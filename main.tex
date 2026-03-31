@@ -1,0 +1,646 @@
+\documentclass[a4paper, 12pt]{article}
+\usepackage[margin=2.5cm]{geometry}
+%\usepackage{geometry}[2cm,2cm,2cm,2cm]
+\usepackage[utf8]{inputenc}
+\usepackage[nosumlimits]{amsmath}
+\usepackage{amssymb,stmaryrd,amsthm,MnSymbol}
+\usepackage{amsfonts,amssymb,amsopn}
+ \usepackage[colorlinks=true,
+            linkcolor=red,
+            filecolor=red,
+            citecolor=blue,
+            urlcolor=blue,]{hyperref}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{bbold}
+
+\usepackage{comment}
+\usepackage{graphicx}
+\usepackage{mathtools}
+\usepackage{multicol}
+\usepackage{tikz, tikz-cd}
+\usetikzlibrary{arrows.meta, decorations.pathreplacing, calligraphy, positioning}
+\usepackage{adjustbox}
+
+\usepackage{aligned-overset}
+\usepackage{enumerate}
+\usepackage[ruled]{algorithm2e}
+\usepackage{wrapfig}
+\usepackage{placeins}
+
+\usepackage{nicematrix}
+
+\usepackage{caption, subcaption}
+% for basis function plots
+\newlength{\twosubht}
+\newsavebox{\twosubbox}
+
+\usepackage{natbib}
+\let\OLDthebibliography\thebibliography
+\renewcommand\thebibliography[1]{
+  \OLDthebibliography{#1}
+  \setlength{\parskip}{1pt}
+  \setlength{\itemsep}{0pt plus 0.3ex}
+}
+\bibliographystyle{elsarticle-harv}
+
+\usepackage{multirow}
+
+%opening
+\title{Hierarchical Subdivision $k$-Form Spaces on the Matrix Level}
+\author{Robert Piel\footnote{University of Surrey, School of Mathematics and Physics, UK (r.piel@surrey.ac.uk), ORCID: \url{https://orcid.org/0009-0001-8681-2493}} \ and
+Werner Bauer\footnote{University of Surrey, School of Mathematics and Physics, UK (w.bauer@surrey.ac.uk), ORCID: \url{https://orcid.org/0000-0002-5040-4287}}
+}
+
+
+\newcommand{\todo}[1]{\vspace{5 mm}\par \noindent
+	\framebox{\begin{minipage}[c]{0.95 \textwidth}
+			\tt #1 \end{minipage}}\vspace{5 mm}\par}
+\newcommand{\werner}[1]{{\color{magenta}WB says: #1}}
+\newcommand{\robert}[1]{{\color{orange} #1}}
+\newcommand{\colin}[1]{{\color{blue}CC says: #1}}
+\newcommand{\incl}[1]{{\color{red}#1}}
+\newcommand{\checkit}[1]{{\color{red}#1}}
+\newcommand{\RobertChanged}[1]{{\color{brown}#1}}
+%\renewcommand{\checkit}[1]{{\color{red}#1}}
+\newcommand{\tbd}[1]{{\color{red}#1}}
+\newcommand{\highlight}[1]{{\color{cyan} #1}}
+
+% colors
+\newcommand{\blue}{\color{blue}}
+\newcommand{\red}{\color{red}}
+\newcommand{\green}{\color{ForestGreen}}
+
+% highlighting
+\newcommand{\hlcyan}[1]{{\sethlcolor{cyan}\hl{#1}}}
+\newcommand{\hlorange}[1]{{\sethlcolor{orange}\hl{#1}}}
+
+% handling simplices
+\newcommand{\T}{\mathcal{T}}
+\newcommand{\K}{\mathcal{K}}
+\newcommand{\V}{\mathcal{V}}
+\newcommand{\E}{\mathcal{E}}
+\newcommand{\F}{\mathcal{F}}
+
+\newcommand{\simplexname}{\sigma}
+\newcommand{\simplex}[3]{\freeQ{\simplexname}{#1}{#2}{#3}}
+\newcommand{\simplexnametwo}{\kappa}
+\newcommand{\simplextwo}[3]{\freeQ{\simplexnametwo}{#1}{#2}{#3}}
+\newcommand{\simplexsubset}[2]{\freeVec{\Delta}{#1}{#2}}
+
+\newcommand{\vertex}[2]{\freeQ{v}{}{#1}{#2}}
+\newcommand{\vertexpos}[2]{\freeQ{\Vec{v}}{}{#1}{#2}}
+\newcommand{\edge}[2]{\freeQ{e}{}{#1}{#2}}
+\newcommand{\face}[2]{\freeQ{f}{}{#1}{#2}}
+
+% adjacency relations
+\newcommand{\KmKnl}[3]{\K^{#1}\K^{#2}_{#3}}
+\newcommand{\VFl}[1]{\V\F_{#1}}
+\newcommand{\EFl}[1]{\E\F_{#1}}
+\newcommand{\FFl}[1]{\F\F_{#1}}
+\newcommand{\VEl}[1]{\V\E_{#1}}
+\newcommand{\EEl}[1]{\E\E_{#1}}
+\newcommand{\FEl}[1]{\F\E_{#1}}
+\newcommand{\VVl}[1]{\V\V_{#1}}
+\newcommand{\EVl}[1]{\E\V_{#1}}
+\newcommand{\FVl}[1]{\F\V_{#1}}
+
+\newcommand{\KKltoL}[3]{\K^{#1}\K^{#1}_{#2 \to #3}}
+\newcommand{\VVltoL}[2]{\V\V_{#1 \to #2}}
+\newcommand{\EEltoL}[2]{\E\E_{#1 \to #2}}
+\newcommand{\FFltoL}[2]{\F\F_{#1 \to #2}}
+
+% indices for components
+\newcommand{\coarseIdxone}{{ i}}
+\newcommand{\coarseIdxtwo}{{ m}}
+\newcommand{\fineIdxone}{{ j}}
+\newcommand{\fineIdxtwo}{{ n}}
+
+% indices for levels
+\renewcommand{\l}{{\green\ell}}
+\renewcommand{\L}{{\green L}}
+
+\newcommand{\lzero}{{\green 0}}
+\newcommand{\lone}{{\green {\l'}  }}
+\newcommand{\ltwo}{{\green {\l''} }}
+\newcommand{\lthree}{{\green {\l'''} }}
+
+% numbers
+\newcommand{\nc}{{\color{Magenta} n_c}}
+\newcommand{\nr}{{\color{Magenta} n_r}}
+\newcommand{\ns}{{\color{Magenta} n_s}}
+
+% refinement stencils
+\newcommand{\RSt}{\mathrm{R}}
+\newcommand{\cRSt}{\RSt_{c}}
+\newcommand{\R}{\mathcal{R}}
+
+% derivative stencil
+\newcommand{\DSt}{\mathrm{D}}
+
+% macros that determine the general format
+% constrained quantity
+\newcommand{\constrQ}[5]{ ( {#1}^{#2}_{#3 \vert #4} )_{#5}} % e.g. \constr_vec{c}{k}{\ell}{L}{i} renders as (c^k_{l|L})_i
+% constrained vector (no index i)
+\newcommand{\constrVec}[4]{ {#1}^{#2}_{#3 \vert #4} }
+% free quantity
+\newcommand{\freeQ}[4]{ ( {#1}^{#2}_{#3} )_{#4}}
+% free vector (no index i)
+\newcommand{\freeVec}[3]{ {#1}^{#2}_{#3}}
+
+% subdiv operators
+\newcommand{\Sop}[3]{\mathcal{S}^{#1}_{{#2} \to {#3}}}
+\newcommand{\Smat}[3]{\mathbf{\mathrm{S}}^{#1}_{#2 \to #3}}
+\newcommand{\Smatij}[5]{\left(\mathbf{\mathrm{S}}^{#1}_{#2 \to #3}\right)_{#4 #5}}
+
+% accumulated subdiv matrix
+\newcommand{\Aop}[3]{\mathcal{A}^{#1}_{{#2} \to {#3}}}
+\newcommand{\Amat}[3]{\mathbf{\mathrm{A}}^{#1}_{#2 \to #3}}
+\newcommand{\Amatij}[5]{\left(\mathbf{\mathrm{A}}^{#1}_{#2 \to #3}\right)_{#4 #5}}
+
+\newcommand{\primalAop}[4]{ {\mathcal{A}^{#1}_{{#2} \to {#3}|{#4} }}  }
+\newcommand{\dualAop}[4]{ {\mathcal{B}^{#1}_{{#2}|\,{#3} \rightarrow {#4}} }}
+
+% Whit and Loop, and their Aops
+\newcommand{\Whit}{\mathrm{Whit}}
+\newcommand{\Loop}{\mathrm{Loop}}
+\newcommand{\AopWhit}[2]{\Aop{\Whit}{#1}{#2}}
+\newcommand{\AopLoop}[2]{\Aop{\Loop}{#1}{#2}}
+
+% derivative
+\newcommand{\extd}{\mathbf{d}}
+\newcommand{\auxextd}{\overset{\sim}{\vphantom{a}\smash{\mathbf{d}}}} % auxiliary derivative
+\newcommand{\Dmat}[2]{\mathbf{D}^{#1}_{#2}} % derivative matrix
+\newcommand{\Dmatij}[4]{\big(\mathbf{D}^{#1}_{#2}\big)_{#3 #4}} % derivative matrix with components
+
+\newcommand{\dd}{\mathrm{d}_d} % discrete exterior derivative
+\newcommand{\ddk}[1]{\mathrm{d}_d^{#1}}
+\newcommand{\ddkl}[2]{\mathrm{d}_{d,#2}^{#1}}
+
+% FEEC spaces
+\newcommand{\FEECspace}[2]{\Lambda^{#1}_{#2}}
+\newcommand{\FEECbasis}{\psi}
+\newcommand{\FEECbases}{\Psi}
+\newcommand{\FEECspaceZero}[2]{\mathring{\Lambda}^{#1}_{#2}}
+
+% subdiv spaces
+\newcommand{\SDFspace}[3]{\mathcal{S}\Lambda^{#1}_{#2 \vert #3}}
+\newcommand{\SDFbasis}{\phi}
+\newcommand{\SDFbases}{\Phi}
+\newcommand{\SDFbasesZero}{\mathring{\SDFbases}}
+\newcommand{\SDFspaceZero}[3]{\mathring{\mathcal{S}}\Lambda^{#1}_{#2 \vert #3}}
+
+% operators for BCs
+\newcommand{\trace}{\mathrm{tr}}
+\newcommand{\Vint}{\mathring{\V}}
+\newcommand{\Eint}{\mathring{\E}}
+\newcommand{\Fint}{\mathring{\F}}
+\newcommand{\Kint}{\mathring{\K}^k}
+\newcommand{\BCAop}[3]{\mathring{\mathcal{A}} {}^{#1}_{#2 \to #3}}
+\newcommand{\BCAmat}[3]{\mathring{\mathrm{A}} {}^{#1}_{#2 \to #3}}
+\newcommand{\BCBEop}[4]{\mathring{\mathcal{B}} {}^{#1}_{#2 \vert #3 \to #4}}
+
+% hierarchical spaces
+\newcommand{\C}{\heth}
+\newcommand{\I}{\mathcal{I}}
+\newcommand{\II}{\mathbb{I}}
+\newcommand{\calP}{\mathcal{P}}
+\newcommand{\heth}{\textphnc{H}}
+
+\newcommand{\activeDoFs}{\mathbb{A}}
+\newcommand{\inactiveDoFs}{\mathbb{I}}
+\newcommand{\D}{\activeDoFs}
+\newcommand{\activeDoFSet}[2]{\activeDoFs^{#1}_{#2}}
+\newcommand{\activeSDFspaces}[2]{\mathcal{S}\activeDoFSet{#1}{#2}}
+
+\newcommand{\hierSDFspace}[3]{\mathcal{S}\activeDoFs^{#1}_{#2 \vert #3}}
+\newcommand{\inactiveSDFspace}[3]{\mathcal{S}\inactiveDoFs^{#1}_{#2 \vert #3}}
+\newcommand{\coarseInactiveSDFspace}[3]{\mathcal{S}\inactiveDoFs^{#1, \mathrm{c}}_{#2 \vert #3}}
+\newcommand{\fineInactiveSDFspace}[3]{\mathcal{S}\inactiveDoFs^{#1, \mathrm{f}}_{#2 \vert #3}}
+
+% general maths
+\renewcommand{\powerset}{\mathbb{P}}
+\newcommand{\inclusion}{\iota}
+\newcommand{\auxincl}{\overset{\sim}{\vphantom{a}\smash{\iota}}} % auxiliary derivative
+\newcommand{\support}{\mathrm{supp}}
+\newcommand{\pfrac}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\M}{\mathcal{M}}
+\newcommand{\vvert}[1]{\left\vert #1 \right\vert}
+\newcommand{\dimlk}[2]{\big\vert \K^{#2}_{#1} \big\vert}
+\newcommand{\sumdimlk}[2]{\vert \K^{#2}_{#1} \vert}
+\newcommand{\closure}[1]{\overset{\circ}{#1} {}}
+\renewcommand{\complement}{\mathsf{c}}
+
+% widecheck and widehat
+\DeclareFontFamily{U}{mathx}{}
+\DeclareFontShape{U}{mathx}{m}{n}{<-> mathx10}{}
+\DeclareSymbolFont{mathx}{U}{mathx}{m}{n}
+\DeclareMathAccent{\widehat}{0}{mathx}{"70}
+\DeclareMathAccent{\widecheck}{0}{mathx}{"71}
+
+% macros for specific spaces
+\newcommand{\CG}{\mathrm{CG}}
+\newcommand{\NED}{\mathrm{NED}}
+\newcommand{\DG}{\mathrm{DG}}
+\newcommand{\Hcurl}{H(\text{curl})}
+\newcommand{\HcurlM}[1]{H\left(\text{curl}, #1\right)}
+\newcommand{\HocurlM}[1]{\mathring{H}\left(\text{curl}, #1\right)}
+
+%%% to be removed %%%
+\newcommand{\rmA}{A}
+
+%% maths environments
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{assumption}[theorem]{Assumption}
+\newtheorem{numberedproof}[theorem]{Proof}
+
+
+%% adjust equation numbering to IMA style
+\numberwithin{equation}{section}
+
+\begin{document}
+
+\maketitle
+
+\vspace{-2.0em}
+
+\begin{abstract}
+
+\end{abstract}
+
+
+\tableofcontents
+
+\section{Introduction}
+
+\section{Properties of the subdivision-induced basis functions}
+
+This section summarises some results from \cite{Piel.2026} that we will need to construct hierarchical subdivision $k$-form spaces.
+
+\robert{\todo{
+    \begin{itemize}
+        \item explain that a basis function is a column of A
+        \item show how we can assemble a new A by mixing and matching basis functions
+    \end{itemize}
+}}
+
+\subsection{Refinement relation}
+
+\begin{figure}
+\begin{center}
+\begin{tikzpicture}[
+    every node/.style={inner sep=0pt, outer sep=0pt},
+    arr/.style={->, >=Stealth, line width=1.5pt, shorten >=2pt, shorten <=2pt}
+]
+
+% ============================================================
+%  COLUMN X POSITIONS
+% ============================================================
+\def\xA{0cm}
+\def\xB{5cm}
+\def\xC{9cm}
+
+% ============================================================
+%  ROW Y POSITIONS
+% ============================================================
+\def\yOne{0cm}
+\def\yTwo{-4.5cm}
+\def\yThree{-8cm}
+
+% ============================================================
+%  ROW 1
+% ============================================================
+\node (A1) at (\xA, \yOne)
+    {\includegraphics[width=0.25\textwidth]{images/stencils/0_form_simplex.pdf}};
+\node[xshift=2pt, yshift=10pt, font=\small, text=black] at (A1.center) {$\simplex{0}{\l}{\coarseIdxone}$};
+
+\node (B1) at (\xB, \yOne)
+    {\includegraphics[width=0.25\textwidth, trim=10pt 0pt 10pt 0pt, clip]{images/stencils/1_form_simplex.pdf}};
+\node[xshift=-12pt, yshift=10pt, font=\small, text=black] at (B1.center) {$\simplex{1}{\l}{\coarseIdxone}$};
+
+\node (C1) at (\xC, \yOne)
+    {\includegraphics[width=0.25\textwidth]{images/stencils/2_form_simplex.pdf}};
+\node[xshift=-12pt, yshift=8pt, font=\small, text=black] at (C1.center) {$\simplex{2}{\l}{\coarseIdxone}$};
+
+% ============================================================
+%  ROW 2
+% ============================================================
+\node (A2) at (\xA, \yTwo)
+    {\includegraphics[width=0.25\textwidth]{images/stencils/0_form_refinement_stencil.pdf}};
+
+\node (B2) at (\xB, \yTwo)
+    {\includegraphics[width=0.25\textwidth, trim=10pt 0pt 10pt 0pt, clip]{images/stencils/1_form_refinement_stencil.pdf}};
+
+\node (C2) at (\xC, \yTwo)
+    {\includegraphics[width=0.25\textwidth]{images/stencils/2_form_refinement_stencil.pdf}};
+
+% ============================================================
+%  VERTICAL ARROWS (one per column, between each row pair)
+% ============================================================
+\draw[arr] (A1.south) -- (A2.north) node[midway, right, font=\small] {$\;\; \cRSt\big( \simplex{0}{\l}{\coarseIdxone} \big)$};
+\draw[arr] ([xshift=-14pt]B1.south) -- ([xshift=-14pt]B2.north) node[midway, right, font=\small] {$\;\; \cRSt\big( \simplex{1}{\l}{\coarseIdxone} \big)$};
+\draw[arr] ([xshift=-14pt]C1.south) -- ([xshift=-14pt]C2.north) node[midway, right, font=\small] {$\;\; \cRSt\big( \simplex{2}{\l}{\coarseIdxone} \big)$};
+
+%\draw[arr] 
+%    ([yshift=-12pt]A2.south west) -- ([yshift=-12pt]C2.south east)
+%    node[midway, below=4pt, font=\small] {Choose active basis functions across all levels $\l \leq \L$ to span hierarchical spaces.};
+
+\end{tikzpicture}
+\end{center}
+\vspace{-5mm}
+\caption{Refinement stencils of $0$-, $1$- and $2$-form basis functions.}
+\end{figure}
+
+\subsection{Derivative relation}
+
+\begin{figure}
+\begin{center}
+\begin{tikzpicture}[
+    every node/.style={inner sep=0pt, outer sep=0pt},
+    arr/.style={->, >=Stealth, line width=1.5pt, shorten >=2pt, shorten <=2pt}
+]
+
+% ============================================================
+%  COLUMN X POSITIONS
+% ============================================================
+\def\xA{0cm}
+\def\xB{5cm}
+\def\xC{10cm}
+
+% ============================================================
+%  ROW Y POSITIONS
+% ============================================================
+\def\yOne{0cm}
+\def\yTwo{-4.5cm}
+\def\yThree{-8cm}
+
+% ============================================================
+%  ROW 1
+% ============================================================
+\node (A1) at (\xA, \yOne)
+    {\includegraphics[width=0.25\textwidth]{images/stencils/0_form_simplex.pdf}};
+\node[xshift=2pt, yshift=10pt, font=\small, text=black] at (A1.center) {$\simplex{0}{\l}{\coarseIdxone}$};
+
+\node (B1) at (\xB, \yOne)
+    {\includegraphics[width=0.25\textwidth, trim=10pt 0pt 10pt 0pt, clip]{images/stencils/1_form_simplex.pdf}};
+\node[xshift=-12pt, yshift=10pt, font=\small, text=black] at (B1.center) {$\simplex{1}{\l}{\coarseIdxone}$};
+
+% ============================================================
+%  ROW 2
+% ============================================================
+\node (A2) at (\xA, \yTwo)
+    {\includegraphics[width=0.25\textwidth]{images/stencils/0_form_deriv_stencil.pdf}};
+
+\node (B2) at (\xB, \yTwo)
+    {\includegraphics[width=0.25\textwidth, trim=10pt 0pt 10pt 0pt, clip]{images/stencils/1_form_deriv_stencil.pdf}};
+
+% ============================================================
+%  VERTICAL ARROWS (one per column, between each row pair)
+% ============================================================
+\draw[arr] (A1.south) -- (A2.north) node[midway, right, font=\small] {$\;\;\DSt\big( \simplex{0}{\l}{\coarseIdxone} \big)$};
+\draw[arr] ([xshift=-14pt]B1.south) -- ([xshift=-14pt]B2.north) node[midway, right, font=\small] {$\;\;\DSt\big( \simplex{1}{\l}{\coarseIdxone} \big)$};
+
+\end{tikzpicture}
+\end{center}
+\vspace{-5mm}
+\caption{Derivate stencils of $0$- and $1$-form basis functions.}
+\end{figure}
+
+\FloatBarrier
+
+\section{Hierarchical subdivision $k$-form spaces}
+
+\robert{\todo{
+    \begin{itemize}
+        \item introduce basic idea of mixing basis functions across different levels (with figure maybe)
+    \end{itemize}
+}}
+
+\begin{figure}
+\begin{center}
+\begin{tikzpicture}[
+    every node/.style={inner sep=0pt, outer sep=0pt},
+    arr/.style={->, >=Stealth, line width=1.5pt, shorten >=2pt, shorten <=2pt}
+]
+
+% ============================================================
+%  COLUMN X POSITIONS
+% ============================================================
+\def\xA{0cm}
+\def\xB{5cm}
+\def\xC{10cm}
+
+% ============================================================
+%  ROW Y POSITIONS
+% ============================================================
+\def\yOne{0cm}
+\def\yTwo{-4cm}
+\def\yThree{-8cm}
+
+% ============================================================
+%  ROW 1
+% ============================================================
+\node (A1) at (\xA, \yOne)
+    {\includegraphics[width=0.25\textwidth]{images/basis_funs/whitney_basis_fun_l0.png}};
+
+\node (B1) at (\xB, \yOne)
+    {\includegraphics[width=0.25\textwidth, trim=10pt 0pt 10pt 0pt, clip]{images/basis_funs/whitney_basis_fun_l1.png}};
+
+\node (C1) at (\xC, \yOne)
+    {\includegraphics[width=0.25\textwidth]{images/basis_funs/whitney_basis_fun_l2.png}};
+
+% ============================================================
+%  ROW 2
+% ============================================================
+\node (A2) at (\xA, \yTwo)
+    {\includegraphics[width=0.25\textwidth]{images/basis_funs/basis_fun_l0.png}};
+
+\node (B2) at (\xB, \yTwo)
+    {\includegraphics[width=0.25\textwidth, trim=10pt 0pt 10pt 0pt, clip]{images/basis_funs/basis_fun_l1.png}};
+
+\node (C2) at (\xC, \yTwo)
+    {\includegraphics[width=0.25\textwidth]{images/basis_funs/basis_fun_l2.png}};
+
+% ============================================================
+%  VERTICAL ARROWS (one per column, between each row pair)
+% ============================================================
+\draw[arr] (A1.south) -- (A2.north) node[midway, right, font=\small] {$\;\;\Aop{0}{0}{\L}$};
+\draw[arr] (B1.south) -- (B2.north) node[midway, right, font=\small] {$\;\;\Aop{0}{1}{\L}$};
+\draw[arr] (C1.south) -- (C2.north) node[midway, right, font=\small] {$\;\;\Aop{0}{2}{\L}$};
+
+% ============================================================
+%  COLUMN LABELS (above row 1)
+% ============================================================
+\node[above=8pt of A1, inner sep=2pt] (colA) {Basis function from $\l = 0$};
+\node[above=8pt of B1, inner sep=2pt] (colB) {Basis function from $\l = 1$};
+\node[above=8pt of C1, inner sep=2pt] (colC) {Basis function from $\l = 2$};
+
+%\draw[arr] 
+%    ([yshift=-12pt]A2.south west) -- ([yshift=-12pt]C2.south east)
+%    node[midway, below=4pt, font=\small] {Choose active basis functions across all levels $\l \leq \L$ to span hierarchical spaces.};
+
+\end{tikzpicture}
+\end{center}
+\vspace{-5mm}
+\caption{Choose active basis functions across all levels $\l \leq \L$ to span hierarchical spaces.}
+\end{figure}
+
+
+\subsection{Patches and interface}
+
+\subsection{Subdivision partition}
+
+\subsection{Active degrees of freedom}
+
+\begin{figure}
+\begin{center}
+\begin{tikzpicture}[
+    every node/.style={inner sep=0pt, outer sep=0pt},
+    arr/.style={->, >=Stealth, line width=1.5pt, shorten >=2pt, shorten <=2pt}
+]
+
+% ============================================================
+%  COLUMN X POSITIONS
+% ============================================================
+\def\xA{0cm}
+\def\xB{5cm}
+\def\xC{10cm}
+
+% ============================================================
+%  ROW Y POSITIONS
+% ============================================================
+\def\yOne{0cm}
+\def\yTwo{-3cm}
+\def\yThree{-6cm}
+
+% ============================================================
+%  ROW 1
+% ============================================================
+\node (A1) at (\xA, \yOne)
+    {\includegraphics[width=0.3\textwidth]{images/dofmeshes/correct/dofs_k_0_lvl_l0.pdf}};
+    %{\includegraphics[width=3cm, height=2.5cm]{images/dofmeshes/correct/dofs_k_0_lvl_l0.pdf}};
+
+\node (B1) at (\xB, \yOne)
+    {\includegraphics[width=0.3\textwidth, trim=10pt 0pt 10pt 0pt, clip]{images/dofmeshes/correct/dofs_k_1_lvl_l0.pdf}};
+    %{\includegraphics[width=3cm, height=2.5cm, trim=10pt 0pt 10pt 0pt, clip]{images/dofmeshes/correct/dofs_k_1_lvl_l0.pdf}};
+
+\node (C1) at (\xC, \yOne)
+    {\includegraphics[width=0.3\textwidth]{images/dofmeshes/correct/dofs_k_2_lvl_l0.pdf}};
+    %{\includegraphics[width=3cm, height=2.5cm]{images/dofmeshes/correct/dofs_k_2_lvl_l0.pdf}};
+
+% ============================================================
+%  ROW 2
+% ============================================================
+\node (A2) at (\xA, \yTwo)
+    {\includegraphics[width=0.3\textwidth]{images/dofmeshes/correct/dofs_k_0_lvl_l1.pdf}};
+
+\node (B2) at (\xB, \yTwo)
+    {\includegraphics[width=0.3\textwidth, trim=10pt 0pt 10pt 0pt, clip]{images/dofmeshes/correct/dofs_k_1_lvl_l1.pdf}};
+
+\node (C2) at (\xC, \yTwo)
+    {\includegraphics[width=0.3\textwidth]{images/dofmeshes/correct/dofs_k_2_lvl_l1.pdf}};
+
+% ============================================================
+%  ROW 3
+% ============================================================
+\node (A3) at (\xA, \yThree)
+    {\includegraphics[width=0.3\textwidth]{images/dofmeshes/correct/dofs_k_0_lvl_l2.pdf}};
+
+\node (B3) at (\xB, \yThree)
+    {\includegraphics[width=0.3\textwidth, trim=10pt 0pt 10pt 0pt, clip]{images/dofmeshes/correct/dofs_k_1_lvl_l2.pdf}};
+
+\node (C3) at (\xC, \yThree)
+    {\includegraphics[width=0.3\textwidth]{images/dofmeshes/correct/dofs_k_2_lvl_l2.pdf}};
+
+% ============================================================
+%  COLUMN LABELS (above row 1)
+% ============================================================
+\node[above=8pt of A1, font=\bfseries, inner sep=2pt] (colA) {$k = 0$};
+\node[above=8pt of B1, font=\bfseries, inner sep=2pt] (colB) {$k = 1$};
+\node[above=8pt of C1, font=\bfseries, inner sep=2pt] (colC) {$k = 2$};
+
+% ============================================================
+%  ROW LABELS (to the left of each row)
+% ============================================================
+\node[left=12pt of A1, font=\bfseries, inner sep=2pt] {$\l = 0$};
+\node[left=12pt of A2, font=\bfseries, inner sep=2pt] {$\l = 1$};
+\node[left=12pt of A3, font=\bfseries, inner sep=2pt] {$\l = 2$};
+
+% ============================================================
+%  OVERBRACE
+%  Goes LEFT to RIGHT so the brace points UPWARD.
+%  raise lifts it above the column label nodes.
+% ============================================================
+\draw[
+    decoration={calligraphic brace, amplitude=6pt, raise=4pt},
+    decorate, line width=1.2pt
+]
+    (A1.north west|-colA.north) -- (C1.north east|-colA.north)
+    node[midway, above=14pt, font=\bfseries] {Active DoFs};
+
+% ============================================================
+%  GRAPHIC ABOVE THE OVERBRACE
+% ============================================================
+\node (topfig) at (5cm, 4.7cm)
+    {\includegraphics[width=0.4\textwidth]{images/dofmeshes/correct/subdiv_partition.pdf}};
+
+\node[above=6pt of topfig, font=\bfseries] {Subdivision partition};
+
+\end{tikzpicture}
+\end{center}
+\caption{Active DoFs for a given subdivision partitions}
+\end{figure}
+
+\FloatBarrier
+
+\section{Numerical Experiment}
+
+\subsection{Projection}
+
+\subsection{Maxwell Eigenvalue problem}
+
+The weak form of the continuous Maxwell eigenvalue problem is given by: Find $\lambda \in \mathbb{R}$ and $u \in \HocurlM{\M}$ such that
+\begin{equation}
+  (\extd u, \extd v)_\M = \lambda (u, v)_\M \qquad \forall v \in \HocurlM{\M}.  
+\end{equation}
+Applying Loop subdivision alters the domain of the eigenvalue problem slightly. Thus, we cannot directly compare the obtained spectrum with the analytical solution. However, siscretisations using the FEEC complex $\FEECspaceZero{k}{}$ are known to converge to the spectrum of the analytical solution on the altered domain without introducing spurious modes (cf. \cite{Arnold.FEEC}). For this reason, we compare the spectrum obtained using the hierarchical subdivision $k$-form spaces with the FEEC spaces $\FEECspaceZero{k}{\L}$.
+
+Figures~\ref{fig:Maxwell_exact_DoFmesh} and \ref{fig:Maxwell_exact_eigenvalues} present a DoF mesh and the eigenvalue spectrum using the subdivision $k$-form spaces defined on the DoF mesh. We observe that the spectrum is faithfully captured. This suggests that the underlying sequence of approximation spaces is exact.
+
+On the other hand, Figures~\ref{fig:Maxwell_inexact_DoFmesh} and \ref{fig:Maxwell_inexact_eigenvalues} present a DoF mesh and an eigenvalue spectrum corresponding to a non-exact complex of subdivision $k$-form spaces. In this case, the discrete spectrum exhibits spurious modes compared to the FEEC discretisation.
+
+\paragraph{Bonus: Instabilities without interface DoFs.} Finally, we want to see what happens if we do not add the interface DoFs. We should probably look at two eigenmodes (with and without the DoFs) and compare them. I expect to see similar instabilities to the ones that arise from boundary truncation.
+
+\subsection{Vector Laplace problem}
+
+The $1$-form Laplace problem is given by
+\begin{equation}
+  (\extd \boldsymbol{\delta} + \boldsymbol{\delta} \extd) u = f
+\end{equation}
+on a domain $\M$. Since the operator $\boldsymbol{\delta}$ is not well-defined for a (subdivision) $1$-form, we introduce the auxiliary variable $\boldsymbol{\delta} \sigma = u$ and use the FEEC-typical mixed weak formulation
+\begin{align}
+  (\sigma, \tau)_\M - (u, \extd \tau)_\M &= 0 \qquad \forall \tau \in \FEECspace{0}{}, \\
+  (\extd \sigma, v)_\M + (\extd u, \extd v) &= f \qquad \forall v \in \FEECspace{1}{}.
+\end{align}
+
+\todo{explain assembly of matrices maybe}
+
+This section follows \checkit{(cabanas, toshniwal)} and verifies the implementation of the subdivision $k$-form spaces using a manufactured solution before moving on to an adaptive simulation with a more complicated right-hand side.
+
+\paragraph{Manufactured solution.} First, we verify that our simulation can faithfully reproduce a manufactured solution. For that, we consider $u = [x(1-x), 0]^T$ and thus $\sigma = 1 - 2x$ and $f = [-2, 0]^T$. Figures~\ref{fig:manufactured_solution} show that the manufactured solution is reproduced for the particular choice of DoF mesh.
+
+\paragraph{Adaptive refinement.} Finally, we want to test the subdivision method's applicability for adaptive refinement. For that, we fix the right-hand side
+\begin{equation}
+  f = []^T.
+\end{equation}
+The Figures~\ref{fig:adaptive_loop} show the evalution of the DoF mesh and the approximation error. We can see that the sequence of DoF mesh refinements sometimes includes non-exact DoF meshes (high error -> harmonic fields) but that the refinement indicators can eliminate them. As shown by (cabanas, toshniwal), it would be much more efficient to restrict the refinements to a class of admissable subdivision partitions. That is subject of future work.
+
+\section{Conclusion}
+\bibliography{references}
+
+\end{document}
