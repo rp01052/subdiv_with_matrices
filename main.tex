@@ -843,8 +843,6 @@ For future computations, it is helpful to group the active degrees of freedom by
     for $\l_t = \l \!+\!1, \hdots, L$.
 \end{lemma}
 
-\robert{\todo{describe the actual algorithm to find the active DoFs?}}
-
 \begin{definition}[Adaptive subdivision differential form spaces]
     \label{def:adaptive_function_spaces}
     Fix an initial mesh $\T_{\l}$ and maximum subdivision level $L$. Let the subdivision partition $\C\big(\T_L\big)$ induce the active $k$-form degrees of freedom $\D^k \big( \C \big)$. The \textbf{active basis functions} of the space $\hierSDFspace{k}{\C}{\L}$ are given by
@@ -872,6 +870,36 @@ For future computations, it is helpful to group the active degrees of freedom by
     \end{equation}
     This means that we only need to add one layer of simplices of the finer level $\l_i +1$ on the side of $\calP^n_{\l_i +1}$. Note, however, that we still require $\C$ to be a subdivision partition which implies the minimal patch size condition in Eq.~\ref{eq:interior_refined_vertex_condition}. Fig.~\ref{fig:case2} in test case 4 shows an example of one such subdivision partition satisfying Eq.~\ref{eq:simplified_setup_assumption} and the induced $k$-form degrees of freedom.
 \end{remark}
+
+Finally, we are going to re-state the two main theorems of \cite{Piel.2026} regarding linear independence and the exactness of the complex.
+
+\begin{theorem}
+    Let $\C$ be a subdivision partition of the mesh hierarchy $\T_\l$ for $\l \in \{ \lzero, \hdots, \L\}$. The basis functions of the hierarchical spaces $\hierSDFspace{k}{\C}{\L}$ from Definition~\ref{def:adaptive_function_spaces} are linearly independent.
+\end{theorem}
+
+\begin{proof}
+    The necessary properties of a subdivision partition were chosen so that linear independence was guaranteed, see \cite{Piel.2026} for the entire proof.
+\end{proof}
+
+\begin{theorem}
+    Let $\C$ be an subdivision partition. The hierarchical spaces $\hierSDFspace{k}{\C}{\L}$ constitute the differential complex
+    \begin{equation}
+    \begin{tikzcd}
+        \mathfrak{R}_\C: \qquad 0 \arrow[r] & \mathbb{R} \arrow[r, "\subset"] & \hierSDFspace{0}{\C}{\L} \arrow[r, "\extd"] & \hierSDFspace{1}{\C}{\L} \arrow[r, "\extd"] & \hierSDFspace{2}{\C}{\L} \arrow[r] & 0.
+    \end{tikzcd}
+    \end{equation}
+    The hierarchical subdivision $k$-form spaces with vanishing trace form the differential complex
+    \begin{equation}
+    \begin{tikzcd}
+        \mathring{\mathfrak{R}}_\C: \qquad 0 \arrow[r] & \hierSDFspace{0}{\C}{\L} \arrow[r, "\extd"] & \hierSDFspace{1}{\C}{\L} \arrow[r, "\extd"] & \hierSDFspace{2}{\C}{\L} \arrow[r, "\int"] & \mathbb{R} \arrow[r] & 0.
+    \end{tikzcd}
+    \end{equation}
+    If $\C$ is an \emph{exact} subdivision partition of a \emph{simply-connected} domain, the complexes $\mathfrak{R}_\C$ and $\mathring{\mathfrak{R}}_\C$ are exact.
+\end{theorem}
+
+\begin{proof}
+    See Theorem \robert{NUM} in \cite{Piel.2026}.
+\end{proof}
 
 \begin{figure}
 \begin{center}
@@ -972,6 +1000,10 @@ For future computations, it is helpful to group the active degrees of freedom by
 \caption{Active DoFs for a given subdivision partitions}
 \end{figure}
 
+\subsection{Implementation}
+
+\robert{\todo{describe the actual algorithm to find the active DoFs? describe the assembly of the subdivision matrix? unrefinement is already done, that can be sais again in one sentence.}}
+
 \FloatBarrier
 
 \section{The Adaptive Loop}
@@ -985,6 +1017,47 @@ For future computations, it is helpful to group the active degrees of freedom by
         \item refine: padding so that every face has an interior vertex, fix isolated boundary vertices
     \end{itemize}
 }}
+
+This section describes the adaptive loop used in the numerical experiments. The loop consists of the steps
+\begin{equation}
+\begin{tikzcd}
+    \mathrm{SOLVE} \arrow[r] & \mathrm{ESTIMATE} \arrow[r] & \mathrm{MARK} \arrow[r] & \mathrm{PAD} \arrow[r] & \mathrm{REFINE} \arrow[llll, rounded corners=0pt, to path={(\tikztostart.south) -- ([yshift=-1.em]\tikztostart.south) -- ([yshift=-1.em]\tikztotarget.south) -- (\tikztotarget.south)}]
+\end{tikzcd}
+\end{equation}
+
+\paragraph{SOLVE.}
+We solve the discrete system on the hierarchical space $\hierSDFspace{k}{\C}{\L}$ using a standard iterative solver.
+
+\paragraph{ESTIMATE.}
+We compute error indicators $\eta_{\l,a}$ per face $\face{\l}{a} \in \C$ of the subdivision partition. The residual is evaluated on the finest level $\L$ and then aggregated to the coarse parent faces:
+\begin{equation}
+    \eta_{\l,a} = \int_{\Aop{}{\l}{\L}(\face{\l}{a})} \big\| \iota (f_h) - f \big\|^2,
+\end{equation}
+where $f_h$ is obtained by applying the discrete PDE operator to $u_h$. Note that the interface DoFs are excluded from the indicator computation.
+
+\begin{example}[Vector Laplace estimator]
+For the mixed vector Laplace problem with $(\sigma_h, u_h) \in \hierSDFspace{0}{\C}{\L} \times \hierSDFspace{1}{\C}{\L}$, the basis functions are piecewise linear approximations of the subdivision limit functions. Hence $\extd u_h$ is piecewise constant and $\boldsymbol{\delta}\extd u_h$ vanishes elementwise, while its contribution appears in the curl jumps across edges. The indicator takes the form
+\begin{equation}
+    \eta_{\l,a}^2 = \sum_{T \,\subset\, \Aop{}{\l}{\L}(\face{\l}{a})} \!\! \left( h_T^2 \|f - \extd \sigma_h\|_{L^2(T)}^2 + \|\sigma_h + \boldsymbol{\delta} u_h\|_{L^2(T)}^2 \right) + \sum_{e \,\subset\, \Aop{}{\l}{\L}(\face{\l}{a})} \!\! h_e \big\|[\![\mathrm{curl}(u_h)]\!]\big\|_{L^2(e)}^2.
+\end{equation}
+The first sum contains the elementwise residuals of both equations, and the second sum contains the curl jump across interior edges $e$ of the fine mesh $\T_\L$.
+\end{example}
+
+\paragraph{MARK.}
+We apply standard Doerfler marking to the indicators $\eta_{\l,a}$, selecting the smallest set of faces whose indicators sum to a fixed fraction of the total. Faces on level $\L$ are not eligible for marking.
+
+\paragraph{PAD.}
+The padding step is non-standard and specific to our setting. After marking, the selected faces may form a covering that is no longer a valid subdivision partition in the sense of Definition~\ref{def:active_k_form_dofs}. To restore admissibility before refinement, we enlarge the marked set by adding neighbouring faces until the following two conditions are satisfied:
+\robert{\todo{
+    \begin{itemize}
+        \item all marked faces contain at least one interior vertex, and
+        \item no boundary vertex touches only one refined face.
+    \end{itemize}
+}}
+This ensures that after refinement the updated subdivision partition remains in the admissible class and the exactness of the de Rham complex is preserved.
+
+\paragraph{REFINE.}
+Each marked and padded face is refined by one level via quadrisection.
 
 \FloatBarrier
 
@@ -1115,12 +1188,12 @@ and $\alpha = 100$ and $R = 0.3$. The vector part $\Vec{b}(x)$ provides a backgr
     \end{subfigure}\hfill
     \begin{subfigure}[b]{0.3\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{images/vector_laplacian/MultiscaleGaussian/fig_estimator_levels_L4.pdf}
+        \includegraphics[width=\textwidth]{images/vector_laplacian/MultiscaleGaussian/fig_dof_breakdown_bars.pdf}
         \caption{}
     \end{subfigure}\hfill
     \begin{subfigure}[b]{0.3\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{images/vector_laplacian/MultiscaleGaussian/fig_estimator_levels_L5.pdf}
+        \includegraphics[width=\textwidth]{images/vector_laplacian/MultiscaleGaussian/fig_marking.pdf}
         \caption{}
     \end{subfigure}
     \\[6pt]
@@ -1131,7 +1204,7 @@ and $\alpha = 100$ and $R = 0.3$. The vector part $\Vec{b}(x)$ provides a backgr
     \end{subfigure}\hfill
     \begin{subfigure}[b]{0.3\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{images/vector_laplacian/MultiscaleGaussian/fig_dof_breakdown_bars.pdf}
+        \includegraphics[width=\textwidth]{images/vector_laplacian/MultiscaleGaussian/fig_estimator_levels_L5.pdf}
         \caption{}
     \end{subfigure}\hfill
     \begin{subfigure}[b]{0.3\textwidth}
