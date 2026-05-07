@@ -644,11 +644,9 @@ In the rest of this paper, we will set up adaptive function spaces by mixing bas
 
 \subsection{Active degrees of freedom}
 
-\robert{\todo{
-    \begin{itemize}
-        \item introduce basic idea of mixing basis functions across different levels (with figure maybe)
-    \end{itemize}
-}}
+\robert{A uniform subdivision $k$-form space $\SDFspace{k}{\lone}{\L}(\T_\lone)$ resolves the domain at a single, globally fixed scale: every basis function $\constrQ{\SDFbasis}{k}{\lone}{\L}{\coarseIdxone}$ has support of the same size, determined by the coarse mesh $\T_{\lone}$. This uniformity is inadequate when the solution of a PDE varies at different spatial scales, for instance because of localized singularities or boundary layers. In such situations it is wasteful to refine the mesh everywhere just to resolve a local feature, and more efficient to increase the resolution only where needed.
+
+The idea of hierarchical subdivision $k$-form spaces is to break this global uniformity by allowing basis functions from \emph{different} subdivision levels $\lone$ to coexist in a single approximation space. As illustrated in Fig.~\ref{fig:hier_basis_funs}, a basis function associated with a coarse level $\lone = 0$ (left column) has broad support covering the entire domain and captures large-scale variation, while a basis function from a finer level $\lone = 2$ (right column) has a support that is roughly $4^2 = 16$ times smaller and can resolve local detail. The top row shows the piecewise linear Whitney counterparts on the fine mesh $\T_\L$, and the bottom row shows the smooth subdivision limit approximations; the operators $\Aop{k}{\lone}{\L}$ (vertical arrows) connect each Whitney basis function on $\T_\L$ to the corresponding constrained basis function on the fine level. By selecting which levels to activate in which region of the domain, we obtain approximation spaces whose local resolution varies spatially, adapting to the regularity of the solution.}
 
 \begin{figure}
 \begin{center}
@@ -717,6 +715,7 @@ In the rest of this paper, we will set up adaptive function spaces by mixing bas
 \end{center}
 \vspace{-5mm}
 \caption{Choose active basis functions across all levels $\l \leq \L$ to span hierarchical spaces.}
+\label{fig:hier_basis_funs}
 \end{figure}
 
 On a matrix-level, any subdivision basis function can be described as a column of the subdivision matrix. Ultimately, since the subdivision matrices of all levels $\lone$ map to $\L$, we can pick and choose any column of any subdivision matrix to become an active degree of freedom. This means we can assemble a vector of degree of freedom
@@ -727,181 +726,37 @@ This means that we can obtain a set of active degrees of freedom by simply choos
 \begin{equation}
   \activeSDFspaces{k}{} \coloneq \mathrm{span}\big( \SDFbases^k_\activeDoFs \big) \quad \text{with} \quad \SDFbases^k_\activeDoFs \coloneq \bigcup_{\simplex{k}{\lone}{\coarseIdxone} \in \activeDoFSet{k}{}} \; \constrQ{\SDFbasis}{k}{\lone}{\L}{\coarseIdxone}.
 \end{equation}
-The hierarchical spaces of subdivision $k$-forms have their own associated subdivision operators. 
+The hierarchical spaces of subdivision $k$-forms have their own associated subdivision operators.
 
-\todo{write down the subdivision operators and their matrix representation. that will reveal how we would assemble the spaces on a matrix-level and handle computational aspects.}
+{\color{orange}
+On the matrix level, the hierarchical basis is encoded in the \emph{hierarchical subdivision matrix} $\Amat{k}{\activeDoFs}{\L}$. Recall that the uniform subdivision matrix $\Amat{k}{\lone}{\L}$ has rows indexed by $\K^k_\L$ and columns indexed by $\K^k_{\lone}$; its column $\coarseIdxone$ is the coordinate vector of the constrained basis function $\constrQ{\SDFbasis}{k}{\lone}{\L}{\coarseIdxone}$ in the Whitney basis of $\FEECspace{k}{}(\T_\L)$. We form $\Amat{k}{\activeDoFs}{\L}$ by retaining, for each level $\lone$, only those columns whose index belongs to the active set $\activeDoFSet{k}{\lone} \subset \K^k_{\lone}$, and concatenating the resulting blocks horizontally across all levels. Identifying the column index of $\Amat{k}{\activeDoFs}{\L}$ with the pair $(\lone, \coarseIdxone)$ for $\simplex{k}{\lone}{\coarseIdxone} \in \activeDoFSet{k}{\lone}$, this reads
+\begin{equation}
+    \left(\Amat{k}{\activeDoFs}{\L}\right)_{\fineIdxone,\,(\lone,\,\coarseIdxone)}
+    \;=\;
+    \left(\Amat{k}{\lone}{\L}\right)_{\fineIdxone,\,\coarseIdxone},
+    \qquad
+    \simplex{k}{\L}{\fineIdxone} \in \K^k_\L, \quad \simplex{k}{\lone}{\coarseIdxone} \in \activeDoFSet{k}{\lone}.
+\end{equation}
+The resulting matrix has dimensions $\big|\K^k_\L\big| \times \big|\activeDoFSet{k}{}\big|$, with $\big|\activeDoFSet{k}{}\big| = \sum_{\lone} \big|\activeDoFSet{k}{\lone}\big|$.
+
+Given a hierarchical form $\omega^k_\activeDoFs \in \activeSDFspaces{k}{}$ with coefficient vector $\bar{c}^k \in \mathbb{R}^{|\activeDoFSet{k}{}|}$, its image under the inclusion $\inclusion \colon \activeSDFspaces{k}{} \hookrightarrow \FEECspace{k}{}(\T_\L)$ is
+\begin{equation}
+    \inclusion\!\left(\omega^k_\activeDoFs\right) = \Amat{k}{\activeDoFs}{\L}\,\bar{c}^k.
+\end{equation}
+This representation allows all operations on hierarchical forms, such as applying the discrete exterior derivative, assembling mass or stiffness matrices, and evaluating residuals, to be carried out as standard sparse linear algebra on the fine level $\T_\L$.
+}
 
 Clearly, most of these configurations do not make sense from a numerical perspective. For instance, the spaces $\activeSDFspaces{k}{}$ might not cover the entire domain, have linearly dependent basis functions or not form differential complexes. The following section present parameterisations of the set $\activeDoFSet{k}{}$ of active degrees of freedom that give us more control over these aspects.
 
 \subsection{Selecting active degrees of freedom}
 
-\todo{
-  The exposition will roughly follows these outlines:
-  \begin{itemize}
-    \item patch spaces: What happens when we restrict the subdiv spaces to a patch? What about supports and derivatives?
-    \item dividing mesh into patches to get a subdiv covering/partition (-> define admissibility)
-    \item joining patch spaces: possible problems (linear dependence, patch interfaces)
-    \item final active dofs given a certain partition
-  \end{itemize}
-}
+\robert{A natural organisational unit for the choice of active degrees of freedom is a \emph{mesh patch} $\calP_\l \subset \T_\l$: a connected submesh at level $\l$ whose closure aligns with the support of the basis functions $\constrQ{\SDFbasis}{k}{\l}{\L}{\coarseIdxone}$ associated with its interior simplices. Tiling the domain with patches at possibly different levels $\l_i$ produces a \emph{subdivision partition} $\C$; we then activate all interior DoFs of each patch, plus additional interface DoFs along patch boundaries. The precise definition is given in Definition~\ref{def:active_k_form_dofs}; here we motivate the key design choices visible in Fig.~\ref{fig:active_dofs}.
 
-\subsection{Patches and interfaces}
+The need for interface DoFs is easiest to see in the $k=1$ column of Fig.~\ref{fig:active_dofs}. At level $\l=0$ (top row, orange edges), only the edges interior to the level-$0$ patches are active; the boundary edges shared with the finer level-$1$ region are absent. At level $\l=1$ (middle row), those same boundary edges appear as active 1-form DoFs. Without them, the exterior derivative $\extd\omega^0$ of a level-$0$ 0-form basis function near the patch boundary would map to an edge with no associated active 1-form DoF, breaking the de Rham complex. More generally, when two patches at levels $\l_i < \l_j$ share a boundary, interface DoFs are added at \emph{every} intermediate level $\l_i < \l_t \leq \l_j$. This prevents basis functions from very different levels meeting abruptly across the interface, which would otherwise create an ill-conditioned system. We do not have rigorous estimates that quantify this stiffening effect, and it remains a subject for further investigation.
 
-\begin{definition}[$k$-Form patch subdivision operators]
-    \label{def:patch_subdiv_operator}
-    Let $\calP_{\l} \subset \T_{\l}$ be a patch. The differential $k$-form patch subdivision operators $\mathcal{A}^k_{\calP_{\l} \to L}$ is a map
-    \begin{equation}
-        \mathcal{A}^k_{\calP_{\l} \to L}: \;\; \FEECspace{k}{}\big( \closure{\calP}_{\l} \big) \;\; \mapsto \;\; \mathcal{S}_{\calP_{\l}, L} \Lambda^k \big( \T_{\l} \big) \subset \FEECspace{k}{} \big( \closure{\calP}_{\l \to L} \big)
-    \end{equation}
-    such that
-    \begin{equation}
-        \label{eq:k_form_patch_subdiv_operator_condition}
-        \mathcal{A}^k_{\calP_{\l} \to L} \Big( \omega^k_{\l} \big\vert_{\closure{\calP}_{\l}} \Big) = \Big( \mathcal{A}^k_{\l \to L} \omega^k_{\l} \Big) \Big\vert_{\closure{\calP}_{\l \to L}} \quad \forall \omega^k_{\l} \in \FEECspace{k}{}\big( \T_{\l} \big).
-    \end{equation}
-\end{definition}
+The interface DoFs are attributed exclusively to the \emph{finer} side of the patch boundary, not the coarser side. Including coarser-side DoFs would introduce linear dependence: any coarser-level basis function restricted to the interface is already expressible as a linear combination of the finer-level basis functions there (cf.\ the refinement stencil condition in Section~2). Restricting to the finer side therefore maintains linear independence while still closing the de Rham complex, as made precise in the theorems at the end of this section.}
 
-The different domains and operators in this definition are illustrated in Fig.~\ref{fig:k_form_subdiv_operator}.
-
-\begin{definition}[Degrees of Freedom map]
-    Let $\calP_{\l} \subset \T_{\l}$ be a patch. The degrees of freedom maps $\Pi_{\l}$ and $\Pi_{L}$ are bijective maps
-    \begin{alignat}{2}
-        \Pi_{\l}&: \; \K^k_{\l}\big(\T_\l\big) &&\to \Big\{1,2,\hdots, \big\vert \K^k_{\l}\big(\closure{\calP}_{\l}\big) \big\vert\Big\} \subset \mathbb{N}, \\
-        \Pi_{L}&: \; \K^k_{L}\big(\T_L\big) &&\to \Big\{1,2,\hdots, \big\vert \K^k_{L}\big(\closure{\calP}_{\l \to L}\big) \big\vert\Big\} \subset \mathbb{N}.
-    \end{alignat}
-\end{definition}
-
-The purpose of these degrees of freedom maps is only a re-enumeration of the $k$-simplices of the domain and image of the $k$-form patch subdivision operators to assemble the following matrices.
-
-\begin{lemma}
-    \label{lemma:subdiv_matrix_of_patch}
-    The coordinate expression $\Amat{k}{\calP_\l}{\L}$ of the $k$-form patch subdivision operator $\mathcal{A}^k_{\calP_{\l \to L}}$ has the dimensions $\Big\vert \K^k_L\big(\closure{\calP}_{\l \to L}\big) \Big\vert \times \Big\vert \K^k_{\l}\big(\closure{\calP}_{\l}\big) \Big\vert$ and is given by
-    \begin{equation}
-        \big(\Amat{k}{\calP_\l}{\L}\big)_{\Pi_{L}(\sigma^k_{L,a}) \, \Pi_{\l}(\sigma^k_{\l, p})} = \big(\Amat{k}{\l}{\L}\big)_{ap} \qquad \text{for all} \quad \sigma^k_{L,a} \in \K^k_L\big(\closure{\calP}_{\l \to L}\big), \;\; \sigma^k_{\l,p} \in \K^k_{\l}\big(\closure{\calP}_{\l}\big).
-    \end{equation}
-\end{lemma}
-\begin{proof}
-    The coordinate expressions of the objects in Eq.~(\ref{eq:k_form_patch_subdiv_operator_condition}) are
-    \begin{alignat}{2}
-        \label{eq:patch_subdiv_in_coordinates_1}
-        \big( \mathcal{A}^k_{\l \to L} \omega^k_{\l} \big) \Big\vert_{\closure{\calP}_{\l \to L}} &= \sum_{\sigma^k_{L,a} \in \K^k_L(\T_L)} &&\bigg( \sum_{\sigma^k_{\l, p} \in \K^k_{\l}(\T_{\l})} \big( \Amat{k}{\l}{\L} \big)_{ap} \; c^k_{\l, p} \bigg) \psi^k_{L, a}\Big\vert_{\closure{\calP}_{\l \to L}}, \\
-        \label{eq:patch_subdiv_in_coordinates_2}
-        \mathcal{A}^k_{\calP_{\l} \to L} \Big( \omega^k_{\l} \big\vert_{\closure{\calP}_{\l}} \Big) &= \sum_{\sigma^k_{L,b} \in \K^k_L(\calP_{\l \to L})} &&\bigg( \sum_{\sigma^k_{\l, q} \in \K^k_{\l}(\closure{\calP}_{\l})} \big( \Amat{k}{\calP_\l}{\L} \big)_{bq} \; c^k_{\l, q} \bigg) \psi^k_{L, b}.
-    \end{alignat}
-    First, note that $\mathcal{A}^k_{\calP_{\l} \to L} \Big( \omega^k_{\l} \big\vert_{\closure{\calP}_{\l}} \Big) = \mathcal{A}^k_{\calP_{\l} \to L} \Big( \omega^k_{\l} \big\vert_{\closure{\calP}_{\l}} \Big) \Big\vert_{\closure{\calP}_{\l \to L}}$ by Def.~\ref{def:patch_subdiv_operator} and ultimately Lemma~\ref{lemma:support_of_patch_spaces}. Thus, the restriction in Eq.~\ref{eq:patch_subdiv_in_coordinates_1} also applies to Eq.~\ref{eq:patch_subdiv_in_coordinates_2}. Comparing coefficients then reveals that Eq.~\ref{eq:k_form_patch_subdiv_operator_condition} is satisfied if 
-    \begin{equation}
-        \big( \rmA^k_{\calP_\l \to L} \big)_{bq} = \big( \rmA^k_{\calP_\l \to L} \big)_{ap} \quad \text{with} \quad b = \Pi_L(\sigma^k_{L,a}) \quad \text{and} \quad q = \Pi_\l(\sigma^k_{\l,p}),
-    \end{equation}
-    for all $\sigma^k_{L,a} \in \K^k_L\big(\closure{\calP}^k_{\l \to L}\big)$ and $\sigma^k_{\l,p} \in \K^k_\l\big(\closure{\calP}^k_{\l}\big)$.
-\end{proof}
-
-This is the most concise coordinate expression of $\mathcal{A}^k_{\calP_{\l \to L}}$. Our implementation does not introduce a degrees of freedom map for the refined patch $\calP_{\l \to L}$ and thus we obtain the following coordinate expression:
-
-\begin{lemma}
-    \label{lemma:embedded_subdiv_matrix_of_patch}
-    The coordinate expression $\rmA^{\iota, k}_{\calP_{\l \to L}}$ of $\iota_{\calP_{\l}} \circ \mathcal{A}^k_{\calP_{\l \to L}}$ has the dimensions $\Big\vert \K^k_L\big(\T_{L}\big) \Big\vert \times \Big\vert \K^k_{\l}\big(\closure{\calP}_{\l}\big) \Big\vert$ and is given by
-    \begin{equation}
-        \big(\rmA^{\iota,k}_{\calP_{\l \to L}}\big)_{a \, \Pi_{\l}(\sigma^k_{\l,p})} = \big(\Amat{k}{\l}{\L}\big)_{ap} \qquad \text{for all} \quad \sigma^k_{\l, p} \in \K^k_{\l}\big(\closure{\calP}_{\l}\big).
-    \end{equation}
-\end{lemma}
-\begin{proof}
-    The proof is analogous to the proof of Lemma~\ref{lemma:subdiv_matrix_of_patch} but without the restriction of $\mathcal{A}^k_{\l \to L} \omega^k_{\l}$.
-\end{proof}
-\robert{This lemma is also not entirely precise but I think the message is understandable given that the previous lemma makes sense.}
-
-Now that we have established differential form spaces on mesh patches, the next section investigates the direct sum of such mesh patches.
-
-\subsection{Subdivision partition}
-
-\begin{definition}[Active $k$-form degrees of freedom]
-    \label{def:active_k_form_dofs}
-    Let $\C\big(\robert{\T_{L}}\big) = \bigcup_{\l_i = \l_0}^L \; \bigcup_{n = 0}^{N_{\l_i}} \; \calP^n_{\l_i}$ be a subdivision partition of $\T_L$. The active $k$-form degrees of freedom $\D^k\big(\C\big)$ are defined as
-    \begin{equation}
-        \label{eq:active_k_form_dofs}
-        \D^k \big(\C\big) \coloneqq \underbrace{\bigcup_{\calP^n_{\l_i} \in \C}}_{(i)} \Bigg[ \underbrace{\K^k \big( \calP^n_{\l_i} \big)}_{(ii)} \cup \underbrace{\bigcup_{\calP^m_{\l_j} \in \C_{> \l_i}}}_{(iii)} \; \underbrace{\bigcup_{\l_t = \l_i +1}^{\l_j}}_{(iv)} \bigg[ \underbrace{\K^k\V_{\l_t} \Big( \V_{\l_t} \big( \I_{(\calP^n_{\l_i \to \l_t}, \calP^m_{\l_j})} \big) \Big)}_{(v)} \cap \underbrace{\K^k_{\l_t} \big( \calP^n_{\l_i \to \l_t} \big)}_{(vi)} \bigg] \Bigg].
-    \end{equation}
-\end{definition}
-
-\robert{Unpacking this definition reveals that for every patch (\textit{i}) $\calP^n_{\l_i}$, we first add all of its $k$-simplices (\textit{ii}). Further, for all relatively finer patches (\textit{iii}) $\calP^m_{\l_j}$ with $\l_j > \l_i$ and intermediate levels (\textit{iv}) $\l_t$ with $\L-i < \l_t \leq \l_j$, all simplices along the interface (\textit{v}) are added to the active degrees of freedom if the simplices are on the coarse side (\textit{vi}) of the interface, i.e. can be generated by refining the patch $\calP^n_{\l_i}$ to level $\l_t$.}
-
-For future computations, it is helpful to group the active degrees of freedom by level $\l_t$ rather than by the individual patches $\calP^n_{\l_i}$. The following lemma re-formulates the active degrees of freedom in exactly that way.
-
-\begin{lemma}
-    \label{lemma:active_k_form_dofs_per_level}
-    The active degrees of freedom $\D^k$ induced by the subdivision partition $\C$ can equivalently be described by
-    \begin{equation}
-        \D^k \big( \C \big) = \bigcup_{\l_t = \l}^L \D^k_{\l_t} \big( \C \big)
-    \end{equation}
-    with
-    \begin{equation}
-        \D^k_{\l} \big( \C \big) = \K^k_{\l} \big(\C_{\l}\big)
-    \end{equation}
-    for $\l_t = \l$ and
-    \begin{equation}
-        \label{eq:active_k_form_dofs_per_level}
-        \D^k_{\l_t} \big( \C \big) = \K^k_{\l_t} \big(\C_{\l_t}\big) \cup \bigcup_{\calP^n_{\l_i} \in \C_{<\l_t}} \; \bigcup_{\calP^m_{\l_j} \in \C_{\geq \l_t}} \; \bigg[ \K^k\V_{\l_t} \Big( \V_{\l_t} \big(\I_{(\calP^n_{\l_i \to \l_t}, \calP^m_{\l_j})} \big) \Big) \cap \K^k_{\l_t} \big(\calP^n_{\l_i \to \l_t}\big) \bigg].
-    \end{equation}
-    for $\l_t = \l \!+\!1, \hdots, L$.
-\end{lemma}
-
-\begin{definition}[Adaptive subdivision differential form spaces]
-    \label{def:adaptive_function_spaces}
-    Fix an initial mesh $\T_{\l}$ and maximum subdivision level $L$. Let the subdivision partition $\C\big(\T_L\big)$ induce the active $k$-form degrees of freedom $\D^k \big( \C \big)$. The \textbf{active basis functions} of the space $\hierSDFspace{k}{\C}{\L}$ are given by
-    \begin{equation}
-        \Phi_{\D^k (\C)} \coloneqq \bigcup_{\sigma^k_{\l_i, p} \in \D^k} \Big\{ \phi^k_{\l_i \to L, p} \Big\}
-    \end{equation}
-    and thus
-    \begin{equation}
-        \hierSDFspace{k}{\C}{\L} \coloneqq \mathrm{span}\big( \Phi_{\D^k (\C)} \big).
-    \end{equation}
-\end{definition}
-
-\noindent Note that the basis functions are increasingly dense for higher levels $\l_i$ because the resolution of the patches $\calP_{\l_i}$ and thus $\D^k_{\l_i}$ scales with roughly $4^{\l_i - \l}$. Two essential properties must be established for the spaces $\hierSDFspace{k}{\C}{\L}$: linear independence of the basis functions and the de Rham complex. Both results can be proven by giving additional structure to the spaces $\hierSDFspace{k}{\C}{\L}$ and investigating its relation to the uniform subdivision spaces $\SDFspace{\l_i}{L}{k}\big(\T_{\l_i}\big)$. These structures will be introduced in the following sections.
-
-\begin{remark}
-    \label{remark:simplification}
-    A typical case of adaptive local refinement comprises the resolution of the region around a singularity of the solution. In that case, it is natural to consider subdivision partitions that satisfy
-    \begin{equation}
-        \label{eq:simplified_setup_assumption}
-        \l_j \neq \l_i \pm 1 \iff \I_{(\calP^n_{\l_i}, \calP^m_{\l_j})} = \varnothing \qquad \forall n = 1,\hdots,N_{\l_i}, \; m = 1,\hdots,N_{\l_i +1},
-    \end{equation}
-    i.e. the only non-trivial interfaces are between adjacent levels $\l_i$ and $\l_i +1$. Under this assumption, the active degrees of freedom in Eq.~\ref{eq:active_k_form_dofs} simplify drastically to
-    \begin{equation}
-        \D^k \big( \C \big) = \bigcup_{\calP^n_{\l_i} \in \C} \Bigg[ \K^k\big(\calP^n_{\l_i}\big) \cup \bigg[ \bigcup_{\calP^m_{\l_i +1} \in \C_{\l_i}} \K^k\V_{\l_i +1} \Big( \V_{\l_i +1} \big( \I_{(\calP^n_{\l_i \to \l_i +1}, \calP^m_{\l_i +1})} \big) \Big) \cap \K^k_{\l_i +1} \big( \calP^n_{\l_i \to \l_i +1} \big) \bigg] \Bigg].
-    \end{equation}
-    This means that we only need to add one layer of simplices of the finer level $\l_i +1$ on the side of $\calP^n_{\l_i +1}$. Note, however, that we still require $\C$ to be a subdivision partition which implies the minimal patch size condition in Eq.~\ref{eq:interior_refined_vertex_condition}. Fig.~\ref{fig:case2} in test case 4 shows an example of one such subdivision partition satisfying Eq.~\ref{eq:simplified_setup_assumption} and the induced $k$-form degrees of freedom.
-\end{remark}
-
-Finally, we are going to re-state the two main theorems of \cite{Piel.2026} regarding linear independence and the exactness of the complex.
-
-\begin{theorem}
-    Let $\C$ be a subdivision partition of the mesh hierarchy $\T_\l$ for $\l \in \{ \lzero, \hdots, \L\}$. The basis functions of the hierarchical spaces $\hierSDFspace{k}{\C}{\L}$ from Definition~\ref{def:adaptive_function_spaces} are linearly independent.
-\end{theorem}
-
-\begin{proof}
-    The necessary properties of a subdivision partition were chosen so that linear independence was guaranteed, see \cite{Piel.2026} for the entire proof.
-\end{proof}
-
-\begin{theorem}
-    Let $\C$ be an subdivision partition. The hierarchical spaces $\hierSDFspace{k}{\C}{\L}$ constitute the differential complex
-    \begin{equation}
-    \begin{tikzcd}
-        \mathfrak{R}_\C: \qquad 0 \arrow[r] & \mathbb{R} \arrow[r, "\subset"] & \hierSDFspace{0}{\C}{\L} \arrow[r, "\extd"] & \hierSDFspace{1}{\C}{\L} \arrow[r, "\extd"] & \hierSDFspace{2}{\C}{\L} \arrow[r] & 0.
-    \end{tikzcd}
-    \end{equation}
-    The hierarchical subdivision $k$-form spaces with vanishing trace form the differential complex
-    \begin{equation}
-    \begin{tikzcd}
-        \mathring{\mathfrak{R}}_\C: \qquad 0 \arrow[r] & \hierSDFspace{0}{\C}{\L} \arrow[r, "\extd"] & \hierSDFspace{1}{\C}{\L} \arrow[r, "\extd"] & \hierSDFspace{2}{\C}{\L} \arrow[r, "\int"] & \mathbb{R} \arrow[r] & 0.
-    \end{tikzcd}
-    \end{equation}
-    If $\C$ is an \emph{exact} subdivision partition of a \emph{simply-connected} domain, the complexes $\mathfrak{R}_\C$ and $\mathring{\mathfrak{R}}_\C$ are exact.
-\end{theorem}
-
-\begin{proof}
-    See Theorem \robert{NUM} in \cite{Piel.2026}.
-\end{proof}
-
-\begin{figure}
+\begin{figure}[htbp]
 \begin{center}
 \begin{tikzpicture}[
     every node/.style={inner sep=0pt, outer sep=0pt},
@@ -927,15 +782,12 @@ Finally, we are going to re-state the two main theorems of \cite{Piel.2026} rega
 % ============================================================
 \node (A1) at (\xA, \yOne)
     {\includegraphics[width=0.3\textwidth]{images/dofmeshes/correct/dofs_k_0_lvl_l0.pdf}};
-    %{\includegraphics[width=3cm, height=2.5cm]{images/dofmeshes/correct/dofs_k_0_lvl_l0.pdf}};
 
 \node (B1) at (\xB, \yOne)
     {\includegraphics[width=0.3\textwidth, trim=10pt 0pt 10pt 0pt, clip]{images/dofmeshes/correct/dofs_k_1_lvl_l0.pdf}};
-    %{\includegraphics[width=3cm, height=2.5cm, trim=10pt 0pt 10pt 0pt, clip]{images/dofmeshes/correct/dofs_k_1_lvl_l0.pdf}};
 
 \node (C1) at (\xC, \yOne)
     {\includegraphics[width=0.3\textwidth]{images/dofmeshes/correct/dofs_k_2_lvl_l0.pdf}};
-    %{\includegraphics[width=3cm, height=2.5cm]{images/dofmeshes/correct/dofs_k_2_lvl_l0.pdf}};
 
 % ============================================================
 %  ROW 2
@@ -977,8 +829,6 @@ Finally, we are going to re-state the two main theorems of \cite{Piel.2026} rega
 
 % ============================================================
 %  OVERBRACE
-%  Goes LEFT to RIGHT so the brace points UPWARD.
-%  raise lifts it above the column label nodes.
 % ============================================================
 \draw[
     decoration={calligraphic brace, amplitude=6pt, raise=4pt},
@@ -997,12 +847,199 @@ Finally, we are going to re-state the two main theorems of \cite{Piel.2026} rega
 
 \end{tikzpicture}
 \end{center}
-\caption{Active DoFs for a given subdivision partitions}
+\caption{Active $k$-form DoFs for the three-level subdivision partition shown at top. Columns correspond to form degree $k = 0$ (vertices, dark circles), $k = 1$ (edges, orange), and $k = 2$ (faces, green). Rows correspond to active DoFs at levels $\l = 0$, $1$, $2$ respectively. At each level, interior simplices of the patches at that level are active, together with interface simplices on the coarser side along boundaries with finer-level patches (cf.\ Definition~\ref{def:active_k_form_dofs}).}
+\label{fig:active_dofs}
 \end{figure}
+
+\FloatBarrier
+\subsection{Patches and interfaces}
+
+\begin{definition}[Mesh Patch]
+    \label{def:mesh_patch}
+    Let $\T$ be a mesh. A \emph{patch} $\calP \subset \T$ is a non-empty sub-collection of faces $\F(\calP) \subset \F(\T)$ such that every face in $\F(\calP)$ shares at least one edge with at least one other face in $\F(\calP)$. Its vertices and edges are
+    \begin{equation}
+        \V(\calP) = \V\F\big(\F(\calP)\big) \qquad \text{and} \qquad \E(\calP) = \E\F\big(\F(\calP)\big),
+    \end{equation}
+    and its boundary consists of edges adjacent to exactly one face of $\calP$:
+    \begin{equation}
+        \partial\calP = \big\{ e \in \E(\calP) : \F\E(e) \not\subset \F(\calP) \big\}.
+    \end{equation}
+\end{definition}
+
+\robert{
+\begin{definition}[Patch Subdivision Operator]
+    \label{def:patch_mesh_subdiv_op}
+    Let $\calP_\l \subset \T_\l$ be a patch. The \emph{patch subdivision operator} $\mathcal{A}_{\calP_\l \to \L}$ maps $\calP_\l$ to its refinement
+    \begin{equation}
+        \mathcal{A}_{\calP_\l \to \L} : \calP_\l \;\mapsto\; \calP_{\l \to \L} \;\subset\; \T_\L,
+    \end{equation}
+    where $\calP_{\l \to \L}$ is the collection of all faces of $\T_\L$ that result from repeated splitting of the faces in $\calP_\l$.
+\end{definition}
+}
+
+\begin{definition}[$k$-Form patch subdivision operators]
+    \label{def:patch_subdiv_operator}
+    Let $\calP_{\l} \subset \T_{\l}$ be a patch. The differential $k$-form patch subdivision operators $\mathcal{A}^k_{\calP_{\l} \to L}$ is a map
+    \begin{equation}
+        \mathcal{A}^k_{\calP_{\l} \to L}: \;\; \FEECspace{k}{}\big( \closure{\calP}_{\l} \big) \;\; \mapsto \;\; \mathcal{S}_{\calP_{\l}, L} \Lambda^k \big( \T_{\l} \big) \subset \FEECspace{k}{} \big( \closure{\calP}_{\l \to L} \big)
+    \end{equation}
+    such that
+    \begin{equation}
+        \label{eq:k_form_patch_subdiv_operator_condition}
+        \mathcal{A}^k_{\calP_{\l} \to L} \Big( \omega^k_{\l} \big\vert_{\closure{\calP}_{\l}} \Big) = \Big( \mathcal{A}^k_{\l \to L} \omega^k_{\l} \Big) \Big\vert_{\closure{\calP}_{\l \to L}} \quad \forall \omega^k_{\l} \in \FEECspace{k}{}\big( \T_{\l} \big).
+    \end{equation}
+\end{definition}
+
+The different domains and operators in this definition are illustrated in Fig.~\ref{fig:k_form_subdiv_operator}. In coordinates, the patch subdivision operator is simply the restriction of $\Amat{k}{\l}{\L}$ to the rows and columns indexed by $\K^k_\L(\closure{\calP}_{\l \to \L})$ and $\K^k_\l(\closure{\calP}_\l)$ respectively; see~\cite{Piel.2026} for the full statement.
+
+\robert{
+\begin{definition}[Non-overlapping Patches and Interfaces]
+    \label{def:interfaces}
+    Let $\calP_{\l_i} \subset \T_{\l_i}$ and $\calP_{\l_j} \subset \T_{\l_j}$ be patches. Their \emph{interface} is
+    \begin{equation}
+        \I_{(\calP_{\l_i}, \calP_{\l_j}) \to \L} \coloneqq \calP_{\l_i \to \L} \cap \calP_{\l_j \to \L}.
+    \end{equation}
+    The patches are called \emph{non-overlapping} if $\I_{(\calP_{\l_i}, \calP_{\l_j}) \to \L} \subset \E_\L(\T_\L)$, i.e.\ their refinements share at most edges, not faces.
+\end{definition}
+
+The interface can also be expressed from either side independently. Specifically,
+\begin{equation}
+    \I_{(\calP_{\l_i \to \L}, \calP_{\l_j})} = \mathcal{A}_{\l_i \to \L}\, \I_{(\calP_{\l_i}, \calP_{\l_j})} \qquad \text{and} \qquad \I_{(\calP_{\l_i}, \calP_{\l_j \to \L})} = \mathcal{A}_{\l_j \to \L}\, \I_{(\calP_{\l_j}, \calP_{\l_i})}
+\end{equation}
+indicate from which level the interface is generated; the two are related by $\mathcal{A}_{\l_i \to \l_j}\, \I_{(\calP_{\l_i}, \calP_{\l_j})} = \I_{(\calP_{\l_j}, \calP_{\l_i})}$.
+
+\begin{definition}[Covering]
+    \label{def:covering}
+    A \emph{covering} of $\T_\L$ is a set of pairwise non-overlapping patches $\calP^n_{\l_i} \subset \T_{\l_i}$, $\l_i = \l, \ldots, \L$, $n \in \{1, \ldots, N_{\l_i}\}$, such that
+    \begin{equation}
+        \T_\L = \bigcup_{\l_i = \l}^\L \;\bigcup_{n = 1}^{N_{\l_i}} \calP^n_{\l_i \to \L}.
+    \end{equation}
+    We write $\C(\T_\L) = \bigcup_{\l_i = \l}^\L \bigcup_{n = 1}^{N_{\l_i}} \calP^n_{\l_i}$ for the covering and use the shorthand
+    \begin{equation}
+        \C_{\l_i} \coloneqq \bigcup_{n}\, \calP^n_{\l_i}, \qquad
+        \C_{< \l_i} \coloneqq \bigcup_{\l_j < \l_i} \C_{\l_j}, \qquad
+        \C_{\leq \l_i} \coloneqq \bigcup_{\l_j \leq \l_i} \C_{\l_j}, \qquad
+        \C_{> \l_i} \coloneqq \bigcup_{\l_j > \l_i} \C_{\l_j}, \qquad
+        \C_{\geq \l_i} \coloneqq \bigcup_{\l_j \geq \l_i} \C_{\l_j}.
+    \end{equation}
+\end{definition}
+}
+
+Now that all patch infrastructure is in place, the next section defines the subdivision partition and the active degrees of freedom.
+
+\subsection{Subdivision partition}
+
+\robert{
+\begin{definition}[Subdivision Partition]
+    \label{def:subdiv_partition}
+    A covering $\C(\T_\L)$ is a \emph{subdivision partition} if every face $f \in \F_{\l_i}(\calP^n_{\l_i})$ of every patch $\calP^n_{\l_i} \in \C$ has at least one vertex $v$ of the refined patch $\calP^n_{\l_i \to \l_i + 1}$ whose face-neighbours are all interior:
+    \begin{align}
+        \label{eq:interior_refined_vertex_condition}
+        \forall \calP^n_{\l_i} \in \C \quad \forall f \in \F_{\l_i}\!\big(\calP^n_{\l_i}\big) \quad &\exists\, v \in \VFl{\l_i+1}\!\Big(\FFltoL{\l_i}{\l_i+1}\big(f\big)\Big) : \nonumber \\
+        &\mathfrak{V} \coloneqq \VFl{\l_i+1}\!\Big(\FVl{\l_i+1}(v)\Big) \;\subset\; \V_{\l_i+1}\!\big(\calP^n_{\l_i \to \l_i+1}\big) \\
+        &\text{and} \quad \mathfrak{V} \setminus \bigg[\{v\} \;\cup \bigcup_{m}\, \V_{\l_i+1}\!\Big(\I_{(\calP^n_{\l_i \to \l_i+1},\, \calP^m_{\l_i+1})}\Big)\bigg] \neq \varnothing. \nonumber
+    \end{align}
+    Here $\mathfrak{V}$ denotes the set of vertices of all faces adjacent to $v$ at level $\l_i + 1$; the condition requires that $v$ has at least one face-neighbour that is interior to $\calP^n_{\l_i \to \l_i + 1}$ (i.e.\ not on any interface). The subdivision partition has interfaces $\I_{(\calP^n_{\l_i}, \calP^m_{\l_j}) \to \L} = \calP^n_{\l_i \to \L} \cap \calP^m_{\l_j \to \L}$ for $(\l_i, n) \neq (\l_j, m)$.
+\end{definition}
+}
+
+\robert{The following definition formalises the interface DoF construction motivated in the previous section and illustrated in Fig.~\ref{fig:active_dofs}.}
+
+\begin{definition}[Active $k$-form degrees of freedom]
+    \label{def:active_k_form_dofs}
+    Let $\C\big(\T_{L}\big) = \bigcup_{\l_i = \l_0}^L \; \bigcup_{n = 0}^{N_{\l_i}} \; \calP^n_{\l_i}$ be a subdivision partition of $\T_L$. The active $k$-form degrees of freedom $\D^k\big(\C\big)$ are defined as
+    \begin{equation}
+        \label{eq:active_k_form_dofs}
+        \D^k \big(\C\big) \coloneqq \underbrace{\bigcup_{\calP^n_{\l_i} \in \C}}_{(i)} \Bigg[ \underbrace{\K^k \big( \calP^n_{\l_i} \big)}_{(ii)} \cup \underbrace{\bigcup_{\calP^m_{\l_j} \in \C_{> \l_i}}}_{(iii)} \; \underbrace{\bigcup_{\l_t = \l_i +1}^{\l_j}}_{(iv)} \bigg[ \underbrace{\K^k\V_{\l_t} \Big( \V_{\l_t} \big( \I_{(\calP^n_{\l_i \to \l_t}, \calP^m_{\l_j})} \big) \Big)}_{(v)} \cap \underbrace{\K^k_{\l_t} \big( \calP^n_{\l_i \to \l_t} \big)}_{(vi)} \bigg] \Bigg].
+    \end{equation}
+\end{definition}
+
+\robert{Unpacking this definition: for every patch (\textit{i}) $\calP^n_{\l_i}$, we first add all of its $k$-simplices (\textit{ii}). Further, for all relatively finer patches (\textit{iii}) $\calP^m_{\l_j}$ with $\l_j > \l_i$ and all intermediate levels (\textit{iv}) $\l_t$ with $\l_i < \l_t \leq \l_j$, all interface simplices (\textit{v}) are added if they lie on the coarser side (\textit{vi}) of the interface, i.e.\ can be generated by refining patch $\calP^n_{\l_i}$ to level $\l_t$.}
+
+For future computations, it is helpful to group the active degrees of freedom by level $\l_t$ rather than by the individual patches $\calP^n_{\l_i}$. The following lemma re-formulates the active degrees of freedom in exactly that way.
+
+\begin{lemma}
+    \label{lemma:active_k_form_dofs_per_level}
+    The active degrees of freedom $\D^k$ induced by the subdivision partition $\C$ can equivalently be described by
+    \begin{equation}
+        \D^k \big( \C \big) = \bigcup_{\l_t = \l}^L \D^k_{\l_t} \big( \C \big)
+    \end{equation}
+    with
+    \begin{equation}
+        \D^k_{\l} \big( \C \big) = \K^k_{\l} \big(\C_{\l}\big)
+    \end{equation}
+    for $\l_t = \l$ and
+    \begin{equation}
+        \label{eq:active_k_form_dofs_per_level}
+        \D^k_{\l_t} \big( \C \big) = \K^k_{\l_t} \big(\C_{\l_t}\big) \cup \bigcup_{\calP^n_{\l_i} \in \C_{<\l_t}} \; \bigcup_{\calP^m_{\l_j} \in \C_{\geq \l_t}} \; \bigg[ \K^k\V_{\l_t} \Big( \V_{\l_t} \big(\I_{(\calP^n_{\l_i \to \l_t}, \calP^m_{\l_j})} \big) \Big) \cap \K^k_{\l_t} \big(\calP^n_{\l_i \to \l_t}\big) \bigg].
+    \end{equation}
+    for $\l_t = \l \!+\!1, \hdots, L$.
+\end{lemma}
+
+\begin{definition}[Adaptive subdivision differential form spaces]
+    \label{def:adaptive_function_spaces}
+    Fix an initial mesh $\T_{\l}$ and maximum subdivision level $L$. Let the subdivision partition $\C\big(\T_L\big)$ induce the active $k$-form degrees of freedom $\D^k \big( \C \big)$. The \textbf{active basis functions} of the space $\hierSDFspace{k}{\C}{\L}$ are given by
+    \begin{equation}
+        \Phi_{\D^k (\C)} \coloneqq \bigcup_{\sigma^k_{\l_i, p} \in \D^k} \Big\{ \phi^k_{\l_i \to L, p} \Big\}
+    \end{equation}
+    and thus
+    \begin{equation}
+        \hierSDFspace{k}{\C}{\L} \coloneqq \mathrm{span}\big( \Phi_{\D^k (\C)} \big).
+    \end{equation}
+\end{definition}
+
+\noindent Note that the basis functions are increasingly dense for higher levels $\l_i$ because the resolution of the patches $\calP_{\l_i}$ and thus $\D^k_{\l_i}$ scales with roughly $4^{\l_i - \l}$. Two essential properties must be established for the spaces $\hierSDFspace{k}{\C}{\L}$: linear independence of the basis functions and the de Rham complex. The proofs of both properties are given in~\cite{Piel.2026}; the main results are restated below.
+
+\begin{remark}
+    \label{remark:simplification}
+    A typical case of adaptive local refinement comprises the resolution of the region around a singularity of the solution. In that case, it is natural to consider subdivision partitions that satisfy
+    \begin{equation}
+        \label{eq:simplified_setup_assumption}
+        \l_j \neq \l_i \pm 1 \iff \I_{(\calP^n_{\l_i}, \calP^m_{\l_j})} = \varnothing \qquad \forall n = 1,\hdots,N_{\l_i}, \; m = 1,\hdots,N_{\l_i +1},
+    \end{equation}
+    i.e. the only non-trivial interfaces are between adjacent levels $\l_i$ and $\l_i +1$. Under this assumption, the active degrees of freedom in Eq.~\ref{eq:active_k_form_dofs} simplify drastically to
+    \begin{equation}
+        \D^k \big( \C \big) = \bigcup_{\calP^n_{\l_i} \in \C} \Bigg[ \K^k\big(\calP^n_{\l_i}\big) \cup \bigg[ \bigcup_{\calP^m_{\l_i +1} \in \C_{\l_i}} \K^k\V_{\l_i +1} \Big( \V_{\l_i +1} \big( \I_{(\calP^n_{\l_i \to \l_i +1}, \calP^m_{\l_i +1})} \big) \Big) \cap \K^k_{\l_i +1} \big( \calP^n_{\l_i \to \l_i +1} \big) \bigg] \Bigg].
+    \end{equation}
+    This means that we only need to add one layer of simplices of the finer level $\l_i +1$ on the side of $\calP^n_{\l_i +1}$. Note, however, that we still require $\C$ to be a subdivision partition, which imposes a minimal patch size condition ensuring each interior vertex of the fine mesh has an associated active basis function. The numerical examples in Section~5 use subdivision partitions satisfying Eq.~\eqref{eq:simplified_setup_assumption}.
+\end{remark}
+
+Finally, we are going to re-state the two main theorems of \cite{Piel.2026} regarding linear independence and the exactness of the complex.
+
+\begin{theorem}
+    Let $\C$ be a subdivision partition of the mesh hierarchy $\T_\l$ for $\l \in \{ \lzero, \hdots, \L\}$. The basis functions of the hierarchical spaces $\hierSDFspace{k}{\C}{\L}$ from Definition~\ref{def:adaptive_function_spaces} are linearly independent.
+\end{theorem}
+
+\begin{proof}
+    The necessary properties of a subdivision partition were chosen so that linear independence was guaranteed, see \cite{Piel.2026} for the entire proof.
+\end{proof}
+
+\begin{theorem}
+    Let $\C$ be an subdivision partition. The hierarchical spaces $\hierSDFspace{k}{\C}{\L}$ constitute the differential complex
+    \begin{equation}
+    \begin{tikzcd}
+        \mathfrak{R}_\C: \qquad 0 \arrow[r] & \mathbb{R} \arrow[r, "\subset"] & \hierSDFspace{0}{\C}{\L} \arrow[r, "\extd"] & \hierSDFspace{1}{\C}{\L} \arrow[r, "\extd"] & \hierSDFspace{2}{\C}{\L} \arrow[r] & 0.
+    \end{tikzcd}
+    \end{equation}
+    The hierarchical subdivision $k$-form spaces with vanishing trace form the differential complex
+    \begin{equation}
+    \begin{tikzcd}
+        \mathring{\mathfrak{R}}_\C: \qquad 0 \arrow[r] & \hierSDFspace{0}{\C}{\L} \arrow[r, "\extd"] & \hierSDFspace{1}{\C}{\L} \arrow[r, "\extd"] & \hierSDFspace{2}{\C}{\L} \arrow[r, "\int"] & \mathbb{R} \arrow[r] & 0.
+    \end{tikzcd}
+    \end{equation}
+    If $\C$ is an \emph{exact} subdivision partition of a \emph{simply-connected} domain, the complexes $\mathfrak{R}_\C$ and $\mathring{\mathfrak{R}}_\C$ are exact.
+\end{theorem}
+
+\begin{proof}
+    See Theorem \robert{NUM} in \cite{Piel.2026}.
+\end{proof}
+
 
 \subsection{Implementation}
 
-\robert{\todo{describe the actual algorithm to find the active DoFs? describe the assembly of the subdivision matrix? unrefinement is already done, that can be sais again in one sentence.}}
+\robert{Given a subdivision partition $\C$, the active DoFs $\D^k(\C)$ are assembled by iterating over all patches $\calP^n_{\l_i} \in \C$: first, all interior $k$-simplices of $\calP^n_{\l_i}$ are added; then, for each pair of patches $(\calP^n_{\l_i}, \calP^m_{\l_j})$ with $\l_j > \l_i$ that share a boundary, the interface $k$-simplices on the coarser side are added at every intermediate level $\l_t \in (\l_i, \l_j]$, directly implementing Definition~\ref{def:active_k_form_dofs}.
+
+The hierarchical subdivision matrix $\Amat{k}{\activeDoFs}{\L}$ is then assembled as described in Section~3.1: for each $\simplex{k}{\lone}{\coarseIdxone} \in \D^k_{\lone}$, the corresponding column of $\Amat{k}{\lone}{\L}$ is extracted and appended. All operations on hierarchical forms — applying the discrete exterior derivative $\Dmat{k}{\L}\Amat{k}{\activeDoFs}{\L}$, assembling the mass matrix $(\Amat{k}{\activeDoFs}{\L})^\top M_\L \Amat{k}{\activeDoFs}{\L}$, or evaluating residuals — reduce to standard sparse linear algebra on the fine level $\T_\L$ without recomputing any integrals.}
 
 \FloatBarrier
 
