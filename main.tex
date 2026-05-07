@@ -279,18 +279,49 @@ Werner Bauer\footnote{University of Surrey, School of Mathematics and Physics, U
 
 \section{Introduction}
 
+\robert{The finite element exterior calculus (FEEC)~\cite{Arnold.FEEC} provides a systematic framework for constructing stable, structure-preserving discretisations of partial differential equations (PDEs) involving differential forms. Its central structure is the discrete de Rham complex: a sequence of finite-dimensional function spaces connected by the exterior derivative $\extd$. Exactness of this complex is the key algebraic property that prevents spurious modes in Maxwell eigenvalue problems, guarantees inf-sup stability in mixed formulations, and underpins the commuting diagram that makes error analysis tractable. Classical realisations of the FEEC use the lowest-order Whitney forms --- the Lagrange ($\mathrm{CG}_1$), Raviart--Thomas ($\mathrm{RT}_0$), and discontinuous ($\mathrm{DG}_0$) spaces --- which are globally conforming but only piecewise polynomial and, at best, $C^0$.
+
+Subdivision algorithms, originally developed for geometric modelling, produce limit functions that are globally smooth on arbitrary triangular meshes. Loop's scheme~\cite{Loop.1987} generates globally $C^1$ scalar limit functions; Wang~\cite{Wang.2006,Wang.2008} extended this construction to differential $k$-forms on all form degrees $k = 0, 1, 2$, yielding subdivision $k$-form spaces that are smooth, globally supported, and form a discrete de Rham complex. These spaces are thus smooth analogues of the Whitney spaces in the FEEC. The companion paper~\cite{Piel.2026} establishes their theoretical foundations: compatibility conditions on the subdivision matrices, approximation estimates, and proofs of linear independence and de Rham complex exactness for the hierarchical construction developed here.
+
+Uniform subdivision spaces assign the same resolution everywhere: every basis function has a support whose size is determined by the coarse mesh $\T_\lzero$. This is adequate for globally smooth solutions but wasteful when the PDE solution is rough only in a small part of the domain. In isogeometric analysis, the analogous limitation of globally refined B-spline spaces has been addressed through hierarchical and truncated hierarchical B-spline spaces~\cite{Evans.2020}, which mix basis functions from different refinement levels to obtain spatially varying resolution while retaining linear independence. Extending this idea to spaces of differential forms is non-trivial: activating basis functions at different levels can break the exactness of the de Rham complex unless the selection is governed by a compatible combinatorial rule.
+The analogous construction for B-spline de Rham complexes has been studied in~\cite{Buffa2011,Evans.2020,Shepherd.2024,Dijkstra.2025}, where admissibility conditions on the hierarchical mesh ensure exactness of the complex.
+A central mechanism in these works is a \emph{completion step} that, after marking basis functions for refinement, enforces a compatibility condition on the active set: in~\cite{Cabanas.2026} this takes the form of \emph{$L$-chain completion}, which forces all basis functions in a connecting $L$-chain to be refined simultaneously whenever a conflicting pair is detected.
+\checkit{The subdivision PAD step described in Section~4 serves an analogous role---it restores the subdivision partition condition after marking---but the precise correspondence between $L$-chain completion and the partition condition, and whether one implies the other, remains to be investigated.}
+
+This paper provides the matrix-level description and algorithms for hierarchical subdivision $k$-form spaces that preserve the de Rham complex, serving as the practical and computational complement to~\cite{Piel.2026}. The key computational objects are the subdivision matrices $\Amat{k}{\l}{\L}$, which represent level-$\l$ basis functions in the Whitney basis of the fine assembly mesh $\T_\L$. A hierarchical space is formed by selecting columns of these matrices --- one per active basis function --- according to a \emph{subdivision partition} of $\T_\L$, a combinatorial condition on the patch decomposition of the domain. This condition, characterised in~\cite{Piel.2026}, simultaneously guarantees linear independence and exactness of the complex. Once the hierarchical subdivision matrix $\Amat{k}{\activeDoFs}{\L}$ is assembled, all downstream operations --- exterior derivative, mass and stiffness matrices, residual evaluation --- reduce to standard sparse linear algebra on $\T_\L$ without recomputing any integrals.
+
+\paragraph*{Contributions.} This paper makes the following contributions:
+\begin{itemize}
+    \item A matrix-level construction of hierarchical subdivision $k$-form spaces and a practical algorithm for assembling the active degrees of freedom and the hierarchical subdivision matrix (Sections~3 and~4).
+    \item An adaptive refinement loop \textsc{Solve}--\textsc{Estimate}--\textsc{Mark}--\textsc{Pad}--\textsc{Refine}, including a non-standard padding step that restores the subdivision partition condition after marking (Section~4).
+    \item Numerical verification via the Maxwell eigenvalue problem, confirming that the exact de Rham complex is preserved, and adaptive convergence experiments for the vector Laplace equation with multi-scale solutions (Section~5).
+\end{itemize}
+
+\paragraph*{Outline.} Section~2 collects the relevant properties of uniform subdivision $k$-form spaces. Section~3 constructs the hierarchical spaces and their matrix assembly. Section~4 describes the adaptive loop. Section~5 presents the numerical experiments. Section~6 concludes.}
+
 \section{Properties of the subdivision-induced basis functions}
 
 This section collects the most important properties of the uniform subdivision $k$-form spaces introduced in~\cite{Piel.2026}. We focus on the aspects that enable the construction of hierarchical subdivision $k$-form spaces in a similar way as~\cite{Evans.2020} did for B-splines.
 
-\todo{
-bridge the gap from here to the following proposition. We should give some (informal) definitions of
-\begin{itemize}
-  \item mesh subdivision and hierarchy
-  \item subdivision operators with focus on subdiv matrices
-  \item introduce subdiv $k$-form spaces as span of subdiv basis functions
-\end{itemize}
-}
+\robert{Starting from an initial coarse triangular mesh $\T_\l$ at level $\l = \lzero$, the \emph{subdivision algorithm} produces a sequence of increasingly fine meshes $\T_{\lzero+1}, \ldots, \T_\L$ by repeatedly applying two steps: a \emph{topological refinement} that splits every triangle into four, and a \emph{geometric averaging} step that repositions vertices as weighted averages of neighbouring coarse vertices. We use Loop's subdivision scheme~\cite{Loop.1987} throughout. The resulting \emph{mesh hierarchy} $\{\T_\l\}_{\l=\lzero}^{\L}$ ranges from the coarsest level $\lzero$ to the finest, the \emph{assembly mesh} $\T_\L$. At each level $\l$, we denote the sets of vertices, edges, and faces by $\K^0_\l = \V_\l$, $\K^1_\l = \E_\l$, and $\K^2_\l = \F_\l$, with cardinalities $|\K^k_\l|$.
+
+On each mesh $\T_\l$, the lowest-order Whitney $k$-form spaces are the standard FEEC spaces
+\begin{equation}
+    \FEECspace{0}{\l} = \mathrm{CG}_1(\T_\l), \qquad \FEECspace{1}{\l} = \mathrm{RT}_0(\T_\l), \qquad \FEECspace{2}{\l} = \mathrm{DG}_0(\T_\l),
+\end{equation}
+with basis functions $\freeQ{\FEECbasis}{k}{\l}{\coarseIdxone}$ indexed by the $k$-simplices $\simplex{k}{\l}{\coarseIdxone} \in \K^k_\l$.
+
+The subdivision algorithm induces a linear \emph{subdivision operator} $\Sop{k}{\l}{\l+1}: \FEECspace{k}{\l} \to \FEECspace{k}{\l+1}$ between Whitney spaces on consecutive levels. Composing these one-step operators gives the \emph{accumulated subdivision operator}
+\begin{equation}
+    \Aop{k}{\l}{\L} \coloneqq \Sop{k}{\L-1}{\L} \circ \cdots \circ \Sop{k}{\l}{\l+1},
+\end{equation}
+whose coordinate representation with respect to the Whitney bases of $\FEECspace{k}{\l}$ and $\FEECspace{k}{\L}$ is the \emph{subdivision matrix} $\Amat{k}{\l}{\L}$ of size $|\K^k_\L| \times |\K^k_\l|$. Column $\coarseIdxone$ of $\Amat{k}{\l}{\L}$ is the coordinate vector of the image of $\freeQ{\FEECbasis}{k}{\l}{\coarseIdxone}$ in the fine Whitney basis of $\FEECspace{k}{\L}$.
+
+The \emph{subdivision $k$-form space} on level $\l$ is defined as the image of $\FEECspace{k}{\l}$ under $\Aop{k}{\l}{\L}$,
+\begin{equation}
+    \SDFspace{k}{\l}{\L}\big(\T_\l\big) \coloneqq \Aop{k}{\l}{\L}\!\big(\FEECspace{k}{\l}\big),
+\end{equation}
+spanned by the \emph{subdivision basis functions} $\constrQ{\SDFbasis}{k}{\l}{\L}{\coarseIdxone} \coloneqq \Aop{k}{\l}{\L}\, \freeQ{\FEECbasis}{k}{\l}{\coarseIdxone}$, i.e.\ the columns of $\Amat{k}{\l}{\L}$ expressed in the fine Whitney basis. At the finest level, $\SDFspace{k}{\L}{\L} = \FEECspace{k}{\L}$ by definition. The spaces $\SDFspace{k}{\l}{\L}$ are smooth and globally supported functions on $|\T_\L|$ that constitute a discrete de Rham complex, as detailed in~\cite{Piel.2026} and recalled below.}
 
 \subsection{Refinement of basis functions}
 
@@ -305,8 +336,6 @@ corresponding subdivision $k$-form spaces $\SDFspace{k}{\l}{\L}\big(\T_{\l} \big
 and have the dimensions $\dimlk{\l}{k} < \dimlk{\l +1}{k} < \hdots < \dimlk{\L}{k}$.
 \end{proposition}
 
-\todo{\robert{$(\lzero, \l)$ vs $(\l, \lone)$}}
-
 This proposition implies the refinement relation for the subdivision basis functions $\constrQ{\SDFbasis}{k}{\lone}{\L}{\coarseIdxone}$. The resulting properties regarding the refinability of the basis functions form the backbone of the adaptive method presented in this paper. The following discussion is focused on basis functions on intermediate levels $\lone$ with $\lzero \leq \lone \leq \L$ defined as
 \begin{equation}
     \label{equ:basisrel}
@@ -314,7 +343,7 @@ This proposition implies the refinement relation for the subdivision basis funct
 \end{equation}
 where $\Amat{k}{\lone}{\L}$ is the subdivision matrix, cf.~\cite{Piel.2026}. Splitting the accumulated subdivision operator $\Aop{k}{\l}{\L}$ reveals the following relation between the basis functions $\constrVec{\Phi}{k}{\lone}{\L}$ and $\constrVec{\Phi}{k}{\lone + 1}{\L}$ on neighbouring levels.
 
-\begin{lemma}[Refinement Relation]
+\begin{lemma}[Refinement Relation, {\cite{Piel.2026}}]
     \label{lemma:hiermeshrel}
     Let $\lone$ be an arbitrary level such that $\lzero \leq \lone \leq \L$ and let $\Amat{k}{\l}{\l+1}$ be the subdivision matrix associated to $\Aop{k}{\lone}{\lone+1}$. Then, the basis functions $\constrQ{\SDFbasis}{k}{\lone}{\L}{\coarseIdxone}$ and $\constrQ{\SDFbasis}{k}{\lone+1}{\L}{\fineIdxone}$ satisfy the following \emph{refinement relation}
     \begin{equation}
@@ -323,26 +352,12 @@ where $\Amat{k}{\lone}{\L}$ is the subdivision matrix, cf.~\cite{Piel.2026}. Spl
     \end{equation}
 \end{lemma}
 \begin{proof}
-Starting from Eq.~\eqref{equ:basisrel}, we compute
-  \begin{equation}
-  \begin{aligned}
-    \constrQ{\SDFbasis}{k}{\l}{\L}{\coarseIdxone} &= \Aop{k}{\l}{\L}  \; \freeQ{\FEECbasis}{k}{\l}{\coarseIdxone} = \Aop{k}{\l+1}{\L} \Aop{k}{\l}{\l+1} \freeQ{\FEECbasis}{k}{\l}{\coarseIdxone} \\
-    &= \Aop{k}{\l+1}{\L} \Big( \sum_{\fineIdxone = 1}^{\sumdimlk{\lone+1}{k}} \Amatij{k}{\lone}{\lone+1}{\fineIdxone}{\coarseIdxone} \; \constrQ{\SDFbasis}{k}{\lone+1}{\L}{\fineIdxone} \Big) \\
-    &= \sum_{\fineIdxone = 1}^{\sumdimlk{\lone+1}{k}} \Amatij{k}{\lone}{\lone+1}{\fineIdxone}{\coarseIdxone} \Aop{k}{\l+1}{\L} \big( \constrQ{\SDFbasis}{k}{\lone+1}{\L}{\fineIdxone} \big) \\
-    &= \sum_{\fineIdxone = 1}^{\sumdimlk{\lone+1}{k}} \Amatij{k}{\lone}{\lone+1}{\fineIdxone}{\coarseIdxone} \constrQ{\SDFbasis}{k}{\lone+1}{\L}{\fineIdxone},
-  \end{aligned}
-  \end{equation}
-  by splitting the subdivision operator $\Aop{k}{\l}{\L}$ and using its linearity.
+    See~\cite{Piel.2026}.
 \end{proof}
 
 We will capture relationships between different basis functions across the mesh hierarchy through \textit{stencils}. Since there is a one-to-one correspondence between basis functions and simplices, we will formulate these stencils as maps between (sets of) simplices.
 
-\begin{definition}[Stencil]
-    Let $\powerset$ denote the powerset. A stencil is a map
-    \begin{equation}
-       \powerset \big(\K^k_{\lone}\big) \to \powerset \big( \bigsqcup\limits_{\l = \lzero}^{\L} \; \bigsqcup\limits_{k=0}^2 \; \K^k_\l \big).
-    \end{equation}
-\end{definition}
+\robert{We use the term \emph{stencil} for a map from subsets of simplices on one level to subsets of simplices across the hierarchy; formally, a map $\powerset(\K^k_{\lone}) \to \powerset\!\bigl(\bigsqcup_{\l=\lzero}^{\L}\bigsqcup_{k=0}^{2}\K^k_\l\bigr)$.}
 
 We choose to formulate stencils with respect to simplices instead of basis functions because that enables us to use the adjacency operator $\KmKnl{m}{n}{\lone}$ and refinement operators $\KKltoL{k}{\lone}{\ltwo}$ introduced in~\cite{Piel.2026}. The remainder of this section sets up refinement stencils based on the refinement relation~\ref{eq:refinement_relation}, while the next section lays the foundations for the derivative stencil by investigating the relation of basis functions of different form degrees.
 
@@ -351,7 +366,7 @@ The hierarchical refinement relation in Lemma~\ref{lemma:hiermeshrel} provides a
 \begin{definition}[Refinement Stencil]
     \label{def:deep_ref_stencil}
     Let $\constrQ{\SDFbasis}{k}{\lone}{\L}{\coarseIdxone}$ denote the basis function of $\SDFspace{k}{\lone}{\L}$ that is associated to the simplex $\simplex{k}{\lone}{\coarseIdxone}$.
-    A \werner{deep}\robert{/-} refinement stencil is a collection of simplices $\simplex{k}{\ltwo}{\fineIdxone}$ across the finer levels $\ltwo \in \{\lone\!+\!1, \, \hdots, \L\}$ whose associated basis functions $\constrQ{\SDFbasis}{k}{\ltwo}{\L}{\fineIdxone}$ can exactly re-express $\constrQ{\SDFbasis}{k}{\lone}{\L}{\coarseIdxone}$. More concretely, a refinement stencil $\RSt\big(\simplex{k}{\lone}{\coarseIdxone}\big)$ is a map
+    A \robert{deep} refinement stencil is a collection of simplices $\simplex{k}{\ltwo}{\fineIdxone}$ across the finer levels $\ltwo \in \{\lone\!+\!1, \, \hdots, \L\}$ whose associated basis functions $\constrQ{\SDFbasis}{k}{\ltwo}{\L}{\fineIdxone}$ can exactly re-express $\constrQ{\SDFbasis}{k}{\lone}{\L}{\coarseIdxone}$. More concretely, a refinement stencil $\RSt\big(\simplex{k}{\lone}{\coarseIdxone}\big)$ is a map
     \begin{equation}
         \label{equ:refstencilunion}
         \RSt : \K^k_{\lone} \to \powerset \Big(\bigcup_{\ltwo = \lone+1}^{\L} \K^k_{\ltwo} \Big), \quad  \simplex{k}{\lone}{\coarseIdxone} \mapsto \RSt \big( \simplex{k}{\lone}{\coarseIdxone} \big)
@@ -374,7 +389,7 @@ The coefficients $\constrQ{c}{k}{\ltwo}{\lone}{\fineIdxone}$ above are connected
 
 In the following, we will systematically construct refinement stencils by iterating the canonical refinement stencil defined next. According to eq.~\ref{eq:refinement_relation}, all basis functions $\constrQ{\SDFbasis}{k}{\lone+1}{\L}{\fineIdxone}$ with non-zero entries $\Amatij{k}{\lone}{\lone+1}{\fineIdxone}{\coarseIdxone} \neq 0$ are required to re-express the coarse basis function $\constrQ{\SDFbasis}{k}{\lone}{\L}{\coarseIdxone}$. The following definition formalises this selection of basis functions.
 
-\begin{definition}[\werner{Shallow}\robert{/Canonical} Refinement Stencil]
+\begin{definition}[\robert{Canonical} Refinement Stencil]
     Let $\constrQ{\SDFbasis}{k}{\lone}{\L}{\coarseIdxone}$ denote the basis function of $\SDFspace{k}{\lone}{\L}$ that is associated to the simplex $\simplex{k}{\lone}{\coarseIdxone}$. The canonical refinement $\cRSt\big( \simplex{k}{\lone}{\coarseIdxone}\big)$ of $\constrQ{\SDFbasis}{k}{\lone}{\L}{\coarseIdxone}$ is the map
     \begin{eqnarray}
         \cRSt: \K^k_{\lone} \to \powerset\big( \K^k_{\lone+1}\big), \qquad \simplex{k}{\lone}{\coarseIdxone} \mapsto \Big\{ \simplex{k}{\lone+1}{\fineIdxone} \in \K^k_{\lone+1} \colon \; \Amatij{k}{\lone}{\lone+1}{\fineIdxone}{\coarseIdxone} \neq 0 \Big\}.
@@ -386,30 +401,13 @@ As we did before, we will slightly abuse the notation and overload the canonical
     \cRSt: \powerset\big(\K^k_{\lone}\big) \to \powerset\big( \K^k_{\lone+1}\big), \qquad \simplexsubset{k}{\lone} \mapsto \bigcup_{\simplex{k}{\lone}{\coarseIdxone} \in \simplexsubset{k}{\lone}}\cRSt\big( \simplex{k}{\lone}{\coarseIdxone} \big).
 \end{equation}
 
-We call this refinement stencil canonical because it is the only that contains only simplices on level $\lone\!+\!1$ and is thus uniquely determined through the refinement relation~\ref{eq:refinement_relation}. Of course, once we allow simplices and basis functions from finer levels $\ltwo > \lone \! + \! 1$ we lose this uniqueness. For example, there exist multiple refinement stencils of $\simplex{k}{\lone}{\coarseIdxone}$ with simplices from levels $\lone\!+\!1$ and $\lone\!+\!2$. Denoting
+\robert{We call this refinement stencil canonical because it is the only one that contains simplices solely on level $\lone\!+\!1$ and is thus uniquely determined by the refinement relation~\ref{eq:refinement_relation}. Once we allow simplices from finer levels $\ltwo > \lone\!+\!1$, uniqueness is lost. For instance, if $\cRSt(\simplex{k}{\lone}{\coarseIdxone}) = \{\simplex{k}{\lone+1}{\fineIdxone_1}, \ldots, \simplex{k}{\lone+1}{\fineIdxone_n}\}$, then for each $m = 1, \ldots, n$,
 \begin{equation}
-    \cRSt\big( \simplex{k}{\lone}{\coarseIdxone} \big) = \big\{ \simplex{k}{\lone+1}{\fineIdxone_1}, \simplex{k}{\lone+1}{\fineIdxone_2}, \hdots, \simplex{k}{\lone+1}{\fineIdxone_N} \big\}
+    \label{eq:example_ref_stencil}
+    \RSt_m = \cRSt\big(\simplex{k}{\lone+1}{\fineIdxone_m}\big) \cup \big\{\simplex{k}{\lone+1}{\fineIdxone_i} : i \neq m\big\}
 \end{equation}
-with $N=\big\vert \cRSt\big( \simplex{k}{\lone}{\coarseIdxone} \big) \big\vert$, we can find many more refinement stencils of $\simplex{k}{\lone}{\coarseIdxone}$ like
-\begin{align}
-    \label{eq:example_ref_stencils_start}
-    \RSt_1 &= \cRSt\big( \simplex{k}{\lone+1}{\fineIdxone_1} \big) \cup \big\{\simplex{k}{\lone+1}{\fineIdxone_2}, \hdots, \simplex{k}{\lone+1}{\fineIdxone_N} \big\}, \\[2pt]
-    \RSt_2 &= \big\{ \simplex{k}{\lone+1}{\fineIdxone_1} \big\} \cup \cRSt \big(\simplex{k}{\lone+1}{\fineIdxone_2} \big) \cup \big\{ \hdots, \simplex{k}{\lone+1}{\fineIdxone_N} \big\}, \\
-    \vdots \nonumber \\
-    \RSt_N &= \big\{ \simplex{k}{\lone+1}{\fineIdxone_1}, \simplex{k}{\lone+1}{\fineIdxone_2}, \hdots \big\} \cup \cRSt\big( \simplex{k}{\lone+1}{\fineIdxone_N} \big), \\[2pt]
-    \RSt_{12} &= \cRSt\big( \simplex{k}{\lone+1}{\fineIdxone_1} \big) \cup \cRSt\big( \simplex{k}{\lone+1}{\fineIdxone_2} \big) \cup \big\{ \hdots, \simplex{k}{\lone+1}{\fineIdxone_N} \big\}, \\[2pt]
-    \label{eq:example_ref_stencils_intermediate}
-    \RSt_{1N} &= \cRSt\big( \simplex{k}{\lone+1}{\fineIdxone_1} \big) \cup \big\{ \simplex{k}{\lone+1}{\fineIdxone_2}, \hdots \big\} \cup \cRSt \big(\simplex{k}{\lone+1}{\fineIdxone_N} \big), \\[2pt]
-    \label{eq:example_ref_stencils_end}
-    \RSt_{12N} &= \cRSt\big( \simplex{k}{\lone+1}{\fineIdxone_1} \big) \cup \cRSt\big( \simplex{k}{\lone+1}{\fineIdxone_2} \big) \cup \big\{ \hdots \big\} \cup \cRSt \big(\simplex{k}{\lone+1}{\fineIdxone_N} \big).
-\end{align}
+is a valid refinement stencil of $\simplex{k}{\lone}{\coarseIdxone}$ with simplices on levels $\lone\!+\!1$ and $\lone\!+\!2$, yielding $n$ distinct alternatives to $\cRSt(\simplex{k}{\lone}{\coarseIdxone})$.}
 
-\robert{\todo{
-    \begin{itemize}
-        \item explain that a basis function is a column of A
-        \item show how we can assemble a new A by mixing and matching basis functions
-    \end{itemize}
-}}
 
 \begin{figure}
 \begin{center}
@@ -486,38 +484,18 @@ We now set up the differential structure of the spaces. First,~\cite{Piel.2026} 
   \constrVec{\mathfrak{R}}{}{\lone}{\L}\colon \quad 0 \arrow[r] & \SDFspace{0}{\lone}{\L} \arrow[r, "\extd"] & \SDFspace{1}{\lone}{\L} \arrow[r, "\extd"] & \SDFspace{2}{\lone}{\L} \arrow[r] & 0.
 \end{tikzcd}
 \end{equation}
-on all intermediate levels $\lone$ with $\lzero \leq \l \leq \lone \leq \L$. The coordinate expression of the action of the exterior derivative $\extd$ on the spaces $\SDFspace{k}{\lone}{\L}$ can be described using the discrete exterior derivative from DEC~\citep{Hirani.2003,Desbrun.2006}:
+on all intermediate levels $\lone$ with $\lzero \leq \l \leq \lone \leq \L$. \robert{The coordinate expression of the action of the exterior derivative $\extd$ on the spaces $\SDFspace{k}{\lone}{\L}$ follows directly from the coarse-level oriented incidence matrix $\Dmat{k}{\lone}$~\citep{Hirani.2003,Desbrun.2006,Piel.2026}. (Throughout, we write $\extd$ directly; the companion paper~\cite{Piel.2026} employs an auxiliary operator $\auxextd$ that coincides with $\extd$ for the compatible schemes used here.)
 \begin{equation}
-  \text{derivative relation.}
+    \label{eq:derivative_relation_basis}
+    \extd \constrQ{\SDFbasis}{k}{\lone}{\L}{\coarseIdxone} = \sum_{\coarseIdxtwo=1}^{\sumdimlk{\lone}{k+1}} \Dmatij{k}{\lone}{\coarseIdxtwo}{\coarseIdxone} \, \constrQ{\SDFbasis}{k+1}{\lone}{\L}{\coarseIdxtwo}.
 \end{equation}
-In the context of splines, this is equivalent to forward-differencing, in particular for triangular splines like box splines~\citep{de_boor_box_1993}.
-
-\todo{
-  introduce derivative stencil
-}
-
-The following section leverages the refinement and derivative stencils to construct hierarchical subdivision $k$-form spaces that satisfy differential complexes. The cohomology of these complexes will turn out to be a delicate matter.
-
-The rest of this section explores more properties of the basis $\constrVec{\Phi}{k}{\lone}{\L}$ regarding their derivatives. Analogously to the previous section, we introduce a derivative relation and stencil. As before, we consider basis functions on a level $\lone$ with $\lzero \leq \lone \leq \L$ to emphasize that the statements are true for basis functions on all intermediate levels.
-
-\begin{theorem}[Derivative Relation]
-    \label{theorem:derivative_relation}
-    Given a set of compatible subdivision schemes, the basis functions of $\SDFspace{k}{\lone}{\L}$ satisfy
-    \begin{equation}
-        \label{eq:derivative_relation}
-        \auxextd \constrQ{\SDFbasis}{k}{\lone}{\L}{\coarseIdxone} = \sum_{\coarseIdxtwo = 1}^{\sumdimlk{\lone}{k+1}} \freeQ{c}{k}{\lone}{\coarseIdxtwo} \, \constrQ{\SDFbasis}{k}{\lone}{\L}{\coarseIdxtwo} \quad \text{with} \quad \freeQ{c}{k}{\lone}{\coarseIdxtwo} = \Dmatij{k}{\lone}{\coarseIdxtwo}{\coarseIdxone}
-    \end{equation}
-    as described in Assumption~\ref{assumption:PLambda_form_complex}.
-\end{theorem}
-\begin{proof}
-    The claim follows immediately from Lemma~\ref{lemma:d_tilde_action_in_coordinates} with $\constrVec{\omega}{k}{\lone}{\L} = \constrQ{\SDFbasis}{k}{\lone}{\L}{\coarseIdxone}$.
-\end{proof}
+Since $\Dmat{k}{\lone}$ is the signed incidence matrix of $\T_\lone$, only the $(k+1)$-simplices of $\T_\lone$ adjacent to $\simplex{k}{\lone}{\coarseIdxone}$ appear with non-zero coefficients. In the context of splines, this is equivalent to forward-differencing, in particular for triangular splines like box splines~\citep{de_boor_box_1993}.}
 
 \begin{definition}[Derivative Stencil]
     \label{def:derivative_stencil}
     Let $\constrQ{\SDFbasis}{k}{\lone}{\L}{\coarseIdxone}$ be a basis function of $\SDFspace{k}{\lone}{\L}$ associated with the $k$-simplex $\simplex{k}{\lone}{\coarseIdxone} \in \K^k_{\lone}$. The derivative stencil $\DSt$ is a map 
     \begin{equation}
-        \DSt : \K^k_{\lone} \to \powerset \big( \K^{k+1}_{\lone} \big), \qquad \simplex{k}{\lone}{\coarseIdxone} = \big\{ \simplex{k+1}{\lone}{\coarseIdxtwo}: \; \Dmatij{k}{\lone}{\coarseIdxtwo}{\coarseIdxone} \neq 0 \big\}.
+        \DSt : \K^k_{\lone} \to \powerset \big( \K^{k+1}_{\lone} \big), \qquad \simplex{k}{\lone}{\coarseIdxone} \robert{\mapsto} \big\{ \simplex{k+1}{\lone}{\coarseIdxtwo}: \; \Dmatij{k}{\lone}{\coarseIdxtwo}{\coarseIdxone} \neq 0 \big\}.
     \end{equation}
 \end{definition}
 
@@ -526,61 +504,31 @@ Once again, we overload the derivative stencil such that it can also act on sets
     \DSt : \powerset\Big(\K^k_{\lone}\Big) \to \powerset \big( \K^{k+1}_{\lone} \big), \qquad \simplexsubset{k}{\lone} \mapsto \bigcup_{\simplex{k}{\lone}{\coarseIdxone} \in \simplexsubset{k}{\lone}} \DSt \big( \simplex{k}{\lone}{\coarseIdxone} \big)
 \end{equation}
 
-This definition together with Theorem~\ref{theorem:derivative_relation} implies the following two propositions.
+This definition together with Eq.~\eqref{eq:derivative_relation_basis} implies the following two propositions.
 
 \begin{proposition}
     \label{prop:d_tilde_on_phi}
-    $\auxextd \constrQ{\SDFbasis}{k}{\lone}{\L}{\coarseIdxone} = \sum\limits_{\simplex{k+1}{\lone}{\coarseIdxtwo} \in \DSt(\simplex{k}{\lone}{\coarseIdxone})} \Dmatij{k}{\lone}{\coarseIdxtwo}{\coarseIdxone} \, \constrQ{\SDFbasis}{k}{\lone}{\L}{\coarseIdxtwo}$
+    $\robert{\extd} \constrQ{\SDFbasis}{k}{\lone}{\L}{\coarseIdxone} = \sum\limits_{\simplex{k+1}{\lone}{\coarseIdxtwo} \in \DSt(\simplex{k}{\lone}{\coarseIdxone})} \Dmatij{k}{\lone}{\coarseIdxtwo}{\coarseIdxone} \, \robert{\constrQ{\SDFbasis}{k+1}{\lone}{\L}{\coarseIdxtwo}}$
 \end{proposition}
 
 \begin{proposition}
     \label{cor:derivative_support}
-    $\support \big( \constrQ{\SDFbasis}{k}{\lone}{\L}{\coarseIdxone} \big) = \support \big( \auxextd \constrQ{\SDFbasis}{k}{\lone}{\L}{\coarseIdxone} \big) = \bigcup\limits_{\simplex{k+1}{\lone}{\coarseIdxtwo} \in \DSt(\simplex{k}{\lone}{\coarseIdxone})} \mathrm{supp} \big( \constrQ{\SDFbasis}{k+1}{\lone}{\L}{\coarseIdxtwo} \big).$
+    $\support \big( \constrQ{\SDFbasis}{k}{\lone}{\L}{\coarseIdxone} \big) = \support \big( \robert{\extd} \constrQ{\SDFbasis}{k}{\lone}{\L}{\coarseIdxone} \big) = \bigcup\limits_{\simplex{k+1}{\lone}{\coarseIdxtwo} \in \DSt(\simplex{k}{\lone}{\coarseIdxone})} \mathrm{supp} \big( \constrQ{\SDFbasis}{k+1}{\lone}{\L}{\coarseIdxtwo} \big).$
 \end{proposition}
 
-The derivative stencil provides another valuable tool for constructing our hierarchical function spaces. Every active $k$-form basis function must have its associated derivative stencil present in the $k+1$-form space. Otherwise, the de Rham complex will be broken. Before we move on to considerations of this kind, the next section makes the constructions in this section more concrete. In particular, we present subdivision schemes that are known to satisfy the commutative relation in Lemma~\ref{lemma:compatibility_condition_in_coordinates}. Further, the basis function supports and the refinement and derivative stencils will be described concretely for the schemes adopted in this work.
+\robert{The derivative stencil is key for ensuring that every active $k$-form basis function has its derivative stencil present in the $(k+1)$-form space — a requirement for preserving the de Rham complex. The following lemma makes the stencil concrete for the Wang schemes~\cite{Wang.2006,Wang.2008} used in this work.}
 
-Recall from Proposition~\ref{prop:d_tilde_on_phi} that $\auxextd$ acts on the basis function $\constrQ{\SDFbasis}{k}{\lone}{\L}{\coarseIdxone}$ of $\SDFspace{k}{\lone}{\L}$ by
-\begin{equation}
-    \label{eq:d_tilde_on_basis_function}
-    \auxextd \constrQ{\SDFbasis}{k}{\lone}{\L}{\coarseIdxone} = \sum_{\simplex{k+1}{\lone}{\coarseIdxtwo} \in \DSt(\simplex{k}{\lone}{\coarseIdxone})} \Dmatij{k}{\lone}{\coarseIdxtwo}{\coarseIdxone} \; \constrQ{\SDFbasis}{k+1}{\lone}{\L}{\coarseIdxtwo}.
-\end{equation}
-Thus, by Definition~\ref{def:derivative_stencil}, the derivative stencil is given by the following lemma.
-
-\begin{lemma}
+\robert{\begin{lemma}[{\cite{Piel.2026}}]
     \label{lemma:derivative_stencil}
-    Let $\freeQ{v}{}{\lone}{\coarseIdxone} \in \V_{\lone}$ and $\freeQ{e}{}{\lone}{\coarseIdxtwo}e_m \in \E_{\lone}$ be a vertex and an edge on level $\lone$. For the Wang schemes, the derivative stencils are given by
+    Let $\freeQ{v}{}{\lone}{\coarseIdxone} \in \V_{\lone}$ and $\freeQ{e}{}{\lone}{\coarseIdxtwo} \in \E_{\lone}$ be a vertex and an edge on level $\lone$. For the Wang subdivision schemes~\cite{Wang.2006,Wang.2008} (whose $0$-form scheme coincides with Loop subdivision~\cite{Loop.1987}), the derivative stencils are given by
     \begin{equation}
-        \DSt\big( \freeQ{v}{}{\lone}{\coarseIdxone} \big) = \EVl{\lone}\big( \freeQ{v}{}{\lone}{\coarseIdxone} \big) \quad \text{and} \quad \DSt\big( \freeQ{e}{}{\lone}{\coarseIdxtwo} \big) = \FEl{\lone}\big( \freeQ{e}{}{\lone}{\coarseIdxtwo} \big).
+        \DSt\big( \freeQ{v}{}{\lone}{\coarseIdxone} \big) = \EVl{\lone}\big( \freeQ{v}{}{\lone}{\coarseIdxone} \big) \quad \text{and} \quad \DSt\big( \freeQ{e}{}{\lone}{\coarseIdxtwo} \big) = \FEl{\lone}\big( \freeQ{e}{}{\lone}{\coarseIdxtwo} \big),
     \end{equation}
-    More generally, we can write this as
-    \begin{equation}
-        \DSt\big(\simplex{k}{\lone}{\coarseIdxone}\big) = \K^{k+1}\K^k_{\lone}\big(\simplex{k}{\lone}{\coarseIdxone}\big)
-    \end{equation}
-    for any $\simplex{k}{\lone}{\coarseIdxone} \in \K^k_{\lone}$.
+    or more generally, $\DSt\big(\simplex{k}{\lone}{\coarseIdxone}\big) = \K^{k+1}\K^k_{\lone}\big(\simplex{k}{\lone}{\coarseIdxone}\big)$ for any $\simplex{k}{\lone}{\coarseIdxone} \in \K^k_{\lone}$.
 \end{lemma}
 \begin{proof}
-    The claim follows immediately from the characterization of $\Dmat{k}{\lone}$ in Lemma~\ref{lemma:discrete_exterior_derivative}, where $\Dmatij{k}{\lone}{\coarseIdxtwo}{\coarseIdxone} \neq 0$ if $\simplex{k}{\lone}{\coarseIdxone} \in \K^{k} \K^{k+1}_{\lone} \big( \simplex{k+1}{\lone}{\coarseIdxtwo} \big)$. Alternatively, one could compare the supports analogously to the proof of Lemma \ref{lemma:canonical_refinement_stencil}.
-\end{proof}
-
-The following last lemma for this section establishes the parallels between the compatibility of the subdivision scheme and the compatibility of the refinement and derivative stencils.
-\begin{lemma}
-    Let $\simplex{k}{\lone}{\coarseIdxone} \in \K^k_{\lone}$. The derivative stencil and the canonical refinement stencil commute, i.e.
-    \begin{equation}
-        \cRSt \circ \DSt \big(\simplex{k}{\lone}{\coarseIdxone}\big) = \DSt \circ \cRSt \big(\simplex{k}{\lone}{\coarseIdxone}\big)
-    \end{equation}
-\end{lemma}
-\begin{proof}
-    From
-    \begin{equation}
-        \robert{\K^{k+1}\V_{\lone} = \KmKnl{k+1}{k}{\lone}\K^{k+1}\K^k_{\l_i} \circ \K^{k}\V_{\lone}, \qquad \F\K^{k+1}_{\lone} \circ \K^{k+1}\K^k_{\l_i}\KmKnl{k+1}{k}{\lone} = \F\K^k_{\lone}}
-    \end{equation}
-    and the Lemmas~\ref{lemma:canonical_refinement_stencil} and~\ref{lemma:derivative_stencil} follows
-    \begin{alignat}{2}
-        \cRSt \circ \DSt \big(\simplex{k}{\lone}{\coarseIdxone}\big) &= \K^{k+1}\V_{\lone +1} \circ \VFl{\lone+1} \circ \FFltoL{\lone}{\lone+1} \circ \F\K^{k+1}_{\lone} \circ \KmKnl{k+1}{k}{\lone} \big(\simplex{k}{\lone}{\coarseIdxone}\big) && \\
-        &= \KmKnl{k+1}{k}{\lone+1} \circ \K^{k}\V_{\lone +1} \circ \VFl{\lone+1} \circ \FFltoL{\lone}{\lone+1} \circ \F\K^k_{\lone} \big(\simplex{k}{\lone}{\coarseIdxone}\big) &&= \DSt \circ \cRSt \big(\simplex{k}{\lone}{\coarseIdxone}\big).
-    \end{alignat}
-\end{proof}
+    See~\cite{Piel.2026}.
+\end{proof}}
 
 In the rest of this paper, we will set up adaptive function spaces by mixing basis functions on different subdivision levels and control their linear independence and the de Rham complex by using the refinement and derivative stencils.
 
@@ -644,9 +592,7 @@ In the rest of this paper, we will set up adaptive function spaces by mixing bas
 
 \subsection{Active degrees of freedom}
 
-\robert{A uniform subdivision $k$-form space $\SDFspace{k}{\lone}{\L}(\T_\lone)$ resolves the domain at a single, globally fixed scale: every basis function $\constrQ{\SDFbasis}{k}{\lone}{\L}{\coarseIdxone}$ has support of the same size, determined by the coarse mesh $\T_{\lone}$. This uniformity is inadequate when the solution of a PDE varies at different spatial scales, for instance because of localized singularities or boundary layers. In such situations it is wasteful to refine the mesh everywhere just to resolve a local feature, and more efficient to increase the resolution only where needed.
-
-The idea of hierarchical subdivision $k$-form spaces is to break this global uniformity by allowing basis functions from \emph{different} subdivision levels $\lone$ to coexist in a single approximation space. As illustrated in Fig.~\ref{fig:hier_basis_funs}, a basis function associated with a coarse level $\lone = 0$ (left column) has broad support covering the entire domain and captures large-scale variation, while a basis function from a finer level $\lone = 2$ (right column) has a support that is roughly $4^2 = 16$ times smaller and can resolve local detail. The top row shows the piecewise linear Whitney counterparts on the fine mesh $\T_\L$, and the bottom row shows the smooth subdivision limit approximations; the operators $\Aop{k}{\lone}{\L}$ (vertical arrows) connect each Whitney basis function on $\T_\L$ to the corresponding constrained basis function on the fine level. By selecting which levels to activate in which region of the domain, we obtain approximation spaces whose local resolution varies spatially, adapting to the regularity of the solution.}
+\robert{Uniform subdivision spaces $\SDFspace{k}{\lone}{\L}$ resolve the domain at a single global scale, which is wasteful when the PDE solution contains localised features. Hierarchical spaces break this uniformity by mixing basis functions from \emph{different} levels $\lone$: as illustrated in Fig.~\ref{fig:hier_basis_funs}, a level-$0$ function (left) has broad support capturing large-scale variation, while a level-$2$ function (right) has support roughly $4^2$ times smaller and can resolve local detail. Selecting which levels to activate in which part of the domain yields an approximation space whose resolution adapts spatially to the solution.}
 
 \begin{figure}
 \begin{center}
@@ -747,8 +693,6 @@ This representation allows all operations on hierarchical forms, such as applyin
 }
 
 Clearly, most of these configurations do not make sense from a numerical perspective. For instance, the spaces $\activeSDFspaces{k}{}$ might not cover the entire domain, have linearly dependent basis functions or not form differential complexes. The following section present parameterisations of the set $\activeDoFSet{k}{}$ of active degrees of freedom that give us more control over these aspects.
-
-\subsection{Selecting active degrees of freedom}
 
 \robert{A natural organisational unit for the choice of active degrees of freedom is a \emph{mesh patch} $\calP_\l \subset \T_\l$: a connected submesh at level $\l$ whose closure aligns with the support of the basis functions $\constrQ{\SDFbasis}{k}{\l}{\L}{\coarseIdxone}$ associated with its interior simplices. Tiling the domain with patches at possibly different levels $\l_i$ produces a \emph{subdivision partition} $\C$; we then activate all interior DoFs of each patch, plus additional interface DoFs along patch boundaries. The precise definition is given in Definition~\ref{def:active_k_form_dofs}; here we motivate the key design choices visible in Fig.~\ref{fig:active_dofs}.
 
@@ -852,94 +796,16 @@ The interface DoFs are attributed exclusively to the \emph{finer} side of the pa
 \end{figure}
 
 \FloatBarrier
-\subsection{Patches and interfaces}
+\subsection{Selecting active degrees of freedom using subdivision partitions}
 
-\begin{definition}[Mesh Patch]
-    \label{def:mesh_patch}
-    Let $\T$ be a mesh. A \emph{patch} $\calP \subset \T$ is a non-empty sub-collection of faces $\F(\calP) \subset \F(\T)$ such that every face in $\F(\calP)$ shares at least one edge with at least one other face in $\F(\calP)$. Its vertices and edges are
-    \begin{equation}
-        \V(\calP) = \V\F\big(\F(\calP)\big) \qquad \text{and} \qquad \E(\calP) = \E\F\big(\F(\calP)\big),
-    \end{equation}
-    and its boundary consists of edges adjacent to exactly one face of $\calP$:
-    \begin{equation}
-        \partial\calP = \big\{ e \in \E(\calP) : \F\E(e) \not\subset \F(\calP) \big\}.
-    \end{equation}
-\end{definition}
+\robert{A \emph{patch} $\calP_\l \subset \T_\l$ is a non-empty, edge-connected collection of faces of $\T_\l$, with boundary $\partial\calP_\l$ consisting of those edges adjacent to exactly one face. The \emph{patch subdivision operator} $\mathcal{A}_{\calP_\l \to \L}$ maps $\calP_\l$ to the collection $\calP_{\l \to \L}$ of all faces of $\T_\L$ arising from repeatedly splitting the faces of $\calP_\l$; in coordinates, it is the restriction of $\Amat{k}{\l}{\L}$ to the rows and columns indexed by the $k$-simplices of $\calP_{\l \to \L}$ and $\calP_\l$, respectively; see~\cite{Piel.2026}.
 
-\robert{
-\begin{definition}[Patch Subdivision Operator]
-    \label{def:patch_mesh_subdiv_op}
-    Let $\calP_\l \subset \T_\l$ be a patch. The \emph{patch subdivision operator} $\mathcal{A}_{\calP_\l \to \L}$ maps $\calP_\l$ to its refinement
-    \begin{equation}
-        \mathcal{A}_{\calP_\l \to \L} : \calP_\l \;\mapsto\; \calP_{\l \to \L} \;\subset\; \T_\L,
-    \end{equation}
-    where $\calP_{\l \to \L}$ is the collection of all faces of $\T_\L$ that result from repeated splitting of the faces in $\calP_\l$.
-\end{definition}
-}
-
-\begin{definition}[$k$-Form patch subdivision operators]
-    \label{def:patch_subdiv_operator}
-    Let $\calP_{\l} \subset \T_{\l}$ be a patch. The differential $k$-form patch subdivision operators $\mathcal{A}^k_{\calP_{\l} \to L}$ is a map
-    \begin{equation}
-        \mathcal{A}^k_{\calP_{\l} \to L}: \;\; \FEECspace{k}{}\big( \closure{\calP}_{\l} \big) \;\; \mapsto \;\; \mathcal{S}_{\calP_{\l}, L} \Lambda^k \big( \T_{\l} \big) \subset \FEECspace{k}{} \big( \closure{\calP}_{\l \to L} \big)
-    \end{equation}
-    such that
-    \begin{equation}
-        \label{eq:k_form_patch_subdiv_operator_condition}
-        \mathcal{A}^k_{\calP_{\l} \to L} \Big( \omega^k_{\l} \big\vert_{\closure{\calP}_{\l}} \Big) = \Big( \mathcal{A}^k_{\l \to L} \omega^k_{\l} \Big) \Big\vert_{\closure{\calP}_{\l \to L}} \quad \forall \omega^k_{\l} \in \FEECspace{k}{}\big( \T_{\l} \big).
-    \end{equation}
-\end{definition}
-
-The different domains and operators in this definition are illustrated in Fig.~\ref{fig:k_form_subdiv_operator}. In coordinates, the patch subdivision operator is simply the restriction of $\Amat{k}{\l}{\L}$ to the rows and columns indexed by $\K^k_\L(\closure{\calP}_{\l \to \L})$ and $\K^k_\l(\closure{\calP}_\l)$ respectively; see~\cite{Piel.2026} for the full statement.
-
-\robert{
-\begin{definition}[Non-overlapping Patches and Interfaces]
-    \label{def:interfaces}
-    Let $\calP_{\l_i} \subset \T_{\l_i}$ and $\calP_{\l_j} \subset \T_{\l_j}$ be patches. Their \emph{interface} is
-    \begin{equation}
-        \I_{(\calP_{\l_i}, \calP_{\l_j}) \to \L} \coloneqq \calP_{\l_i \to \L} \cap \calP_{\l_j \to \L}.
-    \end{equation}
-    The patches are called \emph{non-overlapping} if $\I_{(\calP_{\l_i}, \calP_{\l_j}) \to \L} \subset \E_\L(\T_\L)$, i.e.\ their refinements share at most edges, not faces.
-\end{definition}
-
-The interface can also be expressed from either side independently. Specifically,
-\begin{equation}
-    \I_{(\calP_{\l_i \to \L}, \calP_{\l_j})} = \mathcal{A}_{\l_i \to \L}\, \I_{(\calP_{\l_i}, \calP_{\l_j})} \qquad \text{and} \qquad \I_{(\calP_{\l_i}, \calP_{\l_j \to \L})} = \mathcal{A}_{\l_j \to \L}\, \I_{(\calP_{\l_j}, \calP_{\l_i})}
-\end{equation}
-indicate from which level the interface is generated; the two are related by $\mathcal{A}_{\l_i \to \l_j}\, \I_{(\calP_{\l_i}, \calP_{\l_j})} = \I_{(\calP_{\l_j}, \calP_{\l_i})}$.
-
-\begin{definition}[Covering]
-    \label{def:covering}
-    A \emph{covering} of $\T_\L$ is a set of pairwise non-overlapping patches $\calP^n_{\l_i} \subset \T_{\l_i}$, $\l_i = \l, \ldots, \L$, $n \in \{1, \ldots, N_{\l_i}\}$, such that
-    \begin{equation}
-        \T_\L = \bigcup_{\l_i = \l}^\L \;\bigcup_{n = 1}^{N_{\l_i}} \calP^n_{\l_i \to \L}.
-    \end{equation}
-    We write $\C(\T_\L) = \bigcup_{\l_i = \l}^\L \bigcup_{n = 1}^{N_{\l_i}} \calP^n_{\l_i}$ for the covering and use the shorthand
-    \begin{equation}
-        \C_{\l_i} \coloneqq \bigcup_{n}\, \calP^n_{\l_i}, \qquad
-        \C_{< \l_i} \coloneqq \bigcup_{\l_j < \l_i} \C_{\l_j}, \qquad
-        \C_{\leq \l_i} \coloneqq \bigcup_{\l_j \leq \l_i} \C_{\l_j}, \qquad
-        \C_{> \l_i} \coloneqq \bigcup_{\l_j > \l_i} \C_{\l_j}, \qquad
-        \C_{\geq \l_i} \coloneqq \bigcup_{\l_j \geq \l_i} \C_{\l_j}.
-    \end{equation}
-\end{definition}
-}
-
-Now that all patch infrastructure is in place, the next section defines the subdivision partition and the active degrees of freedom.
-
-\subsection{Subdivision partition}
+Two patches $\calP_{\l_i}$ and $\calP_{\l_j}$ are \emph{non-overlapping} if their refinements share at most edges: $\I_{(\calP_{\l_i}, \calP_{\l_j}) \to \L} \coloneqq \calP_{\l_i \to \L} \cap \calP_{\l_j \to \L} \subset \E_\L(\T_\L)$. A \emph{covering} $\C(\T_\L) = \bigcup_{\l_i,n}\calP^n_{\l_i}$ is a set of pairwise non-overlapping patches whose refinements tile $\T_\L$, i.e.\ $\T_\L = \bigcup_{\l_i,n}\calP^n_{\l_i \to \L}$. We write $\C_{\l_i}$ for the level-$\l_i$ patches and $\C_{>\l_i}$, $\C_{\geq\l_i}$, $\C_{<\l_i}$, $\C_{\leq\l_i}$ for the corresponding level subsets.}
 
 \robert{
 \begin{definition}[Subdivision Partition]
     \label{def:subdiv_partition}
-    A covering $\C(\T_\L)$ is a \emph{subdivision partition} if every face $f \in \F_{\l_i}(\calP^n_{\l_i})$ of every patch $\calP^n_{\l_i} \in \C$ has at least one vertex $v$ of the refined patch $\calP^n_{\l_i \to \l_i + 1}$ whose face-neighbours are all interior:
-    \begin{align}
-        \label{eq:interior_refined_vertex_condition}
-        \forall \calP^n_{\l_i} \in \C \quad \forall f \in \F_{\l_i}\!\big(\calP^n_{\l_i}\big) \quad &\exists\, v \in \VFl{\l_i+1}\!\Big(\FFltoL{\l_i}{\l_i+1}\big(f\big)\Big) : \nonumber \\
-        &\mathfrak{V} \coloneqq \VFl{\l_i+1}\!\Big(\FVl{\l_i+1}(v)\Big) \;\subset\; \V_{\l_i+1}\!\big(\calP^n_{\l_i \to \l_i+1}\big) \\
-        &\text{and} \quad \mathfrak{V} \setminus \bigg[\{v\} \;\cup \bigcup_{m}\, \V_{\l_i+1}\!\Big(\I_{(\calP^n_{\l_i \to \l_i+1},\, \calP^m_{\l_i+1})}\Big)\bigg] \neq \varnothing. \nonumber
-    \end{align}
-    Here $\mathfrak{V}$ denotes the set of vertices of all faces adjacent to $v$ at level $\l_i + 1$; the condition requires that $v$ has at least one face-neighbour that is interior to $\calP^n_{\l_i \to \l_i + 1}$ (i.e.\ not on any interface). The subdivision partition has interfaces $\I_{(\calP^n_{\l_i}, \calP^m_{\l_j}) \to \L} = \calP^n_{\l_i \to \L} \cap \calP^m_{\l_j \to \L}$ for $(\l_i, n) \neq (\l_j, m)$.
+    A covering $\C(\T_\L)$ is a \emph{subdivision partition} if every patch satisfies a minimum-size condition: every face of every patch, after one step of refinement, must contain at least one vertex whose entire face-ring lies strictly in the interior of the refined patch (i.e.\ not on any interface with a neighbouring patch). This rules out interior linear dependence of basis functions; see~\cite{Piel.2026} for the precise statement.
 \end{definition}
 }
 
@@ -991,17 +857,7 @@ For future computations, it is helpful to group the active degrees of freedom by
 \noindent Note that the basis functions are increasingly dense for higher levels $\l_i$ because the resolution of the patches $\calP_{\l_i}$ and thus $\D^k_{\l_i}$ scales with roughly $4^{\l_i - \l}$. Two essential properties must be established for the spaces $\hierSDFspace{k}{\C}{\L}$: linear independence of the basis functions and the de Rham complex. The proofs of both properties are given in~\cite{Piel.2026}; the main results are restated below.
 
 \begin{remark}
-    \label{remark:simplification}
-    A typical case of adaptive local refinement comprises the resolution of the region around a singularity of the solution. In that case, it is natural to consider subdivision partitions that satisfy
-    \begin{equation}
-        \label{eq:simplified_setup_assumption}
-        \l_j \neq \l_i \pm 1 \iff \I_{(\calP^n_{\l_i}, \calP^m_{\l_j})} = \varnothing \qquad \forall n = 1,\hdots,N_{\l_i}, \; m = 1,\hdots,N_{\l_i +1},
-    \end{equation}
-    i.e. the only non-trivial interfaces are between adjacent levels $\l_i$ and $\l_i +1$. Under this assumption, the active degrees of freedom in Eq.~\ref{eq:active_k_form_dofs} simplify drastically to
-    \begin{equation}
-        \D^k \big( \C \big) = \bigcup_{\calP^n_{\l_i} \in \C} \Bigg[ \K^k\big(\calP^n_{\l_i}\big) \cup \bigg[ \bigcup_{\calP^m_{\l_i +1} \in \C_{\l_i}} \K^k\V_{\l_i +1} \Big( \V_{\l_i +1} \big( \I_{(\calP^n_{\l_i \to \l_i +1}, \calP^m_{\l_i +1})} \big) \Big) \cap \K^k_{\l_i +1} \big( \calP^n_{\l_i \to \l_i +1} \big) \bigg] \Bigg].
-    \end{equation}
-    This means that we only need to add one layer of simplices of the finer level $\l_i +1$ on the side of $\calP^n_{\l_i +1}$. Note, however, that we still require $\C$ to be a subdivision partition, which imposes a minimal patch size condition ensuring each interior vertex of the fine mesh has an associated active basis function. The numerical examples in Section~5 use subdivision partitions satisfying Eq.~\eqref{eq:simplified_setup_assumption}.
+    The numerical examples in Section~5 use subdivision partitions where only adjacent levels share an interface. In that case, the active DoF formula~\eqref{eq:active_k_form_dofs} simplifies: only a single layer of interface simplices needs to be added at the finer of the two adjacent levels.
 \end{remark}
 
 Finally, we are going to re-state the two main theorems of \cite{Piel.2026} regarding linear independence and the exactness of the complex.
@@ -1044,16 +900,6 @@ The hierarchical subdivision matrix $\Amat{k}{\activeDoFs}{\L}$ is then assemble
 \FloatBarrier
 
 \section{The Adaptive Loop}
-
-\robert{\todo{
-    \begin{itemize}
-        \item SOLVE -> ESTIMATE -> MARK -> REFINE
-        \item solve is standard with Eigen::Minres solver and preconditioner
-        \item estimate: regular Hcurl residual with jump terms
-        \item mark: standard doerfler marking with cluster-awareness and/or lower priority for faces close to L
-        \item refine: padding so that every face has an interior vertex, fix isolated boundary vertices
-    \end{itemize}
-}}
 
 This section describes the adaptive loop used in the numerical experiments. The loop consists of the steps
 \begin{equation}
