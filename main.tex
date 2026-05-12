@@ -271,7 +271,9 @@ Werner Bauer\footnote{University of Surrey, School of Mathematics and Physics, U
 \vspace{-2.0em}
 
 \begin{abstract}
+\robert{We provide the algorithmic and computational complement to the theoretical framework of~\cite{Piel.2026} for hierarchical subdivision $k$-form spaces on triangular meshes. The central observation is that every active basis function is a column of an accumulated subdivision matrix $\Smat{k}{\l}{\L}$; collecting these columns into the hierarchical subdivision matrix $\Amat{k}{\activeDoFs}{\L}$ reduces all downstream operations (exterior derivative, mass and stiffness assembly, residual evaluation) to standard sparse linear algebra on the finest mesh $\T_\L$ without recomputing any integrals. We give explicit algorithms for constructing the active degrees of freedom from a subdivision partition, including a frontier-sweep procedure for the interface basis functions at level boundaries.
 
+For the adaptive solution of PDEs, we describe a \textsc{Solve}--\textsc{Estimate}--\textsc{Mark}--\textsc{Pad}--\textsc{Refine} loop in which the non-standard PAD step enforces the subdivision partition condition after Dörfler marking, and a topological repair step corrects isolated boundary vertices that would otherwise break de Rham exactness. Numerical experiments on the Maxwell eigenvalue problem confirm that exact subdivision partitions reproduce the reference spectrum without spurious modes; adaptive experiments on the mixed vector Laplace equation demonstrate spatially resolving refinement consistent with the hierarchical approximation theory.}
 \end{abstract}
 
 
@@ -279,16 +281,16 @@ Werner Bauer\footnote{University of Surrey, School of Mathematics and Physics, U
 
 \section{Introduction}
 
-\robert{The finite element exterior calculus (FEEC)~\cite{Arnold.FEEC} provides a systematic framework for constructing stable, structure-preserving discretisations of partial differential equations (PDEs) involving differential forms. Its central structure is the discrete de Rham complex: a sequence of finite-dimensional function spaces connected by the exterior derivative $\extd$. Exactness of this complex is the key algebraic property that prevents spurious modes in Maxwell eigenvalue problems, guarantees inf-sup stability in mixed formulations, and underpins the commuting diagram that makes error analysis tractable. Classical realisations of the FEEC use the lowest-order Whitney forms --- the Lagrange ($\mathrm{CG}_1$), Raviart--Thomas ($\mathrm{RT}_0$), and discontinuous ($\mathrm{DG}_0$) spaces --- which are globally conforming but only piecewise polynomial and, at best, $C^0$.
+\robert{The finite element exterior calculus (FEEC)~\cite{Arnold.FEEC} provides a systematic framework for constructing stable, structure-preserving discretisations of partial differential equations (PDEs) involving differential forms. Its central structure is the discrete de Rham complex: a sequence of finite-dimensional function spaces connected by the exterior derivative $\extd$. Exactness of this complex is the key algebraic property that prevents spurious modes in Maxwell eigenvalue problems, guarantees inf-sup stability in mixed formulations, and underpins the commuting diagram that makes error analysis tractable. Classical realisations of the FEEC use the lowest-order Whitney forms (the Lagrange ($\mathrm{CG}_1$), Raviart--Thomas ($\mathrm{RT}_0$), and discontinuous ($\mathrm{DG}_0$) spaces), which are globally conforming but only piecewise polynomial and, at best, $C^0$.
 
 Subdivision algorithms, originally developed for geometric modelling, produce limit functions that are globally smooth on arbitrary triangular meshes. Loop's scheme~\cite{Loop.1987} generates globally $C^1$ scalar limit functions; Wang~\cite{Wang.2006,Wang.2008} extended this construction to differential $k$-forms on all form degrees $k = 0, 1, 2$, yielding subdivision $k$-form spaces that are smooth, globally supported, and form a discrete de Rham complex. These spaces are thus smooth analogues of the Whitney spaces in the FEEC. The companion paper~\cite{Piel.2026} establishes their theoretical foundations: compatibility conditions on the subdivision matrices, approximation estimates, and proofs of linear independence and de Rham complex exactness for the hierarchical construction developed here.
 
 Uniform subdivision spaces assign the same resolution everywhere: every basis function has a support whose size is determined by the coarse mesh $\T_\lzero$. This is adequate for globally smooth solutions but wasteful when the PDE solution is rough only in a small part of the domain. In isogeometric analysis, the analogous limitation of globally refined B-spline spaces has been addressed through hierarchical and truncated hierarchical B-spline spaces~\cite{Evans.2020}, which mix basis functions from different refinement levels to obtain spatially varying resolution while retaining linear independence. Extending this idea to spaces of differential forms is non-trivial: activating basis functions at different levels can break the exactness of the de Rham complex unless the selection is governed by a compatible combinatorial rule.
 The analogous construction for B-spline de Rham complexes has been studied in~\cite{Buffa2011,Evans.2020,Shepherd.2024,Dijkstra.2025}, where admissibility conditions on the hierarchical mesh ensure exactness of the complex.
 A central mechanism in these works is a \emph{completion step} that, after marking basis functions for refinement, enforces a compatibility condition on the active set: in~\cite{Cabanas.2026} this takes the form of \emph{$L$-chain completion}, which forces all basis functions in a connecting $L$-chain to be refined simultaneously whenever a conflicting pair is detected.
-\checkit{The subdivision PAD step described in Section~4 serves an analogous role---it restores the subdivision partition condition after marking---but the precise correspondence between $L$-chain completion and the partition condition, and whether one implies the other, remains to be investigated.}
+\checkit{The subdivision PAD step described in Section~4 serves an analogous role (restoring the subdivision partition condition after marking), but the precise correspondence between $L$-chain completion and the partition condition, and whether one implies the other, remains to be investigated.}
 
-This paper provides the matrix-level description and algorithms for hierarchical subdivision $k$-form spaces that preserve the de Rham complex, serving as the practical and computational complement to~\cite{Piel.2026}. The key computational objects are the subdivision matrices $\Amat{k}{\l}{\L}$, which represent level-$\l$ basis functions in the Whitney basis of the fine assembly mesh $\T_\L$. A hierarchical space is formed by selecting columns of these matrices --- one per active basis function --- according to a \emph{subdivision partition} of $\T_\L$, a combinatorial condition on the patch decomposition of the domain. This condition, characterised in~\cite{Piel.2026}, simultaneously guarantees linear independence and exactness of the complex. Once the hierarchical subdivision matrix $\Amat{k}{\activeDoFs}{\L}$ is assembled, all downstream operations --- exterior derivative, mass and stiffness matrices, residual evaluation --- reduce to standard sparse linear algebra on $\T_\L$ without recomputing any integrals.
+This paper provides the matrix-level description and algorithms for hierarchical subdivision $k$-form spaces that preserve the de Rham complex, serving as the practical and computational complement to~\cite{Piel.2026}. The key computational objects are the subdivision matrices $\Amat{k}{\l}{\L}$, which represent level-$\l$ basis functions in the Whitney basis of the fine assembly mesh $\T_\L$. A hierarchical space is formed by selecting one column of these matrices per active basis function, according to a \emph{subdivision partition} of $\T_\L$, a combinatorial condition on the patch decomposition of the domain. This condition, characterised in~\cite{Piel.2026}, simultaneously guarantees linear independence and exactness of the complex. Once the hierarchical subdivision matrix $\Amat{k}{\activeDoFs}{\L}$ is assembled, all downstream operations (exterior derivative, mass and stiffness matrices, residual evaluation) reduce to standard sparse linear algebra on $\T_\L$ without recomputing any integrals.
 
 \paragraph*{Contributions.} This paper makes the following contributions:
 \begin{itemize}
@@ -711,51 +713,51 @@ The interface DoFs are attributed exclusively to the \emph{finer} side of the pa
 %  COLUMN X POSITIONS
 % ============================================================
 \def\xA{0cm}
-\def\xB{5cm}
-\def\xC{10cm}
+\def\xB{3.9cm}
+\def\xC{7.8cm}
 
 % ============================================================
 %  ROW Y POSITIONS
 % ============================================================
 \def\yOne{0cm}
-\def\yTwo{-3cm}
-\def\yThree{-6cm}
+\def\yTwo{-2.4cm}
+\def\yThree{-4.8cm}
 
 % ============================================================
 %  ROW 1
 % ============================================================
 \node (A1) at (\xA, \yOne)
-    {\includegraphics[width=0.3\textwidth]{images/dofmeshes/correct/dofs_k_0_lvl_l0.pdf}};
+    {\includegraphics[width=0.22\textwidth]{images/dofmeshes/correct/dofs_k_0_lvl_l0.pdf}};
 
 \node (B1) at (\xB, \yOne)
-    {\includegraphics[width=0.3\textwidth, trim=10pt 0pt 10pt 0pt, clip]{images/dofmeshes/correct/dofs_k_1_lvl_l0.pdf}};
+    {\includegraphics[width=0.22\textwidth, trim=10pt 0pt 10pt 0pt, clip]{images/dofmeshes/correct/dofs_k_1_lvl_l0.pdf}};
 
 \node (C1) at (\xC, \yOne)
-    {\includegraphics[width=0.3\textwidth]{images/dofmeshes/correct/dofs_k_2_lvl_l0.pdf}};
+    {\includegraphics[width=0.22\textwidth]{images/dofmeshes/correct/dofs_k_2_lvl_l0.pdf}};
 
 % ============================================================
 %  ROW 2
 % ============================================================
 \node (A2) at (\xA, \yTwo)
-    {\includegraphics[width=0.3\textwidth]{images/dofmeshes/correct/dofs_k_0_lvl_l1.pdf}};
+    {\includegraphics[width=0.22\textwidth]{images/dofmeshes/correct/dofs_k_0_lvl_l1.pdf}};
 
 \node (B2) at (\xB, \yTwo)
-    {\includegraphics[width=0.3\textwidth, trim=10pt 0pt 10pt 0pt, clip]{images/dofmeshes/correct/dofs_k_1_lvl_l1.pdf}};
+    {\includegraphics[width=0.22\textwidth, trim=10pt 0pt 10pt 0pt, clip]{images/dofmeshes/correct/dofs_k_1_lvl_l1.pdf}};
 
 \node (C2) at (\xC, \yTwo)
-    {\includegraphics[width=0.3\textwidth]{images/dofmeshes/correct/dofs_k_2_lvl_l1.pdf}};
+    {\includegraphics[width=0.22\textwidth]{images/dofmeshes/correct/dofs_k_2_lvl_l1.pdf}};
 
 % ============================================================
 %  ROW 3
 % ============================================================
 \node (A3) at (\xA, \yThree)
-    {\includegraphics[width=0.3\textwidth]{images/dofmeshes/correct/dofs_k_0_lvl_l2.pdf}};
+    {\includegraphics[width=0.22\textwidth]{images/dofmeshes/correct/dofs_k_0_lvl_l2.pdf}};
 
 \node (B3) at (\xB, \yThree)
-    {\includegraphics[width=0.3\textwidth, trim=10pt 0pt 10pt 0pt, clip]{images/dofmeshes/correct/dofs_k_1_lvl_l2.pdf}};
+    {\includegraphics[width=0.22\textwidth, trim=10pt 0pt 10pt 0pt, clip]{images/dofmeshes/correct/dofs_k_1_lvl_l2.pdf}};
 
 \node (C3) at (\xC, \yThree)
-    {\includegraphics[width=0.3\textwidth]{images/dofmeshes/correct/dofs_k_2_lvl_l2.pdf}};
+    {\includegraphics[width=0.22\textwidth]{images/dofmeshes/correct/dofs_k_2_lvl_l2.pdf}};
 
 % ============================================================
 %  COLUMN LABELS (above row 1)
@@ -784,8 +786,8 @@ The interface DoFs are attributed exclusively to the \emph{finer} side of the pa
 % ============================================================
 %  GRAPHIC ABOVE THE OVERBRACE
 % ============================================================
-\node (topfig) at (5cm, 4.7cm)
-    {\includegraphics[width=0.4\textwidth]{images/dofmeshes/correct/subdiv_partition.pdf}};
+\node (topfig) at (3.9cm, 4.0cm)
+    {\includegraphics[width=0.3\textwidth]{images/dofmeshes/correct/subdiv_partition.pdf}};
 
 \node[above=6pt of topfig, font=\bfseries] {Subdivision partition};
 
@@ -887,15 +889,128 @@ Finally, we are going to re-state the two main theorems of \cite{Piel.2026} rega
 \end{theorem}
 
 \begin{proof}
-    See Theorem \robert{NUM} in \cite{Piel.2026}.
+    See \cite{Piel.2026}.
 \end{proof}
 
 
 \subsection{Implementation}
 
-\robert{Given a subdivision partition $\C$, the active DoFs $\D^k(\C)$ are assembled by iterating over all patches $\calP^n_{\l_i} \in \C$: first, all interior $k$-simplices of $\calP^n_{\l_i}$ are added; then, for each pair of patches $(\calP^n_{\l_i}, \calP^m_{\l_j})$ with $\l_j > \l_i$ that share a boundary, the interface $k$-simplices on the coarser side are added at every intermediate level $\l_t \in (\l_i, \l_j]$, directly implementing Definition~\ref{def:active_k_form_dofs}.
+\robert{The implementation of the active subdivision space proceeds in two stages.
+Given a subdivision partition $P$, we first enumerate the active degrees of
+freedom $\D^k[\l]$ for each form degree $k \in \{0,1,2\}$ and level $\l$
+using Algorithm~\ref{alg:buildactivedofs}. We then assemble, for each form
+degree $k$, the sparse matrix $\Amat{k}{\activeDoFs}{\L}$ whose columns are
+the level-$\L$ coefficient expansions of the active basis functions
+(Algorithm~\ref{alg:buildsubdivmatrix}). Galerkin projection of all
+bilinear forms to the active space then reduces to standard sparse
+matrix--matrix products, without any re-assembly of integrals.
 
-The hierarchical subdivision matrix $\Amat{k}{\activeDoFs}{\L}$ is then assembled as described in Section~3.1: for each $\simplex{k}{\lone}{\coarseIdxone} \in \D^k_{\lone}$, the corresponding column of $\Amat{k}{\lone}{\L}$ is extracted and appended. All operations on hierarchical forms — applying the discrete exterior derivative $\Dmat{k}{\L}\Amat{k}{\activeDoFs}{\L}$, assembling the mass matrix $(\Amat{k}{\activeDoFs}{\L})^\top M_\L \Amat{k}{\activeDoFs}{\L}$, or evaluating residuals — reduce to standard sparse linear algebra on the fine level $\T_\L$ without recomputing any integrals.}
+The active DoFs split into two contributions at each level $\l$.
+\emph{Native} DoFs are the $k$-simplices of every active face $f \in
+P[\l]$. \emph{Interface} DoFs are additional basis functions at the
+boundary between a level-$\l$ active region and a refined region on level
+$\l + 1$: these correspond to subdivision basis functions whose support
+straddles the level boundary and are not captured by the native-DoF
+construction alone. They are produced by a frontier sweep
+(steps~(a)--(d) of Algorithm~\ref{alg:buildactivedofs}) that maintains the
+set of interior edges separating resolved (coarse-side) faces from
+unresolved (finer) regions. Each level the frontier is split into child
+edges and interface vertices; the vertices emit the DoFs they introduce on
+the following level. The ordering of operations within each level is fixed:
+old frontier edges are consumed first, new ones are spawned, DoFs are
+emitted from the previous level's vertices, and finally the frontier is
+split for the next level.}
+
+\robert{\begin{algorithm}[H]
+\caption{$\textsc{BuildActiveDoFs}(P)$: active degrees of freedom from a subdivision partition}
+\label{alg:buildactivedofs}
+\tcp{1.\ Native DoFs}
+$\D^0[\l] \leftarrow \emptyset$,\; $\D^1[\l] \leftarrow \emptyset$ for all $\l$;\quad $\D^2 \leftarrow P$\;
+\For{$\l = 0, \ldots, \L$}{
+    \For{each $f \in P[\l]$}{
+        $\D^0[\l] \leftarrow \D^0[\l] \cup \mathrm{verts}(f)$;\quad $\D^1[\l] \leftarrow \D^1[\l] \cup \mathrm{edges}(f)$\;
+    }
+}
+\tcp{2.\ Interface DoFs (frontier sweep)}
+$\mathrm{frontier} \leftarrow \emptyset$;\quad $\mathrm{pendingVerts} \leftarrow \emptyset$\;
+\For{$\l = 0, \ldots, \L$}{
+    \tcp{(a) consume frontier edges whose fine side is now resolved at level $\l$}
+    $\mathrm{frontier} \leftarrow \{ e \in \mathrm{frontier} : \text{fine-side faces of } e \notin P[\l] \}$\;
+    \tcp{(b) spawn new frontier edges: interior edges of $\mathcal{F}_\l$ with exactly one adjacent face in $P[\l]$}
+    $\mathrm{frontier} \leftarrow \mathrm{frontier} \cup \textsc{FindInterfaceEdges}(\l, \D)$\;
+    \tcp{(c) emit DoFs from interface vertices spawned at level $\l - 1$}
+    \For{each $v \in \mathrm{pendingVerts}$}{
+        $\D^0[\l] \leftarrow \D^0[\l] \cup \{v\}$;\quad
+        $\D^1[\l] \leftarrow \D^1[\l] \cup \mathrm{activeEdges}(v)$;\quad
+        $\D^2[\l] \leftarrow \D^2[\l] \cup \mathrm{activeFaces}(v)$\;
+    }
+    $\mathrm{pendingVerts} \leftarrow \emptyset$\;
+    \tcp{(d) split frontier edges into child edges and interface vertices for level $\l + 1$}
+    \If{$\l < \L$}{
+        $\mathrm{newFrontier} \leftarrow \emptyset$;\quad $\mathrm{newVerts} \leftarrow \emptyset$\;
+        \For{each $e \in \mathrm{frontier}$}{
+            $(e_1, e_2, v_{\mathrm{mid}}) \leftarrow \textsc{SplitEdge}(e)$ at level $\l + 1$\;
+            $\mathrm{newFrontier} \leftarrow \mathrm{newFrontier} \cup \{e_1, e_2\}$;\quad
+            $\mathrm{newVerts} \leftarrow \mathrm{newVerts} \cup \{v_{\mathrm{mid}}\}$\;
+        }
+        \For{each endpoint $v$ of edges in $\mathrm{frontier}$, taken once per $v$}{
+            \lIf{$v$ borders a refined region}{$\mathrm{newVerts} \leftarrow \mathrm{newVerts} \cup \{v\}$}
+        }
+        $\mathrm{frontier} \leftarrow \mathrm{newFrontier}$;\quad
+        $\mathrm{pendingVerts} \leftarrow \mathrm{newVerts}$\;
+    }
+}
+\Return $\D$\;
+\end{algorithm}}
+
+\robert{\todo{Flag: The interface DoFs emitted in step~(c) include 2-form (face) contributions from the fine side of the level boundary. Native 2-form DoFs on the coarser side are already added in step~1; the interface emission adds child faces of the coarser active fan that meet the interface. Please confirm this is consistent with Definition~\ref{def:active_k_form_dofs} and the intended interpretation in the paper.}}
+
+\robert{Once the active DoFs $\D$ are known, the active subdivision matrix
+$\Amat{k}{\activeDoFs}{\L}$ is assembled column by column. Let
+$\Smat{k}{\l}{\L}$ denote the accumulated subdivision matrix for $k$-forms
+from level $\l$ to level $\L$, i.e.\ the product of per-level operators
+$\Smat{k}{\l}{\l+1}, \ldots, \Smat{k}{\L-1}{\L}$. For an active simplex
+$s \in \D^k[\l]$, the level-$\L$ expansion of the corresponding basis
+function is column $s$ of $\Smat{k}{\l}{\L}$. The columns of
+$\Amat{k}{\activeDoFs}{\L}$ are ordered level by level (all level-$0$
+active DoFs first, then level $1$, etc.); this ordering is exploited by the
+preconditioner described in Section~\ref{sec:preconditioner}.}
+
+\robert{\begin{algorithm}[H]
+\caption{$\textsc{BuildSubdivMatrix}(\D, k)$: active subdivision matrix}
+\label{alg:buildsubdivmatrix}
+\KwIn{active DoFs $\D$, form degree $k \in \{0,1\}$}
+\KwOut{matrix $\Amat{k}{\activeDoFs}{\L} \in \mathbb{R}^{K_\L \times K_\D}$, where $K_\L = |\mathcal{K}^k_\L|$ and $K_\D = \sum_\l |\D^k[\l]|$}
+$\Amat{k}{\activeDoFs}{\L} \leftarrow (K_\L \times K_\D)$ sparse zero matrix;\quad $\mathrm{col} \leftarrow 0$\;
+\For{$\l = 0, \ldots, \L$}{
+    $\mathbf{S} \leftarrow \Smat{k}{\l}{\L}$ \tcp{accumulated subdivision matrix from level $\l$ to $\L$}
+    \For{each simplex $s \in \D^k[\l]$}{
+        $\Amat{k}{\activeDoFs}{\L}[\,:\,,\mathrm{col}] \leftarrow \mathbf{S}[\,:\,,s]$;\quad $\mathrm{col} \leftarrow \mathrm{col} + 1$\;
+    }
+}
+\Return $\Amat{k}{\activeDoFs}{\L}$\;
+\end{algorithm}}
+
+\robert{Given $\Amat{0}{\activeDoFs}{\L}$ and $\Amat{1}{\activeDoFs}{\L}$, the
+active-space bilinear forms are obtained by Galerkin restriction of the
+embedding-level operators, assembled once before the adaptive loop:
+\begin{equation}
+    \mathbf{M}_0 = (\Amat{0}{\activeDoFs}{\L})^\top \mathbf{M}\, \Amat{0}{\activeDoFs}{\L},
+    \quad
+    \mathbf{C}_0 = (\Amat{1}{\activeDoFs}{\L})^\top \mathbf{C}\, \Amat{1}{\activeDoFs}{\L},
+    \quad
+    \mathbf{B}_0 = (\Amat{0}{\activeDoFs}{\L})^\top \mathbf{B}\, \Amat{1}{\activeDoFs}{\L},
+\end{equation}
+where $\mathbf{M}$, $\mathbf{C}$, $\mathbf{B}$ are the mass, curl--curl,
+and gradient-coupling matrices on $\T_\L$. The resulting block system is
+\begin{equation}
+    K =
+    \begin{pmatrix}
+        -\mathbf{M}_0 & \mathbf{B}_0 \\
+        \mathbf{B}_0^\top & \mathbf{C}_0
+    \end{pmatrix},
+\end{equation}
+which is symmetric indefinite.}
 
 \FloatBarrier
 
@@ -907,6 +1022,23 @@ This section describes the adaptive loop used in the numerical experiments. The 
     \mathrm{SOLVE} \arrow[r] & \mathrm{ESTIMATE} \arrow[r] & \mathrm{MARK} \arrow[r] & \mathrm{PAD} \arrow[r] & \mathrm{REFINE} \arrow[llll, rounded corners=0pt, to path={(\tikztostart.south) -- ([yshift=-1.em]\tikztostart.south) -- ([yshift=-1.em]\tikztotarget.south) -- (\tikztotarget.south)}]
 \end{tikzcd}
 \end{equation}
+
+\robert{Algorithm~\ref{alg:adaptive_loop} gives the complete outer loop in pseudocode. Note that $\textsc{FixIsolatedBoundaryVertices}$ is called after $\textsc{DoerflerMarking}$ (which internally calls $\textsc{PadMarkedFaces}$); together they constitute the PAD step of the diagram.}
+
+\robert{\begin{algorithm}[H]
+\caption{Adaptive loop}
+\label{alg:adaptive_loop}
+\KwIn{initial partition $P$, maximum steps $S$, Dörfler parameter $\theta$}
+\For{$\mathrm{step} = 0, \ldots, S - 1$}{
+    $\D \leftarrow \textsc{BuildActiveDoFs}(P)$ \tcp{Alg.~\ref{alg:buildactivedofs}}
+    $(\Amat{0}{\activeDoFs}{\L}, \Amat{1}{\activeDoFs}{\L}) \leftarrow \textsc{BuildSubdivMatrices}(\D)$ \tcp{Alg.~\ref{alg:buildsubdivmatrix}}
+    $(\mathbf{M}_0, \mathbf{C}_0, \mathbf{B}_0) \leftarrow \bigl((\Amat{0}{\activeDoFs}{\L})^\top \mathbf{M} \Amat{0}{\activeDoFs}{\L},\; (\Amat{1}{\activeDoFs}{\L})^\top \mathbf{C} \Amat{1}{\activeDoFs}{\L},\; (\Amat{0}{\activeDoFs}{\L})^\top \mathbf{B} \Amat{1}{\activeDoFs}{\L}\bigr)$\;
+    $(\sigma_h, u_h) \leftarrow \mathrm{MINRES}$ solve of $K(\sigma, u) = (0,\; (\Amat{1}{\activeDoFs}{\L})^\top f)$ with preconditioner $\mathbf{P}$ \tcp{Section~\ref{sec:preconditioner}}
+    $\eta \leftarrow \textsc{AggregateEstimators}(\{\eta^2_T\}_{T \in \T_\L},\, P)$ \tcp{Alg.~\ref{alg:aggregate}}
+    $P \leftarrow \textsc{DoerflerMarking}(P, \eta, \theta)$ \tcp{Alg.~\ref{alg:doerfler}}
+    $P \leftarrow \textsc{FixIsolatedBoundaryVertices}(P)$ \tcp{Alg.~\ref{alg:fix_boundary}}
+}
+\end{algorithm}}
 
 \paragraph{SOLVE.}
 We solve the discrete system on the hierarchical space $\hierSDFspace{k}{\C}{\L}$ using a standard iterative solver.
@@ -926,21 +1058,130 @@ For the mixed vector Laplace problem with $(\sigma_h, u_h) \in \hierSDFspace{0}{
 The first sum contains the elementwise residuals of both equations, and the second sum contains the curl jump across interior edges $e$ of the fine mesh $\T_\L$.
 \end{example}
 
+\robert{The element indicators $\eta^2_T$ are evaluated on every triangle $T$ of the embedding mesh $\T_\L$ and then aggregated onto the active partition by walking each fine face up the quad-tree to its ancestor in $P$. The resulting per-patch value $\eta_{\l,a}$ is the square root of the summed fine-mesh indicators over all level-$\L$ descendants of $\face{\l}{a}$.}
+
+\robert{\begin{algorithm}[H]
+\caption{$\textsc{AggregateEstimators}(\{\eta^2_T\}_{T \in \T_\L}, P)$: aggregate fine-mesh indicators onto the active partition}
+\label{alg:aggregate}
+\KwIn{per-element indicators $\eta^2_T$ for all $T \in \T_\L$, partition $P$}
+\KwOut{per-patch estimators $\eta[\l][f]$ for $f \in P[\l]$}
+$\zeta[\l][f] \leftarrow 0$ for all $\l$, $f \in P[\l]$\;
+\For{each $T \in \T_\L$}{
+    $g \leftarrow T$\;
+    \For{$\l = \L, \L-1, \ldots, 0$}{
+        \If{$g \in P[\l]$}{
+            $\zeta[\l][g] \leftarrow \zeta[\l][g] + \eta^2_T$;\quad \textbf{break}\;
+        }
+        $g \leftarrow \lfloor g/4 \rfloor$ \tcp{parent face (SEC convention: children of $f$ are $\{4f, \ldots, 4f+3\}$)}
+    }
+}
+\Return $\eta[\l][f] = \sqrt{\zeta[\l][f]}$ for all active $(\l, f)$\;
+\end{algorithm}}
+
 \paragraph{MARK.}
-We apply standard Doerfler marking to the indicators $\eta_{\l,a}$, selecting the smallest set of faces whose indicators sum to a fixed fraction of the total. Faces on level $\L$ are not eligible for marking.
+We apply standard Doerfler marking to the indicators $\eta_{\l,a}$, selecting the smallest set of faces whose indicators sum to a fixed fraction of the total. Faces on level $\L$ are not eligible for marking\robert{: they contribute to the reported global error but cannot be refined further within the present hierarchy, so they are excluded from the threshold total. This means the effective fraction of refineable error selected is at least $\theta$.}
+
+\robert{\begin{algorithm}[H]
+\caption{$\textsc{DoerflerMarking}(P, \eta, \theta)$: Dörfler marking on a subdivision partition}
+\label{alg:doerfler}
+\KwIn{partition $P$, estimators $\eta[\l][f]$, parameter $\theta \in (0,1]$}
+\KwOut{refined partition $P_{\mathrm{new}}$}
+$\mathrm{total} \leftarrow \sum_{\l < \L,\; f \in P[\l]} \eta[\l][f]^2$ \tcp{level-$\L$ faces excluded}
+\lIf{$\mathrm{total} = 0$}{\Return $P$}
+Sort all $(\l, f)$ with $f \in P[\l]$, $\l < \L$, by descending $\eta[\l][f]^2$\;
+$\mathrm{accum} \leftarrow 0$;\quad $\mathrm{marked}[\l] \leftarrow \emptyset$ for all $\l$\;
+\For{each $(\l, f)$ in sorted order while $\mathrm{accum} < \theta \cdot \mathrm{total}$}{
+    $\mathrm{marked}[\l] \leftarrow \mathrm{marked}[\l] \cup \{f\}$;\quad $\mathrm{accum} \leftarrow \mathrm{accum} + \eta[\l][f]^2$\;
+}
+$\textsc{PadMarkedFaces}(\mathrm{marked}, P)$ \tcp{Alg.~\ref{alg:padding}}
+$P_{\mathrm{new}} \leftarrow P$\;
+\For{each level $\l$ and each $f \in \mathrm{marked}[\l]$}{
+    Remove $f$ from $P_{\mathrm{new}}[\l]$; insert $\{4f, 4f+1, 4f+2, 4f+3\}$ into $P_{\mathrm{new}}[\l+1]$\;
+}
+\Return $P_{\mathrm{new}}$\;
+\end{algorithm}}
 
 \paragraph{PAD.}
-The padding step is non-standard and specific to our setting. After marking, the selected faces may form a covering that is no longer a valid subdivision partition in the sense of Definition~\ref{def:active_k_form_dofs}. To restore admissibility before refinement, we enlarge the marked set by adding neighbouring faces until the following two conditions are satisfied:
-\robert{\todo{
-    \begin{itemize}
-        \item all marked faces contain at least one interior vertex, and
-        \item no boundary vertex touches only one refined face.
-    \end{itemize}
-}}
-This ensures that after refinement the updated subdivision partition remains in the admissible class and the exactness of the de Rham complex is preserved.
+\robert{The padding step is non-standard and specific to our setting. After marking, the selected faces may form a covering that violates the subdivision-partition admissibility condition of Definition~\ref{def:active_k_form_dofs}. Algorithm~\ref{alg:padding} iteratively enlarges the marked set until every face in every level-$\l$ patch has at least one \emph{interior vertex} — a vertex all of whose adjacent faces lie in the patch (condition~(I) of Definition~\ref{def:active_k_form_dofs}). For an offending face $f$, we choose the vertex $v$ with the fewest missing fan faces and mark the currently-active ancestors of those missing faces (walking up the quad-tree via $g \leftarrow \lfloor g/4 \rfloor$).}
+
+\robert{\begin{algorithm}[H]
+\caption{$\textsc{PadMarkedFaces}(\mathrm{marked}, P)$: admissibility padding}
+\label{alg:padding}
+\KwIn{marked faces $\mathrm{marked}[\l]$ per level (in/out), partition $P$}
+\Repeat{$\mathrm{newMarks} = \emptyset$}{
+    Build tentative partition $\mathrm{tent}$ by applying $\mathrm{marked}$ to $P$\;
+    $\mathrm{newMarks}[\l] \leftarrow \emptyset$ for all $\l$\;
+    \For{$\l = 0, \ldots, \L$ with $\mathrm{tent}[\l] \neq \emptyset$}{
+        $I_v \leftarrow \{ v : \forall\, g \in \mathrm{vert\_faces}(v),\; g \in \mathrm{tent}[\l] \}$ \tcp{interior vertices of $\mathrm{tent}[\l]$}
+        \For{each $f \in \mathrm{tent}[\l]$ with no vertex in $I_v$}{
+            $v \leftarrow \arg\min_{v' \in \mathrm{verts}(f)} \#\{ g \in \mathrm{vert\_faces}(v') : g \notin \mathrm{tent}[\l] \}$\;
+            \For{each $g \in \mathrm{vert\_faces}(v)$ with $g \notin \mathrm{tent}[\l]$}{
+                Walk $g \leftarrow \lfloor g/4 \rfloor$ until $g \in P$; add $g$ to $\mathrm{newMarks}$\;
+            }
+        }
+    }
+    $\mathrm{marked} \leftarrow \mathrm{marked} \cup \mathrm{newMarks}$\;
+}
+\end{algorithm}}
+
+\robert{\todo{Flag: Algorithm~\ref{alg:padding} enforces only condition~(I) of Definition~\ref{def:active_k_form_dofs} (interior-vertex requirement). Condition~(II) (no isolated boundary vertex) is handled separately by Algorithm~\ref{alg:fix_boundary} rather than here. If Definition~\ref{def:active_k_form_dofs} states both conditions, please confirm the current split is correctly described.}}
+\robert{This ensures that after refinement the updated subdivision partition satisfies condition~(I) and the active basis is locally complete.
+
+A second, topological repair step is needed at domain-boundary vertices and has no analogue in standard AFEM. After padding, a boundary vertex $v$ may be \emph{isolated}: both faces incident to $v$ along $\partial\Omega$ remain coarse while some interior fan face has been refined. This creates a curl-free 1-form supported near the boundary that is not the gradient of any active 0-form, breaking exactness of the discrete de~Rham sequence $0 \to \hierSDFspace{0}{\C}{\L} \xrightarrow{\nabla} \hierSDFspace{1}{\C}{\L} \xrightarrow{\mathrm{curl}} \hierSDFspace{2}{\C}{\L} \to 0$ at the 1-form level. Algorithm~\ref{alg:fix_boundary} repairs this by walking the fan of faces around $v$ between its two boundary-incident faces $bF_1, bF_2$ and refining the shorter side, so the refined region reaches the domain boundary on at least one side.}
+
+\robert{\begin{algorithm}[H]
+\caption{$\textsc{FixIsolatedBoundaryVertices}(P)$: restore de~Rham exactness at boundary vertices}
+\label{alg:fix_boundary}
+\For{$\l = 0, \ldots, \L - 1$}{
+    \For{each $f \in P[\l]$}{
+        \For{each boundary vertex $v$ of $f$}{
+            $(bF_1, bF_2) \leftarrow$ the two faces incident to $v$ on $\partial\Omega$\;
+            \lIf{$bF_1 \notin P[\l]$ or $bF_2 \notin P[\l]$}{\textbf{continue} \tcp*[f]{already fixed}}
+            \lIf{every $g \in \mathrm{vert\_faces}(v)$ lies in $P[\l]$}{\textbf{continue} \tcp*[f]{not isolated}}
+            $\mathrm{fan} \leftarrow \textsc{TraverseFan}(v, bF_1, bF_2)$ \tcp{ordered faces from $bF_1$ to $bF_2$}
+            $d_L \leftarrow$ index of first refined face from $bF_1$ end\;
+            $d_R \leftarrow$ index of first refined face from $bF_2$ end\;
+            \eIf{$d_L \leq d_R$}{
+                Refine $\mathrm{fan}[0], \ldots, \mathrm{fan}[d_L - 1]$ in $P$\;
+            }{
+                Refine $\mathrm{fan}[|\mathrm{fan}| - d_R], \ldots, \mathrm{fan}[|\mathrm{fan}| - 1]$ in $P$\;
+            }
+        }
+    }
+}
+\end{algorithm}}
+
+\robert{\todo{Flag: The motivation (broken de~Rham exactness at isolated boundary vertices) follows the comment in the source code. The analytical claim — that this geometric fix is necessary and sufficient to restore exactness — has not been separately verified. Please confirm the framing before publication.}}
 
 \paragraph{REFINE.}
 Each marked and padded face is refined by one level via quadrisection.
+
+\robert{\subsection{Preconditioner}
+\label{sec:preconditioner}
+
+The block system $K$ is symmetric indefinite and is solved with MINRES.
+We use a block-diagonal SPD preconditioner
+\begin{equation}
+    \mathbf{P} =
+    \begin{pmatrix}
+        \mathbf{M}_0 & 0 \\
+        0 & \mathbf{S}
+    \end{pmatrix},
+\end{equation}
+where $\mathbf{S}$ approximates the Schur complement of the $(1,1)$ block
+by replacing $\mathbf{M}_0^{-1}$ with a row-sum lumped inverse:
+\begin{equation}
+    \mathbf{S} = \mathbf{C}_0 + \mathbf{B}_0^\top\, \mathrm{diag}(\mathbf{M}_0 \mathbf{1})^{-1}\, \mathbf{B}_0,
+\end{equation}
+where $\mathbf{1}$ is the all-ones vector of length $\dim \D^0$. Row-sum
+lumping is preferred over bare diagonal lumping because, for piecewise-linear
+elements on triangles, the row sums of the mass matrix bound $\mathbf{M}_0$
+from above with a mesh-independent constant, giving a more stable Schur
+approximation on the irregular meshes produced by adaptive refinement. Both
+blocks of $\mathbf{P}$ are factorised once per adaptive step by sparse
+Cholesky (LDLT) and the factorisation is discarded afterwards, since the
+active spaces are non-nested between steps. The cost per MINRES iteration is
+one triangular back-solve per block.}
 
 \FloatBarrier
 
@@ -1092,7 +1333,7 @@ and $\alpha = 100$ and $R = 0.3$. The vector part $\Vec{b}(x)$ provides a backgr
     \end{subfigure}\hfill
     \begin{subfigure}[b]{0.3\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{images/vector_laplacian/MultiscaleGaussian/fig_marking.pdf}
+        \includegraphics[width=\textwidth]{images/vector_laplacian/MultiscaleGaussian/fig_estimator_levels_L4.pdf}
         \caption{}
     \end{subfigure}
     \caption{Multiscale Gaussian test case.}
@@ -1100,6 +1341,15 @@ and $\alpha = 100$ and $R = 0.3$. The vector part $\Vec{b}(x)$ provides a backgr
 \end{figure}
 
 \section{Conclusion}
+
+\robert{We have presented a complete matrix-level framework for hierarchical subdivision $k$-form spaces and their use in an adaptive loop for structure-preserving PDE discretisations. The central observation is that any active subdivision basis function is a column of an accumulated subdivision matrix $\Smat{k}{\l}{\L}$; selecting columns according to a subdivision partition produces a hierarchical space $\hierSDFspace{k}{\C}{\L}$ whose linear independence and de Rham exactness are guaranteed by the partition condition proved in the companion paper~\cite{Piel.2026}. Once the hierarchical subdivision matrix $\Amat{k}{\activeDoFs}{\L}$ is assembled, all bilinear forms are obtained by Galerkin restriction of the embedding-level operators without recomputing any integrals, and the active-space linear system reduces to standard sparse linear algebra on the finest mesh $\T_\L$.
+
+The adaptive loop adds two subdivision-specific steps to the standard \textsc{Solve}--\textsc{Estimate}--\textsc{Mark}--\textsc{Refine} cycle. The padding step (Algorithm~\ref{alg:padding}) enlarges the marked set to satisfy the interior-vertex condition of the subdivision partition, and the boundary-vertex repair (Algorithm~\ref{alg:fix_boundary}) corrects an isolated topological defect that would otherwise break de Rham exactness by introducing a curl-free 1-form near the boundary that is not the gradient of any active 0-form. Both steps are local and inexpensive relative to the linear solve.
+
+The numerical experiments confirm the two key structural properties of the framework. For the Maxwell eigenvalue problem, exact subdivision partitions reproduce the reference FEEC spectrum without spurious modes; inexact ones introduce them. This serves as a direct diagnostic for the correctness of the active-DoF construction and the de Rham complex structure. For the mixed vector Laplace equation, the adaptive loop concentrates refinement at the location of steep gradients and achieves convergence behaviour consistent with the hierarchical approximation theory.
+
+Several directions remain open. The precise correspondence between the subdivision PAD step and the $L$-chain completion used in hierarchical B-spline AFEM~\cite{Cabanas.2026} has not been established; clarifying this connection would relate the two frameworks and potentially enable convergence proofs to be transferred. The analytical justification of the boundary-vertex repair step (specifically, that the geometric fix of Algorithm~\ref{alg:fix_boundary} is both necessary and sufficient to restore de Rham exactness) also remains to be proved. On the solver side, the block-diagonal LDLT preconditioner used here is effective for the problem sizes considered, but a multigrid preconditioner that respects the globally supported subdivision basis would reduce the per-step cost for larger problems; this requires a prolongation operator compatible with $\Amat{k}{\activeDoFs}{\L}$ and is left for future work. Finally, a promising direction is to adopt the overlapping patch framework of Bressan~\cite{Bressan.2024} in place of the non-overlapping subdivision partition used here. Overlapping patches can provide a richer set of admissible active-DoF configurations and may admit a more flexible PAD step, at the cost of requiring a partition-of-unity treatment to maintain linear independence; adapting the matrix-level assembly and the de Rham complex to that setting is an open problem.}
+
 \bibliography{references}
 
 \end{document}
