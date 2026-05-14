@@ -299,7 +299,9 @@ This paper provides the matrix-level description and algorithms for hierarchical
     \item Numerical verification via the Maxwell eigenvalue problem, confirming that the exact de Rham complex is preserved, and adaptive convergence experiments for the vector Laplace equation with multi-scale solutions (Section~5).
 \end{itemize}
 
-\section{Properties of the subdivision-induced basis functions}
+\section{Subdivision $k$-form spaces: from uniform to hierarchical}
+
+\subsection{Subdivision basis functions}
 
 This section collects the most important properties of the uniform subdivision $k$-form spaces introduced in~\cite{Piel.2026}. We focus on the aspects that enable the construction of hierarchical subdivision $k$-form spaces in a similar way as~\cite{Evans.2020} did for B-splines.
 
@@ -323,7 +325,7 @@ The \emph{subdivision $k$-form space} on level $\l$ is defined as the image of $
 \end{equation}
 spanned by the \emph{subdivision basis functions} $\constrQ{\SDFbasis}{k}{\l}{\L}{\coarseIdxone} \coloneqq \Aop{k}{\l}{\L}\, \freeQ{\FEECbasis}{k}{\l}{\coarseIdxone}$, i.e.\ the columns of $\Amat{k}{\l}{\L}$ expressed in the fine Whitney basis. At the finest level, $\SDFspace{k}{\L}{\L} = \FEECspace{k}{\L}$ by definition. The spaces $\SDFspace{k}{\l}{\L}$ are smooth and globally supported functions on $|\T_\L|$ that constitute a discrete de Rham complex, as detailed in~\cite{Piel.2026} and recalled below.}
 
-\subsubsection{Computational representation of objects}
+\subsection{Computational representations}
 
 A $k$-form $\constrVec{\omega}{k}{\l}{\L} \in \SDFspace{k}{\l}{\L}$ can be written as
 \begin{equation}
@@ -361,6 +363,76 @@ This implies
     \end{bmatrix}
 \end{equation}
 and thus shows that the columns of the subdivision matrix $\Amat{k}{\l}{\L}$ contain the coefficients of the subdivision basis functions $\constrQ{\SDFbasis}{k}{\l}{\L}{\coarseIdxone}$ in the fine FEEC space $\FEECspace{k}{\L}$.
+
+\robert{Uniform subdivision spaces $\SDFspace{k}{\lone}{\L}$ resolve the domain at a single global scale, which is wasteful when the PDE solution contains localised features. Hierarchical spaces break this uniformity by mixing basis functions from \emph{different} levels $\lone$: as illustrated in Fig.~\ref{fig:hier_basis_funs}, a level-$0$ function (left) has broad support capturing large-scale variation, while a level-$2$ function (right) has support roughly $4^2$ times smaller and can resolve local detail. Selecting which levels to activate in which part of the domain yields an approximation space whose resolution adapts spatially to the solution.}
+
+\begin{figure}
+\begin{center}
+\begin{tikzpicture}[
+    every node/.style={inner sep=0pt, outer sep=0pt},
+    arr/.style={->, >=Stealth, line width=1.5pt, shorten >=2pt, shorten <=2pt}
+]
+
+% ============================================================
+%  COLUMN X POSITIONS
+% ============================================================
+\def\xA{0cm}
+\def\xB{5cm}
+\def\xC{10cm}
+
+% ============================================================
+%  ROW Y POSITIONS
+% ============================================================
+\def\yOne{0cm}
+\def\yTwo{-4cm}
+\def\yThree{-8cm}
+
+% ============================================================
+%  ROW 1
+% ============================================================
+\node (A1) at (\xA, \yOne)
+    {\includegraphics[width=0.25\textwidth]{images/basis_funs/whitney_basis_fun_l0.png}};
+
+\node (B1) at (\xB, \yOne)
+    {\includegraphics[width=0.25\textwidth, trim=10pt 0pt 10pt 0pt, clip]{images/basis_funs/whitney_basis_fun_l1.png}};
+
+\node (C1) at (\xC, \yOne)
+    {\includegraphics[width=0.25\textwidth]{images/basis_funs/whitney_basis_fun_l2.png}};
+
+% ============================================================
+%  ROW 2
+% ============================================================
+\node (A2) at (\xA, \yTwo)
+    {\includegraphics[width=0.25\textwidth]{images/basis_funs/basis_fun_l0.png}};
+
+\node (B2) at (\xB, \yTwo)
+    {\includegraphics[width=0.25\textwidth, trim=10pt 0pt 10pt 0pt, clip]{images/basis_funs/basis_fun_l1.png}};
+
+\node (C2) at (\xC, \yTwo)
+    {\includegraphics[width=0.25\textwidth]{images/basis_funs/basis_fun_l2.png}};
+
+% ============================================================
+%  VERTICAL ARROWS (one per column, between each row pair)
+% ============================================================
+\draw[arr] (A1.south) -- (A2.north) node[midway, right, font=\small] {$\;\;\Aop{0}{0}{\L}$};
+\draw[arr] (B1.south) -- (B2.north) node[midway, right, font=\small] {$\;\;\Aop{0}{1}{\L}$};
+\draw[arr] (C1.south) -- (C2.north) node[midway, right, font=\small] {$\;\;\Aop{0}{2}{\L}$};
+
+% ============================================================
+%  COLUMN LABELS (above row 1)
+% ============================================================
+\node[above=8pt of A1, inner sep=2pt] (colA) {Basis function from $\l = 0$};
+\node[above=8pt of B1, inner sep=2pt] (colB) {Basis function from $\l = 1$};
+\node[above=8pt of C1, inner sep=2pt] (colC) {Basis function from $\l = 2$};
+
+\end{tikzpicture}
+\end{center}
+\vspace{-5mm}
+\caption{Subdivision basis functions from levels $\l = 0$, $1$, $2$. Whitney functions (top row) are mapped by $\Aop{0}{\l}{\L}$ to their smooth subdivision limits (bottom row). Coarser levels have broader support; hierarchical spaces select from all levels to adapt resolution spatially.}
+\label{fig:hier_basis_funs}
+\end{figure}
+
+\robert{In the uniform space $\SDFspace{k}{\l}{\L}$, every $k$-simplex of $\T_\l$ contributes a basis function, so $\activeDoFSet{k}{\l} = \K^k_\l$. The hierarchical space relaxes this: it selects $\activeDoFSet{k}{\l} \subsetneq \K^k_\l$ at each level, mixing coarse basis functions (broad support, large-scale variation) and fine basis functions (small support, local detail) to adapt spatial resolution to the solution. Not every choice of $\activeDoFSet{k}{\l}$ yields a well-behaved space — the active basis functions may fail to be linearly independent, or the spaces may fail to form a de Rham complex. Section~3 develops the theory of admissible choices.}
 
 The same representation extends to the hierarchical space $\hierSDFspace{k}{\C}{\L}$. A form $\constrVec{\omega}{k}{\activeDoFs}{\L} \in \hierSDFspace{k}{\C}{\L}$ is a linear combination of active basis functions drawn from all levels,
 \begin{equation}
@@ -420,7 +492,7 @@ The active DoFs use the same simplex indices $\coarseIdxone$ as in the uniform s
         }_{\activeDoFSet{k}{\L}}
     \;\Bigr].
 \end{equation}
-With the active subdivision basis $\constrVec{\SDFbases}{k}{\activeDoFs}{\L}$ chosen and the fine Whitney basis $\freeVec{\FEECbases}{k}{\L}$ fixed, the form $\constrVec{\omega}{k}{\activeDoFs}{\L}$ admits two representations that must agree. Equating them and comparing coefficients in $\freeVec{\FEECbases}{k}{\L}$ defines the hierarchical subdivision matrix $\Amat{k}{\activeDoFs}{\L}$:
+With the active subdivision basis $\constrVec{\SDFbases}{k}{\activeDoFs}{\L}$ chosen and the fine Whitney basis $\freeVec{\FEECbases}{k}{\L}$ fixed, the form $\constrVec{\omega}{k}{\activeDoFs}{\L}$ admits two representations that must agree. Equating them and comparing coefficients in $\FEECspace{k}{\L}$ defines the hierarchical subdivision matrix $\Amat{k}{\activeDoFs}{\L}$:
 \begin{equation}
     \label{eq:hierarchical_form_compact}
     \constrVec{\omega}{k}{\activeDoFs}{\L}
@@ -449,6 +521,8 @@ In practice it is the $\big(\freeVec{\FEECbases}{k}{\L}\big)^T \cdot \Amat{k}{\a
 The PDE is then solved for the hierarchical DoF vector $\freeVec{\bar{c}}{k}{\activeDoFs}$, which collects the coefficients of the solution in the active subdivision basis. Once $\freeVec{\bar{c}}{k}{\activeDoFs}$ is known, the fine-level Whitney representation of the solution is recovered as $\Amat{k}{\activeDoFs}{\L} \cdot \freeVec{\bar{c}}{k}{\activeDoFs}$. This matrix--vector product is the coordinate expression of the inclusion $\iota \colon \hierSDFspace{k}{\C}{\L} \hookrightarrow \FEECspace{k}{\L}$, and the resulting fine-level vector can be used directly for post-processing, visualisation, and residual estimation on $\T_\L$.
 
 The concrete task that remains is therefore constructing $\Amat{k}{\activeDoFs}{\L}$, which reduces to choosing the active DoFs $\activeDoFSet{k}{\l}$. The remainder of this paper focuses on defining $\activeDoFSet{k}{\l}$ such that the resulting hierarchical spaces are linearly independent and preserve a discrete de Rham complex, and on assembling $\Amat{k}{\activeDoFs}{\L}$ from those choices.
+
+\section{Constructing hierarchical subdivision spaces}
 
 \subsection{Refinement of basis functions}
 
@@ -657,7 +731,7 @@ This definition together with Eq.~\eqref{eq:derivative_relation_basis} implies t
     See~\cite{Piel.2026}.
 \end{proof}}
 
-In the rest of this paper, we will set up adaptive function spaces by mixing basis functions on different subdivision levels and control their linear independence and the de Rham complex by using the refinement and derivative stencils.
+The following subsections set up adaptive function spaces by mixing basis functions on different subdivision levels, using the refinement and derivative stencils to control linear independence and the de Rham complex.
 
 
 \begin{figure}
@@ -715,81 +789,7 @@ In the rest of this paper, we will set up adaptive function spaces by mixing bas
 
 \FloatBarrier
 
-\section{Hierarchical subdivision $k$-form spaces}
-
 \subsection{Active degrees of freedom}
-
-\robert{Uniform subdivision spaces $\SDFspace{k}{\lone}{\L}$ resolve the domain at a single global scale, which is wasteful when the PDE solution contains localised features. Hierarchical spaces break this uniformity by mixing basis functions from \emph{different} levels $\lone$: as illustrated in Fig.~\ref{fig:hier_basis_funs}, a level-$0$ function (left) has broad support capturing large-scale variation, while a level-$2$ function (right) has support roughly $4^2$ times smaller and can resolve local detail. Selecting which levels to activate in which part of the domain yields an approximation space whose resolution adapts spatially to the solution.}
-
-\begin{figure}
-\begin{center}
-\begin{tikzpicture}[
-    every node/.style={inner sep=0pt, outer sep=0pt},
-    arr/.style={->, >=Stealth, line width=1.5pt, shorten >=2pt, shorten <=2pt}
-]
-
-% ============================================================
-%  COLUMN X POSITIONS
-% ============================================================
-\def\xA{0cm}
-\def\xB{5cm}
-\def\xC{10cm}
-
-% ============================================================
-%  ROW Y POSITIONS
-% ============================================================
-\def\yOne{0cm}
-\def\yTwo{-4cm}
-\def\yThree{-8cm}
-
-% ============================================================
-%  ROW 1
-% ============================================================
-\node (A1) at (\xA, \yOne)
-    {\includegraphics[width=0.25\textwidth]{images/basis_funs/whitney_basis_fun_l0.png}};
-
-\node (B1) at (\xB, \yOne)
-    {\includegraphics[width=0.25\textwidth, trim=10pt 0pt 10pt 0pt, clip]{images/basis_funs/whitney_basis_fun_l1.png}};
-
-\node (C1) at (\xC, \yOne)
-    {\includegraphics[width=0.25\textwidth]{images/basis_funs/whitney_basis_fun_l2.png}};
-
-% ============================================================
-%  ROW 2
-% ============================================================
-\node (A2) at (\xA, \yTwo)
-    {\includegraphics[width=0.25\textwidth]{images/basis_funs/basis_fun_l0.png}};
-
-\node (B2) at (\xB, \yTwo)
-    {\includegraphics[width=0.25\textwidth, trim=10pt 0pt 10pt 0pt, clip]{images/basis_funs/basis_fun_l1.png}};
-
-\node (C2) at (\xC, \yTwo)
-    {\includegraphics[width=0.25\textwidth]{images/basis_funs/basis_fun_l2.png}};
-
-% ============================================================
-%  VERTICAL ARROWS (one per column, between each row pair)
-% ============================================================
-\draw[arr] (A1.south) -- (A2.north) node[midway, right, font=\small] {$\;\;\Aop{0}{0}{\L}$};
-\draw[arr] (B1.south) -- (B2.north) node[midway, right, font=\small] {$\;\;\Aop{0}{1}{\L}$};
-\draw[arr] (C1.south) -- (C2.north) node[midway, right, font=\small] {$\;\;\Aop{0}{2}{\L}$};
-
-% ============================================================
-%  COLUMN LABELS (above row 1)
-% ============================================================
-\node[above=8pt of A1, inner sep=2pt] (colA) {Basis function from $\l = 0$};
-\node[above=8pt of B1, inner sep=2pt] (colB) {Basis function from $\l = 1$};
-\node[above=8pt of C1, inner sep=2pt] (colC) {Basis function from $\l = 2$};
-
-%\draw[arr] 
-%    ([yshift=-12pt]A2.south west) -- ([yshift=-12pt]C2.south east)
-%    node[midway, below=4pt, font=\small] {Choose active basis functions across all levels $\l \leq \L$ to span hierarchical spaces.};
-
-\end{tikzpicture}
-\end{center}
-\vspace{-5mm}
-\caption{Choose active basis functions across all levels $\l \leq \L$ to span hierarchical spaces.}
-\label{fig:hier_basis_funs}
-\end{figure}
 
 On a matrix-level, any subdivision basis function can be described as a column of the subdivision matrix. Ultimately, since the subdivision matrices of all levels $\lone$ map to $\L$, we can pick and choose any column of any subdivision matrix to become an active degree of freedom. This means we can assemble a vector of degree of freedom
 \begin{equation}
@@ -801,31 +801,13 @@ This means that we can obtain a set of active degrees of freedom by simply choos
 \end{equation}
 The hierarchical spaces of subdivision $k$-forms have their own associated subdivision operators.
 
-{\color{orange}
-On the matrix level, the hierarchical basis is encoded in the \emph{hierarchical subdivision matrix} $\Amat{k}{\activeDoFs}{\L}$. Recall that the uniform subdivision matrix $\Amat{k}{\lone}{\L}$ has rows indexed by $\K^k_\L$ and columns indexed by $\K^k_{\lone}$; its column $\coarseIdxone$ is the coordinate vector of the constrained basis function $\constrQ{\SDFbasis}{k}{\lone}{\L}{\coarseIdxone}$ in the Whitney basis of $\FEECspace{k}{}(\T_\L)$. We form $\Amat{k}{\activeDoFs}{\L}$ by retaining, for each level $\lone$, only those columns whose index belongs to the active set $\activeDoFSet{k}{\lone} \subset \K^k_{\lone}$, and concatenating the resulting blocks horizontally across all levels. Identifying the column index of $\Amat{k}{\activeDoFs}{\L}$ with the pair $(\lone, \coarseIdxone)$ for $\simplex{k}{\lone}{\coarseIdxone} \in \activeDoFSet{k}{\lone}$, this reads
-\begin{equation}
-    \left(\Amat{k}{\activeDoFs}{\L}\right)_{\fineIdxone,\,(\lone,\,\coarseIdxone)}
-    \;=\;
-    \left(\Amat{k}{\lone}{\L}\right)_{\fineIdxone,\,\coarseIdxone},
-    \qquad
-    \simplex{k}{\L}{\fineIdxone} \in \K^k_\L, \quad \simplex{k}{\lone}{\coarseIdxone} \in \activeDoFSet{k}{\lone}.
-\end{equation}
-The resulting matrix has dimensions $\big|\K^k_\L\big| \times \big|\activeDoFSet{k}{}\big|$, with $\big|\activeDoFSet{k}{}\big| = \sum_{\lone} \big|\activeDoFSet{k}{\lone}\big|$.
-
-Given a hierarchical form $\omega^k_\activeDoFs \in \activeSDFspaces{k}{}$ with coefficient vector $\bar{c}^k \in \mathbb{R}^{|\activeDoFSet{k}{}|}$, its image under the inclusion $\inclusion \colon \activeSDFspaces{k}{} \hookrightarrow \FEECspace{k}{}(\T_\L)$ is
-\begin{equation}
-    \inclusion\!\left(\omega^k_\activeDoFs\right) = \Amat{k}{\activeDoFs}{\L}\,\bar{c}^k.
-\end{equation}
-This representation allows all operations on hierarchical forms, such as applying the discrete exterior derivative, assembling mass or stiffness matrices, and evaluating residuals, to be carried out as standard sparse linear algebra on the fine level $\T_\L$.
-}
-
 Clearly, most of these configurations do not make sense from a numerical perspective. For instance, the spaces $\activeSDFspaces{k}{}$ might not cover the entire domain, have linearly dependent basis functions or not form differential complexes. The following section present parameterisations of the set $\activeDoFSet{k}{}$ of active degrees of freedom that give us more control over these aspects.
 
 \robert{A natural organisational unit for the choice of active degrees of freedom is a \emph{mesh patch} $\calP_\l \subset \T_\l$: a connected submesh at level $\l$ whose closure aligns with the support of the basis functions $\constrQ{\SDFbasis}{k}{\l}{\L}{\coarseIdxone}$ associated with its interior simplices. Tiling the domain with patches at possibly different levels $\l_i$ produces a \emph{subdivision partition} $\C$; we then activate all interior DoFs of each patch, plus additional interface DoFs along patch boundaries. The precise definition is given in Definition~\ref{def:active_k_form_dofs}; here we motivate the key design choices visible in Fig.~\ref{fig:active_dofs}.
 
 The need for interface DoFs is easiest to see in the $k=1$ column of Fig.~\ref{fig:active_dofs}. At level $\l=0$ (top row, orange edges), only the edges interior to the level-$0$ patches are active; the boundary edges shared with the finer level-$1$ region are absent. At level $\l=1$ (middle row), those same boundary edges appear as active 1-form DoFs. Without them, the exterior derivative $\extd\omega^0$ of a level-$0$ 0-form basis function near the patch boundary would map to an edge with no associated active 1-form DoF, breaking the de Rham complex. More generally, when two patches at levels $\l_i < \l_j$ share a boundary, interface DoFs are added at \emph{every} intermediate level $\l_i < \l_t \leq \l_j$. This prevents basis functions from very different levels meeting abruptly across the interface, which would otherwise create an ill-conditioned system. We do not have rigorous estimates that quantify this stiffening effect, and it remains a subject for further investigation.
 
-The interface DoFs are attributed exclusively to the \emph{finer} side of the patch boundary, not the coarser side. Including coarser-side DoFs would introduce linear dependence: any coarser-level basis function restricted to the interface is already expressible as a linear combination of the finer-level basis functions there (cf.\ the refinement stencil condition in Section~2). Restricting to the finer side therefore maintains linear independence while still closing the de Rham complex, as made precise in the theorems at the end of this section.}
+The interface DoFs are attributed exclusively to the \emph{finer} side of the patch boundary, not the coarser side. Including coarser-side DoFs would introduce linear dependence: any coarser-level basis function restricted to the interface is already expressible as a linear combination of the finer-level basis functions there (cf.\ the refinement stencil condition in Section~3). Restricting to the finer side therefore maintains linear independence while still closing the de Rham complex, as made precise in the theorems at the end of this section.}
 
 \begin{figure}[htbp]
 \begin{center}
@@ -1018,7 +1000,9 @@ Finally, we are going to re-state the two main theorems of \cite{Piel.2026} rega
 \end{proof}
 
 
-\subsection{Implementation}
+\section{Implementation and adaptive loop}
+
+\subsection{Assembling the hierarchical subdivision matrix}
 
 \robert{The implementation of the active subdivision space proceeds in two stages.
 Given a subdivision partition $P$, we first enumerate the active degrees of
@@ -1139,7 +1123,7 @@ which is symmetric indefinite.}
 
 \FloatBarrier
 
-\section{The Adaptive Loop}
+\subsection{The adaptive loop}
 
 This section describes the adaptive loop used in the numerical experiments. The loop consists of the steps
 \begin{equation}
