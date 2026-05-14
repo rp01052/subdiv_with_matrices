@@ -58,7 +58,6 @@ Werner Bauer\footnote{University of Surrey, School of Mathematics and Physics, U
 			\tt #1 \end{minipage}}\vspace{5 mm}\par}
 \newcommand{\werner}[1]{{\color{magenta}WB says: #1}}
 \newcommand{\robert}[1]{{\color{orange} #1}}
-\newcommand{\colin}[1]{{\color{blue}CC says: #1}}
 \newcommand{\incl}[1]{{\color{red}#1}}
 \newcommand{\checkit}[1]{{\color{red}#1}}
 \newcommand{\RobertChanged}[1]{{\color{brown}#1}}
@@ -70,6 +69,7 @@ Werner Bauer\footnote{University of Surrey, School of Mathematics and Physics, U
 \newcommand{\blue}{\color{blue}}
 \newcommand{\red}{\color{red}}
 \newcommand{\green}{\color{ForestGreen}}
+\newcommand{\brickred}{\color{BrickRed}}
 
 % highlighting
 \newcommand{\hlcyan}[1]{{\sethlcolor{cyan}\hl{#1}}}
@@ -111,10 +111,10 @@ Werner Bauer\footnote{University of Surrey, School of Mathematics and Physics, U
 \newcommand{\FFltoL}[2]{\F\F_{#1 \to #2}}
 
 % indices for components
-\newcommand{\coarseIdxone}{{ i}}
-\newcommand{\coarseIdxtwo}{{ m}}
-\newcommand{\fineIdxone}{{ j}}
-\newcommand{\fineIdxtwo}{{ n}}
+\newcommand{\coarseIdxone}{{\brickred i}}
+\newcommand{\coarseIdxtwo}{{\brickred m}}
+\newcommand{\fineIdxone}{{\brickred j}}
+\newcommand{\fineIdxtwo}{{\brickred n}}
 
 % indices for levels
 \renewcommand{\l}{{\green\ell}}
@@ -322,6 +322,133 @@ The \emph{subdivision $k$-form space} on level $\l$ is defined as the image of $
     \SDFspace{k}{\l}{\L}\big(\T_\l\big) \coloneqq \Aop{k}{\l}{\L}\!\big(\FEECspace{k}{\l}\big),
 \end{equation}
 spanned by the \emph{subdivision basis functions} $\constrQ{\SDFbasis}{k}{\l}{\L}{\coarseIdxone} \coloneqq \Aop{k}{\l}{\L}\, \freeQ{\FEECbasis}{k}{\l}{\coarseIdxone}$, i.e.\ the columns of $\Amat{k}{\l}{\L}$ expressed in the fine Whitney basis. At the finest level, $\SDFspace{k}{\L}{\L} = \FEECspace{k}{\L}$ by definition. The spaces $\SDFspace{k}{\l}{\L}$ are smooth and globally supported functions on $|\T_\L|$ that constitute a discrete de Rham complex, as detailed in~\cite{Piel.2026} and recalled below.}
+
+\subsubsection{Computational representation of objects}
+
+A $k$-form $\constrVec{\omega}{k}{\l}{\L} \in \SDFspace{k}{\l}{\L}$ can be written as
+\begin{equation}
+    \constrVec{\omega}{k}{\l}{\L} = \sum\limits_{\coarseIdxone = 1}^{\sumdimlk{\l}{k}} \freeQ{c}{k}{\l}{\coarseIdxone} \constrQ{\SDFbasis}{k}{\l}{\L}{\coarseIdxone} = \sum\limits_{i = 1}^{\sumdimlk{\l}{k}} \freeQ{c}{k}{\l}{\coarseIdxone} \Big( \sum\limits_{\fineIdxone = 1}^{\sumdimlk{\L}{k}} \Amatij{k}{\l}{\L}{\fineIdxone}{\coarseIdxone} \freeQ{\FEECbasis}{k}{\L}{\fineIdxone} \Big).
+\end{equation}
+We can vectorise this equation by introducing the vectors
+\begin{equation}
+    \freeVec{\bar{c}}{k}{\l} \coloneqq \begin{bmatrix}
+        \freeQ{c}{k}{\l}{1} \\
+        \freeQ{c}{k}{\l}{2} \\
+        \vdots \\
+        \freeQ{c}{k}{\l}{\sumdimlk{\l}{k}}
+    \end{bmatrix}, \qquad 
+    \constrVec{\SDFbases}{k}{\l}{\L} \coloneqq \begin{bmatrix}
+        \constrQ{\SDFbasis}{k}{\l}{\L}{1} \\
+        \constrQ{\SDFbasis}{k}{\l}{\L}{2} \\
+        \vdots \\
+        \constrQ{\SDFbasis}{k}{\l}{\L}{\sumdimlk{\l}{k}}
+    \end{bmatrix}, \qquad 
+    \freeVec{\FEECbases}{k}{\L} \coloneqq \begin{bmatrix}
+        \freeQ{\FEECbasis}{k}{\L}{1} \\
+        \freeQ{\FEECbasis}{k}{\L}{2} \\
+        \vdots \\
+        \freeQ{\FEECbasis}{k}{\L}{\sumdimlk{\L}{k}}
+    \end{bmatrix}.
+\end{equation}
+We can then re-write $\constrVec{\omega}{k}{\l}{\L} \in \SDFspace{k}{\l}{\L}$ as
+\begin{equation}
+    \constrVec{\omega}{k}{\l}{\L} = \big( \constrVec{\SDFbases}{k}{\l}{\L} \big)^T \cdot \freeVec{\bar{c}}{k}{\l} = \big( \freeVec{\FEECbases}{k}{\L} \big)^T \cdot \Amat{k}{\l}{\L} \cdot \freeVec{\bar{c}}{k}{\l}.
+\end{equation}
+This implies
+\begin{equation}
+    \big( \freeVec{\FEECbases}{k}{\L} \big)^T \cdot \Amat{k}{\l}{\L} = \big( \constrVec{\SDFbases}{k}{\l}{\L} \big)^T = \begin{bmatrix}
+        \constrQ{\SDFbasis}{k}{\l}{\L}{1} & \constrQ{\SDFbasis}{k}{\l}{\L}{2} & \dots & \constrQ{\SDFbasis}{k}{\l}{\L}{\sumdimlk{\l}{k}}
+    \end{bmatrix}
+\end{equation}
+and thus shows that the columns of the subdivision matrix $\Amat{k}{\l}{\L}$ contain the coefficients of the subdivision basis functions $\constrQ{\SDFbasis}{k}{\l}{\L}{\coarseIdxone}$ in the fine FEEC space $\FEECspace{k}{\L}$.
+
+The same representation extends to the hierarchical space $\hierSDFspace{k}{\C}{\L}$. A form $\constrVec{\omega}{k}{\activeDoFs}{\L} \in \hierSDFspace{k}{\C}{\L}$ is a linear combination of active basis functions drawn from all levels,
+\begin{equation}
+    \label{eq:hierarchical_form_sum}
+    \constrVec{\omega}{k}{\activeDoFs}{\L}
+    = \sum\limits_{\l=\lzero}^{\L} \; \sum\limits_{\simplex{k}{\l}{\coarseIdxone} \in \activeDoFSet{k}{\l}}
+        \freeQ{c}{k}{\l}{\coarseIdxone} \, \constrQ{\SDFbasis}{k}{\l}{\L}{\coarseIdxone}.
+\end{equation}
+The active DoFs use the same simplex indices $\coarseIdxone$ as in the uniform space $\SDFspace{k}{\l}{\L}$, but restricted to $\activeDoFSet{k}{\l} \subset \K^k_\l$. To form explicit vectors we enumerate the active simplices on level $\l$ in increasing index order as $\simplex{k}{\l}{\coarseIdxone_1}, \ldots, \simplex{k}{\l}{\coarseIdxone_{|\activeDoFSet{k}{\l}|}}$ with $\coarseIdxone_1 < \cdots < \coarseIdxone_{|\activeDoFSet{k}{\l}|}$. The concatenated basis-function and coefficient vectors, grouped by level with blocks separated by vertical bars, are
+\begin{equation}
+    \label{eq:hierarchical_dof_vector}
+    \big(\freeVec{\bar{c}}{k}{\activeDoFs}\big)^T
+    = \Bigl[\;
+        \underbrace{
+            \freeQ{c}{k}{0}{\coarseIdxone_1}
+            \;\; \cdots \;\;
+            \freeQ{c}{k}{0}{\coarseIdxone_{|\activeDoFSet{k}{0}|}}
+        }_{\displaystyle (\freeVec{\bar{c}}{k}{0})^T}
+        \;\Big|\;
+        \underbrace{
+            \freeQ{c}{k}{1}{\coarseIdxone_1}
+            \;\; \cdots \;\;
+            \freeQ{c}{k}{1}{\coarseIdxone_{|\activeDoFSet{k}{1}|}}
+        }_{\displaystyle (\freeVec{\bar{c}}{k}{1})^T}
+        \;\Big|\;
+        \cdots
+        \;\Big|\;
+        \underbrace{
+            \freeQ{c}{k}{\L}{\coarseIdxone_1}
+            \;\; \cdots \;\;
+            \freeQ{c}{k}{\L}{\coarseIdxone_{|\activeDoFSet{k}{\L}|}}
+        }_{\displaystyle (\freeVec{\bar{c}}{k}{\L})^T}
+    \;\Bigr],
+\end{equation}
+\begin{equation}
+    \label{eq:hierarchical_basis_vector}
+    \big(\constrVec{\SDFbases}{k}{\activeDoFs}{\L}\big)^T
+    = \Bigl[\;
+        \underbrace{
+            \constrQ{\SDFbasis}{k}{0}{\L}{\coarseIdxone_1}
+            \;\cdots\;
+            \constrQ{\SDFbasis}{k}{0}{\L}{\coarseIdxone_{|\activeDoFSet{k}{0}|}}
+        }_{\activeDoFSet{k}{0}}
+        \;\Big|\;
+        \underbrace{
+            \constrQ{\SDFbasis}{k}{1}{\L}{\coarseIdxone_1}
+            \;\cdots\;
+            \constrQ{\SDFbasis}{k}{1}{\L}{\coarseIdxone_{|\activeDoFSet{k}{1}|}}
+        }_{\activeDoFSet{k}{1}}
+        \;\Big|\;
+        \cdots
+        \;\Big|\;
+        \underbrace{
+            \constrQ{\SDFbasis}{k}{\L}{\L}{\coarseIdxone_1}
+            \;\cdots\;
+            \constrQ{\SDFbasis}{k}{\L}{\L}{\coarseIdxone_{|\activeDoFSet{k}{\L}|}}
+        }_{\activeDoFSet{k}{\L}}
+    \;\Bigr].
+\end{equation}
+With the active subdivision basis $\constrVec{\SDFbases}{k}{\activeDoFs}{\L}$ chosen and the fine Whitney basis $\freeVec{\FEECbases}{k}{\L}$ fixed, the form $\constrVec{\omega}{k}{\activeDoFs}{\L}$ admits two representations that must agree. Equating them and comparing coefficients in $\freeVec{\FEECbases}{k}{\L}$ defines the hierarchical subdivision matrix $\Amat{k}{\activeDoFs}{\L}$:
+\begin{equation}
+    \label{eq:hierarchical_form_compact}
+    \constrVec{\omega}{k}{\activeDoFs}{\L}
+    = \big(\constrVec{\SDFbases}{k}{\activeDoFs}{\L}\big)^T \cdot \freeVec{\bar{c}}{k}{\activeDoFs}
+    = \big(\freeVec{\FEECbases}{k}{\L}\big)^T \cdot \Amat{k}{\activeDoFs}{\L} \cdot \freeVec{\bar{c}}{k}{\activeDoFs}.
+\end{equation}
+This implies $\big(\freeVec{\FEECbases}{k}{\L}\big)^T \cdot \Amat{k}{\activeDoFs}{\L} = \big(\constrVec{\SDFbases}{k}{\activeDoFs}{\L}\big)^T$, showing that the columns of $\Amat{k}{\activeDoFs}{\L}$ are the coefficients of the active subdivision basis functions in $\FEECspace{k}{\L}$. The level grouping of $\freeVec{\bar{c}}{k}{\activeDoFs}$ mirrors the block column structure of $\Amat{k}{\activeDoFs}{\L}$:
+\begin{equation}
+    \label{eq:hierarchical_matrix_blocks}
+    \Amat{k}{\activeDoFs}{\L}
+    =
+    \Bigl[
+        \underbrace{\bigl(\Amat{k}{0}{\L}\bigr)_{\activeDoFSet{k}{0}}}_{\mathbb{R}^{|\K^k_\L| \times |\activeDoFSet{k}{0}|}}
+        \;\Big|\;
+        \underbrace{\bigl(\Amat{k}{1}{\L}\bigr)_{\activeDoFSet{k}{1}}}_{\mathbb{R}^{|\K^k_\L| \times |\activeDoFSet{k}{1}|}}
+        \;\Big|\;
+        \cdots
+        \;\Big|\;
+        \underbrace{\bigl(\Amat{k}{\L}{\L}\bigr)_{\activeDoFSet{k}{\L}}}_{\mathbb{R}^{|\K^k_\L| \times |\activeDoFSet{k}{\L}|}}
+    \Bigr],
+\end{equation}
+so that the block $(\freeVec{\bar{c}}{k}{\l})^T$ multiplies precisely the $|\activeDoFSet{k}{\l}|$ columns of $\Amat{k}{\activeDoFs}{\L}$ originating from level $\l$, contributing $\sum_{\simplex{k}{\l}{\coarseIdxone} \in \activeDoFSet{k}{\l}} \freeQ{c}{k}{\l}{\coarseIdxone} \, \constrQ{\SDFbasis}{k}{\l}{\L}{\coarseIdxone}$ to $\constrVec{\omega}{k}{\activeDoFs}{\L}$.
+
+In practice it is the $\big(\freeVec{\FEECbases}{k}{\L}\big)^T \cdot \Amat{k}{\activeDoFs}{\L}$ picture that drives the implementation, rather than the $\big(\constrVec{\SDFbases}{k}{\activeDoFs}{\L}\big)^T$ picture. A bilinear form with fine-level matrix $\mathbf{M}$ on $\FEECspace{k}{\L}$ restricts to the hierarchical space as $(\Amat{k}{\activeDoFs}{\L})^T \mathbf{M}\, \Amat{k}{\activeDoFs}{\L}$, so the discrete system is assembled in $\FEECspace{k}{\L}$ via standard FEniCS routines and compressed by two sparse matrix multiplications. The fine Whitney basis $\freeVec{\FEECbases}{k}{\L}$ is handled implicitly by FEniCS and never appears explicitly in code.
+
+The PDE is then solved for the hierarchical DoF vector $\freeVec{\bar{c}}{k}{\activeDoFs}$, which collects the coefficients of the solution in the active subdivision basis. Once $\freeVec{\bar{c}}{k}{\activeDoFs}$ is known, the fine-level Whitney representation of the solution is recovered as $\Amat{k}{\activeDoFs}{\L} \cdot \freeVec{\bar{c}}{k}{\activeDoFs}$. This matrix--vector product is the coordinate expression of the inclusion $\iota \colon \hierSDFspace{k}{\C}{\L} \hookrightarrow \FEECspace{k}{\L}$, and the resulting fine-level vector can be used directly for post-processing, visualisation, and residual estimation on $\T_\L$.
+
+The concrete task that remains is therefore constructing $\Amat{k}{\activeDoFs}{\L}$, which reduces to choosing the active DoFs $\activeDoFSet{k}{\l}$. The remainder of this paper focuses on defining $\activeDoFSet{k}{\l}$ such that the resulting hierarchical spaces are linearly independent and preserve a discrete de Rham complex, and on assembling $\Amat{k}{\activeDoFs}{\L}$ from those choices.
 
 \subsection{Refinement of basis functions}
 
