@@ -281,7 +281,7 @@ For the adaptive solution of PDEs, we describe a \textsc{Solve}--\textsc{Estimat
 
 \section{Introduction}
 
-The finite element exterior calculus (FEEC)~\cite{Arnold.FEEC} provides a systematic framework for constructing stable, structure-preserving discretisations of partial differential equations (PDEs) involving differential forms. Its central structure is the discrete de Rham complex: a sequence of finite-dimensional function spaces connected by the exterior derivative $\extd$. Exactness of this complex is the key algebraic property that prevents spurious modes in Maxwell eigenvalue problems, guarantees inf-sup stability in mixed formulations, and underpins the commuting diagram that makes error analysis tractable. Classical realisations of the FEEC use the lowest-order Whitney forms, also knownn as the continuous Galerkin ($\mathrm{CG}_1$), Raviart--Thomas ($\mathrm{RT}_0$), and discontinuous ($\mathrm{DG}_0$) spaces, which are globally conforming but only piecewise polynomial and, at best, $\mathcal{C}^0$.
+The finite element exterior calculus (FEEC)~\cite{Arnold.FEEC} provides a systematic framework for constructing stable, structure-preserving discretisations of partial differential equations (PDEs) involving differential forms. Its central structure is the discrete de Rham complex: a sequence of finite-dimensional function spaces connected by the exterior derivative $\extd$. Exactness of this complex is the key algebraic property that prevents spurious modes in Maxwell eigenvalue problems, guarantees inf-sup stability in mixed formulations, and underpins the commuting diagram that makes error analysis tractable. Classical realisations of the FEEC use the lowest-order Whitney forms, also known as the continuous Galerkin ($\mathrm{CG}_1$), Raviart--Thomas ($\mathrm{RT}_0$), and discontinuous ($\mathrm{DG}_0$) spaces, which are globally conforming but only piecewise polynomial and, at best, $\mathcal{C}^0$.
 
 Subdivision algorithms, originally developed for geometric modelling, produce limit functions that are globally smooth on arbitrary triangular meshes. For example, Loop's scheme~\citep{Loop.1987} generates globally $\mathcal{C}^1$ scalar limit functions. Wang~\citep{Wang.2006,Wang.2008} introduce subdivision schemes for $1$- and $2$-forms that commute with the discrete exterior derivative from Discrete Exterior Calculus (DEC, \cite{Hirani.2003,Desbrun.2006}). These subdivision schemes give rise to subdivision $k$-form spaces in the DEC sense \citep{Goes.2015}. \cite{Piel.2026} translate their work to finite elements and introduce a framework for subdivision-based finite elements that form discrete de Rham complexes on meshes with uniform refinement.
 
@@ -1334,7 +1334,7 @@ Figures~\ref{fig:Maxwell_exact_DoFmesh} and \ref{fig:Maxwell_inexact_DoFmesh} pr
     \label{fig:maxwell_overview}
 \end{figure}
 
-\robert{\paragraph{Bonus: Instabilities without intermediate interface DoFs.} Finally, we want to see what happens if we do not add the intermediate interface DoFs. We should probably look at two eigenmodes (with and without the DoFs) and compare them. I expect to see similar instabilities to the ones that arise from boundary truncation.}
+\robert{\todo{\paragraph{Bonus: Instabilities without intermediate interface DoFs.} Finally, we want to see what happens if we do not add the intermediate interface DoFs. We should probably look at two eigenmodes (with and without the DoFs) and compare them. I expect to see similar instabilities to the ones that arise from boundary truncation.}}
 
 \FloatBarrier
 
@@ -1350,8 +1350,6 @@ on a domain $\M$. Since the operator $\boldsymbol{\delta}$ is not well-defined f
   (\extd \sigma, v)_\M + (\extd u, \extd v)_\M &= (f, v)_\M \qquad \forall v \in \HocurlM{\M}.
 \end{align}
 
-\robert{\todo{explain assembly of matrices maybe? i.e., unrefinement}}
-
 This section focuses on two test cases that we will refer to as \textit{circular layer} and \textit{multiscale Gaussians}. The circular layer test case is adopted from \cite{Cabanas.2026} and its analytical solution is given by
 \begin{equation}
     \label{eq:circular_layer_test_case}
@@ -1361,6 +1359,10 @@ This section focuses on two test cases that we will refer to as \textit{circular
     \end{bmatrix}
 \end{equation}
 and $\alpha = 100$ and $R = 0.3$. The vector part $\Vec{b}(x)$ provides a background field while the $\tanh$ term adds a sharp, radially symmetric transition between $+\Vec{b}$ and $-\Vec{b}$. The right-hand side $f_{\mathrm{CL}}$ corresponding to $\Vec{u}_{\mathrm{CL}}$ can be computed using the (strong) vector laplace equation. The panels of Figure~\ref{fig:circular_layer_adaptive_solution} show the evolution of the solution $\Vec{u}^n_{\mathrm{CL}}$ and the subdivision partition $\C^n_{\mathrm{CL}}$ after $n$ steps of the adaptive loop.
+
+\robert{\todo{
+    write down the formula for the right hand side of the Multisclae Gaussian test case and explain the results we see in the plots.
+}}
 
 \begin{figure}[htbp]
     \centering
