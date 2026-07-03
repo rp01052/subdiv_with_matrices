@@ -959,31 +959,26 @@ Finally, we are going to re-state the two main theorems of \cite{Piel.2026} rega
 
 \subsection{Assembling the hierarchical subdivision matrix}
 
-\robert{The implementation of the active subdivision space proceeds in two stages.
-Given a subdivision partition $P$, we first enumerate the active degrees of
-freedom $\D^k[\l]$ for each form degree $k \in \{0,1,2\}$ and level $\l$
-using Algorithm~\ref{alg:buildactivedofs}. We then assemble, for each form
+The implementation of the active subdivision spaces $\hierSDFspace{k}{\C}{\L}$ proceeds in two stages. 
+Given a subdivision partition $\C$, we first identify the active degrees of
+freedom $\D^k$ for each form degree $k \in \{0,1,2\}$ 
+using Algorithm~\ref{alg:buildactivedofs}. Algorithm~\ref{alg:buildsubdivmatrix} then assembles, for each form
 degree $k$, the sparse matrix $\Amat{k}{\activeDoFs}{\L}$ whose columns are
-the level-$\L$ coefficient expansions of the active basis functions
-(Algorithm~\ref{alg:buildsubdivmatrix}). Galerkin projection of all
+the level-$\L$ coefficient expansions of the active basis functions $\Phi_{\D^k (\C)}$, see Equations~\eqref{eq:hierarchical_form_compact} and~\eqref{eq:hierarchical_matrix_blocks}. Galerkin projection of all
 bilinear forms to the active space then reduces to standard sparse
-matrix--matrix products, without any re-assembly of integrals.
+matrix-matrix products, without any re-assembly of integrals, see for example Equation~\eqref{eq:FE_matrix_assembly}.
 
 The active DoFs split into two contributions at each level $\l$.
-\emph{Native} DoFs are the $k$-simplices of every active face $f \in
-P[\l]$. \emph{Interface} DoFs are additional basis functions at the
-boundary between a level-$\l$ active region and a refined region on level
-$\l + 1$: these correspond to subdivision basis functions whose support
-straddles the level boundary and are not captured by the native-DoF
-construction alone. They are produced by a frontier sweep
+\emph{Patch} DoFs are the $k$-simplices of every active face $\face{\l}{\coarseIdxone} \in \C$. \emph{Interface} DoFs are additional basis functions at the
+boundary between patches on different levels. They are produced by a frontier sweep
 (steps~(a)--(d) of Algorithm~\ref{alg:buildactivedofs}) that maintains the
 set of interior edges separating resolved (coarse-side) faces from
 unresolved (finer) regions. Each level the frontier is split into child
-edges and interface vertices; the vertices emit the DoFs they introduce on
+edges and interface vertices, the vertices emit the DoFs they introduce on
 the following level. The ordering of operations within each level is fixed:
 old frontier edges are consumed first, new ones are spawned, DoFs are
 emitted from the previous level's vertices, and finally the frontier is
-split for the next level.}
+split for the next level.
 
 \robert{It is helpful to group the active degrees of freedom by level $\l_t$
 rather than by the individual patches $\calP^n_{\l_i}$ of
@@ -1103,6 +1098,7 @@ $\Amat{k}{\activeDoFs}{\L} \leftarrow (K_\L \times K_\D)$ sparse zero matrix;\qu
 active-space bilinear forms are obtained by Galerkin restriction of the
 embedding-level operators, assembled once before the adaptive loop:
 \begin{equation}
+    \label{eq:FE_matrix_assembly}
     \mathbf{M}_0 = (\Amat{0}{\activeDoFs}{\L})^\top \mathbf{M}\, \Amat{0}{\activeDoFs}{\L},
     \quad
     \mathbf{C}_0 = (\Amat{1}{\activeDoFs}{\L})^\top \mathbf{C}\, \Amat{1}{\activeDoFs}{\L},
@@ -1129,30 +1125,15 @@ which is symmetric indefinite.}
 This section describes the adaptive loop used in the numerical experiments. The loop consists of the steps
 \begin{equation}
 \begin{tikzcd}
-    \mathrm{SOLVE} \arrow[r] & \mathrm{ESTIMATE} \arrow[r] & \mathrm{MARK} \arrow[r] & \mathrm{REFINE} \arrow[r] & \mathrm{PAD} \arrow[llll, rounded corners=0pt, to path={(\tikztostart.south) -- ([yshift=-1.em]\tikztostart.south) -- ([yshift=-1.em]\tikztotarget.south) -- (\tikztotarget.south)}]
+    \textsc{Solve} \arrow[r] & \textsc{Estimate} \arrow[r] & \textsc{Mark} \arrow[r] & \textsc{Refine} \arrow[r] & \textsc{Pad} \arrow[llll, rounded corners=0pt, to path={(\tikztostart.south) -- ([yshift=-1.em]\tikztostart.south) -- ([yshift=-1.em]\tikztotarget.south) -- (\tikztotarget.south)}]
 \end{tikzcd}
 \end{equation}
 
-The following sections will cover the individual steps of this loop, and focus particularly on the non-standard choices we made during the implementation. The $\mathrm{SOLVE}$ step involves solving a linear system. We used Eigen's (\robert{cite}) sparse MINRES solver with a block-diagonal approximate (mass-lumped) Schur complex preconditioner (\robert{maybe keep some information from below here and delete what's below.}). For the $\mathrm{ESTIMATE}$ step, we use a standard $\Hcurl$ estimator to compute residuals per face in the subdivision partition. These residuals are then re-distributed to the active vertices in the partition. The $\mathrm{ESTIMATE}$ step is covered in more detail in Section~\ref{subsec:estimate}. We employ greedy Doerfler marking for the vertex residuals to refine vertex stars. This typically leads to inexact subdivision partitions, and thus needs a $\mathrm{PADDING}$ step to recover its exactness, see Section~\ref{subsec:refinement_and_padding}.
+The following sections will cover the individual steps of this loop, and focus particularly on the non-standard choices we made during the implementation. The $\mathrm{SOLVE}$ step involves solving a linear system. For example, for the vector Laplace problem in Section~\ref{subsec:vector_laplace}, we use Eigen's (\robert{cite}) sparse MINRES solver with a block-diagonal approximate (mass-lumped) Schur complex preconditioner (\robert{maybe keep some information from below here and delete what's below.}). For the $\mathrm{ESTIMATE}$ step, we use a standard $\Hcurl$ estimator to compute residuals per face in the subdivision partition. These residuals are then re-distributed to the active vertices in the partition. The $\mathrm{ESTIMATE}$ step is covered in more detail in Section~\ref{subsec:estimate}. We employ greedy Doerfler marking for the vertex residuals to refine vertex stars. This typically leads to inexact subdivision partitions, and thus needs a $\mathrm{PADDING}$ step to recover its exactness, see Section~\ref{subsec:refinement_and_padding}.
 
-\vspace{3mm}
-
-\robert{\begin{algorithm}[H]
-\caption{Adaptive loop}
-\label{alg:adaptive_loop}
-\KwIn{initial partition $\C$, Dörfler parameter $\theta$, termination criteria}
-\For{$\mathrm{step} = 0, \ldots, S - 1$}{
-    $\D \leftarrow \textsc{BuildActiveDoFs}(\C)$ \tcp{Alg.~\ref{alg:buildactivedofs}}
-    $(\Amat{0}{\activeDoFs}{\L}, \Amat{1}{\activeDoFs}{\L}) \leftarrow \textsc{BuildSubdivMatrices}(\D)$ \tcp{Alg.~\ref{alg:buildsubdivmatrix}}
-    $(\mathbf{M}_0, \mathbf{C}_0, \mathbf{B}_0) \leftarrow \bigl((\Amat{0}{\activeDoFs}{\L})^\top \mathbf{M} \Amat{0}{\activeDoFs}{\L},\; (\Amat{1}{\activeDoFs}{\L})^\top \mathbf{C} \Amat{1}{\activeDoFs}{\L},\; (\Amat{0}{\activeDoFs}{\L})^\top \mathbf{B} \Amat{1}{\activeDoFs}{\L}\bigr)$\;
-    $(\sigma_h, u_h) \leftarrow \mathrm{MINRES}$ solve of $K(\sigma, u) = (0,\; (\Amat{1}{\activeDoFs}{\L})^\top f)$ with preconditioner $\mathbf{P}$ \tcp{Section~\ref{sec:preconditioner}}
-    $\eta \leftarrow \textsc{AggregateEstimators}(\{\eta^2_T\}_{T \in \T_\L},\, P)$ \tcp{Alg.~\ref{alg:aggregate}}
-    $P \leftarrow \textsc{DoerflerRefine}(P, \eta, \theta)$ \tcp{mark $+$ refine $+$ pad; Alg.~\ref{alg:doerfler}, \ref{alg:padding}}
-}
-\end{algorithm}}
-
-\paragraph{SOLVE.}
+\subsubsection{Solve}
 \label{sec:preconditioner}
+
 \robert{We solve the discrete system on the hierarchical space $\hierSDFspace{k}{\C}{\L}$ with an iterative solver. For the mixed problems considered here the block system $K$ is symmetric indefinite, so we use MINRES with a block-diagonal SPD preconditioner
 \begin{equation}
     \mathbf{P} =
@@ -1165,51 +1146,59 @@ The following sections will cover the individual steps of this loop, and focus p
 \end{equation}
 where $\mathbf{S}$ approximates the Schur complement of the $(1,1)$ block by replacing $\mathbf{M}_0^{-1}$ with a row-sum lumped inverse ($\mathbf{1}$ the all-ones vector of length $\dim \D^0$). Row-sum lumping bounds $\mathbf{M}_0$ from above with a mesh-independent constant for piecewise-linear triangles, giving a stable Schur approximation on the irregular meshes produced by adaptive refinement. Both blocks are factorised once per adaptive step by sparse Cholesky (LDLT) and discarded afterwards, since the active spaces are non-nested between steps; each MINRES iteration then costs one triangular back-solve per block.}
 
-\paragraph{ESTIMATE.}
+\subsubsection{Estimation}
+\label{subsec:estimate}
+
 We compute error indicators $\eta_{\l,a}$ per face $\face{\l}{a} \in \C$ of the subdivision partition. The residual is evaluated on the finest level $\L$ and then aggregated to the coarse parent faces:
 \begin{equation}
-    \eta_{\l,a} = \int_{\Aop{}{\l}{\L}(\face{\l}{a})} \big\| \iota (f_h) - f \big\|^2,
+    \label{eq:project_estimator_on_L_to_partition}
+    \eta^2_{\l,\coarseIdxone} = \int_{\Aop{}{\l}{\L}(\face{\l}{\coarseIdxone})} \big\| \iota (f_h) - f \big\|^2 \qquad \robert{ \text{or} \qquad  \sum\limits_{\face{\L}{\fineIdxone} \in \Aop{}{\l}{\L}(\face{\l}{\coarseIdxone})} \eta^2_{\L,\fineIdxone} },
 \end{equation}
 where $f_h$ is obtained by applying the discrete PDE operator to $u_h$. Note that the interface DoFs are excluded from the indicator computation.
 
 \begin{example}[Vector Laplace estimator]
-For the mixed vector Laplace problem with $(\sigma_h, u_h) \in \hierSDFspace{0}{\C}{\L} \times \hierSDFspace{1}{\C}{\L}$, the basis functions are piecewise linear approximations of the subdivision limit functions. Hence $\extd u_h$ is piecewise constant and $\boldsymbol{\delta}\extd u_h$ vanishes elementwise, while its contribution appears in the curl jumps across edges. The indicator takes the form
+For the mixed vector Laplace problem with $(\sigma_h, u_h) \in \hierSDFspace{0}{\C}{\L} \times \hierSDFspace{1}{\C}{\L}$ from Section~\ref{subsec:vector_laplace}, the basis functions are piecewise linear approximations of the subdivision limit functions. Hence $\extd (\iota u_h)$ is piecewise constant in $\FEECspace{2}{\L}$ and $\boldsymbol{\delta}\extd (\iota u_h)$ vanishes elementwise, while its contribution appears in the curl jumps across edges. In $\FEECspace{2}{\L}$, the indicator takes the form
 \begin{equation}
-    \eta_{\l,a}^2 = \sum_{T \,\subset\, \Aop{}{\l}{\L}(\face{\l}{a})} \!\! \left( h_T^2 \|f - \extd \sigma_h\|_{L^2(T)}^2 + \|\sigma_h + \boldsymbol{\delta} u_h\|_{L^2(T)}^2 \right) + \sum_{e \,\subset\, \Aop{}{\l}{\L}(\face{\l}{a})} \!\! h_e \big\|[\![\mathrm{curl}(u_h)]\!]\big\|_{L^2(e)}^2.
+\begin{aligned}
+    \eta_{\L,\fineIdxone}^2 = \quad &\sum\limits_{\face{\L}{\coarseIdxone} \,\in\, \F_\L} \!\! \robert{h_{\face{\L}{\fineIdxone}}^2} \big( \|f - \extd \sigma_h\|_{L^2(\face{\L}{\fineIdxone})}^2 + \|\sigma_h + \boldsymbol{\delta} u_h\|_{L^2(\face{\L}{\fineIdxone})}^2 \big) \\
+    + &\sum\limits_{\edge{\L}{\fineIdxtwo} \, \in \, \E_\L} \robert{h_e} \big\|[\![\mathrm{curl}(u_h)]\!]\big\|_{L^2(\edge{\L}{\fineIdxtwo})}^2.
+\end{aligned}
 \end{equation}
-The first sum contains the elementwise residuals of both equations, and the second sum contains the curl jump across interior edges $e$ of the fine mesh $\T_\L$.
+The first sum contains the elementwise residuals of both equations, and the second sum contains the curl jump across interior edges $e$ of the fine mesh $\T_\L$. The per-face indicator $\eta_{\L,\fineIdxone}^2$ on level $\L$ can be translated back to the subdivision partition $\C$ using Equation~\ref{eq:project_estimator_on_L_to_partition}.
 \end{example}
 
-\robert{The element indicators $\eta^2_T$ are evaluated on every triangle $T$ of the embedding mesh $\T_\L$ and then aggregated onto the active partition by walking each fine face up the quad-tree to its ancestor in $P$. The resulting per-patch value $\eta_{\l,a}$ is the square root of the summed fine-mesh indicators over all level-$\L$ descendants of $\face{\l}{a}$.}
+\newcommand{\activeStar}{\F\V_\C}
 
-\robert{\begin{algorithm}[H]
-\caption{$\textsc{AggregateEstimators}(\{\eta^2_T\}_{T \in \T_\L}, P)$: aggregate fine-mesh indicators onto the active partition}
-\label{alg:aggregate}
-\KwIn{per-element indicators $\eta^2_T$ for all $T \in \T_\L$, partition $P$}
-\KwOut{per-patch estimators $\eta[\l][f]$ for $f \in P[\l]$}
-$\zeta[\l][f] \leftarrow 0$ for all $\l$, $f \in P[\l]$\;
-\For{each $T \in \T_\L$}{
-    $g \leftarrow T$\;
-    \For{$\l = \L, \L-1, \ldots, 0$}{
-        \If{$g \in P[\l]$}{
-            $\zeta[\l][g] \leftarrow \zeta[\l][g] + \eta^2_T$;\quad \textbf{break}\;
-        }
-        $g \leftarrow \lfloor g/4 \rfloor$ \tcp{parent face (SEC convention: children of $f$ are $\{4f, \ldots, 4f+3\}$)}
-    }
-}
-\Return $\eta[\l][f] = \sqrt{\zeta[\l][f]}$ for all active $(\l, f)$\;
-\end{algorithm}}
+\noindent We now have estimators $\eta_{\l,\coarseIdxone}$ per face of the subdivision partition $\C$. However, the atomic units of refinement in our scheme are vertex stars because the give rise to clean analysis. To enable vertex-based refinement for the adaptive algorithm, we need to sum up the face estimators $\eta_{\l,\coarseIdxone}$ to vertex estimators $\nu_{\l,\coarseIdxtwo}$. To introduce the formula, we need to define the \emph{active star} $\activeStar(\vertex{\l}{\coarseIdxtwo})$ of an active vertex $\vertex{\l}{\coarseIdxtwo}$.
+\begin{equation}
+    \activeStar(\vertex{\l}{\coarseIdxtwo}) \coloneq \bigcup\limits_{\lone \in \{\l, \L\} \; \colon \; \vertex{\l \to \lone}{\coarseIdxtwo} \in \C^0_{\lone}} \FEl{\lone} \big( \vertex{\l \to \lone}{\coarseIdxtwo} \big) \; \cap \; \C^2_{\lone}.
+\end{equation}
+The active star operator $\activeStar(\vertex{\l}{\coarseIdxtwo})$ collects all active faces of the subdivision partition $\C$ across the coarsest level $\l$ and finest level $\lone$ on which the vertex is active. The fact that the vertex persists from level $\l$ to level $\lone$ means that we can define equivalence classes
+\begin{equation}
+    \vertex{}{\coarseIdxtwo} \coloneq 
+\end{equation}
 
-\paragraph{MARK.}
+\todo{Do define this, this is good. We can then look at the intersection between the equivalence class and the subdiv partition to get all vertices we need to take the star over.}
+
+\robert{To each vertex $\vertex{\l}{\coarseIdxtwo}$ we assign the total energy and area of the faces in its star, taken at $v$'s coarsest active level $\l_{\min}(v)$,
+\begin{equation}
+    \label{eq:vertex_energy_density}
+    \mathrm{energy}(v) = \!\!\!\sum_{\face{\l}{a} \,\in\, \mathrm{star}(v)} \!\!\! \eta_{\l,a}^2, \qquad
+    \mathrm{area}(v) = \!\!\!\sum_{\face{\l}{a} \,\in\, \mathrm{star}(v)} \!\!\! \mathrm{area}(\face{\l}{a}),
+\end{equation}
+and form the error \emph{density} $\rho(v) = \mathrm{energy}(v)/\mathrm{area}(v)$. Dividing by the star area cancels the $\approx\!4\times$ per-level shrinkage of the star area, so a vertex resolving a fine feature competes on an equal footing with coarse ones. The density $\rho(v)$ is the quantity the \textsc{Mark} step ranks by.}
+
+\subsubsection{Marking}
+\label{subsec:mark}
+
 \todo{\guidance{Dissolve the worked example here (narrative point~3). When Section~\ref{subsec:worked_example} is folded in, attach Fig.~\ref{fig:pipeline_marking} (residual $\to$ density $\to$ post-mark) as the running illustration of this paragraph, using the closed-form $\eta$ of Eq.~\eqref{eq:worked_example_eta} as the concrete input.}}
 \robert{We mark by \emph{vertex stars} rather than by individual faces, so that
 every refinement acts on the combinatorial object the admissibility argument
 reasons about: a complete, single-level vertex star. Marking splits into a
 \emph{decision} phase (which vertices to refine) and an \emph{application} phase
-(how far to refine each of them). In the decision phase we aggregate the squared
-indicators $\eta_{\l,a}^2$ and the star areas onto each vertex $v$ at its coarsest
-active level $\l_{\min}(v)$, rank the vertices by the error \emph{density}
-$\rho(v) = \big(\textstyle\sum \eta^2\big)/\big(\sum \mathrm{area}\big)$, and greedily
+(how far to refine each of them). In the decision phase we rank the vertices by the
+error density $\rho(v)$ from the \textsc{Estimate} step
+(Eq.~\eqref{eq:vertex_energy_density}, Section~\ref{subsec:estimate}) and greedily
 select the densest vertices until the marked energy reaches the Dörfler bulk
 $\theta \sum_{\l<\L} \eta_{\l,a}^2$. Faces on level $\L$ are excluded from this
 total, as they cannot be refined further within the present hierarchy; the
@@ -1219,10 +1208,10 @@ $T(v) = \min\big(\text{finest active level in }v\text{'s star} + 1,\ \L\big)$ fo
 each selected vertex, and refine each selected star up to $T(v)$. A final
 $\textsc{Pad}$ (Alg.~\ref{alg:padding}) restores admissibility.}
 
-\robert{Three choices deserve comment. Ranking by density $\eta^2/\mathrm{area}$
-cancels the $\approx\!4\times$ per-level shrinkage of the star area, so a vertex on
-a fine feature competes on equal footing with coarse ones and the partition
-advances by roughly one level per step. Homogenising the \emph{whole} star to
+\robert{Three choices deserve comment. Ranking by the density $\rho(v)$
+(Section~\ref{subsec:estimate}) rather than raw energy lets a vertex on a fine
+feature compete with coarse ones, so the partition advances by roughly one level
+per step. Homogenising the \emph{whole} star to
 $\text{finest}+1$ (rather than only the arc active at $\l_{\min}(v)$) makes each
 mark a complete uniform-level star and keeps it $1$-irregular internally; going one
 level beyond the star's current finest face is what lets an already-uniform star
@@ -1252,7 +1241,65 @@ $P' \leftarrow P$\;
 \Return $\textsc{Pad}(P')$ \tcp{Alg.~\ref{alg:padding}}
 \end{algorithm}}
 
-\paragraph{PAD.}
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig1a.pdf}
+        \caption{Per-face residual $\eta_f$.}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig1b.pdf}
+        \caption{Per-vertex residual $\nu_v$.}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig1c.pdf}
+        \caption{After refinement.}
+    \end{subfigure}
+    \caption{\robert{Marking stage of the worked example
+    (Eq.~\eqref{eq:worked_example_eta}). (a) the coarse mesh coloured by the
+    per-face residual $\eta_f$; (b) the per-vertex error density $\rho(v)$, the
+    ranking key the marker sorts by, evaluated at each vertex's coarsest active
+    level; (c) the partition after refining the marked stars, before any padding,
+    with the selected vertices overlaid on the density scale of~(b).}}
+    \label{fig:pipeline_marking}
+\end{figure}
+
+\subsubsection{Refinement}
+\label{subsec:refine}
+
+Each marked and padded face is refined by one level via quadrisection.
+
+\subsubsection{Padding}
+\label{subsec:padding}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig2a.pdf}
+        \caption{Before padding.}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig2b.pdf}
+        \caption{resolved vertex pinches.}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig2c.pdf}
+        \caption{condition-I pad.}
+    \end{subfigure}
+    \caption{\robert{Padding stage of the worked example. (a) repeats
+    Fig.~\ref{fig:pipeline_marking}(c), the partition before padding; (b) after
+    $\textsc{ResolveVertexPinches}$, the centre pinch is gone; (c) after the
+    condition-I pad, the one remaining inadmissible face is refined, giving the
+    final admissible partition (grading does not fire here).}}
+    \label{fig:pipeline_padding}
+\end{figure}
+
 \todo{\guidance{Dissolve the worked example here (narrative point~3). Attach Fig.~\ref{fig:pipeline_padding} (pre-pad $\to$ after pinch $\to$ after condition-I) as the illustration of this paragraph, and \emph{end the padding exposition with the open hand-off} placed below.}}
 \robert{The padding step is non-standard and specific to our setting. After
 marking, the refined covering may violate the subdivision-partition admissibility
@@ -1376,90 +1423,6 @@ trip grading.}
     the finest level, cleanly separating the conditioning role of grading from the
     admissibility role of condition~I.}}
     \label{fig:grading_example}
-\end{figure}
-
-\paragraph{REFINE.}
-Each marked and padded face is refined by one level via quadrisection.
-
-\FloatBarrier
-
-\subsection{A worked example: marking and padding on a valence-8 disk}
-\label{subsec:worked_example}
-
-\todo{\guidance{Dissolve this subsection (narrative point~3). This is currently the first of three tellings of the ``a pinch/loop injects a spurious harmonic, padding removes it'' story (the other two are Sections~\ref{subsec:exactness_atomic} and~\ref{subsec:maxwell}). Fold it into the \textsc{Mark} and \textsc{Pad} paragraphs above: keep the closed-form $\eta$ (Eq.~\eqref{eq:worked_example_eta}) as the concrete input, move Figs.~\ref{fig:pipeline_marking} and~\ref{fig:pipeline_padding} to those paragraphs, and delete this header so the example becomes the \emph{setup} for Section~\ref{subsec:exactness_atomic} rather than a standalone retelling.}}
-
-\guidance{Open hand-off (to end the padding exposition once this subsection is dissolved): \emph{Whether these two rules reliably restore an exact, independent basis --- not just on this constructed input but across the admissibility boundary --- is verified directly in Section~\ref{subsec:exactness_atomic}.}}
-
-\robert{To make the stages concrete we push a single residual through the actual
-pipeline on a valence-$8$ two-ring disk (centre vertex of valence $8$; $32$
-level-$0$ faces). Evaluated at each face barycentre $(x,y)$, the element indicator
-is the closed form
-\begin{equation}
-    \label{eq:worked_example_eta}
-    \eta(x,y) = \mathbb{1}\{x\,y > 0\} + \exp\!\big(-((x-2)^2 + y^2)/(2 \cdot 0.4^2)\big),
-\end{equation}
-with Dörfler parameter $\theta = 0.97$. This $\eta$ is a synthetic stand-in for the
-estimator output of \eqref{eq:derivative_relation_basis}\,--\,style residual: it is
-prescribed as one nonnegative scalar per face rather than obtained from a solve,
-but the marking and padding stages act on it exactly as they would on a real
-$H(\mathrm{curl})$ residual, so the pipeline shown here is identical to a real
-adaptive step. The first term is the indicator of the first and third quadrants;
-density-ranked vertex-star marking refines those two opposite quarters and leaves
-the coarse remainder as two disconnected arcs around the centre --- the valence-$8$
-\emph{pinch}. The second term is a small Gaussian at the boundary vertex $(2,0)$;
-it marks one extra star poking into a coarse quadrant, leaving one face without a
-Good vertex so that the condition-I pad has exactly one face to refine. Every
-active face stays on levels $\{0,1\}$, so grading never fires.}
-
-\begin{figure}[htbp]
-    \centering
-    \begin{subfigure}[b]{0.31\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig1a.pdf}
-        \caption{Per-face residual $\eta_f$.}
-    \end{subfigure}\hfill
-    \begin{subfigure}[b]{0.31\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig1b.pdf}
-        \caption{Per-vertex density $\rho(v)$.}
-    \end{subfigure}\hfill
-    \begin{subfigure}[b]{0.31\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig1c.pdf}
-        \caption{After marking (pre-padding).}
-    \end{subfigure}
-    \caption{\robert{Marking stage of the worked example
-    (Eq.~\eqref{eq:worked_example_eta}). (a) the coarse mesh coloured by the
-    per-face residual $\eta_f$; (b) the per-vertex error density $\rho(v)$, the
-    ranking key the marker sorts by, evaluated at each vertex's coarsest active
-    level; (c) the partition after refining the marked stars, before any padding,
-    with the selected vertices overlaid on the density scale of~(b).}}
-    \label{fig:pipeline_marking}
-\end{figure}
-
-\begin{figure}[htbp]
-    \centering
-    \begin{subfigure}[b]{0.31\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig2a.pdf}
-        \caption{Before padding.}
-    \end{subfigure}\hfill
-    \begin{subfigure}[b]{0.31\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig2b.pdf}
-        \caption{After $\textsc{ResolveVertexPinches}$.}
-    \end{subfigure}\hfill
-    \begin{subfigure}[b]{0.31\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig2c.pdf}
-        \caption{After condition-I pad (final).}
-    \end{subfigure}
-    \caption{\robert{Padding stage of the worked example. (a) repeats
-    Fig.~\ref{fig:pipeline_marking}(c), the partition before padding; (b) after
-    $\textsc{ResolveVertexPinches}$, the centre pinch is gone; (c) after the
-    condition-I pad, the one remaining inadmissible face is refined, giving the
-    final admissible partition (grading does not fire here).}}
-    \label{fig:pipeline_padding}
 \end{figure}
 
 \FloatBarrier
@@ -1751,6 +1714,7 @@ even as the cohomologically meaningful $\dim\mathcal{H}^1$ falls from $2$ to $0$
 \FloatBarrier
 
 \subsection{Vector Laplace problem}
+\label{subsec:vector_laplace}
 
 The $1$-form Laplace problem is given by
 \begin{equation}
@@ -1916,6 +1880,8 @@ $P' \leftarrow$ copy of $P$\;
 \Return $\textsc{Pad}(P')$\;
 \end{algorithm}}
 
+\newpage
+
 \robert{\begin{algorithm}[H]
 \caption{$\textsc{ResolveVertexPinches}(P)$: full pinch resolution}
 \label{alg:pinch_full}
@@ -1938,6 +1904,8 @@ $P' \leftarrow$ copy of $P$\;
 }
 \Return $P$\;
 \end{algorithm}}
+
+\newpage
 
 \robert{\begin{algorithm}[H]
 \caption{$\textsc{PadPartitionPerVertexGraded}(P)$: full condition-I padding with grading}
