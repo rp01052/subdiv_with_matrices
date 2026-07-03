@@ -19,7 +19,7 @@
 \usepackage{mathtools}
 \usepackage{multicol}
 \usepackage{tikz, tikz-cd}
-\usetikzlibrary{arrows.meta, decorations.pathreplacing, calligraphy, positioning}
+\usetikzlibrary{arrows.meta, decorations.pathreplacing, calligraphy, positioning, calc}
 \usepackage{adjustbox}
 
 \usepackage{aligned-overset}
@@ -45,6 +45,7 @@
 \bibliographystyle{elsarticle-harv}
 
 \usepackage{multirow}
+\usepackage{booktabs}
 
 %opening
 \title{Hierarchical Subdivision $k$-Form Spaces on the Matrix Level}
@@ -64,6 +65,11 @@ Werner Bauer\footnote{University of Surrey, School of Mathematics and Physics, U
 %\renewcommand{\checkit}[1]{{\color{red}#1}}
 \newcommand{\tbd}[1]{{\color{red}#1}}
 \newcommand{\highlight}[1]{{\color{cyan} #1}}
+% narrative guidance (draft scaffolding): lime-coloured text that reminds the
+% reader/author how a piece fits the overall story. Concrete reader-facing
+% guidance is used bare as \guidance{...}; not-yet-final refactoring reminders
+% are wrapped as \todo{\guidance{...}}. Switch lime!70!black to lime for pure lime.
+\newcommand{\guidance}[1]{{\color{lime!70!black} #1}}
 
 % colors
 \newcommand{\blue}{\color{blue}}
@@ -273,8 +279,10 @@ Werner Bauer\footnote{University of Surrey, School of Mathematics and Physics, U
 \begin{abstract}
 We provide the algorithmic and computational complement to the theoretical framework of~\cite{Piel.2026} for hierarchical subdivision $k$-form spaces on triangular meshes. The central observation is that every basis function is represented by a column of the accumulated subdivision matrix. Selecting active degrees of freedom results in collecting their corresponding columns into the hierarchical subdivision matrix. This sparse matrix reduces all downstream operations like matrix assembly or residual evaluation to standard sparse linear algebra on the finest mesh $\T_\L$ without recomputing any integrals. We give explicit algorithms for constructing the active degrees of freedom from a subdivision partition, including a frontier-sweep procedure for the interface basis functions at level boundaries.
 
-For the adaptive solution of PDEs, we describe a \textsc{Solve}--\textsc{Estimate}--\textsc{Mark}--\textsc{Pad}--\textsc{Refine} loop in which the non-standard \textsc{Pad} step enforces the subdivision partition condition after Dörfler marking, and a topological repair step corrects isolated boundary vertices that would otherwise break de Rham exactness. Numerical experiments on the Maxwell eigenvalue problem confirm that exact subdivision partitions reproduce the reference spectrum without spurious modes and adaptive experiments on the mixed vector Laplace equation demonstrate out adaptive loop.
+For the adaptive solution of PDEs, we describe a \textsc{Solve}--\textsc{Estimate}--\textsc{Mark}--\textsc{Refine}--\textsc{Pad} loop in which the non-standard \textsc{Pad} step enforces the subdivision partition condition after Dörfler marking \robert{by alternating pinch resolution and condition-I grading to a fixed point, refining the coarse regions that would otherwise break de Rham exactness}. Numerical experiments on the Maxwell eigenvalue problem confirm that exact subdivision partitions reproduce the reference spectrum without spurious modes and adaptive experiments on the mixed vector Laplace equation demonstrate \robert{our} adaptive loop.
 \end{abstract}
+
+\todo{\guidance{Scoping (narrative point~1). Weave one bridging clause into the abstract so its arc matches the paper: after ``\ldots\ reduces all downstream operations to standard sparse linear algebra'', add that \emph{the substantive question is then purely combinatorial --- which column selections are admissible --- which we answer via the subdivision-partition condition and enforce during adaptivity with the} \textsc{Pad} \emph{step}. This signals that the matrix picture is the setup and the admissibility/padding machinery is the body of the work.}}
 
 
 \tableofcontents
@@ -298,6 +306,8 @@ This paper provides the matrix-level description and algorithms for hierarchical
     \item An adaptive refinement loop \textsc{Solve}--\textsc{Estimate}--\textsc{Mark}--\textsc{Pad}--\textsc{Refine}, including a non-standard padding step that restores the subdivision partition condition after marking (Section~4).
     \item Numerical verification via the Maxwell eigenvalue problem, confirming that the exact de Rham complex is preserved, and adaptive convergence experiments for the vector Laplace equation with multi-scale solutions (Section~5).
 \end{itemize}
+
+\todo{\guidance{Scoping (narrative point~1). Re-split the first bullet so the two layers are billed honestly instead of the combinatorial machinery hiding inside ``a practical algorithm'': (i) the \emph{matrix representation} that reduces the hierarchical space to a column selection from $\{\Amat{k}{\l}{\L}\}_\l$ (Section~2), and (ii) the \emph{combinatorial admissibility theory plus the} \textsc{Pad} \emph{repair algorithm} that governs which selections are legal and restores legality during adaptivity (Sections~3--4). Admissibility/padding is most of the paper and should headline as its own contribution.}}
 
 \section{Subdivision $k$-form spaces: from uniform to hierarchical}
 
@@ -366,72 +376,6 @@ This implies
 and thus shows that the columns of the subdivision matrix $\Amat{k}{\l}{\L}$ contain the coefficients of the subdivision basis functions $\constrQ{\SDFbasis}{k}{\l}{\L}{\coarseIdxone}$ in the fine FEEC space $\FEECspace{k}{\L}$.
 
 Uniform subdivision spaces $\SDFspace{k}{\lone}{\L}$ resolve the domain at a single global scale, which is wasteful when the PDE solution contains localised features. Hierarchical spaces break this uniformity by mixing basis functions from \emph{different} levels $\lone$: as illustrated in Fig.~\ref{fig:hier_basis_funs}, a level-$0$ function (left) has broad support capturing large-scale variation, while a level-$2$ function (right) has a much smaller support and can resolve local detail. Selecting which levels to activate in which part of the domain yields an approximation space whose resolution adapts spatially to the solution.
-
-\begin{figure}
-\begin{center}
-\begin{tikzpicture}[
-    every node/.style={inner sep=0pt, outer sep=0pt},
-    arr/.style={->, >=Stealth, line width=1.5pt, shorten >=2pt, shorten <=2pt}
-]
-
-% ============================================================
-%  COLUMN X POSITIONS
-% ============================================================
-\def\xA{0cm}
-\def\xB{5cm}
-\def\xC{10cm}
-
-% ============================================================
-%  ROW Y POSITIONS
-% ============================================================
-\def\yOne{0cm}
-\def\yTwo{-4cm}
-\def\yThree{-8cm}
-
-% ============================================================
-%  ROW 1
-% ============================================================
-\node (A1) at (\xA, \yOne)
-    {\includegraphics[width=0.25\textwidth]{images/basis_funs/whitney_basis_fun_l0.png}};
-
-\node (B1) at (\xB, \yOne)
-    {\includegraphics[width=0.25\textwidth, trim=10pt 0pt 10pt 0pt, clip]{images/basis_funs/whitney_basis_fun_l1.png}};
-
-\node (C1) at (\xC, \yOne)
-    {\includegraphics[width=0.25\textwidth]{images/basis_funs/whitney_basis_fun_l2.png}};
-
-% ============================================================
-%  ROW 2
-% ============================================================
-\node (A2) at (\xA, \yTwo)
-    {\includegraphics[width=0.25\textwidth]{images/basis_funs/basis_fun_l0.png}};
-
-\node (B2) at (\xB, \yTwo)
-    {\includegraphics[width=0.25\textwidth, trim=10pt 0pt 10pt 0pt, clip]{images/basis_funs/basis_fun_l1.png}};
-
-\node (C2) at (\xC, \yTwo)
-    {\includegraphics[width=0.25\textwidth]{images/basis_funs/basis_fun_l2.png}};
-
-% ============================================================
-%  VERTICAL ARROWS (one per column, between each row pair)
-% ============================================================
-\draw[arr] (A1.south) -- (A2.north) node[midway, right, font=\small] {$\;\;\Aop{0}{0}{\L}$};
-\draw[arr] (B1.south) -- (B2.north) node[midway, right, font=\small] {$\;\;\Aop{0}{1}{\L}$};
-\draw[arr] (C1.south) -- (C2.north) node[midway, right, font=\small] {$\;\;\Aop{0}{2}{\L}$};
-
-% ============================================================
-%  COLUMN LABELS (above row 1)
-% ============================================================
-\node[above=8pt of A1, inner sep=2pt] (colA) {Basis function from $\l = 0$};
-\node[above=8pt of B1, inner sep=2pt] (colB) {Basis function from $\l = 1$};
-\node[above=8pt of C1, inner sep=2pt] (colC) {Basis function from $\l = 2$};
-
-\end{tikzpicture}
-\end{center}
-\vspace{-5mm}
-\caption{Subdivision basis functions from levels $\l = 0$, $1$, $2$. Whitney functions (top row) are mapped by $\Aop{0}{\l}{\L}$ to their smooth subdivision limits (bottom row). Coarser levels have broader support; hierarchical spaces select from all levels to adapt resolution spatially.}
-\label{fig:hier_basis_funs}
-\end{figure}
 
 In the uniform space $\SDFspace{k}{\l}{\L}$, every $k$-simplex of $\T_\l$ contributes a basis function, so $\activeDoFSet{k}{\l} = \K^k_\l$. The hierarchical space relaxes this: it selects $\activeDoFSet{k}{\l} \subset \K^k_\l$ at each level, mixing coarse basis functions (broad support, large-scale variation) and fine basis functions (small support, local detail) to adapt spatial resolution to the solution. Not every choice of $\activeDoFSet{k}{\l}$ yields a well-behaved space. For example, the active basis functions may fail to be linearly independent, or the spaces may fail to constitute an exact differential complex. Section~\ref{sec:construction_of_hierarchical_subdiv_spaces} develops the theory of admissible choices.
 
@@ -523,8 +467,12 @@ The PDE is then solved for the hierarchical DoF vector $\freeVec{\bar{c}}{k}{\ac
 
 The concrete task that remains is therefore constructing $\Amat{k}{\activeDoFs}{\L}$, which reduces to choosing the active DoFs $\activeDoFSet{k}{\l}$. The remainder of this paper focuses on defining $\activeDoFSet{k}{\l}$ such that the resulting hierarchical spaces are linearly independent and preserve a discrete de Rham complex, and on assembling $\Amat{k}{\activeDoFs}{\L}$ from those choices.
 
+\guidance{From here the matrix picture is fixed. The object $\Amat{k}{\activeDoFs}{\L}$ is always the same kind of thing --- a selection of columns from the hierarchy $\{\Amat{k}{\l}{\L}\}_\l$ --- and every downstream operation is the generic Galerkin restriction of Section~\ref{subsec:computational_representations}, \emph{independent} of which columns are chosen. The entire remaining question is therefore combinatorial: \emph{which} column selections (equivalently, which subdivision partitions) yield a linearly independent basis and a de Rham complex. The rest of the paper characterises the admissible selections (Section~\ref{sec:construction_of_hierarchical_subdiv_spaces}), assembles and adapts them (Section~4), and verifies the resulting exactness (Section~5).}
+
 \section{Constructing hierarchical subdivision spaces}
 \label{sec:construction_of_hierarchical_subdiv_spaces}
+
+\guidance{The matrix representation of Section~\ref{subsec:computational_representations} is unchanged throughout this section; here we determine \emph{which} column selections are admissible. The two tools below --- refinement stencils and derivative stencils --- are the visual language for the two admissibility conditions (linear independence and closure of the complex), which the subdivision partition of Section~\ref{subsec:selecting_active_dofs} then enforces geometrically.}
 
 \subsection{Refinement of basis functions}
 
@@ -578,6 +526,8 @@ The hierarchical refinement relation in Lemma~\ref{lemma:hiermeshrel} provides a
     \end{equation}
 \end{definition}
 
+\todo{\guidance{Trim (narrative point~2). Corollary~\ref{cor:refinement_support} below and the ``uniqueness is lost'' example (Eq.~\eqref{eq:example_ref_stencil} and its $n$-alternatives discussion) are formal weight with no payoff here --- neither is used by any algorithm or by the admissibility statement, and they are what make this subsection read as a dead-end ladder. Cut both; keep the Refinement Relation (Lemma~\ref{lemma:hiermeshrel}), the canonical refinement stencil, and the figure.}}
+
 \begin{corollary}
     \label{cor:refinement_support}
     Let $\RSt\big( \simplex{k}{\lone}{\coarseIdxone} \big)$ be a refinement stencil of $\constrQ{\SDFbasis}{k}{\lone}{\L}{\coarseIdxone}$ with $\lzero \leq \lone \leq \ltwo \leq \L$. It then holds that
@@ -609,65 +559,82 @@ We call this refinement stencil canonical because it is the only one that contai
 \end{equation}
 is a valid refinement stencil of $\simplex{k}{\lone}{\coarseIdxone}$ with simplices on levels $\lone\!+\!1$ and $\lone\!+\!2$, yielding $n$ distinct alternatives to $\cRSt(\simplex{k}{\lone}{\coarseIdxone})$. To guarantee linear independence of the chosen basis functions, we need to ensure that every refinement stencil of every active DoFs contains at least one inactive DoF. We refer to \citep{Piel.2026} for this discussion and only use their results here to motivate the choice of active DoFs in Subsection~\ref{subsec:selecting_active_dofs}.
 
+\todo{\guidance{Reframe (narrative point~2). The last sentence undersells --- it reads as ``this formalism was optional''. Replace it with the actual correspondence: \emph{the refinement stencil is the visual test for linear independence --- a selection is independent precisely when every active DoF's refinement stencil still contains an inactive DoF}. State it as the purpose of this subsection, not as a deferral to the companion paper.}}
 
 \begin{figure}
 \begin{center}
+% Height-based version: every image is sized by its HEIGHT (\rowheight), so
+% trimming a side only makes that image narrower -- it never scales beyond the
+% row height. \rowgap sets the adjustable vertical gap between the two rows.
 \begin{tikzpicture}[
     every node/.style={inner sep=0pt, outer sep=0pt},
     arr/.style={->, >=Stealth, line width=1.5pt, shorten >=2pt, shorten <=2pt}
 ]
 
 % ============================================================
+%  TUNABLES (unitless, in cm)
+% ============================================================
+\def\rowheight{3.}   % fixed height of EACH row, in cm
+\def\rowgap{1.0}    % vertical gap between the two rows, in cm
+\def\divideroffset{10}  % how far (in pt) each divider stops short of the top/bottom
+
+% ============================================================
 %  COLUMN X POSITIONS
 % ============================================================
-\def\xA{0cm}
-\def\xB{5cm}
-\def\xC{9cm}
+\def\xA{0}
+\def\xB{5.0}
+\def\xC{9.5}
 
 % ============================================================
-%  ROW Y POSITIONS
+%  ROW Y POSITIONS (row 2 sits one row-height + gap below row 1)
 % ============================================================
-\def\yOne{0cm}
-\def\yTwo{-4.5cm}
-\def\yThree{-8cm}
+\def\yOne{0}
+\def\yTwo{-\rowheight-\rowgap}
 
 % ============================================================
-%  ROW 1
+%  ROW 1 (simplices)
 % ============================================================
 \node (A1) at (\xA, \yOne)
-    {\includegraphics[width=0.25\textwidth]{images/stencils/0_form_simplex.pdf}};
+    {\includegraphics[height=\rowheight cm]{images/stencils/0_form_simplex.pdf}};
 \node[xshift=2pt, yshift=10pt, font=\small, text=black] at (A1.center) {$\simplex{0}{\l}{\coarseIdxone}$};
 
 \node (B1) at (\xB, \yOne)
-    {\includegraphics[width=0.25\textwidth, trim=10pt 0pt 10pt 0pt, clip]{images/stencils/1_form_simplex.pdf}};
-\node[xshift=-12pt, yshift=10pt, font=\small, text=black] at (B1.center) {$\simplex{1}{\l}{\coarseIdxone}$};
+    {\includegraphics[height=\rowheight cm, trim=10pt 0pt 230pt 0pt, clip]{images/stencils/1_form_simplex.pdf}};
+\node[xshift=-0pt, yshift=10pt, font=\small, text=black] at (B1.center) {$\simplex{1}{\l}{\coarseIdxone}$};
 
 \node (C1) at (\xC, \yOne)
-    {\includegraphics[width=0.25\textwidth]{images/stencils/2_form_simplex.pdf}};
+    {\includegraphics[height=\rowheight cm, trim=10pt 0pt 230pt 0pt, clip]{images/stencils/2_form_simplex.pdf}};
 \node[xshift=-12pt, yshift=8pt, font=\small, text=black] at (C1.center) {$\simplex{2}{\l}{\coarseIdxone}$};
 
 % ============================================================
-%  ROW 2
+%  ROW 2 (refinement stencils)
 % ============================================================
 \node (A2) at (\xA, \yTwo)
-    {\includegraphics[width=0.25\textwidth]{images/stencils/0_form_refinement_stencil.pdf}};
+    {\includegraphics[height=\rowheight cm]{images/stencils/0_form_refinement_stencil.pdf}};
 
 \node (B2) at (\xB, \yTwo)
-    {\includegraphics[width=0.25\textwidth, trim=10pt 0pt 10pt 0pt, clip]{images/stencils/1_form_refinement_stencil.pdf}};
+    {\includegraphics[height=\rowheight cm, trim=10pt 0pt 230pt 0pt, clip]{images/stencils/1_form_refinement_stencil.pdf}};
 
 \node (C2) at (\xC, \yTwo)
-    {\includegraphics[width=0.25\textwidth]{images/stencils/2_form_refinement_stencil.pdf}};
+    {\includegraphics[height=\rowheight cm, trim=10pt 0pt 230pt 0pt, clip]{images/stencils/2_form_refinement_stencil.pdf}};
 
 % ============================================================
-%  VERTICAL ARROWS (one per column, between each row pair)
+%  VERTICAL ARROWS (one per column, between the two rows)
 % ============================================================
 \draw[arr] (A1.south) -- (A2.north) node[midway, right, font=\small] {$\;\; \cRSt\big( \simplex{0}{\l}{\coarseIdxone} \big)$};
-\draw[arr] ([xshift=-14pt]B1.south) -- ([xshift=-14pt]B2.north) node[midway, right, font=\small] {$\;\; \cRSt\big( \simplex{1}{\l}{\coarseIdxone} \big)$};
-\draw[arr] ([xshift=-14pt]C1.south) -- ([xshift=-14pt]C2.north) node[midway, right, font=\small] {$\;\; \cRSt\big( \simplex{2}{\l}{\coarseIdxone} \big)$};
+\draw[arr] ([xshift=-0pt]B1.south) -- ([xshift=-0pt]B2.north) node[midway, right, font=\small] {$\;\; \cRSt\big( \simplex{1}{\l}{\coarseIdxone} \big)$};
+\draw[arr] ([xshift=-0pt]C1.south) -- ([xshift=-0pt]C2.north) node[midway, right, font=\small] {$\;\; \cRSt\big( \simplex{2}{\l}{\coarseIdxone} \big)$};
 
-%\draw[arr] 
-%    ([yshift=-12pt]A2.south west) -- ([yshift=-12pt]C2.south east)
-%    node[midway, below=4pt, font=\small] {Choose active basis functions across all levels $\l \leq \L$ to span hierarchical spaces.};
+% ============================================================
+%  VERTICAL DIVIDERS (thin; one full-height line per column-pair,
+%  spanning from the top of row 1 to the bottom of row 2 so the middle
+%  gap is covered too). Anchored to the image nodes -> they track
+%  trims / column moves and never extend beyond the images.
+% ============================================================
+% between columns A and B
+\draw[line width=0.1pt] ([yshift=-\divideroffset pt]$(A1.north east)!0.5!(B1.north west)$) -- ([yshift=\divideroffset pt]$(A2.south east)!0.5!(B2.south west)$);
+% between columns B and C
+\draw[line width=0.1pt] ([yshift=-\divideroffset pt]$(B1.north east)!0.5!(C1.north west)$) -- ([yshift=\divideroffset pt]$(B2.south east)!0.5!(C2.south west)$);
 
 \end{tikzpicture}
 \end{center}
@@ -736,58 +703,63 @@ The derivative stencil is key for ensuring that every active $k$-form basis func
 
 \cite{Piel.2026} go on to show that the derivative of every active basis function can be represented by active basis functions of the next space in the complex. To obtain this result, they need to show that every simplex in the derivative stencil has a refinement stencil in the active DoFs. In this work, we only use the derivative stencil to motivate the choice of active DoFs in Subsection~\ref{subsec:selecting_active_dofs}.
 
+\todo{\guidance{Reframe (narrative point~2), mirroring the refinement-stencil reframe above. State the correspondence rather than the deferral: \emph{the derivative stencil is the visual test for closure of the complex --- the spaces close into a de Rham complex precisely when every active DoF's derivative stencil is itself active}. Together with the refinement-stencil condition, these are the two conditions the subdivision partition enforces.}}
 
 \begin{figure}
 \begin{center}
+% Scale is tied to HEIGHT (not width): fixing the height means trimming the
+% horizontal extent (tightening the column gaps / divider below) makes the
+% figure narrower without enlarging the images. Adjust the height to taste.
+\resizebox{!}{3.2cm}{%
 \begin{tikzpicture}[
     every node/.style={inner sep=0pt, outer sep=0pt},
     arr/.style={->, >=Stealth, line width=1.5pt, shorten >=2pt, shorten <=2pt}
 ]
 
 % ============================================================
-%  COLUMN X POSITIONS
+%  COLUMN X POSITIONS (single row: simplex -> deriv stencil, twice)
 % ============================================================
 \def\xA{0cm}
-\def\xB{5cm}
-\def\xC{10cm}
+\def\xB{4.3cm}
+\def\xC{8.0cm}
+\def\xD{11.5cm}
 
-% ============================================================
-%  ROW Y POSITIONS
-% ============================================================
 \def\yOne{0cm}
-\def\yTwo{-4.5cm}
-\def\yThree{-8cm}
 
 % ============================================================
-%  ROW 1
+%  0-FORM GROUP
 % ============================================================
-\node (A1) at (\xA, \yOne)
-    {\includegraphics[width=0.25\textwidth]{images/stencils/0_form_simplex.pdf}};
-\node[xshift=2pt, yshift=10pt, font=\small, text=black] at (A1.center) {$\simplex{0}{\l}{\coarseIdxone}$};
+\node (A) at (\xA, \yOne)
+    {\includegraphics[height=3cm]{images/stencils/0_form_simplex.pdf}};
+\node[xshift=2pt, yshift=10pt, font=\small, text=black] at (A.center) {$\simplex{0}{\l}{\coarseIdxone}$};
 
-\node (B1) at (\xB, \yOne)
-    {\includegraphics[width=0.25\textwidth, trim=10pt 0pt 10pt 0pt, clip]{images/stencils/1_form_simplex.pdf}};
-\node[xshift=-12pt, yshift=10pt, font=\small, text=black] at (B1.center) {$\simplex{1}{\l}{\coarseIdxone}$};
+\node (B) at (\xB, \yOne)
+    {\includegraphics[height=3cm]{images/stencils/0_form_deriv_stencil.pdf}};
 
-% ============================================================
-%  ROW 2
-% ============================================================
-\node (A2) at (\xA, \yTwo)
-    {\includegraphics[width=0.25\textwidth]{images/stencils/0_form_deriv_stencil.pdf}};
-
-\node (B2) at (\xB, \yTwo)
-    {\includegraphics[width=0.25\textwidth, trim=10pt 0pt 10pt 0pt, clip]{images/stencils/1_form_deriv_stencil.pdf}};
+\draw[arr] (A.east) -- (B.west) node[midway, above=6pt, font=\small] {$\DSt\big( \simplex{0}{\l}{\coarseIdxone} \big)$};
 
 % ============================================================
-%  VERTICAL ARROWS (one per column, between each row pair)
+%  DIVIDER (thin, no taller than the images: height 3cm -> +/-1.5cm)
 % ============================================================
-\draw[arr] (A1.south) -- (A2.north) node[midway, right, font=\small] {$\;\;\DSt\big( \simplex{0}{\l}{\coarseIdxone} \big)$};
-\draw[arr] ([xshift=-14pt]B1.south) -- ([xshift=-14pt]B2.north) node[midway, right, font=\small] {$\;\;\DSt\big( \simplex{1}{\l}{\coarseIdxone} \big)$};
+\draw[line width=0.1pt] (6.35cm, 1.2cm) -- (6.35cm, -1.2cm);
 
-\end{tikzpicture}
+% ============================================================
+%  1-FORM GROUP
+% ============================================================
+\node (C) at (\xC, \yOne)
+    {\includegraphics[height=3cm, trim=10pt 0pt 230pt 0pt, clip]{images/stencils/1_form_simplex.pdf}};
+\node[xshift=-0pt, yshift=10pt, font=\small, text=black] at (C.center) {$\simplex{1}{\l}{\coarseIdxone}$};
+
+\node (D) at (\xD, \yOne)
+    {\includegraphics[height=3cm, trim=10pt 0pt 230pt 0pt, clip]{images/stencils/1_form_deriv_stencil.pdf}};
+
+\draw[arr] ([xshift=-0pt]C.east) -- ([xshift=-1pt]D.west) node[midway, above=6pt, font=\small] {$\DSt\big( \simplex{1}{\l}{\coarseIdxone} \big)$};
+
+\end{tikzpicture}%
+}
 \end{center}
-\vspace{-5mm}
-\caption{Derivate stencils of $0$- and $1$-form basis functions.}
+\vspace{-3mm}
+\caption{Derivate stencils of $0$- and $1$-form basis functions, arranged in a single row: each simplex maps under $\DSt$ to its derivative stencil, with the $0$-form and $1$-form groups separated by a divider.}
 \end{figure}
 
 \FloatBarrier
@@ -806,6 +778,8 @@ the corresponding hierarchical space is
 where $\constrVec{\SDFbases}{k}{\activeDoFs}{\L}$ is the active basis function vector from~\eqref{eq:hierarchical_basis_vector}.
 
 Not every choice yields a well-behaved hierarchical space $\hierSDFspace{k}{\C}{\L}$. The selected columns of $\Amat{k}{\activeDoFs}{\L}$ must be linearly independent, must together represent forms that cover the entire domain, and the spaces for successive form degrees must close the de Rham complex. The remainder of this section characterises the admissible choices via the notion of a \emph{subdivision partition}.
+
+\guidance{The two admissibility requirements have a purely visual reading in terms of the refinement and derivative stencils introduced above. A selection is linearly \emph{independent} when every active basis function's refinement stencil still contains an inactive DoF; the spaces \emph{close into a complex} when every active function's derivative stencil is itself active. The subdivision partition defined below is the geometric bookkeeping that enforces both conditions at once, so that admissibility can be checked by inspecting patch interfaces rather than the abstract stencil machinery. This is what the stencils were for.}
 
 \begin{figure}[tb]
 \begin{center}
@@ -930,27 +904,7 @@ The interface DoFs are attributed exclusively to the \emph{finer} side of the pa
     \end{equation}
 \end{definition}
 
-\robert{Unpacking this definition: for every patch (\textit{i}) $\calP^n_{\l_i}$, we first add all of its $k$-simplices (\textit{ii}). Further, for all relatively finer patches (\textit{iii}) $\calP^m_{\l_j}$ with $\l_j > \l_i$ and all intermediate levels (\textit{iv}) $\l_t$ with $\l_i < \l_t \leq \l_j$, all interface simplices (\textit{v}) are added if they lie on the coarser side (\textit{vi}) of the interface, i.e.\ can be generated by refining patch $\calP^n_{\l_i}$ to level $\l_t$.}
-
-For future computations, it is helpful to group the active degrees of freedom by level $\l_t$ rather than by the individual patches $\calP^n_{\l_i}$. The following lemma re-formulates the active degrees of freedom in exactly that way.
-
-\begin{lemma}
-    \label{lemma:active_k_form_dofs_per_level}
-    The active degrees of freedom $\D^k$ induced by the subdivision partition $\C$ can equivalently be described by
-    \begin{equation}
-        \D^k \big( \C \big) = \bigcup_{\l_t = \l}^L \D^k_{\l_t} \big( \C \big)
-    \end{equation}
-    with
-    \begin{equation}
-        \D^k_{\l} \big( \C \big) = \K^k_{\l} \big(\C_{\l}\big)
-    \end{equation}
-    for $\l_t = \l$ and
-    \begin{equation}
-        \label{eq:active_k_form_dofs_per_level}
-        \D^k_{\l_t} \big( \C \big) = \K^k_{\l_t} \big(\C_{\l_t}\big) \cup \bigcup_{\calP^n_{\l_i} \in \C_{<\l_t}} \; \bigcup_{\calP^m_{\l_j} \in \C_{\geq \l_t}} \; \bigg[ \K^k\V_{\l_t} \Big( \V_{\l_t} \big(\I_{(\calP^n_{\l_i \to \l_t}, \calP^m_{\l_j})} \big) \Big) \cap \K^k_{\l_t} \big(\calP^n_{\l_i \to \l_t}\big) \bigg].
-    \end{equation}
-    for $\l_t = \l \!+\!1, \hdots, L$.
-\end{lemma}
+Unpacking this definition: for every patch (\textit{i}) $\calP^n_{\l_i}$, we first add all of its $k$-simplices (\textit{ii}). Further, for all relatively finer patches (\textit{iii}) $\calP^m_{\l_j}$ with $\l_j > \l_i$ and all intermediate levels (\textit{iv}) $\l_t$ with $\l_i < \l_t \leq \l_j$, all interface simplices (\textit{v}) are added if they lie on the coarser side (\textit{vi}) of the interface, i.e.\ can be generated by refining patch $\calP^n_{\l_i}$ to level $\l_t$.
 
 \begin{definition}[Adaptive subdivision differential form spaces]
     \label{def:adaptive_function_spaces}
@@ -1031,27 +985,67 @@ old frontier edges are consumed first, new ones are spawned, DoFs are
 emitted from the previous level's vertices, and finally the frontier is
 split for the next level.}
 
-\robert{\begin{algorithm}[H]
-\caption{$\textsc{BuildActiveDoFs}(P)$: active degrees of freedom from a subdivision partition}
+\robert{It is helpful to group the active degrees of freedom by level $\l_t$
+rather than by the individual patches $\calP^n_{\l_i}$ of
+Definition~\ref{def:active_k_form_dofs}. The following lemma re-formulates
+$\D^k(\C)$ in exactly that way, and it is this level-indexed form that
+Algorithm~\ref{alg:buildactivedofs} implements.}
+
+\begin{lemma}
+    \label{lemma:active_k_form_dofs_per_level}
+    The active degrees of freedom $\D^k$ induced by the subdivision partition $\C$ can equivalently be described by
+    \begin{equation}
+        \D^k \big( \C \big) = \bigcup_{\l_t = \l}^L \D^k_{\l_t} \big( \C \big)
+    \end{equation}
+    with
+    \begin{equation}
+        \D^k_{\l} \big( \C \big) = \K^k_{\l} \big(\C_{\l}\big)
+    \end{equation}
+    for $\l_t = \l$ and
+    \begin{equation}
+        \label{eq:active_k_form_dofs_per_level}
+        \D^k_{\l_t} \big( \C \big) = \K^k_{\l_t} \big(\C_{\l_t}\big) \cup \bigcup_{\calP^n_{\l_i} \in \C_{<\l_t}} \; \bigcup_{\calP^m_{\l_j} \in \C_{\geq \l_t}} \; \bigg[ \K^k\V_{\l_t} \Big( \V_{\l_t} \big(\I_{(\calP^n_{\l_i \to \l_t}, \calP^m_{\l_j})} \big) \Big) \cap \K^k_{\l_t} \big(\calP^n_{\l_i \to \l_t}\big) \bigg].
+    \end{equation}
+    for $\l_t = \l \!+\!1, \hdots, L$.
+\end{lemma}
+
+\robert{The correspondence between Lemma~\ref{lemma:active_k_form_dofs_per_level}
+and Algorithm~\ref{alg:buildactivedofs} is direct. The algorithm is indexed by
+level $\l = 0, \ldots, \L$, mirroring $\D^k(\C) = \bigcup_{\l_t} \D^k_{\l_t}(\C)$,
+and its two stages realise the two terms of~\eqref{eq:active_k_form_dofs_per_level}:
+the native DoFs of Step~1 produce the term $\K^k_{\l_t}(\C_{\l_t})$, while the
+frontier sweep of Step~2 produces the interface term. By contrast, the
+patch-pair indexing of Definition~\ref{def:active_k_form_dofs} would translate
+into a doubly-nested loop over patch pairs, which is not what we implement.}
+
+\begin{algorithm}[t]
+\color{orange}
+\caption{$\textsc{BuildActiveDoFs}(\C)$: active degrees of freedom from a subdivision partition}
 \label{alg:buildactivedofs}
+\BlankLine
 \tcp{1.\ Native DoFs}
-$\D^0[\l] \leftarrow \emptyset$,\; $\D^1[\l] \leftarrow \emptyset$ for all $\l$;\quad $\D^2 \leftarrow P$\;
-\For{$\l = 0, \ldots, \L$}{
-    \For{each $f \in P[\l]$}{
-        $\D^0[\l] \leftarrow \D^0[\l] \cup \mathrm{verts}(f)$;\quad $\D^1[\l] \leftarrow \D^1[\l] \cup \mathrm{edges}(f)$\;
+$\D^2 \leftarrow \C$\;
+\For{$\l = 0, \, \ldots, \, \L$}{
+    $\D^0[\l] \leftarrow \emptyset$\;
+    $\D^1[\l] \leftarrow \emptyset$\;
+    \For{each $f \in \C[\l]$}{
+        $\D^0[\l] \leftarrow \D^0[\l] \cup \mathrm{verts}(f)$\;
+        $\D^1[\l] \leftarrow \D^1[\l] \cup \mathrm{edges}(f)$\;
     }
 }
+\BlankLine
 \tcp{2.\ Interface DoFs (frontier sweep)}
-$\mathrm{frontier} \leftarrow \emptyset$;\quad $\mathrm{pendingVerts} \leftarrow \emptyset$\;
-\For{$\l = 0, \ldots, \L$}{
+$\mathrm{frontier} \leftarrow \emptyset$\;
+$\mathrm{pendingVerts} \leftarrow \emptyset$\;
+\For{$\l = 0, \, \ldots, \, \L$}{
     \tcp{(a) consume frontier edges whose fine side is now resolved at level $\l$}
     $\mathrm{frontier} \leftarrow \{ e \in \mathrm{frontier} : \text{fine-side faces of } e \notin P[\l] \}$\;
     \tcp{(b) spawn new frontier edges: interior edges of $\mathcal{F}_\l$ with exactly one adjacent face in $P[\l]$}
     $\mathrm{frontier} \leftarrow \mathrm{frontier} \cup \textsc{FindInterfaceEdges}(\l, \D)$\;
     \tcp{(c) emit DoFs from interface vertices spawned at level $\l - 1$}
     \For{each $v \in \mathrm{pendingVerts}$}{
-        $\D^0[\l] \leftarrow \D^0[\l] \cup \{v\}$;\quad
-        $\D^1[\l] \leftarrow \D^1[\l] \cup \mathrm{activeEdges}(v)$;\quad
+        $\D^0[\l] \leftarrow \D^0[\l] \cup \{v\}$\;
+        $\D^1[\l] \leftarrow \D^1[\l] \cup \mathrm{activeEdges}(v)$\;
         $\D^2[\l] \leftarrow \D^2[\l] \cup \mathrm{activeFaces}(v)$\;
     }
     $\mathrm{pendingVerts} \leftarrow \emptyset$\;
@@ -1071,9 +1065,13 @@ $\mathrm{frontier} \leftarrow \emptyset$;\quad $\mathrm{pendingVerts} \leftarrow
     }
 }
 \Return $\D$\;
-\end{algorithm}}
+\end{algorithm}
 
-\robert{\todo{Flag: The interface DoFs emitted in step~(c) include 2-form (face) contributions from the fine side of the level boundary. Native 2-form DoFs on the coarser side are already added in step~1; the interface emission adds child faces of the coarser active fan that meet the interface. Please confirm this is consistent with Definition~\ref{def:active_k_form_dofs} and the intended interpretation in the paper.}}
+\robert{The interface DoFs emitted in step~(c) include $2$-form (face)
+contributions from the fine side of the level boundary: the native $2$-form DoFs
+on the coarser side are already added in step~1, and the interface emission adds
+the child faces of the coarser active fan that meet the interface, consistent with
+Definition~\ref{def:active_k_form_dofs}.}
 
 \robert{Once the active DoFs $\D$ are known, the active subdivision matrix
 $\Amat{k}{\activeDoFs}{\L}$ is assembled column by column. Let
@@ -1126,32 +1124,46 @@ which is symmetric indefinite.}
 
 \subsection{The adaptive loop}
 
+\guidance{The matrix representation stays fixed across the loop: every step re-selects columns of $\{\Amat{k}{\l}{\L}\}_\l$ and reassembles the generic Galerkin system of Section~\ref{subsec:computational_representations}. What the loop actually changes --- and must keep admissible --- is the subdivision partition, i.e.\ the column index set. The \textsc{Pad} step is the mechanism that repairs admissibility after marking.}
+
 This section describes the adaptive loop used in the numerical experiments. The loop consists of the steps
 \begin{equation}
 \begin{tikzcd}
-    \mathrm{SOLVE} \arrow[r] & \mathrm{ESTIMATE} \arrow[r] & \mathrm{MARK} \arrow[r] & \mathrm{PAD} \arrow[r] & \mathrm{REFINE} \arrow[llll, rounded corners=0pt, to path={(\tikztostart.south) -- ([yshift=-1.em]\tikztostart.south) -- ([yshift=-1.em]\tikztotarget.south) -- (\tikztotarget.south)}]
+    \mathrm{SOLVE} \arrow[r] & \mathrm{ESTIMATE} \arrow[r] & \mathrm{MARK} \arrow[r] & \mathrm{REFINE} \arrow[r] & \mathrm{PAD} \arrow[llll, rounded corners=0pt, to path={(\tikztostart.south) -- ([yshift=-1.em]\tikztostart.south) -- ([yshift=-1.em]\tikztotarget.south) -- (\tikztotarget.south)}]
 \end{tikzcd}
 \end{equation}
 
-\robert{Algorithm~\ref{alg:adaptive_loop} gives the complete outer loop in pseudocode.}
+The following sections will cover the individual steps of this loop, and focus particularly on the non-standard choices we made during the implementation. The $\mathrm{SOLVE}$ step involves solving a linear system. We used Eigen's (\robert{cite}) sparse MINRES solver with a block-diagonal approximate (mass-lumped) Schur complex preconditioner (\robert{maybe keep some information from below here and delete what's below.}). For the $\mathrm{ESTIMATE}$ step, we use a standard $\Hcurl$ estimator to compute residuals per face in the subdivision partition. These residuals are then re-distributed to the active vertices in the partition. The $\mathrm{ESTIMATE}$ step is covered in more detail in Section~\ref{subsec:estimate}. We employ greedy Doerfler marking for the vertex residuals to refine vertex stars. This typically leads to inexact subdivision partitions, and thus needs a $\mathrm{PADDING}$ step to recover its exactness, see Section~\ref{subsec:refinement_and_padding}.
+
+\vspace{3mm}
 
 \robert{\begin{algorithm}[H]
 \caption{Adaptive loop}
 \label{alg:adaptive_loop}
-\KwIn{initial partition $P$, maximum steps $S$, Dörfler parameter $\theta$}
+\KwIn{initial partition $\C$, Dörfler parameter $\theta$, termination criteria}
 \For{$\mathrm{step} = 0, \ldots, S - 1$}{
-    $\D \leftarrow \textsc{BuildActiveDoFs}(P)$ \tcp{Alg.~\ref{alg:buildactivedofs}}
+    $\D \leftarrow \textsc{BuildActiveDoFs}(\C)$ \tcp{Alg.~\ref{alg:buildactivedofs}}
     $(\Amat{0}{\activeDoFs}{\L}, \Amat{1}{\activeDoFs}{\L}) \leftarrow \textsc{BuildSubdivMatrices}(\D)$ \tcp{Alg.~\ref{alg:buildsubdivmatrix}}
     $(\mathbf{M}_0, \mathbf{C}_0, \mathbf{B}_0) \leftarrow \bigl((\Amat{0}{\activeDoFs}{\L})^\top \mathbf{M} \Amat{0}{\activeDoFs}{\L},\; (\Amat{1}{\activeDoFs}{\L})^\top \mathbf{C} \Amat{1}{\activeDoFs}{\L},\; (\Amat{0}{\activeDoFs}{\L})^\top \mathbf{B} \Amat{1}{\activeDoFs}{\L}\bigr)$\;
     $(\sigma_h, u_h) \leftarrow \mathrm{MINRES}$ solve of $K(\sigma, u) = (0,\; (\Amat{1}{\activeDoFs}{\L})^\top f)$ with preconditioner $\mathbf{P}$ \tcp{Section~\ref{sec:preconditioner}}
     $\eta \leftarrow \textsc{AggregateEstimators}(\{\eta^2_T\}_{T \in \T_\L},\, P)$ \tcp{Alg.~\ref{alg:aggregate}}
-    $P \leftarrow \textsc{DoerflerMarking}(P, \eta, \theta)$ \tcp{Alg.~\ref{alg:doerfler}}
-    $P \leftarrow \textsc{FixIsolatedBoundaryVertices}(P)$ \tcp{Alg.~\ref{alg:fix_boundary}}
+    $P \leftarrow \textsc{DoerflerRefine}(P, \eta, \theta)$ \tcp{mark $+$ refine $+$ pad; Alg.~\ref{alg:doerfler}, \ref{alg:padding}}
 }
 \end{algorithm}}
 
 \paragraph{SOLVE.}
-We solve the discrete system on the hierarchical space $\hierSDFspace{k}{\C}{\L}$ using a standard iterative solver.
+\label{sec:preconditioner}
+\robert{We solve the discrete system on the hierarchical space $\hierSDFspace{k}{\C}{\L}$ with an iterative solver. For the mixed problems considered here the block system $K$ is symmetric indefinite, so we use MINRES with a block-diagonal SPD preconditioner
+\begin{equation}
+    \mathbf{P} =
+    \begin{pmatrix}
+        \mathbf{M}_0 & 0 \\
+        0 & \mathbf{S}
+    \end{pmatrix},
+    \qquad
+    \mathbf{S} = \mathbf{C}_0 + \mathbf{B}_0^\top\, \mathrm{diag}(\mathbf{M}_0 \mathbf{1})^{-1}\, \mathbf{B}_0,
+\end{equation}
+where $\mathbf{S}$ approximates the Schur complement of the $(1,1)$ block by replacing $\mathbf{M}_0^{-1}$ with a row-sum lumped inverse ($\mathbf{1}$ the all-ones vector of length $\dim \D^0$). Row-sum lumping bounds $\mathbf{M}_0$ from above with a mesh-independent constant for piecewise-linear triangles, giving a stable Schur approximation on the irregular meshes produced by adaptive refinement. Both blocks are factorised once per adaptive step by sparse Cholesky (LDLT) and discarded afterwards, since the active spaces are non-nested between steps; each MINRES iteration then costs one triangular back-solve per block.}
 
 \paragraph{ESTIMATE.}
 We compute error indicators $\eta_{\l,a}$ per face $\face{\l}{a} \in \C$ of the subdivision partition. The residual is evaluated on the finest level $\L$ and then aggregated to the coarse parent faces:
@@ -1189,123 +1201,550 @@ $\zeta[\l][f] \leftarrow 0$ for all $\l$, $f \in P[\l]$\;
 \end{algorithm}}
 
 \paragraph{MARK.}
-We apply standard Doerfler marking to the indicators $\eta_{\l,a}$, selecting the smallest set of faces whose indicators sum to a fixed fraction of the total. Faces on level $\L$ are not eligible for marking\robert{: they contribute to the reported global error but cannot be refined further within the present hierarchy, so they are excluded from the threshold total. This means the effective fraction of refineable error selected is at least $\theta$.}
+\todo{\guidance{Dissolve the worked example here (narrative point~3). When Section~\ref{subsec:worked_example} is folded in, attach Fig.~\ref{fig:pipeline_marking} (residual $\to$ density $\to$ post-mark) as the running illustration of this paragraph, using the closed-form $\eta$ of Eq.~\eqref{eq:worked_example_eta} as the concrete input.}}
+\robert{We mark by \emph{vertex stars} rather than by individual faces, so that
+every refinement acts on the combinatorial object the admissibility argument
+reasons about: a complete, single-level vertex star. Marking splits into a
+\emph{decision} phase (which vertices to refine) and an \emph{application} phase
+(how far to refine each of them). In the decision phase we aggregate the squared
+indicators $\eta_{\l,a}^2$ and the star areas onto each vertex $v$ at its coarsest
+active level $\l_{\min}(v)$, rank the vertices by the error \emph{density}
+$\rho(v) = \big(\textstyle\sum \eta^2\big)/\big(\sum \mathrm{area}\big)$, and greedily
+select the densest vertices until the marked energy reaches the Dörfler bulk
+$\theta \sum_{\l<\L} \eta_{\l,a}^2$. Faces on level $\L$ are excluded from this
+total, as they cannot be refined further within the present hierarchy; the
+effective fraction of refineable error selected is therefore at least $\theta$. In
+the application phase we \emph{freeze}, on the input partition, a target level
+$T(v) = \min\big(\text{finest active level in }v\text{'s star} + 1,\ \L\big)$ for
+each selected vertex, and refine each selected star up to $T(v)$. A final
+$\textsc{Pad}$ (Alg.~\ref{alg:padding}) restores admissibility.}
+
+\robert{Three choices deserve comment. Ranking by density $\eta^2/\mathrm{area}$
+cancels the $\approx\!4\times$ per-level shrinkage of the star area, so a vertex on
+a fine feature competes on equal footing with coarse ones and the partition
+advances by roughly one level per step. Homogenising the \emph{whole} star to
+$\text{finest}+1$ (rather than only the arc active at $\l_{\min}(v)$) makes each
+mark a complete uniform-level star and keeps it $1$-irregular internally; going one
+level beyond the star's current finest face is what lets an already-uniform star
+still advance. Freezing $T(v)$ on the input partition bounds each vertex to a
+single homogenisation — reading the live partition instead would let a neighbour
+chase an ever-deeper target, an unbounded cascade — and makes the application
+idempotent, so the padded result is independent of processing order. The full
+decision/application algorithm is given in
+Appendix~\ref{app:full_pseudocode} (Alg.~\ref{alg:doerfler_full}).}
 
 \robert{\begin{algorithm}[H]
-\caption{$\textsc{DoerflerMarking}(P, \eta, \theta)$: Dörfler marking on a subdivision partition}
+\caption{$\textsc{DoerflerRefine}(P, \eta, \theta)$: per-vertex-star marking, refinement, and padding (condensed; full version in Alg.~\ref{alg:doerfler_full})}
 \label{alg:doerfler}
-\KwIn{partition $P$, estimators $\eta[\l][f]$, parameter $\theta \in (0,1]$}
-\KwOut{refined partition $P_{\mathrm{new}}$}
-$\mathrm{total} \leftarrow \sum_{\l < \L,\; f \in P[\l]} \eta[\l][f]^2$ \tcp{level-$\L$ faces excluded}
-\lIf{$\mathrm{total} = 0$}{\Return $P$}
-Sort all $(\l, f)$ with $f \in P[\l]$, $\l < \L$, by descending $\eta[\l][f]^2$\;
-$\mathrm{accum} \leftarrow 0$;\quad $\mathrm{marked}[\l] \leftarrow \emptyset$ for all $\l$\;
-\For{each $(\l, f)$ in sorted order while $\mathrm{accum} < \theta \cdot \mathrm{total}$}{
-    $\mathrm{marked}[\l] \leftarrow \mathrm{marked}[\l] \cup \{f\}$;\quad $\mathrm{accum} \leftarrow \mathrm{accum} + \eta[\l][f]^2$\;
+\KwIn{partition $P$, per-face indicators $\eta[\l][f]$, parameter $\theta \in (0,1]$}
+\KwOut{refined, admissible partition $P'$}
+\tcp{DECISION: which vertices}
+aggregate $\eta[\l][f]^2$ and $\mathrm{area}(f)$ onto each vertex $v$ at its coarsest active level $\l_{\min}(v)$\;
+rank vertices by density $\rho(v) = \mathrm{energy}(v)/\mathrm{area}(v)$; pop highest first, recording the selected $v$, until the marked energy reaches $\theta \sum_{\l<\L} \eta[\l][f]^2$\;
+\tcp{APPLICATION: refine each selected star}
+\For{each selected $v$}{
+    $T(v) \leftarrow \min\big(\text{finest active level in } \mathrm{star}_P(v) + 1,\ \L\big)$ \tcp{frozen on input $P$}
 }
-$\textsc{PadMarkedFaces}(\mathrm{marked}, P)$ \tcp{Alg.~\ref{alg:padding}}
-$P_{\mathrm{new}} \leftarrow P$\;
-\For{each level $\l$ and each $f \in \mathrm{marked}[\l]$}{
-    Remove $f$ from $P_{\mathrm{new}}[\l]$; insert $\{4f, 4f+1, 4f+2, 4f+3\}$ into $P_{\mathrm{new}}[\l+1]$\;
+$P' \leftarrow P$\;
+\For{each selected $v$, coarsest first}{
+    refine every face of $v$'s star in $P'$ up to level $T(v)$, skipping faces already at level $\geq T(v)$\;
 }
-\Return $P_{\mathrm{new}}$\;
+\Return $\textsc{Pad}(P')$ \tcp{Alg.~\ref{alg:padding}}
 \end{algorithm}}
 
 \paragraph{PAD.}
-\robert{The padding step is non-standard and specific to our setting. After marking, the selected faces may form a covering that violates the subdivision-partition admissibility condition of Definition~\ref{def:active_k_form_dofs}. Algorithm~\ref{alg:padding} iteratively enlarges the marked set until every face in every level-$\l$ patch has at least one \emph{interior vertex} — a vertex all of whose adjacent faces lie in the patch (condition~(I) of Definition~\ref{def:active_k_form_dofs}). For an offending face $f$, we choose the vertex $v$ with the fewest missing fan faces and mark the currently-active ancestors of those missing faces (walking up the quad-tree via $g \leftarrow \lfloor g/4 \rfloor$).}
+\todo{\guidance{Dissolve the worked example here (narrative point~3). Attach Fig.~\ref{fig:pipeline_padding} (pre-pad $\to$ after pinch $\to$ after condition-I) as the illustration of this paragraph, and \emph{end the padding exposition with the open hand-off} placed below.}}
+\robert{The padding step is non-standard and specific to our setting. After
+marking, the refined covering may violate the subdivision-partition admissibility
+condition of Definition~\ref{def:active_k_form_dofs}, and it can do so in two
+qualitatively different ways. A coarse region that is \emph{pinched} at a vertex —
+its coarse faces split into two or more disconnected arcs around that vertex —
+carries a spurious harmonic and hence the wrong cohomology; a coarse/fine interface
+that is too tight leaves faces without a fully-covered vertex, breaking local
+completeness of the basis. $\textsc{Pad}$ repairs both by running two rules
+\emph{alternately to a fixed point}: pinch resolution ($\textsc{ResolveVertexPinches}$)
+and condition-I padding with grading ($\textsc{PadCondI}$). Each rule only ever
+\emph{refines} coarse faces, so the loop terminates (bounded by $\L$); a counter
+$\mathrm{padding\_cycles}$ records the productive passes, which was $1$ in every
+atomic test and every adaptive step we observed. Pinch resolution subsumes what an
+earlier boundary-vertex repair did: a lone coarse boundary \emph{notch} is a single
+coarse arc (\emph{fine\,--\,coarse\,--\,fine}), not a pinch, so it is not flagged and
+is left to condition-I grading.}
 
 \robert{\begin{algorithm}[H]
-\caption{$\textsc{PadMarkedFaces}(\mathrm{marked}, P)$: admissibility padding}
+\caption{$\textsc{Pad}(P)$: admissibility padding (condensed; full sub-routines in Alg.~\ref{alg:pinch_full}, \ref{alg:condI_full})}
 \label{alg:padding}
-\KwIn{marked faces $\mathrm{marked}[\l]$ per level (in/out), partition $P$}
-\Repeat{$\mathrm{newMarks} = \emptyset$}{
-    Build tentative partition $\mathrm{tent}$ by applying $\mathrm{marked}$ to $P$\;
-    $\mathrm{newMarks}[\l] \leftarrow \emptyset$ for all $\l$\;
-    \For{$\l = 0, \ldots, \L$ with $\mathrm{tent}[\l] \neq \emptyset$}{
-        $I_v \leftarrow \{ v : \forall\, g \in \mathrm{vert\_faces}(v),\; g \in \mathrm{tent}[\l] \}$ \tcp{interior vertices of $\mathrm{tent}[\l]$}
-        \For{each $f \in \mathrm{tent}[\l]$ with no vertex in $I_v$}{
-            $v \leftarrow \arg\min_{v' \in \mathrm{verts}(f)} \#\{ g \in \mathrm{vert\_faces}(v') : g \notin \mathrm{tent}[\l] \}$\;
-            \For{each $g \in \mathrm{vert\_faces}(v)$ with $g \notin \mathrm{tent}[\l]$}{
-                Walk $g \leftarrow \lfloor g/4 \rfloor$ until $g \in P$; add $g$ to $\mathrm{newMarks}$\;
-            }
-        }
-    }
-    $\mathrm{marked} \leftarrow \mathrm{marked} \cup \mathrm{newMarks}$\;
+\KwIn{partition $P$}
+\KwOut{admissible partition $P$}
+\Repeat{a full pass refines nothing}{
+    $P \leftarrow \textsc{ResolveVertexPinches}(P)$ \tcp{repair pinched coarse regions}
+    $P \leftarrow \textsc{PadCondI}(P)$ \tcp{Good-vertex (cond.~I) $+$ grading}
+}
+\Return $P$\;
+\end{algorithm}}
+
+\robert{\textbf{Pinch resolution.} A vertex $v$ is \emph{pinched} when, at its
+finest active level $\L_v$, its finest faces form $\geq 2$ disconnected arcs around
+its one-ring; equivalently, its coarser faces form $\geq 2$ disconnected arcs. A
+contiguous coarse arc counts as \emph{one} arc regardless of the levels of the
+faces within it, so a pinch is detected even when its two coarse patches sit at
+different levels. We detect every pinch \emph{before} mutating (so resolving one
+cannot hide another), then grade each pinched vertex's coarse patches up to $\L_v$,
+iterating to a fixed point.}
+
+\robert{\begin{algorithm}[H]
+\caption{$\textsc{ResolveVertexPinches}(P)$ (condensed; full version in Alg.~\ref{alg:pinch_full})}
+\label{alg:pinch}
+\Repeat{a pass refines nothing}{
+    detect all pinched vertices: at each $v$'s finest active level $\L_v$, classify its one-ring faces as \textsc{fine} (active at $\L_v$) or \textsc{coarse} (covered by an active ancestor); flag $v$ if the \textsc{fine} faces form $\geq 2$ arcs\;
+    \For{each flagged $v$}{grade $v$'s \textsc{coarse} one-ring faces up to level $\L_v$ (one level at a time along each ancestor chain)\;}
 }
 \end{algorithm}}
 
-\robert{\todo{Flag: Algorithm~\ref{alg:padding} enforces only condition~(I) of Definition~\ref{def:active_k_form_dofs} (interior-vertex requirement). Condition~(II) (no isolated boundary vertex) is handled separately by Algorithm~\ref{alg:fix_boundary} rather than here. If Definition~\ref{def:active_k_form_dofs} states both conditions, please confirm the current split is correctly described.}}
-\robert{This ensures that after refinement the updated subdivision partition satisfies condition~(I) and the active basis is locally complete.}
+\robert{\textbf{Condition-I padding with grading.} With $\mathrm{covered}(g,\l)$
+meaning that $g$ or a coarser ancestor of $g$ is active, and a vertex $w$
+\emph{Good} at level $\l$ when its entire one-ring is $\mathrm{covered}(\cdot,\l)$,
+condition~I (the admissibility requirement, Def.~\ref{def:active_k_form_dofs})
+demands that every active face have a Good vertex. We enforce it first, to a fixed
+point; grading — bounding the level span of any vertex's active faces by
+$\mathrm{maxSpan}$, purely for conditioning — is run last, on the span violations
+that survive the now-admissible partition. This ordering avoids over-refining,
+since condition~I usually refines the coarse frontier faces that would otherwise
+trip grading.}
+
+\robert{\begin{algorithm}[H]
+\caption{$\textsc{PadCondI}(P)$ (condensed; full version in Alg.~\ref{alg:condI_full})}
+\label{alg:condI}
+\tcp{Phase 1 --- admissibility (condition I)}
+\Repeat{no face is refined this pass}{
+    refine every active face that has no Good vertex\;
+}
+\tcp{Phase 2 --- grading}
+\Repeat{no vertex spans $> \mathrm{maxSpan}$ levels}{
+    refine the coarsest active faces of every vertex whose active faces span $> \mathrm{maxSpan}$ levels; re-run Phase 1\;
+}
+\Return $P$\;
+\end{algorithm}}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.22\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/exactness/v8_quarters_lvl2_input.pdf}
+        \caption{Pinch input.}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.22\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/exactness/v8_quarters_lvl2_padded.pdf}
+        \caption{Pinch padded.}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.22\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/exactness/v8_quarters_lvl2_mixedcoarse_input.pdf}
+        \caption{Mixed-coarse input.}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.22\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/exactness/v8_quarters_lvl2_mixedcoarse_padded.pdf}
+        \caption{Mixed-coarse padded.}
+    \end{subfigure}
+    \caption{\robert{Pinch resolution on a valence-$8$ centre vertex. Left pair: a
+    two-level pinch, whose two coarse arcs give $\dim\mathcal{H}^1 = 2$
+    (Table~\ref{tab:atomic-cohomology}, ``Valence-$8$ pinch, level~2''); pinch
+    resolution grades the coarse arcs to the finest level and removes the defect.
+    Right pair: the two coarse patches sit at \emph{different} levels ($0$ and $1$),
+    which is why the pinch is detected at each vertex's finest level with contiguous
+    coarse runs merged across levels.}}
+    \label{fig:pinch_examples}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.28\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/exactness/v6_3rings_horseshoe_lvl2_input.pdf}
+        \caption{Input ($0\leftrightarrow2$ jump).}
+    \end{subfigure}\qquad
+    \begin{subfigure}[b]{0.28\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/exactness/v6_3rings_horseshoe_lvl2_padded.pdf}
+        \caption{Graded (coarse arc raised to level~$1$).}
+    \end{subfigure}
+    \caption{\robert{Grading versus condition~I. An already-exact horseshoe
+    (open arc, no spurious harmonic) with a two-level jump: grading only raises the
+    coarse arc by one level to satisfy $\mathrm{maxSpan}$, it does not refine it to
+    the finest level, cleanly separating the conditioning role of grading from the
+    admissibility role of condition~I.}}
+    \label{fig:grading_example}
+\end{figure}
 
 \paragraph{REFINE.}
 Each marked and padded face is refined by one level via quadrisection.
 
-\robert{\subsection{Preconditioner}
-\label{sec:preconditioner}
+\FloatBarrier
 
-The block system $K$ is symmetric indefinite and is solved with MINRES.
-We use a block-diagonal SPD preconditioner
+\subsection{A worked example: marking and padding on a valence-8 disk}
+\label{subsec:worked_example}
+
+\todo{\guidance{Dissolve this subsection (narrative point~3). This is currently the first of three tellings of the ``a pinch/loop injects a spurious harmonic, padding removes it'' story (the other two are Sections~\ref{subsec:exactness_atomic} and~\ref{subsec:maxwell}). Fold it into the \textsc{Mark} and \textsc{Pad} paragraphs above: keep the closed-form $\eta$ (Eq.~\eqref{eq:worked_example_eta}) as the concrete input, move Figs.~\ref{fig:pipeline_marking} and~\ref{fig:pipeline_padding} to those paragraphs, and delete this header so the example becomes the \emph{setup} for Section~\ref{subsec:exactness_atomic} rather than a standalone retelling.}}
+
+\guidance{Open hand-off (to end the padding exposition once this subsection is dissolved): \emph{Whether these two rules reliably restore an exact, independent basis --- not just on this constructed input but across the admissibility boundary --- is verified directly in Section~\ref{subsec:exactness_atomic}.}}
+
+\robert{To make the stages concrete we push a single residual through the actual
+pipeline on a valence-$8$ two-ring disk (centre vertex of valence $8$; $32$
+level-$0$ faces). Evaluated at each face barycentre $(x,y)$, the element indicator
+is the closed form
 \begin{equation}
-    \mathbf{P} =
-    \begin{pmatrix}
-        \mathbf{M}_0 & 0 \\
-        0 & \mathbf{S}
-    \end{pmatrix},
+    \label{eq:worked_example_eta}
+    \eta(x,y) = \mathbb{1}\{x\,y > 0\} + \exp\!\big(-((x-2)^2 + y^2)/(2 \cdot 0.4^2)\big),
 \end{equation}
-where $\mathbf{S}$ approximates the Schur complement of the $(1,1)$ block
-by replacing $\mathbf{M}_0^{-1}$ with a row-sum lumped inverse:
-\begin{equation}
-    \mathbf{S} = \mathbf{C}_0 + \mathbf{B}_0^\top\, \mathrm{diag}(\mathbf{M}_0 \mathbf{1})^{-1}\, \mathbf{B}_0,
-\end{equation}
-where $\mathbf{1}$ is the all-ones vector of length $\dim \D^0$. Row-sum
-lumping is preferred over bare diagonal lumping because, for piecewise-linear
-elements on triangles, the row sums of the mass matrix bound $\mathbf{M}_0$
-from above with a mesh-independent constant, giving a more stable Schur
-approximation on the irregular meshes produced by adaptive refinement. Both
-blocks of $\mathbf{P}$ are factorised once per adaptive step by sparse
-Cholesky (LDLT) and the factorisation is discarded afterwards, since the
-active spaces are non-nested between steps. The cost per MINRES iteration is
-one triangular back-solve per block.}
+with Dörfler parameter $\theta = 0.97$. This $\eta$ is a synthetic stand-in for the
+estimator output of \eqref{eq:derivative_relation_basis}\,--\,style residual: it is
+prescribed as one nonnegative scalar per face rather than obtained from a solve,
+but the marking and padding stages act on it exactly as they would on a real
+$H(\mathrm{curl})$ residual, so the pipeline shown here is identical to a real
+adaptive step. The first term is the indicator of the first and third quadrants;
+density-ranked vertex-star marking refines those two opposite quarters and leaves
+the coarse remainder as two disconnected arcs around the centre --- the valence-$8$
+\emph{pinch}. The second term is a small Gaussian at the boundary vertex $(2,0)$;
+it marks one extra star poking into a coarse quadrant, leaving one face without a
+Good vertex so that the condition-I pad has exactly one face to refine. Every
+active face stays on levels $\{0,1\}$, so grading never fires.}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.31\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig1a.pdf}
+        \caption{Per-face residual $\eta_f$.}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.31\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig1b.pdf}
+        \caption{Per-vertex density $\rho(v)$.}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.31\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig1c.pdf}
+        \caption{After marking (pre-padding).}
+    \end{subfigure}
+    \caption{\robert{Marking stage of the worked example
+    (Eq.~\eqref{eq:worked_example_eta}). (a) the coarse mesh coloured by the
+    per-face residual $\eta_f$; (b) the per-vertex error density $\rho(v)$, the
+    ranking key the marker sorts by, evaluated at each vertex's coarsest active
+    level; (c) the partition after refining the marked stars, before any padding,
+    with the selected vertices overlaid on the density scale of~(b).}}
+    \label{fig:pipeline_marking}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.31\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig2a.pdf}
+        \caption{Before padding.}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.31\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig2b.pdf}
+        \caption{After $\textsc{ResolveVertexPinches}$.}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.31\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig2c.pdf}
+        \caption{After condition-I pad (final).}
+    \end{subfigure}
+    \caption{\robert{Padding stage of the worked example. (a) repeats
+    Fig.~\ref{fig:pipeline_marking}(c), the partition before padding; (b) after
+    $\textsc{ResolveVertexPinches}$, the centre pinch is gone; (c) after the
+    condition-I pad, the one remaining inadmissible face is refined, giving the
+    final admissible partition (grading does not fire here).}}
+    \label{fig:pipeline_padding}
+\end{figure}
 
 \FloatBarrier
 
 \section{Numerical Experiment}
 
+\subsection{Exactness and padding on atomic partitions}
+\label{subsec:exactness_atomic}
+
+\guidance{This subsection is the verification promised at the end of the \textsc{Pad} discussion: it establishes that pinch resolution and condition-I padding \emph{reliably} restore the correct cohomology across the admissibility boundary, not just on the single constructed input of the (dissolved) worked example.}
+
+\robert{Before applying the adaptive loop to a PDE, we validate the admissibility
+construction directly on a suite of atomic test cases and the two failure modes it
+is designed to prevent. Each case is a small concentric-ring mesh around a single
+interior vertex of chosen valence --- a topological \emph{disk}, so that
+\emph{every} discrete harmonic that appears is spurious. For each partition we
+compute the de Rham cohomology of the active space (from the ranks of the discrete
+$\extd$) before and after $\textsc{Pad}$; Table~\ref{tab:atomic-cohomology}
+collects the results under both natural and vanishing-trace (Dirichlet) boundary
+conditions.}
+
+\robert{A non-admissible partition can fail in two qualitatively different ways.
+In a \emph{hard failure} the kernel/image of $\extd$ on the active space genuinely
+changes, producing a spurious harmonic --- a discrete $k$-form that is closed but
+not exact with no topological counterpart --- which corrupts the Hodge
+decomposition and, for Maxwell, injects the spurious zero modes of
+Section~\ref{subsec:worked_example}. In a \emph{soft failure} the active basis is
+merely linearly \emph{dependent}: its column space is still an exact subcomplex, so
+the cohomology is correct, but the naive DoF count overstates the space dimension
+and the mass matrix is singular. In Table~\ref{tab:atomic-cohomology} a hard
+failure shows up as a nonzero harmonic $\dim\mathcal{H}^1$ on a disk, while a soft
+failure shows up as a rank deficit $n_k - \dim V^k > 0$; both distort the Euler
+characteristic $\chi$ away from the disk value $\chi = 1$, and both are removed by
+padding.}
+
+\robert{The controlled examples delineate the admissibility boundary precisely
+(Fig.~\ref{fig:loop_horseshoe}, \ref{fig:control_boundary}):}
+\begin{itemize}
+    \item \robert{\textbf{A coarse loop injects a spurious $\mathcal{H}^1$.} A
+    one-band-wide coarse annulus (the ``$3$-ring, inner$+$outer refined'' row) is
+    \emph{both} a hard failure ($\dim\mathcal{H}^1 = 1$) and a soft failure
+    ($n_1 = 360$, $\operatorname{rank} = 342$, deficit $18$): the single richest
+    case. Padding refines the middle band and restores an exact, independent basis.}
+    \item \robert{\textbf{Break the loop and the defect vanishes.} Replacing the
+    closed annulus by an open arc (``horseshoe'') makes the coarse region a disk
+    again: no spurious harmonic, confirming that the defect is topological (the
+    closed loop), not a mesh-size artifact.}
+    \item \robert{\textbf{It is specifically a one-band effect.} A
+    \emph{two}-band-wide coarse annulus (the ``$4$-ring, middle refined'' negative
+    control) is already admissible --- padding is a no-op --- so the defect is a
+    one-band-strip phenomenon, not a property of any coarse annulus.}
+    \item \robert{\textbf{Boundary notches are a Dirichlet-only, additive defect.}
+    Refining the stars of boundary ``corner'' vertices leaves coarse notches; under
+    natural BCs these are harmless slits, but under Dirichlet each is a relative
+    loop, and independent notches \emph{add} (six symmetric notches give exactly six
+    Dirichlet harmonics).}
+\end{itemize}
+\robert{The two-level \emph{pinch} and its \emph{doubling law}
+($\dim\mathcal{H}^1 = 2$, $\chi = -1$ before padding, both restored after) are the
+``Valence-$8$ pinch, level~2'' row of Table~\ref{tab:atomic-cohomology}, already
+illustrated in Fig.~\ref{fig:pinch_examples}. Further atomic cases are collected in
+Appendix~\ref{app:figure_gallery}.}
+
+\begin{table}[htbp]
+  \centering
+  \small
+  \setlength{\tabcolsep}{4pt}
+  \begin{tabular}{@{}ll l ccc ccc ccc c@{}}
+    \toprule
+    & & & \multicolumn{3}{c}{active DoFs $n_k$} & \multicolumn{3}{c}{$\dim V^k=\operatorname{rank}A_k$} & \multicolumn{3}{c}{harmonic $\dim \mathcal{H}^k$} & \\
+    \cmidrule(lr){4-6}\cmidrule(lr){7-9}\cmidrule(lr){10-12}
+    case & BC & state & $0$ & $1$ & $2$ & $0$ & $1$ & $2$ & $0$ & $1$ & $2$ & $\chi$ \\
+    \midrule
+    \multirow{4}{*}{Valence-6 pinch, level 1} & \multirow{2}{*}{natural} & input & 60 & 156 & 96 & 60 & 156 & 96 & 1 & 1 & 0 & 0 \\
+     &  & padded & 61 & 156 & 96 & 61 & 156 & 96 & 1 & 0 & 0 & 1 \\
+    \cmidrule(l){2-13}
+     & \multirow{2}{*}{Dirichlet} & input & 36 & 132 & 96 & 36 & 132 & 96 & 0 & 1 & 1 & 0 \\
+     &  & padded & 37 & 132 & 96 & 37 & 132 & 96 & 0 & 0 & 1 & 1 \\
+    \midrule
+    \multirow{4}{*}{Valence-8 pinch, level 1} & \multirow{2}{*}{natural} & input & 66 & 174 & 108 & 66 & 174 & 108 & 1 & 1 & 0 & 0 \\
+     &  & padded & 73 & 192 & 120 & 73 & 192 & 120 & 1 & 0 & 0 & 1 \\
+    \cmidrule(l){2-13}
+     & \multirow{2}{*}{Dirichlet} & input & 38 & 146 & 108 & 38 & 146 & 108 & 0 & 1 & 1 & 0 \\
+     &  & padded & 45 & 164 & 120 & 45 & 164 & 120 & 0 & 0 & 1 & 1 \\
+    \midrule
+    \multirow{4}{*}{Valence-8 pinch, level 2} & \multirow{2}{*}{natural} & input & 195 & 556 & 360 & 195 & 556 & 360 & 1 & 2 & 0 & -1 \\
+     &  & padded & 209 & 592 & 384 & 209 & 592 & 384 & 1 & 0 & 0 & 1 \\
+    \cmidrule(l){2-13}
+     & \multirow{2}{*}{Dirichlet} & input & 147 & 508 & 360 & 147 & 508 & 360 & 0 & 2 & 1 & -1 \\
+     &  & padded & 161 & 544 & 384 & 161 & 544 & 384 & 0 & 0 & 1 & 1 \\
+    \midrule
+    \multirow{4}{*}{3-ring, inner+outer refined} & \multirow{2}{*}{natural} & input & 127 & 360 & 234 & 126 & 342 & 216 & 1 & 1 & 0 & 1 \\
+     &  & padded & 127 & 342 & 216 & 127 & 342 & 216 & 1 & 0 & 0 & 1 \\
+    \cmidrule(l){2-13}
+     & \multirow{2}{*}{Dirichlet} & input & 91 & 324 & 234 & 90 & 306 & 216 & 0 & 1 & 1 & 1 \\
+     &  & padded & 91 & 306 & 216 & 91 & 306 & 216 & 0 & 0 & 1 & 1 \\
+    \midrule
+    \multirow{4}{*}{4-ring, middle refined} & \multirow{2}{*}{natural} & input & 169 & 504 & 336 & 169 & 504 & 336 & 1 & 0 & 0 & 1 \\
+     &  & padded & 169 & 504 & 336 & 169 & 504 & 336 & 1 & 0 & 0 & 1 \\
+    \cmidrule(l){2-13}
+     & \multirow{2}{*}{Dirichlet} & input & 145 & 480 & 336 & 145 & 480 & 336 & 0 & 0 & 1 & 1 \\
+     &  & padded & 145 & 480 & 336 & 145 & 480 & 336 & 0 & 0 & 1 & 1 \\
+    \midrule
+    \multirow{4}{*}{Nested centre, level 3} & \multirow{2}{*}{natural} & input & 73 & 240 & 168 & 73 & 240 & 168 & 1 & 0 & 0 & 1 \\
+     &  & padded & 73 & 240 & 168 & 73 & 240 & 168 & 1 & 0 & 0 & 1 \\
+    \cmidrule(l){2-13}
+     & \multirow{2}{*}{Dirichlet} & input & 61 & 228 & 168 & 61 & 228 & 168 & 0 & 0 & 1 & 1 \\
+     &  & padded & 61 & 228 & 168 & 61 & 228 & 168 & 0 & 0 & 1 & 1 \\
+    \bottomrule
+  \end{tabular}
+  \caption{\robert{De Rham cohomology of the atomic subdivision-partition test cases, before
+  (\emph{input}) and after (\emph{padded}) pinch resolution and admissibility
+  padding, under natural and Dirichlet boundary conditions. $n_k$ is the number of
+  active $k$-form DoFs; $\dim V^k=\operatorname{rank}A_k$ is the true dimension of
+  the active space (a deficit $n_k-\dim V^k>0$ signals a linearly dependent basis);
+  $\dim\mathcal{H}^k$ is the rank-corrected harmonic dimension (Betti number). The
+  disk has Euler characteristic $\chi=1$ under both BCs; the pinched inputs deviate,
+  the padded spaces recover it.}}
+  \label{tab:atomic-cohomology}
+\end{table}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.22\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/exactness/v6_3rings_inner_outer_refined_input.pdf}
+        \caption{Loop input.}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.22\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/exactness/v6_3rings_inner_outer_refined_padded.pdf}
+        \caption{Loop padded.}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.22\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/exactness/v6_3rings_horseshoe_input.pdf}
+        \caption{Horseshoe input.}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.22\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/exactness/v6_3rings_horseshoe_padded.pdf}
+        \caption{Horseshoe padded.}
+    \end{subfigure}
+    \caption{\robert{Loop versus horseshoe. Left pair: a one-band coarse annulus
+    carries a spurious $\dim\mathcal{H}^1 = 1$ and a rank deficit $18$
+    (Table~\ref{tab:atomic-cohomology}, ``$3$-ring, inner$+$outer refined''); padding
+    refines the middle band to restore an exact, independent basis. Right pair:
+    breaking the loop into an open arc makes the coarse region a disk again, so
+    there is no defect --- the failure is topological, not a mesh-size artifact.}}
+    \label{fig:loop_horseshoe}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.22\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/exactness/v6_4rings_middle_refined_input.pdf}
+        \caption{Two-band input.}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.22\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/exactness/v6_4rings_middle_refined_padded.pdf}
+        \caption{Two-band padded (no-op).}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.22\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/exactness/v6_boundary_allcorners_lvl1_input.pdf}
+        \caption{Boundary notches input.}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.22\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/exactness/v6_boundary_allcorners_lvl1_padded.pdf}
+        \caption{Boundary notches padded.}
+    \end{subfigure}
+    \caption{\robert{Negative control and boundary notches. Left pair: a two-band
+    coarse annulus is already admissible, so padding is a no-op
+    (Table~\ref{tab:atomic-cohomology}, ``$4$-ring, middle refined''), showing the
+    loop defect is a one-band-strip effect. Right pair: coarse notches at boundary
+    corners are harmless under natural BCs but each becomes a relative loop under
+    Dirichlet BCs; independent notches add, and padding removes them.}}
+    \label{fig:control_boundary}
+\end{figure}
+
+\FloatBarrier
+
 \subsection{Maxwell Eigenvalue problem}
+\label{subsec:maxwell}
 
-The Maxwell eigenvalue problem is a popular test case for structure-preserving discretisations. The weak form of the continuous Maxwell eigenvalue problem is given by: Find $\lambda \in \mathbb{R}$ and $u \in \HocurlM{\M}$ such that
+\guidance{Thesis of this subsection, stated up front so it does not read as a Maxwell-flavoured repeat of Section~\ref{subsec:exactness_atomic}: Section~\ref{subsec:exactness_atomic} established that padding restores the correct cohomology; this section shows the practical consequence for an actual eigensolver. Because a spurious harmonic is closed, its Rayleigh quotient is exactly zero, so the admissibility defect lives entirely at $\lambda = 0$ and leaves the physical band uncontaminated --- in sharp contrast to the interleaved pollution of non-compatible elements. That confinement-to-the-kernel is the new point here, not implied by the cohomology counts of Section~\ref{subsec:exactness_atomic}.}
+
+\robert{The Maxwell cavity (curl--curl) eigenvalue problem is a classical test case for
+structure-preserving discretisations. On the domain $\M = [0,\pi]^2$ its weak form
+is: find $\lambda \in \mathbb{R}$ and $u \in \HocurlM{\M}$, $u \neq 0$, such that
 \begin{equation}
-  (\extd u, \extd v)_\M = \lambda (u, v)_\M \qquad \forall v \in \HocurlM{\M}.  
+  (\extd u, \extd v)_\M = \lambda (u, v)_\M \qquad \forall v \in \HocurlM{\M},
 \end{equation}
-Applying Loop subdivision alters the domain of the eigenvalue problem slightly. Thus, we cannot directly compare the obtained spectrum with the analytical solution. However, discretisations using the FEEC spaces $\FEECspaceZero{k}{}$ are known to converge to the spectrum of the analytical solution on the altered domain without introducing spurious modes (cf. \cite{Arnold.FEEC}). For this reason, we compare the spectrum obtained using the hierarchical subdivision $k$-form spaces with the finest FEEC spaces $\FEECspaceZero{1}{\L}$.
+with analytic spectrum $\lambda = i^2 + j^2$, $(i,j) \in \mathbb{Z}^2_{\geq 0}\setminus\{0\}$,
+i.e.\ $1, 1, 2, 4, 4, 5, \ldots$. We impose homogeneous Dirichlet (vanishing-trace)
+boundary conditions, so the relevant invariant is the \emph{relative} cohomology
+(mod $\partial\M$). Since the square is contractible, its relative first Betti
+number is zero, and \textbf{every harmonic $1$-form appearing in the
+discretisation is therefore spurious}. Applying Loop subdivision alters the domain
+slightly, so we do not compare the discrete spectrum directly with the analytic
+$i^2+j^2$; instead we compare three subdivision partitions that use the same
+approximation of $\M$:
+\begin{itemize}
+    \item \textbf{inexact} --- a mixed-level partition whose interface violates admissibility (Fig.~\ref{fig:Maxwell_inexact_DoFmesh});
+    \item \textbf{exact (padded)} --- the \emph{same} partition after $\textsc{Pad}$ (Fig.~\ref{fig:Maxwell_exact_DoFmesh});
+    \item \textbf{FEEC (uniform)} --- the finest FEEC space $\FEECspaceZero{1}{\L}$, refining the whole domain to level $\L$, which is the verifiably spurious-mode-free reference~\cite{Arnold.FEEC}.
+\end{itemize}}
 
-Figures~\ref{fig:Maxwell_exact_DoFmesh} and \ref{fig:Maxwell_inexact_DoFmesh} present an exact and an inexact subdivision partition, respectively. The eigenvalue spectrum obtained using the subdivision $k$-form spaces defined on both subdivision partitions is visualised in Figure~\ref{fig:Maxwell_eigenvalues}. The exact subdivision partition coincides with the FEEC spectrum. This suggests that the underlying sequence of approximation spaces is exact. On the other hand, the spectrum of the inexact subdivision partition exhibits spurious modes compared to the FEEC discretisation.
+\robert{Table~\ref{tab:maxwell_spectrum} and Figure~\ref{fig:Maxwell_eigenvalues} report the
+result. The physical ($\lambda > 0$) band is \emph{identical} across the three
+partitions (to plotted precision) and tracks the analytic values; the only defect
+of the inexact partition is $\dim\mathcal{H}^1 = 2$ spurious harmonics, which
+padding removes ($\dim\mathcal{H}^1 \to 0$). The reason the pollution is confined
+to $\lambda = 0$ follows from the exact-sequence structure. A non-admissible
+interface makes the active space fail to be a subcomplex, and the concrete symptom
+is a discrete $1$-form that is \emph{closed but not exact} --- a spurious harmonic.
+Being closed, $\extd u_h = 0$, so its Rayleigh quotient
+$(\extd u_h, \extd u_h)/(u_h, u_h) = 0$: it can appear \emph{only} at $\lambda = 0$
+and never in the physical band. This contrasts sharply with classical spectral
+pollution for non-compatible elements, where spurious eigenvalues interleave with
+the physical band; here the admissibility failure is confined to the kernel of
+$\extd$, so the physical spectrum stays clean.}
 
-\robert{\todo{I was only able to find an additional 0 EV for the inexact partition. That can happen if the spurious 1-form has 0 curl but it is inconsistent with \cite{Cabanas.2026}. I want to investigate that in more detail.}}
+\robert{The defect must be read off the rank-based $\dim\mathcal{H}^1$ (from the ranks of
+the discrete $\extd$), \emph{not} the raw count of near-zero eigenvalues. The
+physical kernel $\extd(\hierSDFspace{0}{\C}{\L})$ of gradients is large and
+mesh-dependent, and padding changes the gradient DoF count, so the raw zero-count
+is not comparable between partitions: here it is $125$ (inexact) versus $90$
+(exact), which taken alone would misleadingly suggest padding \emph{removed} modes,
+even as the cohomologically meaningful $\dim\mathcal{H}^1$ falls from $2$ to $0$.}
+
+\begin{table}[htbp]
+    \centering
+    \small
+    \begin{tabular}{@{}l ccc c c@{}}
+        \toprule
+        partition & \multicolumn{3}{c}{physical band $\lambda_1, \ldots, \lambda_6$ recovered} & raw zero-modes ($\lambda \leq \tfrac12$) & $\dim\mathcal{H}^1$ \\
+        \midrule
+        inexact         & \multicolumn{3}{c}{$1.003,\ 1.008,\ 2.017,\ 4.006,\ 4.028,\ 5.031$} & $125$ & $\mathbf{2}$ \\
+        exact (padded)  & \multicolumn{3}{c}{$1.003,\ 1.008,\ 2.017,\ 4.006,\ 4.028,\ 5.031$} & $90$  & $\mathbf{0}$ \\
+        FEEC (uniform)  & \multicolumn{3}{c}{$1.002,\ 1.002,\ 2.010,\ 4.000,\ 4.019,\ 5.024$} & $43$  & --- \\
+        \bottomrule
+    \end{tabular}
+    \caption{\robert{Maxwell cavity spectrum on the inexact, exact (padded), and FEEC
+    (uniform) partitions. The physical band coincides across all three and tracks
+    the analytic $i^2+j^2$; the inexact partition's sole defect is
+    $\dim\mathcal{H}^1 = 2$ spurious harmonics, removed by padding. The raw
+    zero-mode count is dominated by legitimate gradient modes and is not comparable
+    across partitions, so the rank-based $\dim\mathcal{H}^1$ is the clean
+    diagnostic.}}
+    \label{tab:maxwell_spectrum}
+\end{table}
 
 \begin{figure}[htbp]
     \centering
     \begin{subfigure}[b]{0.23\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{images/maxwell/exact_subdiv_partition.png}
-        \caption{Exact subdivision partition.}
+        \includegraphics[width=\textwidth]{images/maxwell/maxwell_partition_exact.pdf}
+        \caption{Exact (padded) partition.}
         \label{fig:Maxwell_exact_DoFmesh}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.23\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{images/maxwell/inexact_subdiv_partition.png}
-        \caption{Inexact subdivision partition.}
+        \includegraphics[width=\textwidth]{images/maxwell/maxwell_partition_inexact.pdf}
+        \caption{Inexact partition.}
         \label{fig:Maxwell_inexact_DoFmesh}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.5\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{images/maxwell/maxwell_spectra.pdf}
-        \caption{Eigenvalue spectra.}
+        \includegraphics[width=\textwidth]{images/maxwell/maxwell_spectrum.pdf}
+        \caption{Physical eigenvalue band.}
         \label{fig:Maxwell_eigenvalues}
     \end{subfigure}
-    \caption{Maxwell eigenvalue problem: DoF meshes for the exact (left) and inexact (centre) subdivision $k$-form complexes, and the corresponding eigenvalue spectra compared to the finest FEEC discretisation $\FEECspaceZero{1}{\L}$ (right).}
+    \caption{\robert{Maxwell eigenvalue problem: the exact (padded) and inexact subdivision
+    partitions differ only at a single coarse/fine interface (left, centre); the
+    physical ($\lambda > 0$) curl--curl band by mode index for the inexact
+    ($\times$), padded ($+$), and FEEC ($\circ$) discretisations overlaps and tracks
+    $i^2+j^2$ (right). The $\dim\mathcal{H}^1$ spurious harmonics carried by the
+    inexact partition live at $\lambda = 0$, off the physical axis, and are
+    annotated rather than plotted.}}
     \label{fig:maxwell_overview}
 \end{figure}
 
@@ -1323,7 +1762,7 @@ on a domain $\M$. Since the operator $\boldsymbol{\delta}$ is not well-defined f
   (\extd \sigma, v)_\M + (\extd u, \extd v)_\M &= (f, v)_\M \qquad \forall v \in \HocurlM{\M}.
 \end{align}
 
-This section focuses on two test cases that we will refer to as \textit{circular layer} and \textit{multiscale Gaussians}. The circular layer test case is adopted from \cite{Cabanas.2026} and its analytical solution is given by
+This section focuses the \emph{circular layer} test case from \cite{Cabanas.2026}. Its analytical solution is given by
 \begin{equation}
     \label{eq:circular_layer_test_case}
     \Vec{u}_{\mathrm{CL}}(x) = \tanh \big(\alpha (\vvert{\vvert{x}}^2 - R^2) \big) \; \Vec{b}(x) \quad \text{with} \quad \Vec{b}(x) = \begin{bmatrix}
@@ -1333,37 +1772,33 @@ This section focuses on two test cases that we will refer to as \textit{circular
 \end{equation}
 and $\alpha = 100$ and $R = 0.3$. The vector part $\Vec{b}(x)$ provides a background field while the $\tanh$ term adds a sharp, radially symmetric transition between $+\Vec{b}$ and $-\Vec{b}$. The right-hand side $f_{\mathrm{CL}}$ corresponding to $\Vec{u}_{\mathrm{CL}}$ can be computed using the (strong) vector laplace equation. The panels of Figure~\ref{fig:circular_layer_adaptive_solution} show the evolution of the solution $\Vec{u}^n_{\mathrm{CL}}$ and the subdivision partition $\C^n_{\mathrm{CL}}$ after $n$ steps of the adaptive loop.
 
-\robert{\todo{
-    write down the formula for the right hand side of the Multisclae Gaussian test case and explain the results we see in the plots.
-}}
-
 \begin{figure}[htbp]
     \centering
     % Top row: 4 smaller panels, all trimmed on the right
     \begin{subfigure}[b]{0.24\textwidth}
         \centering
-        \includegraphics[width=\textwidth, trim=0pt 0pt 4cm 0pt, clip]{images/vector_laplacian/CircularLayer/u0.png}
+        %\includegraphics[width=\textwidth, trim=0pt 0pt 4cm 0pt, clip]{images/vector_laplacian/CircularLayer/u0.png}
         \caption{Step $0$.}
     \end{subfigure}\hfill
     \begin{subfigure}[b]{0.24\textwidth}
         \centering
-        \includegraphics[width=\textwidth, trim=0pt 0pt 4cm 0pt, clip]{images/vector_laplacian/CircularLayer/u1.png}
+        %\includegraphics[width=\textwidth, trim=0pt 0pt 4cm 0pt, clip]{images/vector_laplacian/CircularLayer/u1.png}
         \caption{Step $1$.}
     \end{subfigure}\hfill
     \begin{subfigure}[b]{0.24\textwidth}
         \centering
-        \includegraphics[width=\textwidth, trim=0pt 0pt 4cm 0pt, clip]{images/vector_laplacian/CircularLayer/u2.png}
+        %\includegraphics[width=\textwidth, trim=0pt 0pt 4cm 0pt, clip]{images/vector_laplacian/CircularLayer/u2.png}
         \caption{Step $2$.}
     \end{subfigure}\hfill
     \begin{subfigure}[b]{0.24\textwidth}
         \centering
-        \includegraphics[width=\textwidth, trim=0pt 0pt 4cm 0pt, clip]{images/vector_laplacian/CircularLayer/u3.png}
+        %\includegraphics[width=\textwidth, trim=0pt 0pt 4cm 0pt, clip]{images/vector_laplacian/CircularLayer/u3.png}
         \caption{Step $3$.}
     \end{subfigure}
     \\[8pt]
     % Measure u4 with trim to obtain the row height for matching u6
     \savebox{\twosubbox}{%
-        \includegraphics[width=0.25\textwidth, trim=0pt 0pt 4cm 0pt, clip]{images/vector_laplacian/CircularLayer/u4.png}%
+        %\includegraphics[width=0.25\textwidth, trim=0pt 0pt 4cm 0pt, clip]{images/vector_laplacian/CircularLayer/u4.png}%
     }%
     \setlength{\twosubht}{\ht\twosubbox}%
     % Bottom row: 3 larger panels; u4 and u5 trimmed, u6 scaled to same height
@@ -1374,12 +1809,12 @@ and $\alpha = 100$ and $R = 0.3$. The vector part $\Vec{b}(x)$ provides a backgr
     \end{subfigure}\qquad
     \begin{subfigure}[b]{0.25\textwidth}
         \centering
-        \includegraphics[width=\textwidth, trim=0pt 0pt 4cm 0pt, clip]{images/vector_laplacian/CircularLayer/u5.png}
+        %%\includegraphics[width=\textwidth, trim=0pt 0pt 4cm 0pt, clip]{images/vector_laplacian/CircularLayer/u5.png}
         \caption{Step $5$.}
     \end{subfigure}\qquad
     \begin{subfigure}[b]{0.25\textwidth}
         \centering
-        \includegraphics[height=\twosubht, trim=0pt 0pt 0.8cm 0pt, clip]{images/vector_laplacian/CircularLayer/u6.png}
+        %\includegraphics[height=\twosubht, trim=0pt 0pt 0.8cm 0pt, clip]{images/vector_laplacian/CircularLayer/u6.png}
         \caption{Step $6$.}
     \end{subfigure}
     \caption{Solution $\Vec{u}^n_{\mathrm{CL}}$ and subdivision partition $\C^n_{\mathrm{CL}}$ of the circulay layer test case in Eq.~\eqref{eq:circular_layer_test_case} after step $n$. The color bar of step $6$ is applied across all steps.}
@@ -1391,33 +1826,33 @@ and $\alpha = 100$ and $R = 0.3$. The vector part $\Vec{b}(x)$ provides a backgr
     \centering
     \begin{subfigure}[b]{0.3\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{images/vector_laplacian/MultiscaleGaussian/u_with_subdiv_partition_L_4.png}
+        %\includegraphics[width=\textwidth]{images/vector_laplacian/MultiscaleGaussian/u_with_subdiv_partition_L_4.png}
         \caption{}
     \end{subfigure}\hfill
     \begin{subfigure}[b]{0.3\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{images/vector_laplacian/MultiscaleGaussian/fig_dof_breakdown_bars.pdf}
+        %\includegraphics[width=\textwidth]{images/vector_laplacian/MultiscaleGaussian/fig_dof_breakdown_bars.pdf}
         \caption{}
     \end{subfigure}\hfill
     \begin{subfigure}[b]{0.3\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{images/vector_laplacian/MultiscaleGaussian/fig_marking.pdf}
+        %\includegraphics[width=\textwidth]{images/vector_laplacian/MultiscaleGaussian/fig_marking.pdf}
         \caption{}
     \end{subfigure}
     \\[6pt]
     \begin{subfigure}[b]{0.3\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{images/vector_laplacian/MultiscaleGaussian/fig_convergence_Lsweep.pdf}
+        %\includegraphics[width=\textwidth]{images/vector_laplacian/MultiscaleGaussian/fig_convergence_Lsweep.pdf}
         \caption{}
     \end{subfigure}\hfill
     \begin{subfigure}[b]{0.3\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{images/vector_laplacian/MultiscaleGaussian/fig_estimator_levels_L5.pdf}
+        %\includegraphics[width=\textwidth]{images/vector_laplacian/MultiscaleGaussian/fig_estimator_levels_L5.pdf}
         \caption{}
     \end{subfigure}\hfill
     \begin{subfigure}[b]{0.3\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{images/vector_laplacian/MultiscaleGaussian/fig_estimator_levels_L4.pdf}
+        %\includegraphics[width=\textwidth]{images/vector_laplacian/MultiscaleGaussian/fig_estimator_levels_L4.pdf}
         \caption{}
     \end{subfigure}
     \caption{Multiscale Gaussian test case.}
@@ -1428,12 +1863,175 @@ and $\alpha = 100$ and $R = 0.3$. The vector part $\Vec{b}(x)$ provides a backgr
 
 \robert{We have presented a complete matrix-level framework for hierarchical subdivision $k$-form spaces and their use in an adaptive loop for structure-preserving PDE discretisations. The central observation is that any active subdivision basis function is a column of an accumulated subdivision matrix $\Smat{k}{\l}{\L}$; selecting columns according to a subdivision partition produces a hierarchical space $\hierSDFspace{k}{\C}{\L}$ whose linear independence and de Rham exactness are guaranteed by the partition condition proved in the companion paper~\cite{Piel.2026}. Once the hierarchical subdivision matrix $\Amat{k}{\activeDoFs}{\L}$ is assembled, all bilinear forms are obtained by Galerkin restriction of the embedding-level operators without recomputing any integrals, and the active-space linear system reduces to standard sparse linear algebra on the finest mesh $\T_\L$.
 
-The adaptive loop adds two subdivision-specific steps to the standard \textsc{Solve}--\textsc{Estimate}--\textsc{Mark}--\textsc{Refine} cycle. The padding step (Algorithm~\ref{alg:padding}) enlarges the marked set to satisfy the interior-vertex condition of the subdivision partition, and the boundary-vertex repair (Algorithm~\ref{alg:fix_boundary}) corrects an isolated topological defect that would otherwise break de Rham exactness by introducing a curl-free 1-form near the boundary that is not the gradient of any active 0-form. Both steps are local and inexpensive relative to the linear solve.
+The adaptive loop adds a subdivision-specific \textsc{Pad} step to the standard \textsc{Solve}--\textsc{Estimate}--\textsc{Mark}--\textsc{Refine} cycle. Padding (Algorithm~\ref{alg:padding}) alternates pinch resolution and condition-I grading to a fixed point: pinch resolution repairs a pinched coarse region that would otherwise carry a spurious harmonic (a closed but non-exact discrete $1$-form, breaking de Rham exactness), while condition-I grading enforces the interior-vertex (Good-vertex) requirement and bounds the level jump at coarse/fine interfaces. Both rules only ever refine, are local, and are inexpensive relative to the linear solve.
 
 The numerical experiments confirm the two key structural properties of the framework. For the Maxwell eigenvalue problem, exact subdivision partitions reproduce the reference FEEC spectrum without spurious modes; inexact ones introduce them. This serves as a direct diagnostic for the correctness of the active-DoF construction and the de Rham complex structure. For the mixed vector Laplace equation, the adaptive loop concentrates refinement at the location of steep gradients and achieves convergence behaviour consistent with the hierarchical approximation theory.
 
 Several directions remain open. The precise correspondence between the subdivision PAD step and the $L$-chain completion used in hierarchical B-spline AFEM~\cite{Cabanas.2026} has not been established; clarifying this connection would relate the two frameworks and potentially enable convergence proofs to be transferred. On the solver side, the block-diagonal LDLT preconditioner used here is effective for the problem sizes considered, but a multigrid preconditioner that respects the globally supported subdivision basis would reduce the per-step cost for larger problems; this requires a prolongation operator compatible with $\Amat{k}{\activeDoFs}{\L}$ and is left for future work. Finally, a promising direction is to adopt the overlapping patch framework of Bressan~\cite{Bressan.2024} in place of the non-overlapping subdivision partition used here. Overlapping patches can provide a richer set of admissible active-DoF configurations and may admit a more flexible PAD step, at the cost of requiring a partition-of-unity treatment to maintain linear independence; adapting the matrix-level assembly and the de Rham complex to that setting is an open problem.}
 
 \bibliography{references}
+
+\appendix
+
+\section{Full marking and padding pseudo-code}
+\label{app:full_pseudocode}
+
+\robert{This appendix gives the full versions of the marking and padding routines
+whose condensed forms appear in Section~\ref{subsec:worked_example}
+(Alg.~\ref{alg:doerfler}, \ref{alg:padding}, \ref{alg:pinch}, \ref{alg:condI}).}
+
+\robert{\begin{algorithm}[H]
+\caption{$\textsc{DoerflerMarkPerVertex}(P, \eta, \theta)$: full per-vertex-star marking}
+\label{alg:doerfler_full}
+\KwIn{partition $P$, per-face indicator $\eta_f$ for active $f$, $\theta \in (0,1]$}
+\tcp{DECISION --- which vertices}
+$E \leftarrow 0$\;
+\For{each level $\l$, each active face $f \in P[\l]$ with $\l < \L$}{
+    $E \leftarrow E + \eta_f^2$\;
+    \For{each vertex $v$ of $f$}{
+        $\mathrm{energy}[\l][v] \mathrel{+}= \eta_f^2$;\quad $\mathrm{area}[\l][v] \mathrel{+}= \mathrm{area}(f)$;\quad $\l_{\min}[v] \leftarrow \min(\l_{\min}[v], \l)$\;
+    }
+}
+\lIf{$E = 0$}{\Return $P$}
+$\mathrm{PQ} \leftarrow$ max-heap\;
+\For{each vertex $v$}{
+    $\l \leftarrow \l_{\min}[v]$; \quad $\mathrm{PQ}.\mathrm{push}\big(\text{key} = \mathrm{energy}[\l][v]/\mathrm{area}[\l][v],\ \l,\ v\big)$\;
+}
+$\mathrm{selected} \leftarrow [\,]$;\quad $\mathrm{acc} \leftarrow 0$;\quad $\mathrm{marked}[\l] \leftarrow \emptyset$\;
+\While{$\mathrm{acc} < \theta E$ \textbf{and} $\mathrm{PQ}$ nonempty}{
+    $(\_, \l, v) \leftarrow \mathrm{PQ}.\mathrm{pop}()$;\quad $\mathrm{selected}.\mathrm{append}(\l, v)$\;
+    \For{each face $f \in \mathrm{star}(v)$ with $f \in P[\l]$, $f \notin \mathrm{marked}[\l]$}{
+        $\mathrm{marked}[\l] \leftarrow \mathrm{marked}[\l] \cup \{f\}$;\quad $\mathrm{acc} \mathrel{+}= \eta_f^2$\;
+    }
+}
+\tcp{APPLICATION --- refine each selected star}
+\lFor{$(\l,v) \in \mathrm{selected}$}{$T[v] \leftarrow \min(\text{finest active level of } \mathrm{star}_P(v) + 1,\ \L)$}
+$P' \leftarrow$ copy of $P$\;
+\For{$(\l,v) \in \mathrm{selected}$ sorted ascending by $(\l, v)$}{
+    \For{each face $f$ of $v$'s one-ring at level $T[v]$}{
+        \lIf{$f$ already active at level $\geq T[v]$}{\textbf{continue}}
+        grade $f$'s covering active ancestor up to level $T[v]$ (one level at a time)\;
+    }
+}
+\Return $\textsc{Pad}(P')$\;
+\end{algorithm}}
+
+\robert{\begin{algorithm}[H]
+\caption{$\textsc{ResolveVertexPinches}(P)$: full pinch resolution}
+\label{alg:pinch_full}
+\Repeat{a pass refines nothing}{
+    \tcp{Phase 1 --- detect (no mutation)}
+    $\mathrm{pinches} \leftarrow \emptyset$\;
+    \For{each vertex $v$}{
+        $\L_v \leftarrow v$'s finest active level\;
+        \lIf{any $\L_v$-ring face is covered only by a finer face}{skip $v$}
+        classify each face of $v$'s $\L_v$ one-ring: \textsc{fine} $=$ active at $\L_v$; \textsc{coarse} $=$ covered by an active ancestor at level $< \L_v$\;
+        $\mathrm{arcs} \leftarrow$ number of maximal runs of \textsc{fine} faces (cyclic for interior $v$, open for boundary $v$)\;
+        \lIf{$\mathrm{arcs} \geq 2$}{$\mathrm{pinches} \leftarrow \mathrm{pinches} \cup \{(\L_v, v)\}$}
+    }
+    \tcp{Phase 2 --- refine}
+    \For{$(\L_v, v) \in \mathrm{pinches}$}{
+        \For{each \textsc{coarse} face $f$ of $v$'s $\L_v$-ring}{
+            grade $f$'s covering active ancestor up to level $\L_v$ (one level at a time along the chain; deferred, erase-guarded)\;
+        }
+    }
+}
+\Return $P$\;
+\end{algorithm}}
+
+\robert{\begin{algorithm}[H]
+\caption{$\textsc{PadPartitionPerVertexGraded}(P)$: full condition-I padding with grading}
+\label{alg:condI_full}
+\tcp{$\mathrm{covered}(g,\l)$: $g$ or a coarser ancestor of $g$ is active}
+\tcp{$\mathrm{Good}(w,\l)$: every face in $w$'s one-ring is $\mathrm{covered}(\cdot,\l)$}
+\tcp{Phase 1 --- admissibility (condition I) to a fixed point}
+\Repeat{no face is refined this pass}{
+    $\mathrm{toRefine} \leftarrow \emptyset$\;
+    \For{each level $\l$, each active level-$\l$ face $f$}{
+        \lIf{no vertex of $f$ is $\mathrm{Good}(\cdot,\l)$}{$\mathrm{toRefine} \leftarrow \mathrm{toRefine} \cup \{f\}$}
+    }
+    apply $\mathrm{toRefine}$: each face $\to$ its $4$ children one level deeper\;
+}
+\tcp{Phase 2 --- grading: span $\leq \mathrm{maxSpan}$ levels per vertex}
+\Repeat{$\mathrm{toRefine} = \emptyset$}{
+    $\mathrm{toRefine} \leftarrow \emptyset$\;
+    \For{each vertex $v$}{
+        $\mathrm{lo}, \mathrm{hi} \leftarrow \min, \max$ active level among $v$'s active faces\;
+        \lIf{$\mathrm{hi} - \mathrm{lo} > \mathrm{maxSpan}$}{$\mathrm{toRefine} \leftarrow \mathrm{toRefine} \cup \{v\text{'s active faces at level } \mathrm{lo}\}$}
+    }
+    \If{$\mathrm{toRefine} \neq \emptyset$}{
+        apply $\mathrm{toRefine}$;\quad re-run Phase 1\;
+    }
+}
+\Return $P$\;
+\end{algorithm}}
+
+\section{Atomic-test figure gallery}
+\label{app:figure_gallery}
+
+\robert{This gallery collects the remaining atomic subdivision-partition test cases
+that are not reproduced in the main text (Section~\ref{subsec:exactness_atomic}).
+Each case is shown as an input/padded pair; the corresponding cohomology of the
+richer cases is quantified in Table~\ref{tab:atomic-cohomology}. The
+\texttt{v10} trio (Fig.~\ref{fig:gallery_v10}) stress-tests the coarser-gap guard
+in the pinch-arc detector, and is included for completeness as supplementary
+material.}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v10_last3_200_input.pdf}\caption*{200 in}\end{subfigure}\hfill
+    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v10_last3_200_padded.pdf}\caption*{200 pad}\end{subfigure}\hfill
+    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v10_last3_211_input.pdf}\caption*{211 in}\end{subfigure}\hfill
+    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v10_last3_211_padded.pdf}\caption*{211 pad}\end{subfigure}\hfill
+    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v10_mixed_level_arcs_input.pdf}\caption*{mixed in}\end{subfigure}\hfill
+    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v10_mixed_level_arcs_padded.pdf}\caption*{mixed pad}\end{subfigure}
+    \caption{\robert{Valence-$10$ detector-guard cases: \texttt{v10\_last3\_200} (resolves), \texttt{v10\_last3\_211} (deliberately slips through the guard), \texttt{v10\_mixed\_level\_arcs} (resolves).}}
+    \label{fig:gallery_v10}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v6_3rings_middle_refined_input.pdf}\caption*{3r-mid in}\end{subfigure}\hfill
+    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v6_3rings_middle_refined_padded.pdf}\caption*{3r-mid pad}\end{subfigure}\hfill
+    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v6_4rings_inner_outer_refined_input.pdf}\caption*{4r-io in}\end{subfigure}\hfill
+    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v6_4rings_inner_outer_refined_padded.pdf}\caption*{4r-io pad}\end{subfigure}\hfill
+    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v6_4rings_third_coarse_input.pdf}\caption*{4r-3rd in}\end{subfigure}\hfill
+    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v6_4rings_third_coarse_padded.pdf}\caption*{4r-3rd pad}\end{subfigure}
+    \caption{\robert{Further ring cases: $3$-ring middle-refined, $4$-ring inner$+$outer refined, and $4$-ring third-coarse partitions.}}
+    \label{fig:gallery_rings}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v6_boundary_lvl1_input.pdf}\caption*{bd-1 in}\end{subfigure}\hfill
+    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v6_boundary_lvl1_padded.pdf}\caption*{bd-1 pad}\end{subfigure}\hfill
+    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v6_boundary_lvl2_input.pdf}\caption*{bd-2 in}\end{subfigure}\hfill
+    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v6_boundary_lvl2_padded.pdf}\caption*{bd-2 pad}\end{subfigure}\hfill
+    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v6_leftright_lvl1_input.pdf}\caption*{lr-1 in}\end{subfigure}\hfill
+    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v6_leftright_lvl1_padded.pdf}\caption*{lr-1 pad}\end{subfigure}
+    \\[6pt]
+    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v6_leftright_lvl2_input.pdf}\caption*{lr-2 in}\end{subfigure}\hfill
+    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v6_leftright_lvl2_padded.pdf}\caption*{lr-2 pad}\end{subfigure}\hfill
+    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v6_refine_center_input.pdf}\caption*{ctr in}\end{subfigure}\hfill
+    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v6_refine_center_padded.pdf}\caption*{ctr pad}\end{subfigure}\hfill
+    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v6_nested_center_lvl3_input.pdf}\caption*{nest in}\end{subfigure}\hfill
+    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v6_nested_center_lvl3_padded.pdf}\caption*{nest pad}\end{subfigure}
+    \caption{\robert{Boundary, left/right, single-centre, and nested-centre partitions (valence $6$).}}
+    \label{fig:gallery_boundary_misc}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v8_quarters_lvl1_input.pdf}\caption*{v8-1 in}\end{subfigure}\hfill
+    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v8_quarters_lvl1_padded.pdf}\caption*{v8-1 pad}\end{subfigure}\hfill
+    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v9_cff_lvl1_input.pdf}\caption*{v9-1 in}\end{subfigure}\hfill
+    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v9_cff_lvl1_padded.pdf}\caption*{v9-1 pad}\end{subfigure}\hfill
+    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v9_cff_lvl2_input.pdf}\caption*{v9-2 in}\end{subfigure}\hfill
+    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v9_cff_lvl2_padded.pdf}\caption*{v9-2 pad}\end{subfigure}
+    \caption{\robert{Valence-$8$ single-level quarters and valence-$9$ mixed-arc (\texttt{cff}) partitions.}}
+    \label{fig:gallery_v8v9}
+\end{figure}
+
+\FloatBarrier
 
 \end{document}
