@@ -62,9 +62,14 @@ Werner Bauer\footnote{University of Surrey, School of Mathematics and Physics, U
 \usepackage[normalem]{ulem}  % \sout for struck-through deletions (normalem keeps \emph italic)
 \newcommand{\partitionStar}{\F\V_\C}                         % partition star of a vertex class
 \newcommand{\partitionStarl}[1]{\F\V_{\C, #1}}
-\newcommand{\partitionStarC}[1]{\F\V_{#1}}  
+\newcommand{\partitionStarC}[1]{\F\V_{#1}}
+\newcommand{\partitionStarCl}[2]{\F\V_{#1,#2}}
 \newcommand{\vertclass}[1]{\widehat{v}_{#1}}                 % vertex equivalence class across levels
 \newcommand{\ancestor}[1]{\big\lceil #1 \big\rceil_{\C}}     % coarsen a fine face to its covering active cell of \C
+\newcommand{\quadriF}[1]{\mathcal{Q}^{f}_{#1}}                  % flat single-level quadrisection on partition #1
+\newcommand{\quadriV}[2]{\mathcal{Q}^{\vertclass{} \to #2}_{#1}} % graded quadrisection of a star up to target level #2 on partition #1
+\newcommand{\sourcelevel}{\varsigma}                            % coarsest occupied level of a partition star
+\newcommand{\targetlevel}{\tau}                                 % marking target level
 \newcommand{\Ltwoerror}{e_{L^2}}
 \newcommand{\incl}[1]{{\color{red}#1}}
 \newcommand{\checkit}[1]{{\color{red}#1}}
@@ -304,7 +309,7 @@ Werner Bauer\footnote{University of Surrey, School of Mathematics and Physics, U
 \begin{abstract}
 We provide the algorithmic and computational complement to the theoretical framework of~\cite{Piel.2026} for hierarchical subdivision $k$-form spaces on triangular meshes. The central observation is that every basis function is represented by a column of the accumulated subdivision matrix. Selecting active degrees of freedom results in collecting their corresponding columns into the hierarchical subdivision matrix. This sparse matrix reduces all downstream operations like matrix assembly or residual evaluation to standard sparse linear algebra on the finest mesh $\T_\L$ without recomputing any integrals. We give explicit algorithms for constructing the active degrees of freedom from a subdivision partition, including a frontier-sweep procedure for the interface basis functions at level boundaries.
 
-For the adaptive solution of PDEs, we describe a \textsc{Solve}--\textsc{Estimate}--\textsc{Mark}--\textsc{Refine}--\textsc{Pad} loop in which the non-standard \textsc{Pad} step enforces the subdivision partition condition after Dörfler marking \robert{by alternating pinch resolution and condition-I grading to a fixed point, refining the coarse regions that would otherwise break de Rham exactness}. Numerical experiments on the Maxwell eigenvalue problem confirm that exact subdivision partitions reproduce the reference spectrum without spurious modes and adaptive experiments on the mixed vector Laplace equation demonstrate \robert{our} adaptive loop.
+For the adaptive solution of PDEs, we describe a \textsc{Solve}--\textsc{Estimate}--\textsc{Mark}--\textsc{Refine}--\textsc{Pad} loop in which the non-standard \textsc{Pad} step enforces the subdivision partition condition after Dörfler marking \robert{by alternating pinch resolution, inadmissible-faces padding, and grading to a fixed point, refining the coarse regions that would otherwise break de Rham exactness}. Numerical experiments on the Maxwell eigenvalue problem confirm that exact subdivision partitions reproduce the reference spectrum without spurious modes and adaptive experiments on the mixed vector Laplace equation demonstrate \robert{our} adaptive loop.
 \end{abstract}
 
 \todo{\guidance{Scoping (narrative point~1). Weave one bridging clause into the abstract so its arc matches the paper: after ``\ldots\ reduces all downstream operations to standard sparse linear algebra'', add that \emph{the substantive question is then purely combinatorial --- which column selections are admissible --- which we answer via the subdivision-partition condition and enforce during adaptivity with the} \textsc{Pad} \emph{step}. This signals that the matrix picture is the setup and the admissibility/padding machinery is the body of the work.}}
@@ -893,6 +898,46 @@ A \emph{patch} $\calP_\l \subset \T_\l$ is a non-empty, edge-connected collectio
 
 Two patches $\calP_{\l_i}$ and $\calP_{\l_j}$ are \emph{non-overlapping} if their images in $\T_\L$ share at most edges: $\I_{(\calP_{\l_i}, \calP_{\l_j}) \to \L} \coloneqq \calP_{\l_i \to \L} \cap \calP_{\l_j \to \L} \subset \E_\L(\T_\L)$. A \emph{covering} $\C(\T_\L) = \bigcup_{\l_i,n}\calP^n_{\l_i}$ is a set of pairwise non-overlapping patches whose images tile $\T_\L$, i.e.\ $\T_\L = \bigcup_{\l_i,n}\calP^n_{\l_i \to \L}$. We write $\C_{\l_i}$ for the level-$\l_i$ patches and $\C_{>\l_i}$, $\C_{\geq\l_i}$, $\C_{<\l_i}$, $\C_{\leq\l_i}$ for the corresponding level subsets.}
 
+\begin{definition}[interior vertex at level $\l$]
+    \label{def:interior_vertex}
+    We call a vertex $\vertex{\l}{\coarseIdxtwo} \in \V(\C)$ \emph{interior at level $\l$} if the partition star $\partitionStar{\C}(\vertclass{\coarseIdxtwo})$ of its equivalence class $\vertclass{\coarseIdxtwo}$ does not contain any face on a lever fine that $\l$, i.e.,
+    \begin{equation}
+        \label{eq:interior_vertex}
+        \partitionStar(\vertclass{\coarseIdxtwo}) \cap \F(\C_{>\l}) = \varnothing.
+    \end{equation}
+\end{definition}
+
+\begin{remark}
+    Note that being an interior vertex is a weaker condition than being \emph{patch interior}, i.e.,
+    \begin{equation}
+        \label{eq:patch_interior_vertex}
+        \partitionStar(\vertclass{\coarseIdxtwo}) = \F\V \big( \vertex{\l}{\coarseIdxtwo} \big) \subset \F(\C_{\l}).
+    \end{equation}
+\end{remark}
+
+\begin{definition}[admissible face]
+    We call a face $\face{\l}{\coarseIdxone} \in \F(\C)$ \emph{admissible} if at least one of its vertices $\vertex{\l}{\coarseIdxtwo} \in \V\F\big( \face{\l}{\coarseIdxone} \big)$ is interior at level $\l$. Otherwise, the face is called \emph{inadmissible}.
+\end{definition}
+
+\begin{definition}[pinch vertex]
+    Let $\l$ be the finest level of $\partitionStar(\vertclass{\coarseIdxtwo})$ and compute the number $\mathrm{N}_\coarseIdxtwo$
+    \begin{equation}
+        \mathrm{N}_\coarseIdxtwo \coloneq \Big\vert \big\{ \edge{\l}{\coarseIdxone} \in \E\V(\vertex{\l}{\coarseIdxtwo}) \;\; : \;\; \F\E(\edge{\l}{\coarseIdxone}) \cap \C_\l \neq \varnothing \quad \text{and} \quad \F\E(\edge{\l}{\coarseIdxone}) \setminus \C_\l \neq \varnothing \big\} \Big\vert.
+    \end{equation}
+    of edges whose adjacent faces split into an active and an inactive one on level $\l$. For an interior vertex of $\T_\l$, $\mathrm{N}_\coarseIdxtwo$ will always be even. \robert{(What about boundary vertices? We also need to be careful with the words "interior" and "boundary" here, define properly.)} The \emph{number of disconnected arcs} $\gamma_\coarseIdxtwo$ of the vertex class $\vertclass{\coarseIdxtwo}$ is given by
+    \begin{equation}
+        \gamma_\coarseIdxtwo = \begin{cases}
+            1, \quad & \mathrm{N}_\coarseIdxtwo = 0 \\
+            \tfrac{1}{2} \mathrm{N}_\coarseIdxtwo, \quad & \text{otherwise}.
+        \end{cases}
+    \end{equation}
+    If $\gamma_\coarseIdxtwo \geq 2$, the vertex class $\vertclass{\coarseIdxtwo}$ is a called \emph{pinch} vertex.
+\end{definition}
+
+\robert{The pinch predicate is the one genuinely new ingredient: unlike interior-ness, it is a
+\emph{connectivity} property of the star, read off from the cut spokes rather than expressible
+through the quadrisection operators and $\partitionStar$ alone.}
+
 \robert{
 \begin{definition}[Subdivision Partition]
     \label{def:subdiv_partition}
@@ -973,7 +1018,7 @@ We first capture the persistence of vertices across the hierarchy by defining an
     \label{eq:def_vertex_class}
     \vertclass{\coarseIdxtwo} \coloneq \big\{ \vertex{\l}{\coarseIdxtwo}, \; \vertex{\l \to \l+1}{\coarseIdxtwo}, \; \dots, \; \vertex{\l \to \L}{\coarseIdxtwo} \big\}, \quad \text{where} \quad \l = \min \big\{ \, \lone \in \{\lzero, \, \dots, \, \L\} \; \colon \; \coarseIdxtwo \leq \vert \V_\lone \vert \, \big\}
 \end{equation}
-and $\vertex{\l \to \lone}{\coarseIdxtwo} = \Aop{}{\l}{\lone} \vertex{\l}{\coarseIdxtwo}$ denotes the refined vertices. We chose the $\widehat{\cdot}$ notation because we think of the equivalence relation as lifting the vertex across all finer levels. The active vertices in any equivalence class are given by $\vertclass{\coarseIdxtwo} \cap \V(\C)$.
+and $\vertex{\l \to \lone}{\coarseIdxtwo} = \Aop{}{\l}{\lone} \vertex{\l}{\coarseIdxtwo}$ denotes the refined vertices. We chose the $\widehat{\cdot}$ notation because we think of the equivalence relation as lifting the vertex across all finer levels. The active vertices in any equivalence class are given by $\vertclass{\coarseIdxtwo} \cap \V(\C)$. Since every equivalence class contains at least one active vertex, the number of vertex equivalence classes of $\C$ is at most the number of active $0$-form DoFs, $\vert \activeDoFSet{0}{\C} \vert$.
 
 Further, we define the \emph{ancestor} $\ancestor{\face{\lone}{\fineIdxone}}$ by the relation
 \begin{equation}
@@ -989,7 +1034,31 @@ Further, we define the \emph{ancestor} $\ancestor{\face{\lone}{\fineIdxone}}$ by
 \end{equation}
 \robert{The partition star operator $\partitionStar(\vertclass{\coarseIdxtwo})$ collects \emph{every} active face of the subdivision partition $\C$ incident to the vertex, starting from the coarsest possible level: for each face $\face{\L}{\fineIdxone}$ in the vertex's finest-level one-ring $\FVl{\L}(\vertex{\l \to \L}{\coarseIdxtwo})$ it takes the covering active ancestor $\ancestor{\face{\L}{\fineIdxone}}$. This includes not only the faces of which the vertex is an active corner, but also the coarse face lying across an interface edge through the vertex. We name it the \emph{partition} star because the covering ancestors are cells of the partition $\C$ and hence tile the neighbourhood of the vertex without overlap, unlike faces taken across different levels of the hierarchy, which do overlap.}
 
-\todo{also define $\partitionStarl{\l} = \partitionStar \cap \F(\C_\l)$.}
+\robert{Finally, we write
+\begin{equation}
+    \label{eq:def_partition_star_slice}
+    \partitionStarl{\l}(\vertclass{\coarseIdxtwo}) \coloneq \partitionStar(\vertclass{\coarseIdxtwo}) \cap \F(\C_\l)
+\end{equation}
+for the \emph{level-$\l$ slice} of the partition star, the active faces of the star that lie on level $\l$. Because the covering ancestors tile the vertex neighbourhood without overlap, these slices partition $\partitionStar(\vertclass{\coarseIdxtwo})$ across the levels it occupies.}
+
+\robert{The estimation, marking, refinement, and padding steps below all refine a subdivision partition through \emph{two} operators, which we define here once and refer back to. The \emph{flat quadrisection} $\quadriF{\C}(\simplexsubset{2}{\l})$ refines a \emph{single-level} set of faces $\simplexsubset{2}{\l} \subseteq \F(\C_\l)$ by replacing each face with its four children,
+\begin{equation}
+    \label{eq:quadrisection_operator}
+    \quadriF{\C}(\simplexsubset{2}{\l}) \coloneq \C_{<\l} \; \cup \; \big\{ \C_{\l} \setminus \simplexsubset{2}{\l} \big\} \; \cup \; \big\{ \C_{\l + 1} \cup \Aop{}{\l}{\l + 1} \big(\simplexsubset{2}{\l}\big) \big\} \; \cup \; \C_{>\l + 1};
+\end{equation}
+that is, it removes the faces $\simplexsubset{2}{\l}$ from level $\l$ and adds their children on level $\l+1$, leaving all other levels untouched.}
+
+\robert{The \emph{graded quadrisection} $\quadriV{\C}{t}(\partitionStar(\vertclass{\coarseIdxtwo}))$ homogenises a whole partition star \emph{up to} a target level $t$ by nested flat quadrisection. With $\sourcelevel(\vertclass{\coarseIdxtwo}) = \min\{\l : \partitionStarl{\l}(\vertclass{\coarseIdxtwo}) \neq \varnothing\}$ the coarsest level the star occupies, it is built by:
+\begin{enumerate}
+    \item Initialization: $\C^{\sourcelevel} = \C$;
+    \item for $\l = \sourcelevel, \, \dots, \, t-1$, flat-refine the level-$\l$ slice of the star \emph{recomputed on the current partition} $\C^\l$,
+    \begin{equation}
+        \label{eq:graded_quadrisection}
+        \C^{\l+1} = \quadriF{\C^\l}\big( \partitionStarCl{\C^\l}{\l}(\vertclass{\coarseIdxtwo}) \big);
+    \end{equation}
+    \item set $\quadriV{\C}{t}(\partitionStar(\vertclass{\coarseIdxtwo})) \coloneq \C^{t}$.
+\end{enumerate}
+Recomputing the slice on $\C^\l$ at each step is what drags a coarse interface face up through \emph{every} intermediate level up to $t$. The two operators are distinguished by their superscript --- $\quadriF{}$ refines a set of faces flatly by one level, while $\quadriV{}{\cdot}$ refines a star gradedly toward its vertex --- and only the graded operator carries a target level.}
 
 
 \section{Implementation and adaptive loop}
@@ -1086,32 +1155,6 @@ This section describes the adaptive loop used in the numerical experiments. The 
 
 The following sections will cover the individual steps of this loop, and focus particularly on the non-standard choices we made during the implementation. The $\textsc{Solve}$ step involves solving a linear system. For example, for the vector Laplace problem in Section~\ref{subsec:vector_laplace}, we use Eigen's (\robert{cite}) sparse MINRES solver with a block-diagonal approximate (mass-lumped) Schur complex preconditioner (\robert{maybe keep some information from below here and delete what's below.}). For the $\textsc{Estimate}$ step, we use a standard $\Hcurl$ estimator to compute residuals per face in the subdivision partition. These residuals are then re-distributed to the active vertices in the partition. The $\textsc{Estimate}$ step is covered in more detail in Section~\ref{subsec:estimate}. We employ greedy Dörfler marking for the vertex residuals to refine vertex stars. This typically leads to inexact subdivision partitions, and thus needs a $\textsc{Pad}$ step to recover its exactness, see Section~\ref{subsec:refinement_and_padding}.
 
-\begin{figure}%[htbp]
-    \centering
-    \begin{subfigure}[b]{0.3\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig1a.pdf}
-        \caption{Per-face residual $\eta_f$.}
-    \end{subfigure}\hfill
-    \begin{subfigure}[b]{0.3\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig1b.pdf}
-        \caption{Per-vertex residual $\nu_v$.}
-    \end{subfigure}\hfill
-    \begin{subfigure}[b]{0.3\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig1c.pdf}
-        \caption{After refinement.}
-    \end{subfigure}
-    \caption{\robert{Marking stage of the worked example
-    (Eq.~\eqref{eq:worked_example_eta}). (a) the coarse mesh coloured by the
-    per-face residual $\eta_f$; (b) the per-vertex error density $\nu_\coarseIdxtwo$, the
-    ranking key the marker sorts by, evaluated at each vertex's coarsest active
-    level; (c) the partition after refining the marked stars, before any padding,
-    with the selected vertices overlaid on the density scale of~(b).}}
-    \label{fig:pipeline_marking}
-\end{figure}
-
 \subsubsection{Solve}
 \label{sec:preconditioner}
 
@@ -1181,13 +1224,39 @@ Dividing by the cumulative area of the faces rescales the integral face estimato
 
 Because the partition star includes the coarse face across any interface edge through the vertex, $\nu_\coarseIdxtwo$ accounts for exactly the faces that refining the vertex's star would homogenise during the \textsc{Refine} step, see Section~\ref{subsec:refine}. For this reason, $\nu_\coarseIdxtwo$ measures exactly the error that selecting the vertex would actually resolve in the sense of Dörfler marking, see Section~\ref{subsec:mark}.
 
+\begin{figure}%[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig1a.pdf}
+        \caption{Per-face residual $\eta_f$.}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig1b.pdf}
+        \caption{Per-vertex residual $\nu_v$.}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig1c.pdf}
+        \caption{After refinement.}
+    \end{subfigure}
+    \caption{\robert{Marking stage of the worked example
+    (Eq.~\eqref{eq:worked_example_eta}). (a) the coarse mesh coloured by the
+    per-face residual $\eta_f$; (b) the per-vertex error density $\nu_\coarseIdxtwo$, the
+    ranking key the marker sorts by, evaluated at each vertex's coarsest active
+    level; (c) the partition after refining the marked stars, before any padding,
+    with the selected vertices overlaid on the density scale of~(b).}}
+    \label{fig:pipeline_marking}
+\end{figure}
+
 \subsubsection{Marking}
 \label{subsec:mark}
 
 \todo{\guidance{Dissolve the worked example here (narrative point~3). When Section~\ref{subsec:worked_example} is folded in, attach Fig.~\ref{fig:pipeline_marking} (residual $\to$ density $\to$ post-mark) as the running illustration of this paragraph, using the closed-form $\eta$ of Eq.~\eqref{eq:worked_example_eta} as the concrete input.}}
 
 
-Our code marks vertices rather than faces. This enables us to refine single vertex stars, the central combinatorial object of the admissibility argument in~\cite{companion_paper}. We rank the vertices by the vertex estimator $\nu_\coarseIdxtwo$, see Equation~\eqref{eq:vertex_residual} from Section~\ref{subsec:estimate}. For this purpose, we enumerate the vertex equivalence classes $\vertclass{\coarseIdxtwo}$ so that $\vertclass{\coarseIdxtwo_1} \leq \vertclass{\coarseIdxtwo_2} \leq \ldots \leq \vertclass{\coarseIdxtwo_{\mathrm{V}-1}} \leq \vertclass{\coarseIdxtwo_\mathrm{V}}$, where $\mathrm{V} \leq \vert \activeDoFSet{k}{\C}\vert$ is the number of equivalence classes of vertices of $\C$.
+Our code marks vertices rather than faces. This enables us to refine single vertex stars, the central combinatorial object of the admissibility argument in~\cite{companion_paper}. We rank the vertices by the vertex estimator $\nu_\coarseIdxtwo$, see Equation~\eqref{eq:vertex_residual} from Section~\ref{subsec:estimate}. For this purpose, we enumerate the $\mathrm{V}$ vertex equivalence classes $\vertclass{\coarseIdxtwo}$ of $\C$ in order of decreasing residual, so that $\nu_{\coarseIdxtwo_1} \geq \nu_{\coarseIdxtwo_2} \geq \ldots \geq \nu_{\coarseIdxtwo_{\mathrm{V}-1}} \geq \nu_{\coarseIdxtwo_\mathrm{V}}$.
 
 The Dörfler marking algorithm greedily selects the first $q$ vertex equivalence classes with the largest estimators such that the \emph{marked refinable residual}
 \begin{equation}
@@ -1204,30 +1273,25 @@ where $\theta \in (0, 1]$ is the Dörfler parameter. The set $\R_\theta \subset 
 \subsubsection{Refinement}
 \label{subsec:refine}
 
-\newcommand{\sourcelevel}{\varsigma}
-\newcommand{\targetlevel}{\tau}
-
-The \textsc{Refine} step refines the marked faces $\face{\l}{\coarseIdxone} \in \R_\theta$ of the partition stars of the vertex equivalence classes $\vertclass{\coarseIdxone_1}, \, \dots, \, \vertclass{\coarseIdxtwo_q}$ from Equation~\eqref{eq:marked_refinable_residual}. First, we compute source levels $\sourcelevel(\vertclass{\coarseIdxtwo_p})$ and target levels $\varsigma(\vertclass{\coarseIdxtwo_p})$ for every vertex class by
+The \textsc{Refine} step refines the marked faces $\face{\l}{\coarseIdxone} \in \R_\theta$ of the partition stars of the vertex equivalence classes $\vertclass{\coarseIdxtwo_1}, \, \dots, \, \vertclass{\coarseIdxtwo_q}$ from Equation~\eqref{eq:marked_refinable_residual}. First, we compute source levels $\sourcelevel(\vertclass{\coarseIdxtwo_p})$ and target levels $\targetlevel(\vertclass{\coarseIdxtwo_p})$ for every vertex class by
 \begin{equation}
 \label{eq:source_and_target_level_of_vertex_class}
 \begin{aligned}
-    \sourcelevel_p = \sourcelevel(\vertclass{\coarseIdxtwo_p}) &= \min \big\{ \l \in \{\lzero, \, \dots, \, \L\}: \; \partitionStar(\vertclass{\coarseIdxtwo_p}) \cap \F(\C_\l) \neq \varnothing \big\}, \\
-    \targetlevel_p = \targetlevel(\vertclass{\coarseIdxtwo_p}) &= \min \big\{ \max \big\{ \l \in \{\lzero, \, \dots, \, \L\}: \; \partitionStar(\vertclass{\coarseIdxtwo_p}) \cap \F(\C_\l) \neq \varnothing \big\}, \;\; \L - 1 \big\}.
+    \sourcelevel_{\coarseIdxtwo_p} = \sourcelevel(\vertclass{\coarseIdxtwo_p}) &= \min \big\{ \l \in \{\lzero, \, \dots, \, \L\}: \; \partitionStar(\vertclass{\coarseIdxtwo_p}) \cap \F(\C_\l) \neq \varnothing \big\}, \\
+    \targetlevel_{\coarseIdxtwo_p} = \targetlevel(\vertclass{\coarseIdxtwo_p}) &= \min \big\{ \max \big\{ \l \in \{\lzero, \, \dots, \, \L\}: \; \partitionStar(\vertclass{\coarseIdxtwo_p}) \cap \F(\C_\l) \neq \varnothing \big\} + 1, \;\; \L \big\}.
 \end{aligned}
 \end{equation}
-These source and target levels must be computed on the fixed input subdivision partition $\C$ before any refinement takes place to avoid a cascade of ever increasing target levels. To formally introduce the refinement algorithm, we define the \emph{quadrisection} operator $\mathcal{Q}_{\C} (\simplexsubset{2}{\l})$ that refines the faces $\face{\l}{\coarseIdxone} \in \simplexsubset{2}{\l} \subset \C_\l$ from level $\l$ to level $\l+1$ by
-\begin{equation}
-    \label{eq:quadrisection_operator}
-    \mathcal{Q}_{\C} (\simplexsubset{2}{\l}) \coloneq \C_{<\l} \; \cup \; \big\{ \C_{\l} \setminus \simplexsubset{2}{\l} \big\} \; \cup \; \big\{ \C_{\l + 1} \cup \Aop{}{\l}{\l + 1} \big(\simplexsubset{2}{\l}\big) \big\} \; \cup \; \C_{>\l + 1}.
-\end{equation}
-In other words, the quadrisection operator removes the faces in $\simplexsubset{2}{\l}$ from level $\l$ and adds their refined children to the subdivision partition $\C$.
-The refinement of the partition stars $\partitionStar(\vertclass{\coarseIdxtwo_p})$ proceeds in the following recursive way:
-\begin{enumerate}
-    \item quadrisect the subdivision partition: $\C_{\sourcelevel_p} = \mathcal{Q}_\C \big( \partitionStarl{\sourcelevel_p}(\vertclass{\coarseIdxtwo_p}) \big)$
-    \item re-compute the partition star $\partitionStarC{\C_{\sourcelevel_p}}(\vertclass{\coarseIdxtwo_p})$
-\end{enumerate}
 
-\todo{write down the iterations here. The difference target-source is limited by the grading difference.}
+\todo{Do we need the source level? Shall we make it a generic thing in section 3.4?}
+
+These source and target levels must be computed on the fixed input subdivision partition $\C$ before any refinement takes place, to avoid a cascade of ever increasing target levels. The \textsc{Refine} step then homogenises each marked star to one level beyond its finest: it applies the graded quadrisection $\quadriV{\C}{\targetlevel_{\coarseIdxtwo_p}}\big(\partitionStar(\vertclass{\coarseIdxtwo_p})\big)$ from Equation~\eqref{eq:graded_quadrisection} with target level $\targetlevel_{\coarseIdxtwo_p}$.
+
+The result of the \textsc{Refine} step is the subdivision partition $\C^q$ given by
+\begin{enumerate}
+    \item Initialization: subdivision partition $\C^0 = \C$,
+    \item Refine partition stars iteratively for $p \in \{1, \, \dots, \, q\}$: $\C^{p} = \quadriV{\C^{p-1}}{\targetlevel_{\coarseIdxtwo_p}}\big( \partitionStar(\vertclass{\coarseIdxtwo_p})\big)$.
+\end{enumerate}
+\robert{Because the source and target levels $\sourcelevel_{\coarseIdxtwo_p}, \targetlevel_{\coarseIdxtwo_p}$ are frozen on the input partition $\C$ and each quadrisection only ever homogenises a star upward to its target, the order in which the $q$ stars are processed does not affect the resulting partition $\C^q$. We may therefore apply them in any order; our code processes the coarsest stars first.}
 
 \begin{figure}
 \begin{center}
@@ -1302,85 +1366,32 @@ centre-vertex and fine-side-vertex groups separated by a divider.}}
     \begin{subfigure}[b]{0.3\textwidth}
         \centering
         \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig2c.pdf}
-        \caption{condition-I pad.}
+        \caption{inadmissible-faces pad.}
     \end{subfigure}
     \caption{\robert{Padding stage of the worked example. (a) repeats
     Fig.~\ref{fig:pipeline_marking}(c), the partition before padding; (b) after
     $\textsc{ResolveVertexPinches}$, the centre pinch is gone; (c) after the
-    condition-I pad, the one remaining inadmissible face is refined, giving the
+    inadmissible-faces pad, the one remaining inadmissible face is refined, giving the
     final admissible partition (grading does not fire here).}}
     \label{fig:pipeline_padding}
 \end{figure}
 
-\todo{\guidance{Dissolve the worked example here (narrative point~3). Attach Fig.~\ref{fig:pipeline_padding} (pre-pad $\to$ after pinch $\to$ after condition-I) as the illustration of this paragraph, and \emph{end the padding exposition with the open hand-off} placed below.}}
-\robert{The padding step is non-standard and specific to our setting. After
-marking, the refined covering may violate the subdivision-partition admissibility
-condition of Definition~\ref{def:active_k_form_dofs}, and it can do so in two
-qualitatively different ways. A coarse region that is \emph{pinched} at a vertex —
-its coarse faces split into two or more disconnected arcs around that vertex —
-carries a spurious harmonic and hence the wrong cohomology; a coarse/fine interface
-that is too tight leaves faces without a fully-covered vertex, breaking local
-completeness of the basis. $\textsc{Pad}$ repairs both by running two rules
-\emph{alternately to a fixed point}: pinch resolution ($\textsc{ResolveVertexPinches}$)
-and condition-I padding with grading ($\textsc{PadCondI}$). Each rule only ever
-\emph{refines} coarse faces, so the loop terminates (bounded by $\L$); a counter
-$\mathrm{padding\_cycles}$ records the productive passes, which was $1$ in every
-atomic test and every adaptive step we observed. Pinch resolution subsumes what an
-earlier boundary-vertex repair did: a lone coarse boundary \emph{notch} is a single
-coarse arc (\emph{fine\,--\,coarse\,--\,fine}), not a pinch, so it is not flagged and
-is left to condition-I grading.}
+\todo{\guidance{Dissolve the worked example here (narrative point~3). Attach Fig.~\ref{fig:pipeline_padding} (pre-pad $\to$ after pinch $\to$ after inadmissible-faces) as the illustration of this paragraph, and \emph{end the padding exposition with the open hand-off} placed below.}}
 
-\robert{\begin{algorithm}[H]
-\caption{$\textsc{Pad}(P)$: admissibility padding (condensed; full sub-routines in Alg.~\ref{alg:pinch_full}, \ref{alg:condI_full})}
-\label{alg:padding}
-\KwIn{partition $P$}
-\KwOut{admissible partition $P$}
-\Repeat{a full pass refines nothing}{
-    $P \leftarrow \textsc{ResolveVertexPinches}(P)$ \tcp{repair pinched coarse regions}
-    $P \leftarrow \textsc{PadCondI}(P)$ \tcp{Good-vertex (cond.~I) $+$ grading}
-}
-\Return $P$\;
-\end{algorithm}}
+The \textsc{Refine} step in the previous section yields a partition that might no longer be admissible. The \textsc{Pad} step restores the exactness of the subdivision partition by applying additional refinement around vertex pinches and inadmissible faces, see Definition~\ref{def:exact_subdiv_partition}. The goal is to keep the padded faces to a minimum to avoid inflating the number of DoFs in non-marked regions. The only exception is some grading that we apply around vertices whose partition star covers too many levels. This grading does not change the restored exactness but improves the conditioning of the resulting matrix-vector system. This section covers all three kinds of padding one by one.
 
-\robert{\textbf{Pinch resolution.} A vertex $v$ is \emph{pinched} when, at its
-finest active level $\L_v$, its finest faces form $\geq 2$ disconnected arcs around
-its one-ring; equivalently, its coarser faces form $\geq 2$ disconnected arcs. A
-contiguous coarse arc counts as \emph{one} arc regardless of the levels of the
-faces within it, so a pinch is detected even when its two coarse patches sit at
-different levels. We detect every pinch \emph{before} mutating (so resolving one
-cannot hide another), then grade each pinched vertex's coarse patches up to $\L_v$,
-iterating to a fixed point.}
+The \textsc{Pad} needs no machinery beyond the partition star $\partitionStar$ and the two quadrisection operators $\quadriF{\C}$, $\quadriV{\C}{\cdot}$ of Section~\ref{subsec:partition_star} since every padding substep is a quadrisection of either a partition-star of a vertex class or of faces that violate an admissibility or grading condition.
+
+\paragraph{Resolving vertex pinches.}
+
+\robert{For each pinched vertex $\vertclass{\coarseIdxtwo}$ we homogenise its star to its finest level by applying $\quadriV{\C}{\L_{\coarseIdxtwo}}\big(\partitionStar(\vertclass{\coarseIdxtwo})\big)$, lifting the coarse arcs to $\L_{\coarseIdxtwo}$ and merging them into a single disc. This resolves the cohomology defect: a coarse region pinched at a vertex would otherwise carry a spurious harmonic.}
 
 \robert{\begin{algorithm}[H]
 \caption{$\textsc{ResolveVertexPinches}(P)$ (condensed; full version in Alg.~\ref{alg:pinch_full})}
 \label{alg:pinch}
 \Repeat{a pass refines nothing}{
-    detect all pinched vertices: at each $v$'s finest active level $\L_v$, classify its one-ring faces as \textsc{fine} (active at $\L_v$) or \textsc{coarse} (covered by an active ancestor); flag $v$ if the \textsc{fine} faces form $\geq 2$ arcs\;
-    \For{each flagged $v$}{grade $v$'s \textsc{coarse} one-ring faces up to level $\L_v$ (one level at a time along each ancestor chain)\;}
-}
-\end{algorithm}}
-
-\robert{\textbf{Condition-I padding with grading.} With $\mathrm{covered}(g,\l)$
-meaning that $g$ or a coarser ancestor of $g$ is active, and a vertex $w$
-\emph{Good} at level $\l$ when its entire one-ring is $\mathrm{covered}(\cdot,\l)$,
-condition~I (the admissibility requirement, Def.~\ref{def:active_k_form_dofs})
-demands that every active face have a Good vertex. We enforce it first, to a fixed
-point; grading — bounding the level span of any vertex's active faces by
-$\mathrm{maxSpan}$, purely for conditioning — is run last, on the span violations
-that survive the now-admissible partition. This ordering avoids over-refining,
-since condition~I usually refines the coarse frontier faces that would otherwise
-trip grading.}
-
-\robert{\begin{algorithm}[H]
-\caption{$\textsc{PadCondI}(P)$ (condensed; full version in Alg.~\ref{alg:condI_full})}
-\label{alg:condI}
-\tcp{Phase 1 --- admissibility (condition I)}
-\Repeat{no face is refined this pass}{
-    refine every active face that has no Good vertex\;
-}
-\tcp{Phase 2 --- grading}
-\Repeat{no vertex spans $> \mathrm{maxSpan}$ levels}{
-    refine the coarsest active faces of every vertex whose active faces span $> \mathrm{maxSpan}$ levels; re-run Phase 1\;
+    detect all pinched vertices on the fixed partition $P$: flag $\vertclass{\coarseIdxtwo}$ if it has $\geq 4$ cut spokes, i.e.\ $\geq 2$ arcs, on the level-$\L_{\coarseIdxtwo}$ one-ring (Eq.~\eqref{eq:arc_count})\;
+    \lFor{each flagged $\vertclass{\coarseIdxtwo}$}{$P \leftarrow \quadriV{P}{\L_{\coarseIdxtwo}}\big(\partitionStar(\vertclass{\coarseIdxtwo})\big)$}
 }
 \Return $P$\;
 \end{algorithm}}
@@ -1417,6 +1428,10 @@ trip grading.}
     \label{fig:pinch_examples}
 \end{figure}
 
+\paragraph{Resolving inadmissible faces.}
+
+\robert{For each active face $\face{\l}{\coarseIdxone}$ with no corner interior at level $\l$ we quadrisect the face, applying $\quadriF{\C}\big(\{\face{\l}{\coarseIdxone}\}\big)$. This enforces condition~I of Definition~\ref{def:active_k_form_dofs} --- every active face must have a corner interior at its level --- and so restores admissibility at coarse/fine interfaces that are too tight.}
+
 \begin{figure}[htbp]
     \centering
     \begin{subfigure}[b]{0.28\textwidth}
@@ -1429,13 +1444,63 @@ trip grading.}
         \includegraphics[width=\textwidth]{images/exactness/v6_3rings_horseshoe_lvl2_padded.pdf}
         \caption{Graded (coarse arc raised to level~$1$).}
     \end{subfigure}
-    \caption{\robert{Grading versus condition~I. An already-exact horseshoe
+    \caption{\robert{Grading versus inadmissible-faces padding. An already-exact horseshoe
     (open arc, no spurious harmonic) with a two-level jump: grading only raises the
     coarse arc by one level to satisfy $\mathrm{maxSpan}$, it does not refine it to
     the finest level, cleanly separating the conditioning role of grading from the
-    admissibility role of condition~I.}}
+    admissibility role of inadmissible-faces padding.}}
     \label{fig:grading_example}
 \end{figure}
+
+\paragraph{Grading partition stars.}
+
+\robert{For each vertex $\vertclass{\coarseIdxtwo}$ whose active faces span more than $\mathrm{maxSpan}$ levels we quadrisect its coarsest star slice, applying $\quadriF{\C}\big(\partitionStarl{\sourcelevel_{\coarseIdxtwo}}(\vertclass{\coarseIdxtwo})\big)$, where $\sourcelevel_{\coarseIdxtwo}$ is the coarsest active level of the star. Unlike the first two rules this is a purely numerical repair (excessive level jumps): it does not change the restored exactness, but bounds the level span around a vertex and so improves the conditioning of the matrix-vector system.}
+
+\robert{The pinch rule uses the \emph{graded} quadrisection $\quadriV{}{\cdot}$ on a whole star, at
+target $\L_{\coarseIdxtwo}$ --- one level below the \textsc{Refine} target; the inadmissible-faces and grading rules use the \emph{flat} quadrisection $\quadriF{}$, on a single frontier face and on the
+coarsest slice $\partitionStarl{\sourcelevel_{\coarseIdxtwo}}$ of a star respectively. Every rule only
+ever refines and adds the fewest faces that locally repair its violation, so each pass
+is monotone and $\textsc{Pad}$ terminates: no face is refined beyond level $\L$. The
+rules interact --- homogenising a star or refining a frontier face can expose a fresh
+violation of another rule --- so we alternate pinch resolution
+($\textsc{ResolveVertexPinches}$) with inadmissible-faces-plus-grading ($\textsc{PadCondI}$)
+until a full pass changes nothing. A counter $\mathrm{padding\_cycles}$ records the
+productive passes, which was $1$ in every atomic test and every adaptive step we
+observed; empirically the fixed point is insensitive to the order in which violations
+are processed, though we do not prove it. Within $\textsc{PadCondI}$ we apply
+inadmissible-faces padding first, to a fixed point, and run grading last on the span violations that
+survive the now-admissible partition, which avoids over-refining, since inadmissible-faces
+padding usually already refines the coarse frontier faces that would otherwise trip grading.
+Pinch resolution subsumes an earlier boundary-vertex repair: a lone coarse boundary
+\emph{notch} is a single coarse arc (\emph{fine\,--\,coarse\,--\,fine}), not a pinch, so
+it is left to inadmissible-faces padding and grading.}
+
+\robert{\begin{algorithm}[H]
+\caption{$\textsc{Pad}(P)$: admissibility padding (condensed; full sub-routines in Alg.~\ref{alg:pinch_full}, \ref{alg:condI_full})}
+\label{alg:padding}
+\KwIn{partition $P$}
+\KwOut{admissible partition $P$}
+\Repeat{a full pass refines nothing}{
+    $P \leftarrow \textsc{ResolveVertexPinches}(P)$ \tcp{repair pinched coarse regions}
+    $P \leftarrow \textsc{PadCondI}(P)$ \tcp{inadmissible faces $+$ grading}
+}
+\Return $P$\;
+\end{algorithm}}
+
+\robert{\begin{algorithm}[H]
+\caption{$\textsc{PadCondI}(P)$ (condensed; full version in Alg.~\ref{alg:condI_full})}
+\label{alg:condI}
+\tcp{Phase 1 --- admissibility (condition I)}
+\Repeat{no face is refined this pass}{
+    \lForEach{active $\face{\l}{\coarseIdxone}$ with no corner interior at level $\l$}{$P \leftarrow \quadriF{P}\big(\{\face{\l}{\coarseIdxone}\}\big)$}
+}
+\tcp{Phase 2 --- grading}
+\Repeat{no vertex spans $> \mathrm{maxSpan}$ levels}{
+    \lForEach{$\vertclass{\coarseIdxtwo}$ whose active faces span $> \mathrm{maxSpan}$ levels}{$P \leftarrow \quadriF{P}\big(\partitionStarl{\sourcelevel_{\coarseIdxtwo}}(\vertclass{\coarseIdxtwo})\big)$}
+    re-run Phase 1\;
+}
+\Return $P$\;
+\end{algorithm}}
 
 \FloatBarrier
 
@@ -1444,7 +1509,7 @@ trip grading.}
 \subsection{Exactness and padding on atomic partitions}
 \label{subsec:exactness_atomic}
 
-\guidance{This subsection is the verification promised at the end of the \textsc{Pad} discussion: it establishes that pinch resolution and condition-I padding \emph{reliably} restore the correct cohomology across the admissibility boundary, not just on the single constructed input of the (dissolved) worked example.}
+\guidance{This subsection is the verification promised at the end of the \textsc{Pad} discussion: it establishes that pinch resolution and inadmissible-faces padding \emph{reliably} restore the correct cohomology across the admissibility boundary, not just on the single constructed input of the (dissolved) worked example.}
 
 \robert{Before applying the adaptive loop to a PDE, we validate the admissibility
 construction directly on a suite of atomic test cases and the two failure modes it
@@ -1870,7 +1935,7 @@ where the numerator is the estimated error energy on faces below level $L$ --- p
     \label{tab:cl_tol}
 \end{table}
 
-\paragraph{Padding overhead is lower-dimensional.} \robert{The admissibility padding is a frontier overhead, not an area cost. Table~\ref{tab:padding} lists the active $1$-form DoFs, Dörfler-marked faces, and padded faces per step. Its worst-case size does grow with $L$ (max padded per step $11 \to 22 \to 120$ at $L = 3, 4, 5$) because the padding lives on the \emph{interface} around the refined region, whose length scales like the finest-mesh circumference ($\sim 2^L$), not on its area. Measured against what it pads it stays small: even at $L = 5$ the $120$ padded faces sit against $1\,177$ marked faces ($\approx 10\%$) and $27\,319$ $1$-form DoFs ($< 0.5\%$), and padding converges in a single cycle throughout the whole sweep (pinch resolution and condition-I grading reach a fixed point in one pass). Padding is thus an $O(\text{interface})$ cost --- one dimension below the $O(\text{area})$ cost of the refinement it supports --- with a fixed one-pass overhead; it is a table, not a figure, because the overhead never approaches the leading DoF cost.}
+\paragraph{Padding overhead is lower-dimensional.} \robert{The admissibility padding is a frontier overhead, not an area cost. Table~\ref{tab:padding} lists the active $1$-form DoFs, Dörfler-marked faces, and padded faces per step. Its worst-case size does grow with $L$ (max padded per step $11 \to 22 \to 120$ at $L = 3, 4, 5$) because the padding lives on the \emph{interface} around the refined region, whose length scales like the finest-mesh circumference ($\sim 2^L$), not on its area. Measured against what it pads it stays small: even at $L = 5$ the $120$ padded faces sit against $1\,177$ marked faces ($\approx 10\%$) and $27\,319$ $1$-form DoFs ($< 0.5\%$), and padding converges in a single cycle throughout the whole sweep (pinch resolution and inadmissible-faces padding and grading reach a fixed point in one pass). Padding is thus an $O(\text{interface})$ cost --- one dimension below the $O(\text{area})$ cost of the refinement it supports --- with a fixed one-pass overhead; it is a table, not a figure, because the overhead never approaches the leading DoF cost.}
 
 \begin{table}[t]
   \centering
@@ -1948,7 +2013,7 @@ where the numerator is the estimated error energy on faces below level $L$ --- p
 
 \robert{We have presented a complete matrix-level framework for hierarchical subdivision $k$-form spaces and their use in an adaptive loop for structure-preserving PDE discretisations. The central observation is that any active subdivision basis function is a column of an accumulated subdivision matrix $\Smat{k}{\l}{\L}$; selecting columns according to a subdivision partition produces a hierarchical space $\hierSDFspace{k}{\C}{\L}$ whose linear independence and de Rham exactness are guaranteed by the partition condition proved in the companion paper~\cite{Piel.2026}. Once the hierarchical subdivision matrix $\Amat{k}{\activeDoFs}{\L}$ is assembled, all bilinear forms are obtained by Galerkin restriction of the embedding-level operators without recomputing any integrals, and the active-space linear system reduces to standard sparse linear algebra on the finest mesh $\T_\L$.
 
-The adaptive loop adds a subdivision-specific \textsc{Pad} step to the standard \textsc{Solve}--\textsc{Estimate}--\textsc{Mark}--\textsc{Refine} cycle. Padding (Algorithm~\ref{alg:padding}) alternates pinch resolution and condition-I grading to a fixed point: pinch resolution repairs a pinched coarse region that would otherwise carry a spurious harmonic (a closed but non-exact discrete $1$-form, breaking de Rham exactness), while condition-I grading enforces the interior-vertex (Good-vertex) requirement and bounds the level jump at coarse/fine interfaces. Both rules only ever refine, are local, and are inexpensive relative to the linear solve.
+The adaptive loop adds a subdivision-specific \textsc{Pad} step to the standard \textsc{Solve}--\textsc{Estimate}--\textsc{Mark}--\textsc{Refine} cycle. Padding (Algorithm~\ref{alg:padding}) alternates pinch resolution with inadmissible-faces padding and grading to a fixed point: pinch resolution repairs a pinched coarse region that would otherwise carry a spurious harmonic (a closed but non-exact discrete $1$-form, breaking de Rham exactness), while inadmissible-faces padding and grading enforce the interior-vertex (Good-vertex) requirement and bound the level jump at coarse/fine interfaces. Both rules only ever refine, are local, and are inexpensive relative to the linear solve.
 
 The numerical experiments confirm the two key structural properties of the framework. For the Maxwell eigenvalue problem, exact subdivision partitions reproduce the reference FEEC spectrum without spurious modes; inexact ones introduce them. This serves as a direct diagnostic for the correctness of the active-DoF construction and the de Rham complex structure. For the mixed vector Laplace equation, the adaptive loop concentrates refinement at the location of steep gradients and achieves convergence behaviour consistent with the hierarchical approximation theory.
 
@@ -2066,8 +2131,8 @@ $P' \leftarrow$ copy of $P$\;
         $\L_v \leftarrow v$'s finest active level\;
         \lIf{any $\L_v$-ring face is covered only by a finer face}{skip $v$}
         classify each face of $v$'s $\L_v$ one-ring: \textsc{fine} $=$ active at $\L_v$; \textsc{coarse} $=$ covered by an active ancestor at level $< \L_v$\;
-        $\mathrm{arcs} \leftarrow$ number of maximal runs of \textsc{fine} faces (cyclic for interior $v$, open for boundary $v$)\;
-        \lIf{$\mathrm{arcs} \geq 2$}{$\mathrm{pinches} \leftarrow \mathrm{pinches} \cup \{(\L_v, v)\}$}
+        $\mathrm{cut} \leftarrow$ number of $\L_v$-spokes with exactly one \textsc{fine} incident face (for boundary $v$, close the fan by treating the exterior as one \textsc{coarse} gap)\;
+        \lIf{$\mathrm{cut} \geq 4$}{$\mathrm{pinches} \leftarrow \mathrm{pinches} \cup \{(\L_v, v)\}$ \tcp*{$\geq 2$ arcs, Eq.~\eqref{eq:arc_count}}}
     }
     \tcp{Phase 2 --- refine}
     \For{$(\L_v, v) \in \mathrm{pinches}$}{
@@ -2082,7 +2147,7 @@ $P' \leftarrow$ copy of $P$\;
 \newpage
 
 \robert{\begin{algorithm}[H]
-\caption{$\textsc{PadPartitionPerVertexGraded}(P)$: full condition-I padding with grading}
+\caption{$\textsc{PadPartitionPerVertexGraded}(P)$: full inadmissible-faces padding with grading}
 \label{alg:condI_full}
 \tcp{$\mathrm{covered}(g,\l)$: $g$ or a coarser ancestor of $g$ is active}
 \tcp{$\mathrm{Good}(w,\l)$: every face in $w$'s one-ring is $\mathrm{covered}(\cdot,\l)$}
