@@ -505,6 +505,7 @@ The concrete task that remains is therefore constructing $\Amat{k}{\activeDoFs}{
 \guidance{The matrix representation of Section~\ref{subsec:computational_representations} is unchanged throughout this section; here we determine \emph{which} column selections are admissible. The two tools below --- refinement stencils and derivative stencils --- are the visual language for the two admissibility conditions (linear independence and closure of the complex), which the subdivision partition of Section~\ref{subsec:selecting_active_dofs} then enforces geometrically.}
 
 \subsection{Refinement of basis functions}
+\label{subsec:refinement_of_basis_functions}
 
 \begin{proposition}[Prop.~NUM from~\cite{Piel.2026}]
 \label{prop:uniform_spaces_nested}
@@ -657,6 +658,7 @@ To guarantee linear independence of the chosen basis functions, we need to ensur
 \end{figure}
 
 \subsection{Derivatives of basis functions}
+\label{subsec:derivatives_of_basis_functions}
 
 The previous concepts set up the hierarchical nature of the subdivision $k$-form spaces. Ultimately, they will allow us to pick and choose our active degrees of freedom as we wish (with certain restrictions).
 
@@ -694,11 +696,6 @@ This definition together with Eq.~\eqref{eq:derivative_relation_basis} implies t
 \begin{proposition}
     \label{prop:d_tilde_on_phi}
     $\robert{\extd} \constrQ{\SDFbasis}{k}{\lone}{\L}{\coarseIdxone} = \sum\limits_{\simplex{k+1}{\lone}{\coarseIdxtwo} \in \DSt(\simplex{k}{\lone}{\coarseIdxone})} \Dmatij{k}{\lone}{\coarseIdxtwo}{\coarseIdxone} \, \robert{\constrQ{\SDFbasis}{k+1}{\lone}{\L}{\coarseIdxtwo}}$
-\end{proposition}
-
-\begin{proposition}
-    \label{cor:derivative_support}
-    $\support \big( \constrQ{\SDFbasis}{k}{\lone}{\L}{\coarseIdxone} \big) = \support \big( \robert{\extd} \constrQ{\SDFbasis}{k}{\lone}{\L}{\coarseIdxone} \big) = \bigcup\limits_{\simplex{k+1}{\lone}{\coarseIdxtwo} \in \DSt(\simplex{k}{\lone}{\coarseIdxone})} \mathrm{supp} \big( \constrQ{\SDFbasis}{k+1}{\lone}{\L}{\coarseIdxtwo} \big).$
 \end{proposition}
 
 The derivative stencil is key for ensuring that every active $k$-form basis function has its derivative stencil present in the $(k+1)$-form space and that the resulting spaces constitute a differential complex. The following lemma makes the stencil concrete for the Wang schemes~\cite{Wang.2006,Wang.2008} used in this work.
@@ -791,9 +788,9 @@ the corresponding hierarchical space is
 \end{equation}
 where $\constrVec{\SDFbases}{k}{\activeDoFs}{\L}$ is the active basis function vector from~\eqref{eq:hierarchical_basis_vector}.
 
-Not every choice yields a well-behaved hierarchical space $\hierSDFspace{k}{\C}{\L}$. The selected columns of $\Amat{k}{\activeDoFs}{\L}$ must be linearly independent, must together represent forms that cover the entire domain, and the spaces for successive form degrees must close the de Rham complex. The remainder of this section characterises the admissible choices via the notion of a \emph{subdivision partition}.
+Not every choice yields a well-behaved hierarchical space $\hierSDFspace{k}{\C}{\L}$. The selected columns of $\Amat{k}{\activeDoFs}{\L}$ must together represent forms that cover the entire domain, must be linearly independent, and the spaces for successive form degrees must constitute a exact complex.
 
-\guidance{The two admissibility requirements have a purely visual reading in terms of the refinement and derivative stencils introduced above. A selection is linearly \emph{independent} when every active basis function's refinement stencil still contains an inactive DoF; the spaces \emph{close into a complex} when every active function's derivative stencil is itself active. The subdivision partition defined below is the geometric bookkeeping that enforces both conditions at once, so that admissibility can be checked by inspecting patch interfaces rather than the abstract stencil machinery. This is what the stencils were for.}
+These two admissibility requirements have a visual interpretation in terms of the refinement and derivative stencils introduced in the previous Sections~\ref{subsec:refinement_of_basis_functions} and~\ref{subsec:derivatives_of_basis_functions}. A selection is linearly \emph{independent} when the active DoFs do not contain a refinement stencil for any individual active basis function. Similarly, the spaces constitute a differential complex if the simplices in derivative stencil of any active basis function are themselves present in the active DoFs, either directly or through a refinement stencil. The remainder of this section builds up the notion of s\emph{ubdivision partitions}, the geometric bookkeeping entity whose properties enforce the admissibility conditions directly by means of controlling the stencils.
 
 \begin{figure}[tb]
 \begin{center}
@@ -890,13 +887,48 @@ Not every choice yields a well-behaved hierarchical space $\hierSDFspace{k}{\C}{
 \label{fig:active_dofs}
 \end{figure}
 
-\robert{The preceding subsections establish that every level-$\l$ basis function $\constrQ{\SDFbasis}{k}{\l}{\L}{\coarseIdxone}$ is a column of the subdivision matrix $\Amat{k}{\l}{\L}$, and that the exterior derivative commutes with these matrices via~\eqref{eq:derivative_relation_basis}. Choosing active degrees of freedom therefore amounts to selecting a subset of columns across the hierarchy $\bigl\{\Amat{k}{\l}{\L}\bigr\}_\l$, subject to linear independence, full-domain coverage, and closure of the de Rham complex.
+\smallskip
+A geometrically natural unit for organising the selection of active DoFs is a \emph{mesh patch} that gather simplices that are all activated together. We consider such a patch $\calP_\l \subset \T_\l$ to be a non-empty collection of edge-connected faces of $\T_\l$. We denote the set of $k$-simplices of the patch $\calP_\l$ as $\K^k(\calP_\l)$. The boundary $\partial\calP_\l$ of the patch is the set of edges adjacent to exactly one face of $\calP_\l$. We write $\calP_{\l \to \lone}$ for the patch faces obtained by repeatedly splitting the faces of $\calP_\l$ from level $\l$ to $\lone$. Two patches $\calP_{\l}$ and $\calP_{\lone}$ are \emph{non-overlapping} if their images in $\T_\L$ share at most edges: $\I_{(\calP_{\l}, \calP_{\lone}) \to \L} \coloneqq \calP_{\l \to \L} \cap \calP_{\lone \to \L} \subset \E_\L(\T_\L)$. 
 
-A geometrically natural unit for organising this selection is a \emph{mesh patch}: a connected submesh of $\T_\l$ whose simplices are all activated together. Tiling the domain with patches at (possibly) different levels turns the column-selection problem into a geometric tiling problem, with the constraints checkable locally at patch boundaries. Crucially, the subdivision of a patch's basis functions is already encoded in $\Amat{k}{\l}{\L}$: restricting to the columns indexed by $\K^k(\calP_\l)$ gives exactly the level-$\L$ representations of those basis functions, with no additional patch-level operator required.
+\begin{definition}[covering]
+    \label{def:covering}
+    A \emph{covering} $\C(\T_\L) = \bigcup_{\l_i,n}\calP^n_{\l_i}$ is a set of pairwise non-overlapping patches that tile $\T_\L$, i.e.\ $\T_\L = \bigcup_{\l = \lzero}^\L \bigcup_{n = 0}^{\mathrm{N_{\l}}} \calP^n_{\l \to \L}$, where $\mathrm{N_{\l}}$ is the number of patches on level $\l$. We further denote certain level subsets of a covering by
+    \begin{equation}
+        \C_{\l} = \bigcup\limits_{n = 0}^{\mathrm{N}_\l} \calP^n_{\l \to \L}, \quad \C_{>\lone} = \bigcup\limits_{\l = \lone + 1}^{\L} \C_\l, \quad \C_{\geq\lone} = \bigcup\limits_{\l = \lone }^{\L} \C_\l, \quad \C_{<\lone} = \bigcup\limits_{\l = \lzero }^{\lone - 1} \C_\l, \quad \C_{\leq\lone} = \bigcup\limits_{\l = \lzero }^{\lone} \C_\l.
+    \end{equation}
+\end{definition}
 
-A \emph{patch} $\calP_\l \subset \T_\l$ is a non-empty, edge-connected collection of faces of $\T_\l$, with boundary $\partial\calP_\l$ the set of edges adjacent to exactly one face of $\calP_\l$. We write $\calP_{\l \to \L}$ for the collection of level-$\L$ faces obtained by repeatedly splitting the faces of $\calP_\l$.
+Tiling the domain with patches at different levels turns the column-selection problem into a geometric tiling problem, with the constraints checkable locally in the vicinity of patch boundaries.
 
-Two patches $\calP_{\l_i}$ and $\calP_{\l_j}$ are \emph{non-overlapping} if their images in $\T_\L$ share at most edges: $\I_{(\calP_{\l_i}, \calP_{\l_j}) \to \L} \coloneqq \calP_{\l_i \to \L} \cap \calP_{\l_j \to \L} \subset \E_\L(\T_\L)$. A \emph{covering} $\C(\T_\L) = \bigcup_{\l_i,n}\calP^n_{\l_i}$ is a set of pairwise non-overlapping patches whose images tile $\T_\L$, i.e.\ $\T_\L = \bigcup_{\l_i,n}\calP^n_{\l_i \to \L}$. We write $\C_{\l_i}$ for the level-$\l_i$ patches and $\C_{>\l_i}$, $\C_{\geq\l_i}$, $\C_{<\l_i}$, $\C_{\leq\l_i}$ for the corresponding level subsets.}
+\robert{The predicates below --- and the estimation, marking, and refinement steps of the adaptive loop --- repeatedly refer to three objects derived from a covering $\C$: the equivalence class of a vertex across levels, the \emph{ancestor} of a fine face, and the \emph{partition star} of a vertex. As they recur throughout the remainder of the paper, we collect their definitions here, before the predicates that build on them.}
+
+We first capture the persistence of vertices across the hierarchy by defining an equivalence class $\vertclass{\coarseIdxtwo}$:
+\begin{equation}
+    \label{eq:def_vertex_class}
+    \vertclass{\coarseIdxtwo} \coloneq \big\{ \vertex{\l}{\coarseIdxtwo}, \; \vertex{\l \to \l+1}{\coarseIdxtwo}, \; \dots, \; \vertex{\l \to \L}{\coarseIdxtwo} \big\}, \quad \text{where} \quad \l = \min \big\{ \, \lone \in \{\lzero, \, \dots, \, \L\} \; \colon \; \coarseIdxtwo \leq \vert \V_\lone \vert \, \big\}
+\end{equation}
+and $\vertex{\l \to \lone}{\coarseIdxtwo} = \Aop{}{\l}{\lone} \vertex{\l}{\coarseIdxtwo}$ denotes the refined vertices. We chose the $\widehat{\cdot}$ notation because we think of the equivalence relation as lifting the vertex across all finer levels. The active vertices in any equivalence class are given by $\vertclass{\coarseIdxtwo} \cap \V(\C)$. Since every equivalence class contains at least one active vertex, the number of vertex equivalence classes of $\C$ is at most the number of active $0$-form DoFs, $\vert \activeDoFSet{0}{\C} \vert$.
+
+Further, we define the \emph{ancestor} $\ancestor{\face{\lone}{\fineIdxone}}$ by the relation
+\begin{equation}
+    \label{eq:def_ancestor}
+    \face{\l}{\coarseIdxone} = \ancestor{\face{\lone}{\fineIdxone}} \quad \leftrightarrow \quad \face{\lone}{\fineIdxone} \in \Aop{}{\l}{\lone} \big( \face{\l}{\coarseIdxone} \big),
+\end{equation}
+\robert{that is, $\ancestor{\face{\lone}{\fineIdxone}}$ is the unique active face of $\C$ covering the finer face $\face{\lone}{\fineIdxone}$: the face itself if it is active, otherwise its active coarser ancestor.}
+
+\robert{This allows us to define the \emph{partition star} $\partitionStar(\vertclass{\coarseIdxtwo})$ of a vertex equivalence class $\vertclass{\coarseIdxtwo}$ by}
+\begin{equation}
+    \label{eq:def_partition_star}
+    \robert{\partitionStar(\vertclass{\coarseIdxtwo}) \coloneq \big\{ \, \ancestor{\face{\L}{\fineIdxone}} \; : \; \face{\L}{\fineIdxone} \in \FVl{\L} \big( \vertex{\l \to \L}{\coarseIdxtwo} \big) \, \big\}.}
+\end{equation}
+\robert{The partition star operator $\partitionStar(\vertclass{\coarseIdxtwo})$ collects \emph{every} active face of the covering $\C$ incident to the vertex, starting from the coarsest possible level: for each face $\face{\L}{\fineIdxone}$ in the vertex's finest-level one-ring $\FVl{\L}(\vertex{\l \to \L}{\coarseIdxtwo})$ it takes the covering active ancestor $\ancestor{\face{\L}{\fineIdxone}}$. This includes not only the faces of which the vertex is an active corner, but also the coarse face lying across an interface edge through the vertex. We name it the \emph{partition} star because the covering ancestors are cells of the partition $\C$ and hence tile the neighbourhood of the vertex without overlap, unlike faces taken across different levels of the hierarchy, which do overlap.}
+
+\robert{Finally, we write
+\begin{equation}
+    \label{eq:def_partition_star_slice}
+    \partitionStarl{\l}(\vertclass{\coarseIdxtwo}) \coloneq \partitionStar(\vertclass{\coarseIdxtwo}) \cap \F(\C_\l)
+\end{equation}
+for the \emph{level-$\l$ slice} of the partition star, the active faces of the star that lie on level $\l$. Because the covering ancestors tile the vertex neighbourhood without overlap, these slices partition $\partitionStar(\vertclass{\coarseIdxtwo})$ across the levels it occupies.}
 
 \begin{definition}[interior vertex at level $\l$]
     \label{def:interior_vertex}
@@ -1008,38 +1040,8 @@ Finally, we are going to re-state the two main theorems of \cite{Piel.2026} rega
     See \cite{Piel.2026}.
 \end{proof}
 
-\subsection{Derived objects on a subdivision partition}
-\label{subsec:partition_star}
-
-\robert{The estimation, marking, and refinement steps of the adaptive loop below repeatedly refer to three objects derived from a subdivision partition $\C$: the equivalence class of a vertex across levels, the \emph{ancestor} of a fine face, and the \emph{partition star} of a vertex. As they recur throughout the remainder of the paper, we collect their definitions here.}
-
-We first capture the persistence of vertices across the hierarchy by defining an equivalence class $\vertclass{\coarseIdxtwo}$:
-\begin{equation}
-    \label{eq:def_vertex_class}
-    \vertclass{\coarseIdxtwo} \coloneq \big\{ \vertex{\l}{\coarseIdxtwo}, \; \vertex{\l \to \l+1}{\coarseIdxtwo}, \; \dots, \; \vertex{\l \to \L}{\coarseIdxtwo} \big\}, \quad \text{where} \quad \l = \min \big\{ \, \lone \in \{\lzero, \, \dots, \, \L\} \; \colon \; \coarseIdxtwo \leq \vert \V_\lone \vert \, \big\}
-\end{equation}
-and $\vertex{\l \to \lone}{\coarseIdxtwo} = \Aop{}{\l}{\lone} \vertex{\l}{\coarseIdxtwo}$ denotes the refined vertices. We chose the $\widehat{\cdot}$ notation because we think of the equivalence relation as lifting the vertex across all finer levels. The active vertices in any equivalence class are given by $\vertclass{\coarseIdxtwo} \cap \V(\C)$. Since every equivalence class contains at least one active vertex, the number of vertex equivalence classes of $\C$ is at most the number of active $0$-form DoFs, $\vert \activeDoFSet{0}{\C} \vert$.
-
-Further, we define the \emph{ancestor} $\ancestor{\face{\lone}{\fineIdxone}}$ by the relation
-\begin{equation}
-    \label{eq:def_ancestor}
-    \face{\l}{\coarseIdxone} = \ancestor{\face{\lone}{\fineIdxone}} \quad \leftrightarrow \quad \face{\lone}{\fineIdxone} \in \Aop{}{\l}{\lone} \big( \face{\l}{\coarseIdxone} \big),
-\end{equation}
-\robert{that is, $\ancestor{\face{\lone}{\fineIdxone}}$ is the unique active face of $\C$ covering the finer face $\face{\lone}{\fineIdxone}$: the face itself if it is active, otherwise its active coarser ancestor.}
-
-\robert{This allows us to define the \emph{partition star} $\partitionStar(\vertclass{\coarseIdxtwo})$ of a vertex equivalence class $\vertclass{\coarseIdxtwo}$ by}
-\begin{equation}
-    \label{eq:def_partition_star}
-    \robert{\partitionStar(\vertclass{\coarseIdxtwo}) \coloneq \big\{ \, \ancestor{\face{\L}{\fineIdxone}} \; : \; \face{\L}{\fineIdxone} \in \FVl{\L} \big( \vertex{\l \to \L}{\coarseIdxtwo} \big) \, \big\}.}
-\end{equation}
-\robert{The partition star operator $\partitionStar(\vertclass{\coarseIdxtwo})$ collects \emph{every} active face of the subdivision partition $\C$ incident to the vertex, starting from the coarsest possible level: for each face $\face{\L}{\fineIdxone}$ in the vertex's finest-level one-ring $\FVl{\L}(\vertex{\l \to \L}{\coarseIdxtwo})$ it takes the covering active ancestor $\ancestor{\face{\L}{\fineIdxone}}$. This includes not only the faces of which the vertex is an active corner, but also the coarse face lying across an interface edge through the vertex. We name it the \emph{partition} star because the covering ancestors are cells of the partition $\C$ and hence tile the neighbourhood of the vertex without overlap, unlike faces taken across different levels of the hierarchy, which do overlap.}
-
-\robert{Finally, we write
-\begin{equation}
-    \label{eq:def_partition_star_slice}
-    \partitionStarl{\l}(\vertclass{\coarseIdxtwo}) \coloneq \partitionStar(\vertclass{\coarseIdxtwo}) \cap \F(\C_\l)
-\end{equation}
-for the \emph{level-$\l$ slice} of the partition star, the active faces of the star that lie on level $\l$. Because the covering ancestors tile the vertex neighbourhood without overlap, these slices partition $\partitionStar(\vertclass{\coarseIdxtwo})$ across the levels it occupies.}
+\subsection{Refinement operators on a subdivision partition}
+\label{subsec:refinement_operators}
 
 \robert{The estimation, marking, refinement, and padding steps below all refine a subdivision partition through \emph{two} operators, which we define here once and refer back to. The \emph{flat quadrisection} $\quadriF{\C}(\simplexsubset{2}{\l})$ refines a \emph{single-level} set of faces $\simplexsubset{2}{\l} \subseteq \F(\C_\l)$ by replacing each face with its four children,
 \begin{equation}
@@ -1215,7 +1217,7 @@ For the mixed vector Laplace problem with $(\sigma_h, u_h) \in \hierSDFspace{0}{
 The first sum contains the elementwise residuals of both equations, and the second sum contains the curl jump across interior edges $e$ of the fine mesh $\T_\L$. The per-face indicator $\eta_{\L,\fineIdxone}^2$ on level $\L$ can be translated back to the subdivision partition $\C$ using Equation~\ref{eq:project_estimator_on_L_to_partition}.
 \end{example}
 
-\noindent We now have estimators $\eta_{\l,\coarseIdxone}$ per face of the subdivision partition $\C$. However, the atomic units of refinement in our scheme are vertex stars because they give rise to clean analysis. To enable vertex-based refinement for the adaptive algorithm, we need to sum up the face estimators $\eta_{\l,\coarseIdxone}$ to vertex estimators. Recall from Section~\ref{subsec:partition_star} the vertex equivalence classes $\vertclass{\coarseIdxtwo}$ from Equation~\eqref{eq:def_vertex_class} and their partition stars $\partitionStar(\vertclass{\coarseIdxtwo})$ from Equation~\eqref{eq:def_partition_star}, the active faces of $\C$ incident to the vertex. The vertex-based residual $\nu_\coarseIdxtwo$ our code uses is then defined by
+\noindent We now have estimators $\eta_{\l,\coarseIdxone}$ per face of the subdivision partition $\C$. However, the atomic units of refinement in our scheme are vertex stars because they give rise to clean analysis. To enable vertex-based refinement for the adaptive algorithm, we need to sum up the face estimators $\eta_{\l,\coarseIdxone}$ to vertex estimators. Recall from Section~\ref{subsec:selecting_active_dofs} the vertex equivalence classes $\vertclass{\coarseIdxtwo}$ from Equation~\eqref{eq:def_vertex_class} and their partition stars $\partitionStar(\vertclass{\coarseIdxtwo})$ from Equation~\eqref{eq:def_partition_star}, the active faces of $\C$ incident to the vertex. The vertex-based residual $\nu_\coarseIdxtwo$ our code uses is then defined by
 \begin{equation}
     \label{eq:vertex_residual}
     \nu^2_\coarseIdxtwo = \tfrac{1}{a_\coarseIdxtwo} \; \sum\limits_{\face{\l}{\coarseIdxone} \; \in \; \partitionStar(\vertclass{\coarseIdxtwo}) \setminus \F_\L} \eta^2_{\l,\coarseIdxone}, \qquad \mathrm{where} \qquad a_\coarseIdxtwo = \sum\limits_{\face{\l}{\coarseIdxone} \; \in \; \partitionStar(\vertclass{\coarseIdxtwo}) \setminus \F_\L} \mathrm{area}(\face{\l}{\coarseIdxone}).
@@ -1236,7 +1238,7 @@ Because the partition star includes the coarse face across any interface edge th
         \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig1b.pdf}
         \caption{Per-vertex residual $\nu_v$.}
     \end{subfigure}\hfill
-    \begin{subfigure}[b]{0.3\textwidth}
+\begin{subfigure}[b]{0.3\textwidth}
         \centering
         \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig1c.pdf}
         \caption{After refinement.}
@@ -1380,44 +1382,66 @@ centre-vertex and fine-side-vertex groups separated by a divider.}}
 
 The \textsc{Refine} step in the previous section yields a partition that might no longer be admissible. The \textsc{Pad} step restores the exactness of the subdivision partition by applying additional refinement around vertex pinches and inadmissible faces, see Definition~\ref{def:exact_subdiv_partition}. The goal is to keep the padded faces to a minimum to avoid inflating the number of DoFs in non-marked regions. The only exception is some grading that we apply around vertices whose partition star covers too many levels. This grading does not change the restored exactness but improves the conditioning of the resulting matrix-vector system. This section covers all three kinds of padding one by one.
 
-The \textsc{Pad} needs no machinery beyond the partition star $\partitionStar$ and the two quadrisection operators $\quadriF{\C}$, $\quadriV{\C}{\cdot}$ of Section~\ref{subsec:partition_star} since every padding substep is a quadrisection of either a partition-star of a vertex class or of faces that violate an admissibility or grading condition.
+The \textsc{Pad} needs no machinery beyond the partition star $\partitionStar$ and the two quadrisection operators $\quadriF{\C}$, $\quadriV{\C}{\cdot}$ of Section~\ref{subsec:refinement_operators} since every padding substep is a quadrisection of either a partition-star of a vertex class or of faces that violate an admissibility or grading condition.
 
 \paragraph{Resolving vertex pinches.}
 
-\robert{For each pinched vertex $\vertclass{\coarseIdxtwo}$ we homogenise its star to its finest level by applying $\quadriV{\C}{\L_{\coarseIdxtwo}}\big(\partitionStar(\vertclass{\coarseIdxtwo})\big)$, lifting the coarse arcs to $\L_{\coarseIdxtwo}$ and merging them into a single disc. This resolves the cohomology defect: a coarse region pinched at a vertex would otherwise carry a spurious harmonic.}
+We iterate over all vertex classes $\vertclass{\coarseIdxtwo}$ of the refined subdivision partition to build the set of pinch vertices
+\begin{equation}
+    \mathrm{V}_{\mathrm{pinch}} = \big\{ \vertclass{\coarseIdxtwo} \; \colon \; \vertclass{\coarseIdxtwo} \text{\; is a pinch vertex} \big\}
+\end{equation}
+according to Definition~\ref{def:pinch_vertex}. The subdivision partition $\C^{\mathrm{pinch}}$ with all pinches resolved is obtained from the iteration
+\begin{equation}
+    \label{eq:pinch_resolved_subdiv_partition}
+    \C^{\mathrm{pinch}} = \C^{\vert \mathrm{V}_{\mathrm{pinch}} \vert} \; , \quad \text{where} \quad \C^p = \quadriV{\vertclass{\coarseIdxtwo_p}}{\targetlevel_{\coarseIdxtwo_p}}(\C^{p-1}) \;\; \text{for} \;\; p \in \{1, \, \dots, \, \vert \mathrm{V}_{\mathrm{pinch}} \vert \} 
+\end{equation}
+and $\C^0 = \C$ the subdivision partition after the \textsc{Refine} step and $\targetlevel_{\coarseIdxtwo_p}$ the finest level of the faces of the partition star of $\vertclass{\coarseIdxtwo_p}$. In words, for each pinched vertex $\vertclass{\coarseIdxtwo}$, we homogenise its partition star to its finest level, lifting the coarse arcs to $\targetlevel_{\coarseIdxtwo_p}$ and merging them into a single disc. \robert{This resolves the cohomology defect: a coarse region pinched at a vertex would otherwise carry a spurious harmonic. Crucially, the predicate keys on the \emph{connectivity} of the coarse region, not on how many patches meet: where several patches of different levels touch at a vertex but the coarse faces stay a single connected arc, the vertex is not pinched and the predicate correctly does nothing (Fig.~\ref{fig:not_a_pinch}).}
 
-\robert{\begin{algorithm}[H]
-\caption{$\textsc{ResolveVertexPinches}(P)$ (condensed; full version in Alg.~\ref{alg:pinch_full})}
-\label{alg:pinch}
-\Repeat{a pass refines nothing}{
-    detect all pinched vertices on the fixed partition $P$: flag $\vertclass{\coarseIdxtwo}$ if it has $\geq 4$ cut spokes, i.e.\ $\geq 2$ arcs, on the level-$\L_{\coarseIdxtwo}$ one-ring (Eq.~\eqref{eq:arc_count})\;
-    \lFor{each flagged $\vertclass{\coarseIdxtwo}$}{$P \leftarrow \quadriV{P}{\L_{\coarseIdxtwo}}\big(\partitionStar(\vertclass{\coarseIdxtwo})\big)$}
+% --- Figure knobs --------------------------------------------------------
+% \peScale : overall size -- width of EACH of the four subfigures as a
+%            fraction of \textwidth. Lower it if the row runs too wide.
+% \peVsep  : vertical gap between the two stacked images in each subfigure.
+% \peGap   : horizontal space on each side of the vertical divider line.
+% \peDivH  : length (height) of the divider line -- lower it to make the
+%            dividers shorter (they stay centred on the images).
+\newcommand{\peScale}{0.22}
+\newcommand{\peVsep}{4pt}
+\newcommand{\peGap}{6pt}
+\newcommand{\peDivH}{0.42\textwidth}
+% Helper: one subfigure = inexact image (top) stacked over exact image
+% (bottom), with its own caption. Swap the two image paths freely.
+\newcommand{\pinchsubfig}[3]{% #1 inexact(top) #2 exact(bottom) #3 caption
+    \begin{subfigure}[t]{\peScale\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{#1}\\[\peVsep]
+        \includegraphics[width=\textwidth]{#2}
+        \caption{#3}
+    \end{subfigure}%
 }
-\Return $P$\;
-\end{algorithm}}
-
+% -------------------------------------------------------------------------
 \begin{figure}[htbp]
     \centering
-    \begin{subfigure}[b]{0.22\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{images/exactness/v8_quarters_lvl2_input.pdf}
-        \caption{Pinch input.}
-    \end{subfigure}\hfill
-    \begin{subfigure}[b]{0.22\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{images/exactness/v8_quarters_lvl2_padded.pdf}
-        \caption{Pinch padded.}
-    \end{subfigure}\hfill
-    \begin{subfigure}[b]{0.22\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{images/exactness/v8_quarters_lvl2_mixedcoarse_input.pdf}
-        \caption{Mixed-coarse input.}
-    \end{subfigure}\hfill
-    \begin{subfigure}[b]{0.22\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{images/exactness/v8_quarters_lvl2_mixedcoarse_padded.pdf}
-        \caption{Mixed-coarse padded.}
-    \end{subfigure}
+    \begin{tabular}{@{}c@{\hspace{\peGap}}|@{\hspace{\peGap}}c@{\hspace{\peGap}}|@{\hspace{\peGap}}c@{\hspace{\peGap}}|@{\hspace{\peGap}}c@{}}
+        \pinchsubfig
+            {images/exactness/v8_quarters_lvl2_mixedcoarse_input.pdf}   % inexact (top)
+            {images/exactness/v8_quarters_lvl2_mixedcoarse_padded.pdf}  % exact (bottom)
+            {Level $2$ pinch with background on levels $0$ and $1$.}
+        &
+        \pinchsubfig
+            {images/exactness/v9_cff_lvl1_input.pdf}   % inexact (top)  -- PLACEHOLDER
+            {images/exactness/v9_cff_lvl1_padded.pdf}  % exact (bottom) -- PLACEHOLDER
+            {Level $1$ double-pinch with uniform background.}
+        &
+        \pinchsubfig
+            {images/exactness/v6_boundary_allcorners_lvl1_input.pdf}   % inexact (top)  -- PLACEHOLDER
+            {images/exactness/v6_boundary_allcorners_lvl1_padded.pdf}  % exact (bottom) -- PLACEHOLDER
+            {Six level $1$ boundary pinches with uniform background.}
+        &
+        \pinchsubfig
+            {images/exactness/v8_graded_top_bottom_sides_input.pdf}   % inexact (top)  -- PLACEHOLDER
+            {images/exactness/v8_graded_top_bottom_sides_padded.pdf}  % exact (bottom) -- PLACEHOLDER
+            {Partition without pinch.}
+    \end{tabular}
     \caption{\robert{Pinch resolution on a valence-$8$ centre vertex. Left pair: a
     two-level pinch, whose two coarse arcs give $\dim\mathcal{H}^1 = 2$
     (Table~\ref{tab:atomic-cohomology}, ``Valence-$8$ pinch, level~2''); pinch
@@ -1425,82 +1449,151 @@ The \textsc{Pad} needs no machinery beyond the partition star $\partitionStar$ a
     Right pair: the two coarse patches sit at \emph{different} levels ($0$ and $1$),
     which is why the pinch is detected at each vertex's finest level with contiguous
     coarse runs merged across levels.}}
-    \label{fig:pinch_examples}
+    \label{fig:pinch_resolution}
 \end{figure}
 
 \paragraph{Resolving inadmissible faces.}
 
-\robert{For each active face $\face{\l}{\coarseIdxone}$ with no corner interior at level $\l$ we quadrisect the face, applying $\quadriF{\C}\big(\{\face{\l}{\coarseIdxone}\}\big)$. This enforces condition~I of Definition~\ref{def:active_k_form_dofs} --- every active face must have a corner interior at its level --- and so restores admissibility at coarse/fine interfaces that are too tight.}
+Similarly to resolving pinches, we iterate over all face $\face{\l}{\coarseIdxone}$ of the subdivision partition $\C^{\mathrm{pinch}}$ to build the set of inadmissible faces
+\begin{equation}
+    \F_{\mathrm{inadmissible}} = \big\{ \face{\l}{\coarseIdxone} \; \colon \; \face{\l}{\coarseIdxone} \text{\; is not admissible} \big\}
+\end{equation}
+according to Definition~\ref{def:admissible_face}. The subdivision partition $\C^{\mathrm{admissible}}$ where all faces are admissible is given by
+\begin{equation}
+    \label{eq:inadmissible_faces_resolved_subdiv_partition}
+    \C^{\mathrm{admissible}} = \quadriF{\F_{\mathrm{inadmissible}}} (\C^{\mathrm{pinch}}).
+\end{equation}
+In words, we refine every inadmissible face by one level because the refined faces are guaranteed to have an admissible vertex on level $\l+1$.
 
+% --- Figure knobs --------------------------------------------------------
+% \meScale : overall size -- width of EACH of the four subfigures as a
+%            fraction of \textwidth. Lower it if the row runs too wide.
+% \meVsep  : vertical gap between the two stacked images in each subfigure.
+% \meGap   : horizontal space on each side of the vertical divider line.
+% \mmeDivH  : length (height) of the divider line -- lower it to make the
+%            dividers shorter (they stay centred on the images).
+\newcommand{\meScale}{0.22}
+\newcommand{\meVsep}{4pt}
+\newcommand{\meGap}{6pt}
+\newcommand{\meDivH}{0.42\textwidth}
+% Helper: one subfigure = inexact image (top) stacked over exact image
+% (bottom), with its own caption. Swap the two image paths freely.
+\newcommand{\mePinchsubfig}[3]{% #1 inexact(top) #2 exact(bottom) #3 caption
+    \begin{subfigure}[t]{\meScale\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{#1}\\[\meVsep]
+        \includegraphics[width=\textwidth]{#2}
+        \caption{#3}
+    \end{subfigure}%
+}
+% -------------------------------------------------------------------------
 \begin{figure}[htbp]
     \centering
-    \begin{subfigure}[b]{0.28\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{images/exactness/v6_3rings_horseshoe_lvl2_input.pdf}
-        \caption{Input ($0\leftrightarrow2$ jump).}
-    \end{subfigure}\qquad
-    \begin{subfigure}[b]{0.28\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{images/exactness/v6_3rings_horseshoe_lvl2_padded.pdf}
-        \caption{Graded (coarse arc raised to level~$1$).}
-    \end{subfigure}
-    \caption{\robert{Grading versus inadmissible-faces padding. An already-exact horseshoe
-    (open arc, no spurious harmonic) with a two-level jump: grading only raises the
-    coarse arc by one level to satisfy $\mathrm{maxSpan}$, it does not refine it to
-    the finest level, cleanly separating the conditioning role of grading from the
-    admissibility role of inadmissible-faces padding.}}
-    \label{fig:grading_example}
+    \begin{tabular}{@{}c@{\hspace{\meGap}}|@{\hspace{\meGap}}c@{\hspace{\meGap}}|@{\hspace{\meGap}}c@{\hspace{\meGap}}|@{\hspace{\meGap}}c@{}}
+        \mePinchsubfig
+            {images/exactness/v6_3rings_inner_outer_refined_input.pdf}   % inexact (top)
+            {images/exactness/v6_3rings_inner_outer_refined_padded.pdf}  % exact (bottom)
+            {Level $2$ pinch with uniform background on level $0$.}
+        &
+        \mePinchsubfig
+            {images/exactness/v6_3rings_horseshoe_lvl2_input.pdf}   % inexact (top)
+            {images/exactness/v6_3rings_horseshoe_lvl2_padded.pdf}  % exact (bottom)
+            {Level $2$ pinch with background on levels $0$ and $1$.}
+        &
+        \mePinchsubfig
+            {images/exactness/v6_3rings_middle_refined_input.pdf}   % inexact (top)  -- PLACEHOLDER
+            {images/exactness/v6_3rings_middle_refined_input.pdf}  % exact (bottom) -- PLACEHOLDER
+            {Six level $1$ boundary pinches with uniform background.}
+        &
+        \mePinchsubfig
+            {images/exactness/v6_4rings_inner_outer_refined_input.pdf}   % inexact (top)  -- PLACEHOLDER
+            {images/exactness/v6_4rings_inner_outer_refined_input.pdf}  % exact (bottom) -- PLACEHOLDER
+            {Two partitions without pinches (bottom still to be chosen).}
+    \end{tabular}
+    \caption{\robert{Pinch resolution on a valence-$8$ centre vertex. Left pair: a
+    two-level pinch, whose two coarse arcs give $\dim\mathcal{H}^1 = 2$
+    (Table~\ref{tab:atomic-cohomology}, ``Valence-$8$ pinch, level~2''); pinch
+    resolution grades the coarse arcs to the finest level and removes the defect.
+    Right pair: the two coarse patches sit at \emph{different} levels ($0$ and $1$),
+    which is why the pinch is detected at each vertex's finest level with contiguous
+    coarse runs merged across levels.}}
+    \label{fig:admissibility_padding}
 \end{figure}
+
+% --- Figure knobs --------------------------------------------------------
+% \geScale : overall size -- width of EACH of the three subfigures as a
+%            fraction of \textwidth. Lower it if the row runs too wide.
+% \geVsep  : vertical gap between the two stacked images in each subfigure.
+% \geGap   : horizontal space on each side of the vertical divider line.
+%\newcommand{\geScale}{0.25}
+%\newcommand{\geVsep}{4pt}
+%\newcommand{\geGap}{8pt}
+% Helper: one subfigure = inexact image (top) stacked over exact image
+% (bottom), with its own caption. Swap the two image paths freely.
+%\newcommand{\gradingsubfig}[3]{% #1 inexact(top) #2 exact(bottom) #3 caption
+%    \begin{subfigure}[t]{\geScale\textwidth}
+%        \centering
+%        \includegraphics[width=\textwidth]{#1}\\[\geVsep]
+%        \includegraphics[width=\textwidth]{#2}
+%        \caption{#3}
+%    \end{subfigure}%
+%}
+% -------------------------------------------------------------------------
+%\begin{figure}[htbp]
+%    \centering
+%    \begin{tabular}{@{}c@{\hspace{\geGap}}|@{\hspace{\geGap}}c@{\hspace{\geGap}}|@{\hspace{\geGap}}c@{}}
+%        \gradingsubfig
+%            {images/exactness/v6_boundary_lvl1_input.pdf}   % inexact (top)
+%            {images/exactness/v6_boundary_lvl1_padded.pdf}  % exact (bottom)
+%            {Subfigure A caption.}
+%        &
+%        \gradingsubfig
+%            {images/exactness/v6_boundary_lvl2_input.pdf}   % inexact (top)
+%            {images/exactness/v6_boundary_lvl2_padded.pdf}  % exact (bottom)
+%            {Subfigure B caption.}
+%        &
+%        \gradingsubfig
+%            {images/exactness/v6_3rings_horseshoe_lvl2_input.pdf}   % inexact (top)
+%            {images/exactness/v6_3rings_horseshoe_lvl2_padded.pdf}  % exact (bottom)
+%            {Subfigure C caption.}
+%    \end{tabular}
+%    \caption{\robert{Grading versus inadmissible-faces padding. An already-exact horseshoe
+%    (open arc, no spurious harmonic) with a two-level jump: grading only raises the
+%    coarse arc by one level to satisfy $\mathrm{maxSpan}$, it does not refine it to
+%    the finest level, cleanly separating the conditioning role of grading from the
+%    admissibility role of inadmissible-faces padding.}}
+%    \label{fig:grading_example}
+%\end{figure}
 
 \paragraph{Grading partition stars.}
 
-\robert{For each vertex $\vertclass{\coarseIdxtwo}$ whose active faces span more than $\mathrm{maxSpan}$ levels we quadrisect its coarsest star slice, applying $\quadriF{\C}\big(\partitionStarl{\sourcelevel_{\coarseIdxtwo}}(\vertclass{\coarseIdxtwo})\big)$, where $\sourcelevel_{\coarseIdxtwo}$ is the coarsest active level of the star. Unlike the first two rules this is a purely numerical repair (excessive level jumps): it does not change the restored exactness, but bounds the level span around a vertex and so improves the conditioning of the matrix-vector system.}
+The grading is going to smooth out transitions across patches with a large level difference. Unlike the first two rules the grading step does not restore exactness or linear independence, but improves the conditioning of the matrix-vector system and helps to avoid numerical artifacts in these regions. The predicate to identify the vertex classes $\vertclass{\coarseIdxtwo}$ to grade is the \emph{level gap} $\mu_\coarseIdxtwo$ defined by
+\begin{equation}
+    \label{def:level_gap}
+    \mu_\coarseIdxtwo \coloneq \targetlevel_\coarseIdxtwo - \sourcelevel_\coarseIdxtwo.
+\end{equation}
+The grading code iterates over the vertex classes $\vertclass{\coarseIdxtwo}$ of $\C^{\mathrm{admissible}}$ and assembles the set
+\begin{equation}
+    \mathrm{V}^{\mathrm{grading}} \coloneq \big\{ \vertclass{\coarseIdxtwo} \; \colon \; \mu_\coarseIdxtwo > 2 \big\}
+\end{equation}
+that contains all vertex classes whose coarsest and finest faces in the partition star are more than $2$ levels apart. Of course, the cut-off value of $2$ can be chosen arbitrarily.
 
-\robert{The pinch rule uses the \emph{graded} quadrisection $\quadriV{}{\cdot}$ on a whole star, at
-target $\L_{\coarseIdxtwo}$ --- one level below the \textsc{Refine} target; the inadmissible-faces and grading rules use the \emph{flat} quadrisection $\quadriF{}$, on a single frontier face and on the
-coarsest slice $\partitionStarl{\sourcelevel_{\coarseIdxtwo}}$ of a star respectively. Every rule only
-ever refines and adds the fewest faces that locally repair its violation, so each pass
-is monotone and $\textsc{Pad}$ terminates: no face is refined beyond level $\L$. The
-rules interact --- homogenising a star or refining a frontier face can expose a fresh
-violation of another rule --- so we alternate pinch resolution
-($\textsc{ResolveVertexPinches}$) with inadmissible-faces-plus-grading ($\textsc{PadCondI}$)
-until a full pass changes nothing. A counter $\mathrm{padding\_cycles}$ records the
-productive passes, which was $1$ in every atomic test and every adaptive step we
-observed; empirically the fixed point is insensitive to the order in which violations
-are processed, though we do not prove it. Within $\textsc{PadCondI}$ we apply
-inadmissible-faces padding first, to a fixed point, and run grading last on the span violations that
-survive the now-admissible partition, which avoids over-refining, since inadmissible-faces
-padding usually already refines the coarse frontier faces that would otherwise trip grading.
-Pinch resolution subsumes an earlier boundary-vertex repair: a lone coarse boundary
-\emph{notch} is a single coarse arc (\emph{fine\,--\,coarse\,--\,fine}), not a pinch, so
-it is left to inadmissible-faces padding and grading.}
+The vertex classes marked for grading are refined using the quadrisection operator to obtain the graded subdivision partition $\C^{\mathrm{grading}}$:
+\begin{equation}
+    \label{eq:grading_subdiv_partition}
+    \C^{\mathrm{grading}} = \C^{\vert \mathrm{V}_{\mathrm{admissible}} \vert} \; , \quad \text{where} \quad \C^p = \quadriV{\vertclass{\coarseIdxtwo_q}}{\targetlevel_{\coarseIdxtwo_p} - 2}(\C^{p-1}) \;\; \text{for} \;\; p \in \{1, \, \dots, \, \vert \mathrm{V}_{\mathrm{admissible}} \vert \} 
+\end{equation}
+Note the additional $-2$ in the quadrisection operator $\quadriV{\vertclass{\coarseIdxtwo_p}}{\targetlevel_{\coarseIdxtwo_p} - 2}$. It ensure that the partition star $\partitionStarC{\C^p}(\vertclass{\coarseIdxtwo_p})$ on the graded partition $\C^p$ has a level gap of $2$ or less.
 
-\robert{\begin{algorithm}[H]
-\caption{$\textsc{Pad}(P)$: admissibility padding (condensed; full sub-routines in Alg.~\ref{alg:pinch_full}, \ref{alg:condI_full})}
-\label{alg:padding}
-\KwIn{partition $P$}
-\KwOut{admissible partition $P$}
-\Repeat{a full pass refines nothing}{
-    $P \leftarrow \textsc{ResolveVertexPinches}(P)$ \tcp{repair pinched coarse regions}
-    $P \leftarrow \textsc{PadCondI}(P)$ \tcp{inadmissible faces $+$ grading}
-}
-\Return $P$\;
-\end{algorithm}}
+\paragraph{Summary.}
 
-\robert{\begin{algorithm}[H]
-\caption{$\textsc{PadCondI}(P)$ (condensed; full version in Alg.~\ref{alg:condI_full})}
-\label{alg:condI}
-\tcp{Phase 1 --- admissibility (condition I)}
-\Repeat{no face is refined this pass}{
-    \lForEach{active $\face{\l}{\coarseIdxone}$ with no corner interior at level $\l$}{$P \leftarrow \quadriF{P}\big(\{\face{\l}{\coarseIdxone}\}\big)$}
-}
-\tcp{Phase 2 --- grading}
-\Repeat{no vertex spans $> \mathrm{maxSpan}$ levels}{
-    \lForEach{$\vertclass{\coarseIdxtwo}$ whose active faces span $> \mathrm{maxSpan}$ levels}{$P \leftarrow \quadriF{P}\big(\partitionStarl{\sourcelevel_{\coarseIdxtwo}}(\vertclass{\coarseIdxtwo})\big)$}
-    re-run Phase 1\;
-}
-\Return $P$\;
-\end{algorithm}}
+Every stage of the \textsc{Pad} step uses either the vertex-class based quadrisection operator $\quadriV{\C}{\cdot}$ or the face-based $\quadriF{\C}$.
+
+The pinch padding resolves pinch vertices and thus repairs cohomological artifacts and spurious harmonics, while the mostly restores linear independece of the active basis funtions $\activeDoFSet{k}{\C}$. The grading only refines around vertex classes with large level jumps to improve the conditioning of the linear system.
+
+Every rule only ever refines and adds the fewest faces that locally repair its violation, and no face is refined beyond level $\L$. The order of the padding stages matters. In particular, resolving a pinch vertex can lead to an admissible face becoming inadmissible, cf. Figure~\ref{fig:pipeline_padding}.
+
+We do not \robert{(yet?)} have a proof that $\textsc{Pad}$ terminates. For our implementation, we wrapped the pinch resolution, face admissibility padding and the grading in a loop that terminates once a pass no longer refines any face, i.e., none of the predicates fires. A counter $\mathrm{padding\_cycles}$ records the productive passes, which was the minimum of $1$ in every atomic test and every adaptive step we observed.
 
 \FloatBarrier
 
@@ -1815,7 +1908,7 @@ and $\alpha = 100$ and $R = 0.3$. The vector part $\Vec{b}(x)$ provides a backgr
 
 \robert{Because $\Vec{u}_{\mathrm{CL}}$ is known in closed form, every solve reports two quantities: the computable residual estimator $\eta$ of Section~\ref{subsec:estimate}, which \emph{drives marking}; and the true error $\Ltwoerror \coloneqq \vvert{u_h - \Vec{u}_{\mathrm{CL}}}_{L^2(\M)}$, computed against $\Vec{u}_{\mathrm{CL}}$ interpolated into a degree-$3$ vector-CG space on the finest mesh, which \emph{measures accuracy} and is never used for marking. Marking by an estimator and measuring by the truth is what makes the error-versus-DoF comparison below meaningful.}
 
-\paragraph{Experimental design.} \robert{For each maximum refinement depth $L \in \{3, 4, 5\}$ we run the adaptive loop (per-vertex Dörfler marking with $\theta = 0.67$, followed by \textsc{Pad}) to estimator saturation, and, as a reference, a single \emph{uniform} solve at level $L$. The saturation criterion is discussed below; it stops the L=3 run at step $5$, L=4 at step $7$, and L=5 at step $9$. Table~\ref{tab:cl_headline} collects the headline numbers at the final, saturated adaptive step. The adaptive scheme reaches the accuracy of the uniform level-$L$ solve at a small fraction of its $1$-form DoFs $n_1$, and the saving \emph{grows with depth} --- $3.3\times$, $5.0\times$, $6.2\times$ at $L = 3, 4, 5$ --- because the layer needs fine resolution only locally, so the deeper the refinement allowed, the more uniform refinement wastes on the smooth bulk. Figure~\ref{fig:cl_solution} shows the mechanism directly: the partition concentrates refinement on the circular layer while leaving the interior and exterior coarse.}
+\paragraph{Experimental design.} \robert{For each maximum refinement depth $L \in \{3, 4, 5\}$ we run the adaptive loop (per-vertex Dörfler marking with $\theta = 0.9$, followed by \textsc{Pad}) to estimator saturation, and, as a reference, a single \emph{uniform} solve at level $L$. The saturation criterion is discussed below; it stops the L=3 run at step $4$, L=4 at step $6$, and L=5 at step $8$. Table~\ref{tab:cl_headline} collects the headline numbers at the final, saturated adaptive step. The adaptive scheme reaches the accuracy of the uniform level-$L$ solve at a small fraction of its $1$-form DoFs $n_1$, and the saving \emph{grows with depth} --- $3.3\times$, $4.6\times$, $5.9\times$ at $L = 3, 4, 5$ --- because the layer needs fine resolution only locally, so the deeper the refinement allowed, the more uniform refinement wastes on the smooth bulk. Figure~\ref{fig:cl_solution} shows the mechanism directly: the partition concentrates refinement on the circular layer while leaving the interior and exterior coarse.}
 
 \begin{table}[htbp]
     \centering
@@ -1826,12 +1919,12 @@ and $\alpha = 100$ and $R = 0.3$. The vector part $\Vec{b}(x)$ provides a backgr
         \cmidrule(lr){3-4}\cmidrule(lr){5-6}
         $L$ & step & $n_1$ & $\Ltwoerror$ & $n_1$ & $\Ltwoerror$ & DoF saving & $L^2$ gap \\
         \midrule
-        3 & 5 & $3\,230$  & $9.07\cdot10^{-4}$ & $10\,688$  & $8.34\cdot10^{-4}$ & $\mathbf{3.3\times}$ & $1.09\times$ \\
-        4 & 7 & $8\,520$  & $5.16\cdot10^{-4}$ & $42\,496$  & $3.70\cdot10^{-4}$ & $\mathbf{5.0\times}$ & $1.39\times$ \\
-        5 & 9 & $27\,319$ & $4.03\cdot10^{-4}$ & $169\,472$ & $2.00\cdot10^{-4}$ & $\mathbf{6.2\times}$ & $2.02\times$ \\
+        3 & 4 & $3\,265$  & $9.09\cdot10^{-4}$ & $10\,688$  & $8.34\cdot10^{-4}$ & $\mathbf{3.3\times}$ & $1.09\times$ \\
+        4 & 6 & $9\,235$  & $5.13\cdot10^{-4}$ & $42\,496$  & $3.70\cdot10^{-4}$ & $\mathbf{4.6\times}$ & $1.39\times$ \\
+        5 & 8 & $28\,588$ & $4.06\cdot10^{-4}$ & $169\,472$ & $2.00\cdot10^{-4}$ & $\mathbf{5.9\times}$ & $2.03\times$ \\
         \bottomrule
     \end{tabular}
-    \caption{\robert{The $L$-sweep at the saturated adaptive step. The adaptive scheme matches the uniform level-$L$ accuracy at $3.3\text{--}6.2\times$ fewer $1$-form DoFs $n_1$, with the saving growing with $L$. The adaptive $L^2$ error floors slightly above the uniform value at the same $L$ (the ``$L^2$ gap''), a consequence of marking in the energy norm while measuring in $L^2$; this is decomposed in Table~\ref{tab:cl_decomp}. The DoF count is not flat across $L$ because saturation is deliberately conservative (see the stopping criterion below); a looser stop sharpens the saving to $3.5\times / 5.8\times / 9.9\times$.}}
+    \caption{\robert{The $L$-sweep at the saturated adaptive step. The adaptive scheme matches the uniform level-$L$ accuracy at $3.3\text{--}5.9\times$ fewer $1$-form DoFs $n_1$, with the saving growing with $L$. The adaptive $L^2$ error floors slightly above the uniform value at the same $L$ (the ``$L^2$ gap''), a consequence of marking in the energy norm while measuring in $L^2$; this is decomposed in Table~\ref{tab:cl_decomp}. The DoF count is not flat across $L$ because saturation is deliberately conservative (see the stopping criterion below); a looser stop sharpens the saving to $3.7\times / 5.4\times / 9.3\times$.}}
     \label{tab:cl_headline}
 \end{table}
 
@@ -1857,12 +1950,12 @@ and $\alpha = 100$ and $R = 0.3$. The vector part $\Vec{b}(x)$ provides a backgr
             \caption{Step $6$.}
         \end{subfigure}\hfill
         \begin{subfigure}[b]{0.31\linewidth}
-            \includegraphics[width=\textwidth]{images/laplace_case/u_L5_step8.pdf}
-            \caption{Step $8$.}
+            \includegraphics[width=\textwidth]{images/laplace_case/u_L5_step7.pdf}
+            \caption{Step $7$.}
         \end{subfigure}\hfill
         \begin{subfigure}[b]{0.31\linewidth}
-            \includegraphics[width=\textwidth]{images/laplace_case/u_L5_step9.pdf}
-            \caption{Step $9$.}
+            \includegraphics[width=\textwidth]{images/laplace_case/u_L5_step8.pdf}
+            \caption{Step $8$.}
         \end{subfigure}
     \end{minipage}\hfill
     \begin{minipage}[c]{0.14\textwidth}
@@ -1873,9 +1966,9 @@ and $\alpha = 100$ and $R = 0.3$. The vector part $\Vec{b}(x)$ provides a backgr
     \label{fig:cl_solution}
 \end{figure}
 
-\paragraph{The DoF saving grows with $L$.} \robert{Figure~\ref{fig:cl_convergence} (left) plots the true $L^2$ error against $n_1$ on log--log axes. The three adaptive runs sit on a single convergence envelope, while each uniform reference (hollow square, with a dotted floor at its error) lies far to the right at the same accuracy: the horizontal gap \emph{is} the DoF saving, $3.3\times \to 5.0\times \to 6.2\times$, growing with $L$. We compare in the true $L^2$ error rather than in $\eta$ because $\eta$ is not comparable across $L$ (it carries the finest cell size $h_\L = h_0/2^L$ in its scaling, see below), whereas the $L^2$ error is a genuine norm with no finest-mesh normalisation --- it is identical at step $0$ for every $L$, as it must be.}
+\paragraph{The DoF saving grows with $L$.} \robert{Figure~\ref{fig:cl_convergence} (left) plots the true $L^2$ error against $n_1$ on log--log axes. The three adaptive runs sit on a single convergence envelope, while each uniform reference (hollow square, with a dotted floor at its error) lies far to the right at the same accuracy: the horizontal gap \emph{is} the DoF saving, $3.3\times \to 4.6\times \to 5.9\times$, growing with $L$. We compare in the true $L^2$ error rather than in $\eta$ because $\eta$ is not comparable across $L$ (it carries the finest cell size $h_\L = h_0/2^L$ in its scaling, see below), whereas the $L^2$ error is a genuine norm with no finest-mesh normalisation --- it is identical at step $0$ for every $L$, as it must be.}
 
-\robert{The adaptive $L^2$ error floors slightly \emph{above} the uniform value at the same $L$, and this ``$L^2$ gap'' widens with $L$ (Table~\ref{tab:cl_headline}, last column). This is not a solver defect but the exact signature of marking in the energy norm while measuring in $L^2$, and it decomposes cleanly. Split the domain into the \emph{ring} annulus, where the $\tanh$ layer lives, and the smooth \emph{bulk}. Their supports are disjoint, so the squared $L^2$ error adds in quadrature, $\vvert{u_h - u}^2 = \int_{\mathrm{ring}} \vvert{e}^2 + \int_{\mathrm{bulk}} \vvert{e}^2 = R^2 + B^2$. Both schemes drive the ring to level $L$, so they share the same ring error $R$; uniform also resolves the bulk ($B \approx 0$), so $\vvert{u_h - u}_{\mathrm{unif}} \approx R$, while adaptive leaves the bulk coarse, so $\vvert{u_h - u}_{\mathrm{adap}} = \sqrt{R^2 + B^2}$. Backing the bulk term $B = \sqrt{\text{adaptive}^2 - \text{uniform}^2}$ out of the measured errors (Table~\ref{tab:cl_decomp}) shows that $B$ is essentially \emph{constant} at $\approx 3.5\cdot10^{-4}$ across $L$ --- energy-based marking never sees enough error \emph{density} in the smooth bulk to refine it, so the bulk floor is $L$-independent --- while the uniform (ring) error $R$ halves per level. The gap is therefore $\sqrt{R^2 + B^2}/R = \sqrt{1 + (B/R)^2}$ with $B$ fixed and $R$ shrinking, so it must \emph{diverge} with $L$; the value $2.02$ at $L = 5$ is merely $R$ passing through $\approx 0.57\,B$. A goal-oriented estimator targeting the $L^2$ functional would refine the bulk and close the gap; the energy-optimal estimator used here does not, so this is a \emph{DoF/memory} claim at matched \emph{estimator} accuracy, with the $L^2$ gap explained rather than hidden.}
+\robert{The adaptive $L^2$ error floors slightly \emph{above} the uniform value at the same $L$, and this ``$L^2$ gap'' widens with $L$ (Table~\ref{tab:cl_headline}, last column). This is not a solver defect but the exact signature of marking in the energy norm while measuring in $L^2$, and it decomposes cleanly. Split the domain into the \emph{ring} annulus, where the $\tanh$ layer lives, and the smooth \emph{bulk}. Their supports are disjoint, so the squared $L^2$ error adds in quadrature, $\vvert{u_h - u}^2 = \int_{\mathrm{ring}} \vvert{e}^2 + \int_{\mathrm{bulk}} \vvert{e}^2 = R^2 + B^2$. Both schemes drive the ring to level $L$, so they share the same ring error $R$; uniform also resolves the bulk ($B \approx 0$), so $\vvert{u_h - u}_{\mathrm{unif}} \approx R$, while adaptive leaves the bulk coarse, so $\vvert{u_h - u}_{\mathrm{adap}} = \sqrt{R^2 + B^2}$. Backing the bulk term $B = \sqrt{\text{adaptive}^2 - \text{uniform}^2}$ out of the measured errors (Table~\ref{tab:cl_decomp}) shows that $B$ is essentially \emph{constant} at $\approx 3.5\cdot10^{-4}$ across $L$ --- energy-based marking never sees enough error \emph{density} in the smooth bulk to refine it, so the bulk floor is $L$-independent --- while the uniform (ring) error $R$ halves per level. The gap is therefore $\sqrt{R^2 + B^2}/R = \sqrt{1 + (B/R)^2}$ with $B$ fixed and $R$ shrinking, so it must \emph{diverge} with $L$; the value $2.03$ at $L = 5$ is merely $R$ passing through $\approx 0.57\,B$. A goal-oriented estimator targeting the $L^2$ functional would refine the bulk and close the gap; the energy-optimal estimator used here does not, so this is a \emph{DoF/memory} claim at matched \emph{estimator} accuracy, with the $L^2$ gap explained rather than hidden.}
 
 \begin{figure}[htbp]
     \centering
@@ -1902,12 +1995,12 @@ and $\alpha = 100$ and $R = 0.3$. The vector part $\Vec{b}(x)$ provides a backgr
         \toprule
         $L$ & uniform $R$ & adaptive $\sqrt{R^2+B^2}$ & recovered $B$ & $B/R$ & gap \\
         \midrule
-        3 & $8.34\cdot10^{-4}$ & $9.07\cdot10^{-4}$ & $\mathbf{3.57\cdot10^{-4}}$ & $0.43$ & $1.09$ \\
-        4 & $3.70\cdot10^{-4}$ & $5.16\cdot10^{-4}$ & $\mathbf{3.60\cdot10^{-4}}$ & $0.97$ & $1.39$ \\
-        5 & $2.00\cdot10^{-4}$ & $4.03\cdot10^{-4}$ & $\mathbf{3.51\cdot10^{-4}}$ & $1.76$ & $2.02$ \\
+        3 & $8.34\cdot10^{-4}$ & $9.09\cdot10^{-4}$ & $\mathbf{3.62\cdot10^{-4}}$ & $0.43$ & $1.09$ \\
+        4 & $3.70\cdot10^{-4}$ & $5.13\cdot10^{-4}$ & $\mathbf{3.55\cdot10^{-4}}$ & $0.96$ & $1.39$ \\
+        5 & $2.00\cdot10^{-4}$ & $4.06\cdot10^{-4}$ & $\mathbf{3.53\cdot10^{-4}}$ & $1.77$ & $2.03$ \\
         \bottomrule
     \end{tabular}
-    \caption{\robert{Ring/bulk decomposition of the $L^2$ gap. The recovered bulk error $B = \sqrt{\text{adaptive}^2 - \text{uniform}^2}$ is constant to $\sim 1.5\%$ across $L$ (the $L$-independent bulk floor), while the ring error $R$ halves per level; the gap $\sqrt{1 + (B/R)^2}$ therefore grows without bound. That $B$ is constant is strong evidence the ring/bulk split, not an interface or subdivision-basis artifact, is the real mechanism.}}
+    \caption{\robert{Ring/bulk decomposition of the $L^2$ gap. The recovered bulk error $B = \sqrt{\text{adaptive}^2 - \text{uniform}^2}$ is constant to $\sim 2.5\%$ across $L$ (the $L$-independent bulk floor), while the ring error $R$ halves per level; the gap $\sqrt{1 + (B/R)^2}$ therefore grows without bound. That $B$ is constant is strong evidence the ring/bulk split, not an interface or subdivision-basis artifact, is the real mechanism.}}
     \label{tab:cl_decomp}
 \end{table}
 
@@ -1915,9 +2008,9 @@ and $\alpha = 100$ and $R = 0.3$. The vector part $\Vec{b}(x)$ provides a backgr
 \begin{equation}
     \rho = \frac{\text{refineableEtaSq}}{\text{totalEtaSq}}, \qquad \text{stop when } \rho < \tau,\ \tau = 0.05,
 \end{equation}
-where the numerator is the estimated error energy on faces below level $L$ --- precisely the energy Dörfler can still act on. This is the right metric for three reasons: it is exactly the quantity the plot tracks; it is computable (no exact solution needed, unlike the $L^2$ error); and it is dimensionless, so the same $\tau$ works across $L$ --- unlike the absolute $\eta$, whose $L$-dependent floor makes no single tolerance portable. The $L = 3$ run illustrates it: $\rho$ holds at $1.0$ for steps $0$--$2$ (nothing at level $L$ yet), then drops $0.471 \to 0.116 \to 0.028$ and stops at step $5$.}
+where the numerator is the estimated error energy on faces below level $L$ --- precisely the energy Dörfler can still act on. This is the right metric for three reasons: it is exactly the quantity the plot tracks; it is computable (no exact solution needed, unlike the $L^2$ error); and it is dimensionless, so the same $\tau$ works across $L$ --- unlike the absolute $\eta$, whose $L$-dependent floor makes no single tolerance portable. The $L = 3$ run illustrates it: $\rho$ holds at $1.0$ for steps $0$--$2$ (nothing at level $L$ yet), then drops $0.300 \to 0.026$ and stops at step $4$.}
 
-\robert{But $\tau = 0.05$ is deliberately conservative. Once the refineable part has decoupled from the total ($\rho$ first falls below $1$), the true $L^2$ error is already essentially converged; the remaining steps buy almost nothing. Reading the stopping step off the same trajectories for a range of tolerances (Table~\ref{tab:cl_tol}, all computable from one run --- no re-solve), the $L^2$ error at $\tau = 0.3$ is within $1.5\%$ of the fully-saturated value for every $L$. The strict tail hurts most exactly where it is most expensive: for $L = 5$, tightening $\tau$ from $0.3$ to $0.05$ adds $+10\,259$ DoFs ($+60\%$) and $\approx 5.4$ hours of solve time for a $1.4\%$ $L^2$ gain, because the marginal faces it refines carry vanishing error. A tolerance $\tau \approx 0.2\text{--}0.3$ --- stopping once the refineable part has clearly decoupled rather than nearly vanished --- is the better operating point, sharpening the DoF saving to $3.5\times / 5.8\times / 9.9\times$. The absolute vertical offset between the $L$ curves in Figure~\ref{fig:cl_convergence} (right) is largely normalisation ($\eta \sim h_\L$), not accuracy, so each panel is read \emph{within} its $L$; cross-$L$ accuracy is the job of Figure~\ref{fig:cl_convergence} (left).}
+\robert{But $\tau = 0.05$ is deliberately conservative. Once the refineable part has decoupled from the total ($\rho$ first falls below $1$), the true $L^2$ error is already essentially converged; the remaining steps buy almost nothing. Reading the stopping step off the same trajectories for a range of tolerances (Table~\ref{tab:cl_tol}, all computable from one run --- no re-solve), the $L^2$ error at $\tau = 0.3$ is within $1.5\%$ of the fully-saturated value for every $L$. The strict tail hurts most exactly where it is most expensive: for $L = 5$, tightening $\tau$ from $0.3$ to $0.05$ adds $+10\,308$ DoFs ($+56\%$) and $\approx 6.0$ hours of solve time for a $1.2\%$ $L^2$ gain, because the marginal faces it refines carry vanishing error. A tolerance $\tau \approx 0.2\text{--}0.3$ --- stopping once the refineable part has clearly decoupled rather than nearly vanished --- is the better operating point, sharpening the DoF saving to $3.7\times / 5.4\times / 9.3\times$. The absolute vertical offset between the $L$ curves in Figure~\ref{fig:cl_convergence} (right) is largely normalisation ($\eta \sim h_\L$), not accuracy, so each panel is read \emph{within} its $L$; cross-$L$ accuracy is the job of Figure~\ref{fig:cl_convergence} (left).}
 
 \begin{table}[htbp]
     \centering
@@ -1926,16 +2019,16 @@ where the numerator is the estimated error energy on faces below level $L$ --- p
         \toprule
         $L$ & $\tau = 0.3$ & $\tau = 0.2$ & $\tau = 0.05$ (as run) \\
         \midrule
-        3 & step $4$, $n_1\,3\,080$, $\mathbf{3.5\times}$ & step $4$, $3\,080$, $3.5\times$ & step $5$, $3\,230$, $3.3\times$ \\
-        4 & step $6$, $n_1\,7\,329$, $\mathbf{5.8\times}$ & step $6$, $7\,329$, $5.8\times$ & step $7$, $8\,520$, $5.0\times$ \\
-        5 & step $7$, $n_1\,17\,060$, $\mathbf{9.9\times}$ & step $8$, $22\,942$, $7.4\times$ & step $9$, $27\,319$, $6.2\times$ \\
+        3 & step $3$, $n_1\,2\,869$, $\mathbf{3.7\times}$ & step $4$, $3\,265$, $3.3\times$ & step $4$, $3\,265$, $3.3\times$ \\
+        4 & step $5$, $n_1\,7\,874$, $\mathbf{5.4\times}$ & step $5$, $7\,874$, $5.4\times$ & step $6$, $9\,235$, $4.6\times$ \\
+        5 & step $6$, $n_1\,18\,280$, $\mathbf{9.3\times}$ & step $7$, $24\,143$, $7.0\times$ & step $8$, $28\,588$, $5.9\times$ \\
         \bottomrule
     \end{tabular}
     \caption{\robert{Stopping step, DoF count, and DoF saving as the saturation tolerance $\tau$ is varied (read from the as-run trajectories, no re-solve). The looser $\tau \approx 0.2\text{--}0.3$ recovers nearly all the accuracy --- within $1.5\%$ of the saturated $L^2$ error --- at a markedly better DoF saving, avoiding the runaway final solves of the strict tail.}}
     \label{tab:cl_tol}
 \end{table}
 
-\paragraph{Padding overhead is lower-dimensional.} \robert{The admissibility padding is a frontier overhead, not an area cost. Table~\ref{tab:padding} lists the active $1$-form DoFs, Dörfler-marked faces, and padded faces per step. Its worst-case size does grow with $L$ (max padded per step $11 \to 22 \to 120$ at $L = 3, 4, 5$) because the padding lives on the \emph{interface} around the refined region, whose length scales like the finest-mesh circumference ($\sim 2^L$), not on its area. Measured against what it pads it stays small: even at $L = 5$ the $120$ padded faces sit against $1\,177$ marked faces ($\approx 10\%$) and $27\,319$ $1$-form DoFs ($< 0.5\%$), and padding converges in a single cycle throughout the whole sweep (pinch resolution and inadmissible-faces padding and grading reach a fixed point in one pass). Padding is thus an $O(\text{interface})$ cost --- one dimension below the $O(\text{area})$ cost of the refinement it supports --- with a fixed one-pass overhead; it is a table, not a figure, because the overhead never approaches the leading DoF cost.}
+\paragraph{Padding overhead is lower-dimensional.} \robert{The admissibility padding is a frontier overhead, not an area cost. Table~\ref{tab:padding} lists the active $1$-form DoFs, Dörfler-marked faces, and padded faces per step. Its worst-case size does grow with $L$ (max padded per step $12 \to 22 \to 80$ at $L = 3, 4, 5$) because the padding lives on the \emph{interface} around the refined region, whose length scales like the finest-mesh circumference ($\sim 2^L$), not on its area. Measured against what it pads it stays small: even at $L = 5$ the $80$ padded faces sit against $919$ marked faces ($\approx 9\%$) and $24\,143$ $1$-form DoFs ($< 0.5\%$), and padding converges in a single cycle throughout the whole sweep (pinch resolution and inadmissible-faces padding and grading reach a fixed point in one pass). Padding is thus an $O(\text{interface})$ cost --- one dimension below the $O(\text{area})$ cost of the refinement it supports --- with a fixed one-pass overhead; it is a table, not a figure, because the overhead never approaches the leading DoF cost.}
 
 \begin{table}[t]
   \centering
@@ -1945,32 +2038,29 @@ where the numerator is the estimated error energy on faces below level $L$ --- p
     \toprule
     $L$ & step & $n_1$ & marked & padded \\
     \midrule
-    3 & 0 & 181 & 34 & 2 \\
-    3 & 1 & 483 & 99 & 4 \\
-    3 & 2 & 1302 & 158 & 11 \\
-    3 & 3 & 2585 & 74 & 6 \\
-    3 & 4 & 3080 & 28 & 4 \\
-    3 & 5 & 3230 & 0 & 0 \\
+    3 & 0 & 181 & 40 & 0 \\
+    3 & 1 & 504 & 106 & 2 \\
+    3 & 2 & 1299 & 207 & 12 \\
+    3 & 3 & 2869 & 65 & 5 \\
+    3 & 4 & 3265 & 0 & 0 \\
     \midrule
-    4 & 0 & 181 & 32 & 2 \\
-    4 & 1 & 474 & 100 & 4 \\
-    4 & 2 & 1285 & 149 & 8 \\
-    4 & 3 & 2442 & 180 & 5 \\
-    4 & 4 & 3871 & 329 & 3 \\
-    4 & 5 & 6158 & 215 & 7 \\
-    4 & 6 & 7329 & 239 & 22 \\
-    4 & 7 & 8520 & 0 & 0 \\
+    4 & 0 & 181 & 38 & 0 \\
+    4 & 1 & 495 & 94 & 4 \\
+    4 & 2 & 1245 & 229 & 9 \\
+    4 & 3 & 2936 & 452 & 12 \\
+    4 & 4 & 6260 & 314 & 9 \\
+    4 & 5 & 7874 & 279 & 22 \\
+    4 & 6 & 9235 & 0 & 0 \\
     \midrule
-    5 & 0 & 181 & 34 & 2 \\
-    5 & 1 & 483 & 85 & 7 \\
-    5 & 2 & 1189 & 164 & 15 \\
-    5 & 3 & 2493 & 216 & 5 \\
-    5 & 4 & 4176 & 260 & 6 \\
-    5 & 5 & 6197 & 638 & 30 \\
-    5 & 6 & 10713 & 1095 & 40 \\
-    5 & 7 & 17060 & 1177 & 101 \\
-    5 & 8 & 22942 & 872 & 120 \\
-    5 & 9 & 27319 & 0 & 0 \\
+    5 & 0 & 181 & 43 & 0 \\
+    5 & 1 & 516 & 97 & 7 \\
+    5 & 2 & 1250 & 240 & 19 \\
+    5 & 3 & 3062 & 266 & 12 \\
+    5 & 4 & 4943 & 653 & 29 \\
+    5 & 5 & 9483 & 1514 & 26 \\
+    5 & 6 & 18280 & 1222 & 69 \\
+    5 & 7 & 24143 & 919 & 80 \\
+    5 & 8 & 28588 & 0 & 0 \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -1998,7 +2088,7 @@ where the numerator is the estimated error energy on faces below level $L$ --- p
     \label{fig:cl_patch_interface}
 \end{figure}
 
-\paragraph{Solve cost does not follow the DoF saving.} \robert{The one honest cost is the linear solver. Figure~\ref{fig:cl_minres} reports MINRES iterations (bars) and pure solve time (twin axis) over the sweep. Wall-clock \emph{grows} over the sweep and is dramatically worse than uniform despite far fewer DoFs: adaptive $L = 5$ takes $\approx 3.2$ hours and $668$ iterations at $27\,319$ DoFs, while uniform $L = 5$ takes $46$ seconds and $21$ iterations at $169\,472$ DoFs --- a $6\times$ DoF saving turned into a $250\times$ slowdown. The measured time is the MINRES \texttt{solve} call only (not dofset construction, assembly, or the preconditioner factorisation), so it is genuine solve cost, from two compounding causes: the block-diagonal preconditioner degrades on irregular adaptive meshes, and each iteration gets more expensive because the Galerkin-projected operators \emph{densify} --- the subdivision basis functions are globally supported, so the projection fills far more nonzeros per row than a nodal matrix of the same DoF count, whereas the uniform operators stay sparse and well-conditioned ($\approx 20$ iterations). The adaptivity win here is thus in DoFs and memory, not wall-clock, with the current solver; the preconditioner is the bottleneck and a subdivision-compatible multigrid variant is left for future work (which reinforces the case for the looser $\tau$ above).}
+\paragraph{Solve cost does not follow the DoF saving.} \robert{The one honest cost is the linear solver. Figure~\ref{fig:cl_minres} reports MINRES iterations (bars) and pure solve time (twin axis) over the sweep. Wall-clock \emph{grows} over the sweep and is dramatically worse than uniform despite far fewer DoFs: adaptive $L = 5$ takes $\approx 3.4$ hours and $654$ iterations at $28\,588$ DoFs, while uniform $L = 5$ takes $46$ seconds and $21$ iterations at $169\,472$ DoFs --- a $5.9\times$ DoF saving turned into a $270\times$ slowdown. The measured time is the MINRES \texttt{solve} call only (not dofset construction, assembly, or the preconditioner factorisation), so it is genuine solve cost, from two compounding causes: the block-diagonal preconditioner degrades on irregular adaptive meshes, and each iteration gets more expensive because the Galerkin-projected operators \emph{densify} --- the subdivision basis functions are globally supported, so the projection fills far more nonzeros per row than a nodal matrix of the same DoF count, whereas the uniform operators stay sparse and well-conditioned ($\approx 20$ iterations). The adaptivity win here is thus in DoFs and memory, not wall-clock, with the current solver; the preconditioner is the bottleneck and a subdivision-compatible multigrid variant is left for future work (which reinforces the case for the looser $\tau$ above).}
 
 \begin{figure}[htbp]
     \centering
@@ -2007,7 +2097,7 @@ where the numerator is the estimated error energy on faces below level $L$ --- p
     \label{fig:cl_minres}
 \end{figure}
 
-\robert{In summary, on a manufactured problem with a sharp circular layer and a known exact solution, adaptive subdivision refinement reaches the accuracy of a uniform level-$L$ solve at a small fraction of its DoFs, and the saving grows with depth ($3.3\times, 5.0\times, 6.2\times$ to saturation; $3.5\times, 5.8\times, 9.9\times$ at a looser stop). The refineable/total estimator split identifies when a depth $L$ is exhausted and yields a portable, computable stopping criterion; the admissibility padding costs only $O(\text{interface})$ extra faces per step; and the conformity interface DoFs are a modest, bounded overhead. The one honest cost is the solver: because the projected operators densify under the globally supported basis and the block preconditioner weakens on irregular meshes, the DoF saving is a memory saving rather than, yet, a wall-clock one.}
+\robert{In summary, on a manufactured problem with a sharp circular layer and a known exact solution, adaptive subdivision refinement reaches the accuracy of a uniform level-$L$ solve at a small fraction of its DoFs, and the saving grows with depth ($3.3\times, 4.6\times, 5.9\times$ to saturation; $3.7\times, 5.4\times, 9.3\times$ at a looser stop). The refineable/total estimator split identifies when a depth $L$ is exhausted and yields a portable, computable stopping criterion; the admissibility padding costs only $O(\text{interface})$ extra faces per step; and the conformity interface DoFs are a modest, bounded overhead. The one honest cost is the solver: because the projected operators densify under the globally supported basis and the block preconditioner weakens on irregular meshes, the DoF saving is a memory saving rather than, yet, a wall-clock one.}
 
 \section{Conclusion}
 
@@ -2087,91 +2177,6 @@ $\mathrm{pendingVerts} \leftarrow \emptyset$\;
 }
 \Return $\D$\;
 \end{algorithm}
-
-\section{Full marking and padding pseudo-code}
-\label{app:full_pseudocode}
-
-\robert{This appendix gives the full versions of the marking and padding routines
-whose condensed forms appear in Section~\ref{subsec:worked_example}
-(Alg.~\ref{alg:Dörfler}, \ref{alg:refine}, \ref{alg:padding}, \ref{alg:pinch}, \ref{alg:condI}).}
-
-\robert{\begin{algorithm}[H]
-\caption{$\textsc{DörflerMarkPerVertex}(P, \eta, \theta)$: full per-vertex-star marking}
-\label{alg:Dörfler_full}
-\KwIn{partition $P$, per-face indicator $\eta_f$ for active $f$, $\theta \in (0,1]$}
-
-$\mathrm{selected} \leftarrow [\,]$;\quad $\mathrm{acc} \leftarrow 0$;\quad $\mathrm{marked}[\l] \leftarrow \emptyset$\;
-\While{$\mathrm{acc} < \theta E$ \textbf{and} $\mathrm{PQ}$ nonempty}{
-    $(\_, \l, v) \leftarrow \mathrm{PQ}.\mathrm{pop}()$;\quad $\mathrm{selected}.\mathrm{append}(\l, v)$\;
-    \For{each face $f \in \mathrm{star}(v)$ with $f \in P[\l]$, $f \notin \mathrm{marked}[\l]$}{
-        $\mathrm{marked}[\l] \leftarrow \mathrm{marked}[\l] \cup \{f\}$;\quad $\mathrm{acc} \mathrel{+}= \eta_f^2$\;
-    }
-}
-\tcp{APPLICATION --- refine each selected star}
-\lFor{$(\l,v) \in \mathrm{selected}$}{$T[v] \leftarrow \min(\text{finest active level of } \mathrm{star}_P(v) + 1,\ \L)$}
-$P' \leftarrow$ copy of $P$\;
-\For{$(\l,v) \in \mathrm{selected}$ sorted ascending by $(\l, v)$}{
-    \For{each face $f$ of $v$'s one-ring at level $T[v]$}{
-        \lIf{$f$ already active at level $\geq T[v]$}{\textbf{continue}}
-        grade $f$'s covering active ancestor up to level $T[v]$ (one level at a time)\;
-    }
-}
-\Return $\textsc{Pad}(P')$\;
-\end{algorithm}}
-
-\newpage
-
-\robert{\begin{algorithm}[H]
-\caption{$\textsc{ResolveVertexPinches}(P)$: full pinch resolution}
-\label{alg:pinch_full}
-\Repeat{a pass refines nothing}{
-    \tcp{Phase 1 --- detect (no mutation)}
-    $\mathrm{pinches} \leftarrow \emptyset$\;
-    \For{each vertex $v$}{
-        $\L_v \leftarrow v$'s finest active level\;
-        \lIf{any $\L_v$-ring face is covered only by a finer face}{skip $v$}
-        classify each face of $v$'s $\L_v$ one-ring: \textsc{fine} $=$ active at $\L_v$; \textsc{coarse} $=$ covered by an active ancestor at level $< \L_v$\;
-        $\mathrm{cut} \leftarrow$ number of $\L_v$-spokes with exactly one \textsc{fine} incident face (for boundary $v$, close the fan by treating the exterior as one \textsc{coarse} gap)\;
-        \lIf{$\mathrm{cut} \geq 4$}{$\mathrm{pinches} \leftarrow \mathrm{pinches} \cup \{(\L_v, v)\}$ \tcp*{$\geq 2$ arcs, Eq.~\eqref{eq:arc_count}}}
-    }
-    \tcp{Phase 2 --- refine}
-    \For{$(\L_v, v) \in \mathrm{pinches}$}{
-        \For{each \textsc{coarse} face $f$ of $v$'s $\L_v$-ring}{
-            grade $f$'s covering active ancestor up to level $\L_v$ (one level at a time along the chain; deferred, erase-guarded)\;
-        }
-    }
-}
-\Return $P$\;
-\end{algorithm}}
-
-\newpage
-
-\robert{\begin{algorithm}[H]
-\caption{$\textsc{PadPartitionPerVertexGraded}(P)$: full inadmissible-faces padding with grading}
-\label{alg:condI_full}
-\tcp{$\mathrm{covered}(g,\l)$: $g$ or a coarser ancestor of $g$ is active}
-\tcp{$\mathrm{Good}(w,\l)$: every face in $w$'s one-ring is $\mathrm{covered}(\cdot,\l)$}
-\tcp{Phase 1 --- admissibility (condition I) to a fixed point}
-\Repeat{no face is refined this pass}{
-    $\mathrm{toRefine} \leftarrow \emptyset$\;
-    \For{each level $\l$, each active level-$\l$ face $f$}{
-        \lIf{no vertex of $f$ is $\mathrm{Good}(\cdot,\l)$}{$\mathrm{toRefine} \leftarrow \mathrm{toRefine} \cup \{f\}$}
-    }
-    apply $\mathrm{toRefine}$: each face $\to$ its $4$ children one level deeper\;
-}
-\tcp{Phase 2 --- grading: span $\leq \mathrm{maxSpan}$ levels per vertex}
-\Repeat{$\mathrm{toRefine} = \emptyset$}{
-    $\mathrm{toRefine} \leftarrow \emptyset$\;
-    \For{each vertex $v$}{
-        $\mathrm{lo}, \mathrm{hi} \leftarrow \min, \max$ active level among $v$'s active faces\;
-        \lIf{$\mathrm{hi} - \mathrm{lo} > \mathrm{maxSpan}$}{$\mathrm{toRefine} \leftarrow \mathrm{toRefine} \cup \{v\text{'s active faces at level } \mathrm{lo}\}$}
-    }
-    \If{$\mathrm{toRefine} \neq \emptyset$}{
-        apply $\mathrm{toRefine}$;\quad re-run Phase 1\;
-    }
-}
-\Return $P$\;
-\end{algorithm}}
 
 \section{Atomic-test figure gallery}
 \label{app:figure_gallery}
