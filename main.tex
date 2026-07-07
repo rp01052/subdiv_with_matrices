@@ -60,15 +60,15 @@ Werner Bauer\footnote{University of Surrey, School of Mathematics and Physics, U
 \newcommand{\werner}[1]{{\color{magenta}WB says: #1}}
 \newcommand{\robert}[1]{{\color{orange} #1}}
 \usepackage[normalem]{ulem}  % \sout for struck-through deletions (normalem keeps \emph italic)
-\newcommand{\partitionStar}{\F\V_\C}                         % partition star of a vertex class
-\newcommand{\partitionStarl}[1]{\F\V_{\C, #1}}
-\newcommand{\partitionStarC}[1]{\F\V_{#1}}
-\newcommand{\partitionStarCl}[2]{\F\V_{#1,#2}}
+\newcommand{\coveringStar}{\F\V_\C}                         % covering star of a vertex class
+\newcommand{\coveringStarl}[1]{\F\V_{\C, #1}}
+\newcommand{\coveringStarC}[1]{\F\V_{#1}}
+\newcommand{\coveringStarCl}[2]{\F\V_{#1,#2}}
 \newcommand{\vertclass}[1]{\widehat{v}_{#1}}                 % vertex equivalence class across levels
 \newcommand{\ancestor}[1]{\big\lceil #1 \big\rceil_{\C}}     % coarsen a fine face to its covering active cell of \C
 \newcommand{\quadriF}[1]{\mathcal{Q}^{f}_{#1}}                  % flat single-level quadrisection on partition #1
 \newcommand{\quadriV}[2]{\mathcal{Q}^{\vertclass{} \to #2}_{#1}} % graded quadrisection of a star up to target level #2 on partition #1
-\newcommand{\sourcelevel}{\varsigma}                            % coarsest occupied level of a partition star
+\newcommand{\sourcelevel}{\varsigma}                            % coarsest occupied level of a covering star
 \newcommand{\targetlevel}{\tau}                                 % marking target level
 \newcommand{\Ltwoerror}{e_{L^2}}
 \newcommand{\incl}[1]{{\color{red}#1}}
@@ -403,7 +403,7 @@ and thus shows that the columns of the subdivision matrix $\Amat{k}{\l}{\L}$ con
 
 Uniform subdivision spaces $\SDFspace{k}{\lone}{\L}$ resolve the domain at a single global scale, which is wasteful when the PDE solution contains localised features. Hierarchical spaces break this uniformity by mixing basis functions from \emph{different} levels $\lone$: as illustrated in Fig.~\ref{fig:hier_basis_funs}, a level-$0$ function (left) has broad support capturing large-scale variation, while a level-$2$ function (right) has a much smaller support and can resolve local detail. Selecting which levels to activate in which part of the domain yields an approximation space whose resolution adapts spatially to the solution.
 
-In the uniform space $\SDFspace{k}{\l}{\L}$, every $k$-simplex of $\T_\l$ contributes a basis function, so $\activeDoFSet{k}{\l} = \K^k_\l$. The hierarchical space relaxes this: it selects $\activeDoFSet{k}{\l} \subset \K^k_\l$ at each level, mixing coarse basis functions (broad support, large-scale variation) and fine basis functions (small support, local detail) to adapt spatial resolution to the solution. Not every choice of $\activeDoFSet{k}{\l}$ yields a well-behaved space. For example, the active basis functions may fail to be linearly independent, or the spaces may fail to constitute an exact differential complex. Section~\ref{sec:construction_of_hierarchical_subdiv_spaces} develops the theory of admissible choices.
+In the uniform space $\SDFspace{k}{\l}{\L}$, every $k$-simplex of $\T_\l$ contributes a basis function, so $\activeDoFSet{k}{\l} = \K^k_\l$. The hierarchical space relaxes this: it selects $\activeDoFSet{k}{\l} \subset \K^k_\l$ at each level, mixing coarse basis functions (broad support, large-scale variation) and fine basis functions (small support, local detail) to adapt spatial resolution using the active DoFs $\activeDoFs^k \coloneq \bigcup_{\l = \lzero}^\L \activeDoFSet{k}{\l}$. Not every choice of $\activeDoFSet{k}{\l}$ yields a well-behaved space. For example, the active basis functions may fail to be linearly independent, or the spaces may fail to constitute an exact differential complex. Section~\ref{sec:construction_of_hierarchical_subdiv_spaces} develops the theory of admissible choices.
 
 The same representation extends to the hierarchical space $\hierSDFspace{k}{\C}{\L}$. A form $\constrVec{\omega}{k}{\activeDoFs}{\L} \in \hierSDFspace{k}{\C}{\L}$ is a linear combination of active basis functions drawn from all levels,
 \begin{equation}
@@ -763,22 +763,37 @@ To obtain a differential complex, we need to ensure that the derivative stencil 
 
 \FloatBarrier
 
-\subsection{Selecting active DoFs using subdivision partitions}
+\subsection{Selection of active segrees of freedom}
 \label{subsec:selecting_active_dofs}
 
-Section~\ref{subsec:computational_representations} established that constructing the hierarchical subdivision matrix $\Amat{k}{\activeDoFs}{\L}$ reduces to choosing, at each level $\l$, an index set $\activeDoFSet{k}{\l} \subset \K^k_\l$ of active simplices. Each such choice selects the corresponding columns of $\Amat{k}{\l}{\L}$, assembling $\Amat{k}{\activeDoFs}{\L}$ block by block as in~\eqref{eq:hierarchical_matrix_blocks}. This section addresses the question left open there: which choices of $\activeDoFSet{k}{\l}$ are admissible? Collecting the active simplices across levels,
+Section~\ref{subsec:computational_representations} established that constructing the hierarchical subdivision matrix $\Amat{k}{\activeDoFs}{\L}$ reduces to choosing, at each level $\l$, an index set $\activeDoFSet{k}{\l} \subset \K^k_\l$ of active simplices. Each such choice selects the corresponding columns of $\Amat{k}{\l}{\L}$, assembling $\Amat{k}{\activeDoFs}{\L}$ block by block as in~\eqref{eq:hierarchical_matrix_blocks}. This section addresses the question left open there: which choices of $\activeDoFSet{k}{\l}$ are admissible? Recall that collecting the active simplices across levels yields the active DoFs
 \begin{equation}
-    \activeDoFSet{k}{} \coloneq \bigcup_{\l=\lzero}^{\L} \activeDoFSet{k}{\l},
+    \label{def:activeDoFs}
+    \activeDoFSet{k}{} \coloneq \bigcup_{\l=\lzero}^{\L} \;\, \activeDoFSet{k}{\l}.
 \end{equation}
+
+We now provide a generic definition of the adaptive subdivision $k$-form spaces induced by an arbitrary set of active DoFs $\activeDoFSet{k}{}$.
 the corresponding hierarchical space is
 \begin{equation}
     \activeSDFspaces{k}{} \coloneq \mathrm{span}\bigl( \constrVec{\SDFbases}{k}{\activeDoFs}{\L} \bigr),
 \end{equation}
 where $\constrVec{\SDFbases}{k}{\activeDoFs}{\L}$ is the active basis function vector from~\eqref{eq:hierarchical_basis_vector}.
 
-Not every choice yields a well-behaved hierarchical space $\hierSDFspace{k}{\C}{\L}$. The selected columns of $\Amat{k}{\activeDoFs}{\L}$ must together represent forms that cover the entire domain, must be linearly independent, and the spaces for successive form degrees must constitute a exact complex.
+\begin{definition}[Adaptive subdivision differential form spaces]
+    \label{def:generic_adaptive_function_spaces}
+    Fix an initial mesh $\T_{\lzero}$ with finest level $\L$ and select the active DoFs $\activeDoFSet{k}{}$. The \textbf{active basis functions} of the space $\activeSDFspaces{k}{}$ are given by
+    \begin{equation}
+        \constrVec{\SDFbases}{k}{\activeDoFs}{\L} \coloneqq \bigcup_{\simplex{k}{\l}{\coarseIdxone} \in \activeDoFSet{k}{}} \big\{ \constrQ{\SDFbasis}{k}{\l}{\L}{\coarseIdxone} \big\}
+    \end{equation}
+    and thus
+    \begin{equation}
+        \activeSDFspaces{k}{} \coloneqq \mathrm{span}\big( \constrVec{\SDFbases}{k}{\activeDoFs}{\L} \big).
+    \end{equation}
+\end{definition}
 
-These two admissibility requirements have a visual interpretation in terms of the refinement and derivative stencils introduced in the previous Sections~\ref{subsec:refinement_of_basis_functions} and~\ref{subsec:derivatives_of_basis_functions}. A selection is linearly \emph{independent} when the active DoFs do not contain a refinement stencil for any individual active basis function. Similarly, the spaces constitute a differential complex if the simplices in derivative stencil of any active basis function are themselves present in the active DoFs, either directly or through a refinement stencil. The remainder of this section builds up the notion of s\emph{ubdivision partitions}, the geometric bookkeeping entity whose properties enforce the admissibility conditions directly by means of controlling the stencils.
+Not every choice of active DoFs $\activeDoFSet{k}{}$ yields a well-behaved hierarchical spaces $\activeSDFspaces{k}{}$. The active DoFs $\activeDoFSet{k}{}$ must together represent forms that cover the entire domain, must be linearly independent, and should constitute a exact complex. The remainder of this section introduces the tools needed to parameterise the active DoFs $\activeDoFSet{k}{}$ and to reason about these properties of the adaptive subdivision $k$-form spaces $\activeSDFspaces{k}{}$.
+
+The requirements of linear indepence and expressing exterior differentials have a visual interpretation in terms of the refinement and derivative stencils introduced in the previous Sections~\ref{subsec:refinement_of_basis_functions} and~\ref{subsec:derivatives_of_basis_functions}. A selection is linearly \emph{independent} when the active DoFs do not contain a refinement stencil for any individual active basis function. Similarly, the spaces constitute a differential complex if the simplices in derivative stencil of any active basis function are themselves present in the active DoFs, either directly or through a refinement stencil.
 
 \begin{figure}[tb]
 \begin{center}
@@ -859,7 +874,7 @@ These two admissibility requirements have a visual interpretation in terms of th
     decorate, line width=1.2pt
 ]
     (A1.north west|-colA.north) -- (C1.north east|-colA.north)
-    node[midway, above=14pt, font=\bfseries] {Active DoFs};
+    node[midway, above=14pt, font=\bfseries] {active DoFs};
 
 % ============================================================
 %  GRAPHIC ABOVE THE OVERBRACE
@@ -867,176 +882,72 @@ These two admissibility requirements have a visual interpretation in terms of th
 \node (topfig) at (3.9cm, 4.0cm)
     {\includegraphics[width=0.3\textwidth]{images/dofmeshes/correct/subdiv_partition.pdf}};
 
-\node[above=6pt of topfig, font=\bfseries] {Subdivision partition};
+\node[above=6pt of topfig, font=\bfseries] {subdivision partition};
 
 \end{tikzpicture}
 \end{center}
-\caption{Active $k$-form DoFs for the three-level subdivision partition shown at top. Columns correspond to form degree $k = 0$ (vertices, dark circles), $k = 1$ (edges, orange), and $k = 2$ (faces, green). Rows correspond to active DoFs at levels $\l = 0$, $1$, $2$ respectively. At each level, interior simplices of the patches at that level are active, together with interface simplices on the coarser side along boundaries with finer-level patches (cf.\ Definition~\ref{def:active_k_form_dofs}).}
+\caption{\robert{Active $k$-form DoFs for the three-level subdivision partition shown at top. Columns correspond to form degree $k = 0$ (vertices, dark circles), $k = 1$ (edges, orange), and $k = 2$ (faces, green). Rows correspond to active DoFs at levels $\l = 0$, $1$, $2$ respectively. At each level, interior simplices of the patches at that level are active, together with interface simplices on the coarser side along boundaries with finer-level patches (cf.\ Definition~\ref{def:active_k_form_dofs}).}}
 \label{fig:active_dofs}
 \end{figure}
 
 \smallskip
-A geometrically natural unit for organising the selection of active DoFs is a \emph{mesh patch} that gather simplices that are all activated together. We consider such a patch $\calP_\l \subset \T_\l$ to be a non-empty collection of edge-connected faces of $\T_\l$. We denote the set of $k$-simplices of the patch $\calP_\l$ as $\K^k(\calP_\l)$. The boundary $\partial\calP_\l$ of the patch is the set of edges adjacent to exactly one face of $\calP_\l$. We write $\calP_{\l \to \lone}$ for the patch faces obtained by repeatedly splitting the faces of $\calP_\l$ from level $\l$ to $\lone$. Two patches $\calP_{\l}$ and $\calP_{\lone}$ are \emph{non-overlapping} if their images in $\T_\L$ share at most edges: $\I_{(\calP_{\l}, \calP_{\lone}) \to \L} \coloneqq \calP_{\l \to \L} \cap \calP_{\lone \to \L} \subset \E_\L(\T_\L)$. 
+A geometrically natural unit for organising the selection of active DoFs is a \emph{mesh patch} to gathers simplices that are all activated together. We consider such a patch $\calP_\l \subset \T_\l$ to be a non-empty collection of edge-connected faces of $\T_\l$. We denote the set of $k$-simplices of the patch $\calP_\l$ as $\K^k(\calP_\l)$. The boundary $\partial\calP_\l$ of the patch is the set of edges adjacent to exactly one face of $\calP_\l$. We write $\calP_{\l \to \lone}$ for the patch faces obtained by repeatedly splitting the faces of $\calP_\l$ from level $\l$ to $\lone$. Two patches $\calP_{\l}$ and $\calP_{\lone}$ are \emph{non-overlapping} if their refinements to level $\L$ share at most edges, i.e.
+\begin{equation}
+    \I_{(\calP_{\l}, \calP_{\lone}) \to \L} \coloneqq \calP_{\l \to \L} \, \cap \, \calP_{\lone \to \L} = \partial\calP_{\l \to \L} \, \cup \, \partial\calP_{\lone \to \L} \;\; \subset \E_\L(\T_\L).
+\end{equation}
 
 \begin{definition}[covering]
     \label{def:covering}
-    A \emph{covering} $\C(\T_\L) = \bigcup_{\l_i,n}\calP^n_{\l_i}$ is a set of pairwise non-overlapping patches that tile $\T_\L$, i.e.\ $\T_\L = \bigcup_{\l = \lzero}^\L \bigcup_{n = 0}^{\mathrm{N_{\l}}} \calP^n_{\l \to \L}$, where $\mathrm{N_{\l}}$ is the number of patches on level $\l$. We further denote certain level subsets of a covering by
+    A \emph{covering} $\C(\T_\L) = \bigcup_{\l = \lzero}^\L \bigcup_{n = 1}^{\mathrm{N_{\l}}} \calP^n_{\l}$ is a set of pairwise non-overlapping patches $\calP^n_{\l}$ that tile $\T_\L$ such that $\T_\L = \bigcup_{\l = \lzero}^\L \bigcup_{n = 1}^{\mathrm{N_{\l}}} \calP^n_{\l \to \L}$, where $\mathrm{N_{\l}}$ is the number of patches on level $\l$. We further denote certain level subsets of a covering by
     \begin{equation}
-        \C_{\l} = \bigcup\limits_{n = 0}^{\mathrm{N}_\l} \calP^n_{\l \to \L}, \quad \C_{>\lone} = \bigcup\limits_{\l = \lone + 1}^{\L} \C_\l, \quad \C_{\geq\lone} = \bigcup\limits_{\l = \lone }^{\L} \C_\l, \quad \C_{<\lone} = \bigcup\limits_{\l = \lzero }^{\lone - 1} \C_\l, \quad \C_{\leq\lone} = \bigcup\limits_{\l = \lzero }^{\lone} \C_\l.
+        \C_{\l} = \bigcup\limits_{n = 1}^{\mathrm{N}_\l} \calP^n_{\l \to \L}, \quad \C_{>\lone} = \bigcup\limits_{\l = \lone + 1}^{\L} \C_\l, \quad \C_{\geq\lone} = \bigcup\limits_{\l = \lone }^{\L} \C_\l, \quad \C_{<\lone} = \bigcup\limits_{\l = \lzero }^{\lone - 1} \C_\l, \quad \C_{\leq\lone} = \bigcup\limits_{\l = \lzero }^{\lone} \C_\l.
     \end{equation}
 \end{definition}
 
-Given that all basis function associated to the simplices of all patches, a covering $\C$ ensures that the entire domain is covered with active basis functions. It does not yet guarantee either linear independece or a differential complex. In the following, we will develop an intuition for the selection of additional active degrees of freedom and constraints regarding the covering.
+We refer to the set $\K^k(\C) \coloneq \bigcup_{\l=\lzero}^{\L} \K^k(\C_\l)$ as the \emph{patch DoFs}.
+Thus, spanning an adaptive space using the patch DoFs of covering $\C$ ensures that the entire domain is covered with active basis functions. It does not yet guarantee either linear independece or a differential complex. In the following, we will develop an intuition for the selection of additional active degrees of freedom and constraints regarding the covering.
 
-\vspace{20mm}
-\hrule
+\smallskip
 
-These admissibility conditions needs to be guaranteed by controlling the refinement and derivative stencils of patch DoFs explicitly. This leads to additional constraints and selecting additional active basis functions.
+Consider a covering $\C(\T_\L) = \calP^1_0 \cup \calP^1_1$ with $\L \geq 1$ and two patches, one on level $0$ and one on level $1$, and an interface $\I_{(\calP^1_0, \calP^1_1)}$. The derivative stencils of vertex DoFs $\V(\C)$ reveal whether the derivative active basis functions can be expressed exactly. For non-interface vertices, the derivative stencil is indeed a subset of the patch edge DoFs. However, for interface vertices, some edges in its derivative stencil are not contained in the patch. The same rationale applies to interface edges, where one adjacent face in its derivative stencil is not contained in its patch.
 
+This mismatch can be resolved by including one more layer of edges and faces at any interface. The derivative stencils are then satisfied. However, we can now observe linear dependence of the  additional edges and faces added at the interface on level $0$ that overlap the patch $\calP^1_1$ on level $1$. That implies that we only want to add interface DoFs of a patch if these interface DoFs overlap a coarser patch. There are more cases of linear dependency depending on the concrete geometry of the covering $\C(\T_\L)$. These will be eliminated by constraining the geometry, not by selecting the active DoFs differently.
 
+If we refined the patch $\calP^1_1$ of the covering $\C$ to level $2$, the new interface would now be between a patch on level $0$ and a patch on level $2$. The same derivative and refinement stencil checks as above apply but reveal on more crucial missing ingredient: We need to add separate interface DoFs on level $1$. These interface DoFs are the vertices of the interface, and its incident edges and faces that overlap the coarse patch on level $0$.
 
-\robert{The predicates below --- and the estimation, marking, and refinement steps of the adaptive loop --- repeatedly refer to three objects derived from a covering $\C$: the equivalence class of a vertex across levels, the \emph{ancestor} of a fine face, and the \emph{partition star} of a vertex. As they recur throughout the remainder of the paper, we collect their definitions here, before the predicates that build on them.}
+\smallskip
 
-We first capture the persistence of vertices across the hierarchy by defining an equivalence class $\vertclass{\coarseIdxtwo}$:
-\begin{equation}
-    \label{eq:def_vertex_class}
-    \vertclass{\coarseIdxtwo} \coloneq \big\{ \vertex{\l}{\coarseIdxtwo}, \; \vertex{\l \to \l+1}{\coarseIdxtwo}, \; \dots, \; \vertex{\l \to \L}{\coarseIdxtwo} \big\}, \quad \text{where} \quad \l = \min \big\{ \, \lone \in \{\lzero, \, \dots, \, \L\} \; \colon \; \coarseIdxtwo \leq \vert \V_\lone \vert \, \big\}
-\end{equation}
-and $\vertex{\l \to \lone}{\coarseIdxtwo} = \Aop{}{\l}{\lone} \vertex{\l}{\coarseIdxtwo}$ denotes the refined vertices. We chose the $\widehat{\cdot}$ notation because we think of the equivalence relation as lifting the vertex across all finer levels. The active vertices in any equivalence class are given by $\vertclass{\coarseIdxtwo} \cap \V(\C)$. Since every equivalence class contains at least one active vertex, the number of vertex equivalence classes of $\C$ is at most the number of active $0$-form DoFs, $\vert \activeDoFSet{0}{\C} \vert$.
-
-Further, we define the \emph{ancestor} $\ancestor{\face{\lone}{\fineIdxone}}$ by the relation
-\begin{equation}
-    \label{eq:def_ancestor}
-    \face{\l}{\coarseIdxone} = \ancestor{\face{\lone}{\fineIdxone}} \quad \leftrightarrow \quad \face{\lone}{\fineIdxone} \in \Aop{}{\l}{\lone} \big( \face{\l}{\coarseIdxone} \big),
-\end{equation}
-\robert{that is, $\ancestor{\face{\lone}{\fineIdxone}}$ is the unique active face of $\C$ covering the finer face $\face{\lone}{\fineIdxone}$: the face itself if it is active, otherwise its active coarser ancestor.}
-
-\robert{This allows us to define the \emph{partition star} $\partitionStar(\vertclass{\coarseIdxtwo})$ of a vertex equivalence class $\vertclass{\coarseIdxtwo}$ by}
-\begin{equation}
-    \label{eq:def_partition_star}
-    \robert{\partitionStar(\vertclass{\coarseIdxtwo}) \coloneq \big\{ \, \ancestor{\face{\L}{\fineIdxone}} \; : \; \face{\L}{\fineIdxone} \in \FVl{\L} \big( \vertex{\l \to \L}{\coarseIdxtwo} \big) \, \big\}.}
-\end{equation}
-\robert{The partition star operator $\partitionStar(\vertclass{\coarseIdxtwo})$ collects \emph{every} active face of the covering $\C$ incident to the vertex, starting from the coarsest possible level: for each face $\face{\L}{\fineIdxone}$ in the vertex's finest-level one-ring $\FVl{\L}(\vertex{\l \to \L}{\coarseIdxtwo})$ it takes the covering active ancestor $\ancestor{\face{\L}{\fineIdxone}}$. This includes not only the faces of which the vertex is an active corner, but also the coarse face lying across an interface edge through the vertex. We name it the \emph{partition} star because the covering ancestors are cells of the partition $\C$ and hence tile the neighbourhood of the vertex without overlap, unlike faces taken across different levels of the hierarchy, which do overlap.}
-
-\robert{Finally, we write
-\begin{equation}
-    \label{eq:def_partition_star_slice}
-    \partitionStarl{\l}(\vertclass{\coarseIdxtwo}) \coloneq \partitionStar(\vertclass{\coarseIdxtwo}) \cap \F(\C_\l)
-\end{equation}
-for the \emph{level-$\l$ slice} of the partition star, the active faces of the star that lie on level $\l$. Because the covering ancestors tile the vertex neighbourhood without overlap, these slices partition $\partitionStar(\vertclass{\coarseIdxtwo})$ across the levels it occupies.}
-
-\begin{definition}[interior vertex at level $\l$]
-    \label{def:interior_vertex}
-    We call a vertex $\vertex{\l}{\coarseIdxtwo} \in \V(\C)$ \emph{interior at level $\l$} if the partition star $\partitionStar{\C}(\vertclass{\coarseIdxtwo})$ of its equivalence class $\vertclass{\coarseIdxtwo}$ does not contain any face on a lever fine that $\l$, i.e.,
-    \begin{equation}
-        \label{eq:interior_vertex}
-        \partitionStar(\vertclass{\coarseIdxtwo}) \cap \F(\C_{>\l}) = \varnothing.
-    \end{equation}
-\end{definition}
-
-\begin{remark}
-    Note that being an interior vertex is a weaker condition than being \emph{patch interior}, i.e.,
-    \begin{equation}
-        \label{eq:patch_interior_vertex}
-        \partitionStar(\vertclass{\coarseIdxtwo}) = \F\V \big( \vertex{\l}{\coarseIdxtwo} \big) \subset \F(\C_{\l}).
-    \end{equation}
-\end{remark}
-
-\begin{definition}[admissible face]
-    We call a face $\face{\l}{\coarseIdxone} \in \F(\C)$ \emph{admissible} if at least one of its vertices $\vertex{\l}{\coarseIdxtwo} \in \V\F\big( \face{\l}{\coarseIdxone} \big)$ is interior at level $\l$. Otherwise, the face is called \emph{inadmissible}.
-\end{definition}
-
-\begin{definition}[pinch vertex]
-    Let $\l$ be the finest level of $\partitionStar(\vertclass{\coarseIdxtwo})$ and compute the number $\mathrm{N}_\coarseIdxtwo$
-    \begin{equation}
-        \mathrm{N}_\coarseIdxtwo \coloneq \Big\vert \big\{ \edge{\l}{\coarseIdxone} \in \E\V(\vertex{\l}{\coarseIdxtwo}) \;\; : \;\; \F\E(\edge{\l}{\coarseIdxone}) \cap \C_\l \neq \varnothing \quad \text{and} \quad \F\E(\edge{\l}{\coarseIdxone}) \setminus \C_\l \neq \varnothing \big\} \Big\vert.
-    \end{equation}
-    of edges whose adjacent faces split into an active and an inactive one on level $\l$. For an interior vertex of $\T_\l$, $\mathrm{N}_\coarseIdxtwo$ will always be even. \robert{(What about boundary vertices? We also need to be careful with the words "interior" and "boundary" here, define properly.)} The \emph{number of disconnected arcs} $\gamma_\coarseIdxtwo$ of the vertex class $\vertclass{\coarseIdxtwo}$ is given by
-    \begin{equation}
-        \gamma_\coarseIdxtwo = \begin{cases}
-            1, \quad & \mathrm{N}_\coarseIdxtwo = 0 \\
-            \tfrac{1}{2} \mathrm{N}_\coarseIdxtwo, \quad & \text{otherwise}.
-        \end{cases}
-    \end{equation}
-    If $\gamma_\coarseIdxtwo \geq 2$, the vertex class $\vertclass{\coarseIdxtwo}$ is a called \emph{pinch} vertex.
-\end{definition}
-
-\robert{The pinch predicate is the one genuinely new ingredient: unlike interior-ness, it is a
-\emph{connectivity} property of the star, read off from the cut spokes rather than expressible
-through the quadrisection operators and $\partitionStar$ alone.}
-
-\robert{
-\begin{definition}[Subdivision Partition]
-    \label{def:subdiv_partition}
-    A covering $\C(\T_\L)$ is a \emph{subdivision partition} if every patch satisfies a minimum-size condition: every face of every patch, after one step of refinement, must contain at least one vertex whose entire face-ring lies strictly in the interior of the refined patch (i.e.\ not on any interface with a neighbouring patch). This rules out interior linear dependence of basis functions; see~\cite{Piel.2026} for the precise statement.
-\end{definition}
-}
-
-\robert{The key design choices in Definition~\ref{def:active_k_form_dofs} are illustrated in Fig.~\ref{fig:active_dofs}. The need for interface DoFs is easiest to see in the $k=1$ column. At level $\l=0$ (top row, orange edges), only the edges interior to the level-$0$ patches are active; the boundary edges shared with the finer level-$1$ region are absent. At level $\l=1$ (middle row), those same boundary edges appear as active 1-form DoFs. Without them, the exterior derivative $\extd\omega^0$ of a level-$0$ 0-form basis function near the patch boundary would map to an edge with no associated active 1-form DoF, breaking the de Rham complex. More generally, when two patches at levels $\l_i < \l_j$ share a boundary, interface DoFs are added at \emph{every} intermediate level $\l_i < \l_t \leq \l_j$. This prevents basis functions from very different levels meeting abruptly across the interface, which would otherwise create an ill-conditioned system. We do not have rigorous estimates that quantify this stiffening effect, and it remains a subject for further investigation.
-
-The interface DoFs are attributed exclusively to the \emph{finer} side of the patch boundary, not the coarser side. Including coarser-side DoFs would introduce linear dependence: any coarser-level basis function restricted to the interface is already expressible as a linear combination of the finer-level basis functions there (cf.\ the refinement stencil condition in Section~\ref{sec:construction_of_hierarchical_subdiv_spaces}). Restricting to the finer side therefore maintains linear independence while still closing the de Rham complex, as made precise in the theorems at the end of this section.}
+The selection mechanism of alternating refinement and derivative stencils generalises to the following definition of the active DoFs of a covering $\C$ and lets us define the adaptive subdivision differential form spaces.
 
 \begin{definition}[Active $k$-form degrees of freedom]
     \label{def:active_k_form_dofs}
-    Let $\C\big(\T_{L}\big) = \bigcup_{\l_i = \l_0}^L \; \bigcup_{n = 0}^{N_{\l_i}} \; \calP^n_{\l_i}$ be a subdivision partition of $\T_L$. The active $k$-form degrees of freedom $\D^k\big(\C\big)$ are defined as
+    Let $\C (\T_{\L} ) = \bigcup_{\l = \lzero}^\L \; \bigcup_{n = 0}^{\mathrm{N}_{\l}} \; \calP^n_{\l}$ be a covering of $\T_L$. The active $k$-form degrees of freedom $\activeDoFSet{k}{} (\C)$ are defined as
     \begin{equation}
         \label{eq:active_k_form_dofs}
-        \D^k \big(\C\big) \coloneqq \underbrace{\bigcup_{\calP^n_{\l_i} \in \C}}_{(i)} \Bigg[ \underbrace{\K^k \big( \calP^n_{\l_i} \big)}_{(ii)} \cup \underbrace{\bigcup_{\calP^m_{\l_j} \in \C_{> \l_i}}}_{(iii)} \; \underbrace{\bigcup_{\l_t = \l_i +1}^{\l_j}}_{(iv)} \bigg[ \underbrace{\K^k\V_{\l_t} \Big( \V_{\l_t} \big( \I_{(\calP^n_{\l_i \to \l_t}, \calP^m_{\l_j})} \big) \Big)}_{(v)} \cap \underbrace{\K^k_{\l_t} \big( \calP^n_{\l_i \to \l_t} \big)}_{(vi)} \bigg] \Bigg].
+        \activeDoFSet{k}{} \big(\C\big) \coloneqq \underbrace{\bigcup\limits_{\calP^n_{\l} \in \C}}_{(i)} \bigg[ \underbrace{\K^k \big( \calP^n_{\l} \big)}_{(ii)} \;\; \cup \;\; \underbrace{\bigcup\limits_{\calP^m_{\ltwo} \in \C_{> \l}}}_{(iii)} \;\; \underbrace{\bigcup\limits_{\lone = \l+1}^{\ltwo}}_{(iv)} \; \Big[ \underbrace{\K^k\V_{\lone} \Big( \V_{\lone} \big( \I_{(\calP^n_{\l \to \lone}, \calP^m_{\ltwo})} \big) \Big)}_{(v)} \cap \underbrace{\K^k_{\lone} \big( \calP^n_{\l \to \lone} \big)}_{(vi)} \Big] \; \bigg].
     \end{equation}
 \end{definition}
 
-Unpacking this definition: for every patch (\textit{i}) $\calP^n_{\l_i}$, we first add all of its $k$-simplices (\textit{ii}). Further, for all relatively finer patches (\textit{iii}) $\calP^m_{\l_j}$ with $\l_j > \l_i$ and all intermediate levels (\textit{iv}) $\l_t$ with $\l_i < \l_t \leq \l_j$, all interface simplices (\textit{v}) are added if they lie on the coarser side (\textit{vi}) of the interface, i.e.\ can be generated by refining patch $\calP^n_{\l_i}$ to level $\l_t$.
+Unpacking this definition shows: for every patch (\textit{i}) $\calP^n_{\l}$, we first add all of its patch DoFs (\textit{ii}). Further, for all relatively finer patches (\textit{iii}) $\calP^m_{\ltwo}$ with $\ltwo > \l$ and all intermediate levels (\textit{iv}) $\lone$ with $\l < \lone \leq \ltwo$, all interface simplices (\textit{v}) are added if they lie on the coarser side (\textit{vi}) of the interface, i.e. can be generated by refining patch $\calP^n_{\l}$ to level $\lone$.
 
-\begin{definition}[Adaptive subdivision differential form spaces]
+\begin{definition}[Adaptive subdivision $k$-form spaces induced by a covering]
     \label{def:adaptive_function_spaces}
-    Fix an initial mesh $\T_{\l}$ and maximum subdivision level $L$. Let the subdivision partition $\C\big(\T_L\big)$ induce the active $k$-form degrees of freedom $\D^k \big( \C \big)$. The \textbf{active basis functions} of the space $\hierSDFspace{k}{\C}{\L}$ are given by
+    The adaptive subdivision $k$-form space $\hierSDFspace{k}{\C}{\L}$ induced by the covering $\C(\T_\L)$ is given by
     \begin{equation}
-        \Phi_{\D^k (\C)} \coloneqq \bigcup_{\sigma^k_{\l_i, p} \in \D^k} \Big\{ \phi^k_{\l_i \to L, p} \Big\}
+        \hierSDFspace{k}{\C}{\L} \coloneqq \mathrm{span}\big( \constrVec{\SDFbases}{k}{\activeDoFs(\C)}{\L} \big),
     \end{equation}
-    and thus
-    \begin{equation}
-        \hierSDFspace{k}{\C}{\L} \coloneqq \mathrm{span}\big( \Phi_{\D^k (\C)} \big).
-    \end{equation}
+    where the active basis functions $\constrVec{\SDFbases}{k}{\activeDoFs(\C)}{\L}$ are given by Definition~\ref{def:generic_adaptive_function_spaces}.
 \end{definition}
 
-\noindent Note that the basis functions are increasingly dense for higher levels $\l_i$ because the resolution of the patches $\calP_{\l_i}$ and thus $\D^k_{\l_i}$ scales with roughly $4^{\l_i - \l}$. Two essential properties must be established for the spaces $\hierSDFspace{k}{\C}{\L}$: linear independence of the basis functions and the de Rham complex. The proofs of both properties are given in~\cite{Piel.2026}; the main results are restated below.
+The selection of the active DoFs in Definition~\ref{def:active_k_form_dofs} guarantees that the adaptive subdivision $k$-form spaces $\hierSDFspace{k}{\C}{\L}$ form a differential complex~\citep{companion_paper}, i.e.
+\begin{equation}
+    \label{eq:differential_complex}
+    \extd: \; \hierSDFspace{k}{\C}{\L} \to \hierSDFspace{k+1}{\C}{\L} \qquad \text{and} \qquad \extd \circ \extd: \; \hierSDFspace{k}{\C}{\L} = 0.
+\end{equation}
 
-\begin{remark}
-    The numerical examples in Section~5 use subdivision partitions where only adjacent levels share an interface. In that case, the active DoF formula~\eqref{eq:active_k_form_dofs} simplifies: only a single layer of interface simplices needs to be added at the finer of the two adjacent levels.
-\end{remark}
+The other essential properties, namely linear independece and correct cohomology of the discrete complex, are tied to the geometry of the patches that constitute the covering, see~\cite{companion_paper}.
 
-Finally, we are going to re-state the two main theorems of \cite{Piel.2026} regarding linear independence and the exactness of the complex.
-
-\begin{theorem}
-    Let $\C$ be a subdivision partition of the mesh hierarchy $\T_\l$ for $\l \in \{ \lzero, \hdots, \L\}$. The basis functions of the hierarchical spaces $\hierSDFspace{k}{\C}{\L}$ from Definition~\ref{def:adaptive_function_spaces} are linearly independent.
-\end{theorem}
-
-\begin{proof}
-    The necessary properties of a subdivision partition were chosen so that linear independence was guaranteed, see \cite{Piel.2026} for the entire proof.
-\end{proof}
-
-\begin{theorem}
-    Let $\C$ be an subdivision partition. The hierarchical spaces $\hierSDFspace{k}{\C}{\L}$ constitute the differential complex
-    \begin{equation}
-    \begin{tikzcd}
-        \mathfrak{R}_\C: \qquad 0 \arrow[r] & \mathbb{R} \arrow[r, "\subset"] & \hierSDFspace{0}{\C}{\L} \arrow[r, "\extd"] & \hierSDFspace{1}{\C}{\L} \arrow[r, "\extd"] & \hierSDFspace{2}{\C}{\L} \arrow[r] & 0.
-    \end{tikzcd}
-    \end{equation}
-    The hierarchical subdivision $k$-form spaces with vanishing trace form the differential complex
-    \begin{equation}
-    \begin{tikzcd}
-        \mathring{\mathfrak{R}}_\C: \qquad 0 \arrow[r] & \hierSDFspace{0}{\C}{\L} \arrow[r, "\extd"] & \hierSDFspace{1}{\C}{\L} \arrow[r, "\extd"] & \hierSDFspace{2}{\C}{\L} \arrow[r, "\int"] & \mathbb{R} \arrow[r] & 0.
-    \end{tikzcd}
-    \end{equation}
-    If $\C$ is an \emph{exact} subdivision partition of a \emph{simply-connected} domain, the complexes $\mathfrak{R}_\C$ and $\mathring{\mathfrak{R}}_\C$ are exact.
-\end{theorem}
-
-\begin{proof}
-    See \cite{Piel.2026}.
-\end{proof}
-
-\subsection{Refinement operators on a subdivision partition}
-\label{subsec:refinement_operators}
+\hrule
 
 \robert{The estimation, marking, refinement, and padding steps below all refine a subdivision partition through \emph{two} operators, which we define here once and refer back to. The \emph{flat quadrisection} $\quadriF{\C}(\simplexsubset{2}{\l})$ refines a \emph{single-level} set of faces $\simplexsubset{2}{\l} \subseteq \F(\C_\l)$ by replacing each face with its four children,
 \begin{equation}
@@ -1045,18 +956,159 @@ Finally, we are going to re-state the two main theorems of \cite{Piel.2026} rega
 \end{equation}
 that is, it removes the faces $\simplexsubset{2}{\l}$ from level $\l$ and adds their children on level $\l+1$, leaving all other levels untouched.}
 
-\robert{The \emph{graded quadrisection} $\quadriV{\C}{t}(\partitionStar(\vertclass{\coarseIdxtwo}))$ homogenises a whole partition star \emph{up to} a target level $t$ by nested flat quadrisection. With $\sourcelevel(\vertclass{\coarseIdxtwo}) = \min\{\l : \partitionStarl{\l}(\vertclass{\coarseIdxtwo}) \neq \varnothing\}$ the coarsest level the star occupies, it is built by:
+\robert{The \emph{graded quadrisection} $\quadriV{\C}{t}(\coveringStar(\vertclass{\coarseIdxtwo}))$ homogenises a whole covering star \emph{up to} a target level $t$ by nested flat quadrisection. With $\sourcelevel(\vertclass{\coarseIdxtwo}) = \min\{\l : \coveringStarl{\l}(\vertclass{\coarseIdxtwo}) \neq \varnothing\}$ the coarsest level the star occupies, it is built by:
 \begin{enumerate}
     \item Initialization: $\C^{\sourcelevel} = \C$;
     \item for $\l = \sourcelevel, \, \dots, \, t-1$, flat-refine the level-$\l$ slice of the star \emph{recomputed on the current partition} $\C^\l$,
     \begin{equation}
         \label{eq:graded_quadrisection}
-        \C^{\l+1} = \quadriF{\C^\l}\big( \partitionStarCl{\C^\l}{\l}(\vertclass{\coarseIdxtwo}) \big);
+        \C^{\l+1} = \quadriF{\C^\l}\big( \coveringStarCl{\C^\l}{\l}(\vertclass{\coarseIdxtwo}) \big);
     \end{equation}
-    \item set $\quadriV{\C}{t}(\partitionStar(\vertclass{\coarseIdxtwo})) \coloneq \C^{t}$.
+    \item set $\quadriV{\C}{t}(\coveringStar(\vertclass{\coarseIdxtwo})) \coloneq \C^{t}$.
 \end{enumerate}
 Recomputing the slice on $\C^\l$ at each step is what drags a coarse interface face up through \emph{every} intermediate level up to $t$. The two operators are distinguished by their superscript --- $\quadriF{}$ refines a set of faces flatly by one level, while $\quadriV{}{\cdot}$ refines a star gradedly toward its vertex --- and only the graded operator carries a target level.}
 
+\hrule
+
+\subsection{Subdivision partitions and properties of the adaptive spaces}
+\label{subsec:subdiv_partition}
+
+This section develops the necessary concepts to describe the two particular configurations that compromise linear independence and the cohomology of the complex. This will result in conditions that constrain the geometry of coverings and in geometric predicates that indicate the need for padding in the adaptive loop in Section~\ref{subsec:adaptive_loop}.
+
+\smallskip
+
+The first concept we are going to formalise is the persistence of vertices across the mesh hierarchy $\T_\l$ for $\l = \lzero, \, \dots, \, \L$. The important observation is that, once a vertex first appears on level $\l$, the vertex remains part of the hierarchy throughout all iterations of the subdivision algorithm, only its position can shift slightly. We capture this equivalence of vertices by defining the equivalence classes $\vertclass{\coarseIdxtwo}$ as follows.
+
+\begin{definition}[Vertex equivalence class]
+    \label{def:vertex_classed}
+    Fix a mesh hierarchy $\T_\l$ for $\l = \lzero, \, \dots, \, \L$. The \emph{vertex equivalence classes} $\vertclass{\coarseIdxtwo}$ are defined by
+    \begin{equation}
+        \label{eq:def_vertex_class}
+        \vertclass{\coarseIdxtwo} \coloneq \big\{ \vertex{\l}{\coarseIdxtwo}, \; \vertex{\l \to \l+1}{\fineIdxone}, \; \dots, \; \vertex{\l \to \L}{\coarseIdxtwo} \big\},
+\end{equation}
+    where $\l = \min \big\{ \, \lone \in \{\lzero, \, \dots, \, \L\} \; \colon \; \coarseIdxtwo \leq \vert \V(\T_\lone) \vert \, \big\}$ and $\vertex{\l \to \lone}{\coarseIdxtwo} = \Aop{}{\l}{\lone} \vertex{\l}{\coarseIdxtwo}$ denotes refined vertices.
+\end{definition}
+
+We chose the $\widehat{\cdot}$ notation because we think of the equivalence relation as lifting the vertex $\vertex{\l}{\coarseIdxtwo}$ across all finer levels. The number of vertex equivalence classes of a whole mesh hierarchy ending with $\T_\L$ is $\vert \T_\L \vert$. Most of these equivalence classes will not appear as vertices of a covering $\C(\T_\L)$. This implies that the set
+\begin{equation}
+    \label{eq:def_vertex_classes_of_covering}
+    \widehat{\V}_\C \coloneq \big\{ \vertclass{\coarseIdxtwo} \; \colon \; \vertclass{\coarseIdxtwo} \cap \V(\C) \neq \varnothing \big\}
+\end{equation}
+of vertex equivalence classes $\vertclass{\coarseIdxtwo}$ of the covering $\C(\T_\L)$ is more practically relevant. We find that $\vert \widehat{\V}_\C \vert \leq \vert \V(\C) \vert$ since every equivalence class $\vertclass{\coarseIdxtwo} \in \widehat{\V}_\C$ contains at least one vertex of $\C$.
+
+Finally, we define the \emph{source level} $\sourcelevel_\coarseIdxtwo$ and \emph{target level} $\targetlevel_\coarseIdxtwo$ of a vertex equivalence class $\vertclass{\coarseIdxtwo} \in \widehat{\V}_\C$ by
+\begin{align}
+    \label{eq:def_sourcelevel}
+    \sourcelevel_\coarseIdxtwo &\coloneq \min \, \big\{ \l \in \{\lzero, \, \dots, \, \L\} \; \colon \; \vertex{\l}{\coarseIdxtwo} \in \vertclass{\coarseIdxtwo} \cap \V(\C) \big\}, \\
+    \label{eq:def_targetlevel}
+    \targetlevel_\coarseIdxtwo &\coloneq \max \big\{ \l \in \{\lzero, \, \dots, \, \L\} \; \colon \; \vertex{\l}{\coarseIdxtwo} \in \vertclass{\coarseIdxtwo} \cap \V(\C) \big\}.
+\end{align}
+The reason we call those levels source and target level is due to the effect of the quadrisection operator introduced later in Definition~\ref{def:vertex_quadrisection_operator}.
+
+\smallskip
+
+The next concept we need to introduce is a notion of an inverse face quadrisection. Applying this $\emph{ancestor}$ operator to a fine face returns the coarse face of the covering $\C$ that covers the fine face.
+\begin{definition}[Ancestor operator]
+    \label{def:ancestor_operator}
+    Let $\C$ be a covering. The \emph{ancestor} operator $\ancestor{\cdot}$ is a map $\ancestor{\cdot}: \F(\T_\lone) \to \F(\C)$ defined by the relation
+    \begin{equation}
+        \label{eq:def_ancestor}
+        \face{\l}{\coarseIdxone} = \ancestor{\face{\lone}{\fineIdxone}} \quad \Longleftrightarrow \quad \face{\lone}{\fineIdxone} \in \Aop{}{\l}{\lone} \big( \face{\l}{\coarseIdxone} \big),
+    \end{equation}
+    Note that the ancestor operator is only well-defined if $\l \leq \lone \leq \L$.
+\end{definition}
+
+\smallskip
+
+Combining the vertex equivalence classes $\vertclass{\coarseIdxtwo}$ and the ancestor operator $\ancestor{\cdot}$ allows us to define the \emph{covering star} $\coveringStar(\vertclass{\coarseIdxtwo})$ of a $\vertclass{\coarseIdxtwo}$. This operator returns all faces of a covering $\C$ that ``surround'' the vertex class $\vertclass{\coarseIdxtwo}$ in the following sense.
+\begin{definition}[Covering star]
+    \label{def:covering_star}
+    Let $\C$ be a covering with vertex equivalence classes $\vertclass{\coarseIdxtwo} \in \widehat{\V}_\C$. The \emph{covering star} $\coveringStar\; \colon \; \widehat{\V}_\C \to \powerset\big( \F(\C) \big)$ is defined by
+    \begin{equation}
+        \label{eq:def_partition_star}
+        \coveringStar(\vertclass{\coarseIdxtwo}) \coloneq \Big\{ \, \ancestor{\face{\L}{\fineIdxone}} \; : \; \face{\L}{\fineIdxone} \in \FVl{\L} \big( \vertex{\L}{\coarseIdxtwo} \big) \, \Big\}.
+    \end{equation}
+\end{definition}
+
+The covering star operator $\coveringStar(\vertclass{\coarseIdxtwo})$ collects \emph{every} active face of the covering $\C$ incident to the vertex. This includes not only the faces of which the vertex is an corner, but also the coarse face lying across an interface edge through the vertex. We denote the set of active faces of the covering star that are contained in the covering on level $\l$ by
+\begin{equation}
+    \label{eq:def_partition_star_slice}
+    \coveringStarl{\l}(\vertclass{\coarseIdxtwo}) \coloneq \coveringStar(\vertclass{\coarseIdxtwo}) \cap \F(\C_\l).
+\end{equation}
+
+\medskip
+
+The covering star allows us to define the notion of $\emph{covering-interior}$ vertices, the last prerequisite of the geometric predicates that indicate linear dependence or spurios cohomologies.
+
+\begin{definition}[Covering-interior vertex at level $\l$]
+    \label{def:interior_vertex}
+    We call a vertex $\vertex{\l}{\coarseIdxtwo} \in \V(\C)$ \emph{interior at level $\l$} if the covering star $\coveringStar{\C}(\vertclass{\coarseIdxtwo})$ of its equivalence class $\vertclass{\coarseIdxtwo} \in \widehat{\V}_\C$ does not contain any face on a level finer than $\l$, i.e.,
+    \begin{equation}
+        \label{eq:interior_vertex}
+        \coveringStar(\vertclass{\coarseIdxtwo}) \cap \F(\C_{>\l}) = \varnothing.
+    \end{equation}
+\end{definition}
+
+Note that the set of covering-interior vertices of $\C$ does not only contain the interior vertices of the patches of $\C$ but can also contain interface vertices and vertices on the boundary of the domain.
+
+We are now ready to define the first geometric predicate of face admissibility.
+
+\begin{definition}[admissible face]
+    We call a face $\face{\l}{\coarseIdxone} \in \F(\C)$ \emph{admissible} if at least one of its vertices $\vertex{\l}{\coarseIdxtwo} \in \V\F\big( \face{\l}{\coarseIdxone} \big)$ is covering-interior at level $\l$. Otherwise, the face is called \emph{inadmissible}.
+\end{definition}
+
+The second predicate is that of a pinch vertex.
+
+\begin{definition}[pinch vertex]
+    Let $\vertclass{\coarseIdxtwo} \in \widehat{\V}_\C$ be a vertex equivalence class of $\C$ with target level $\targetlevel_\coarseIdxtwo$ and compute the number
+    \begin{equation}
+        \mathrm{N}_\coarseIdxtwo \coloneq \Big\vert \big\{ \edge{\targetlevel_\coarseIdxtwo}{\coarseIdxone} \in \E\V(\vertex{\targetlevel_\coarseIdxtwo}{\coarseIdxtwo}) \; : \; \F\E(\edge{\targetlevel_\coarseIdxtwo}{\coarseIdxone}) \cap \C_{\targetlevel_\coarseIdxtwo} \neq \varnothing \;\;\; \text{and} \;\;\; \F\E(\edge{\l}{\coarseIdxone}) \setminus \C_{\targetlevel_\coarseIdxtwo} \neq \varnothing \big\} \Big\vert
+    \end{equation}
+    of edges whose adjacent faces split into an active and an inactive face on level $\l$. For an interior vertex of $\T_{\targetlevel_\coarseIdxtwo}$, $\mathrm{N}_\coarseIdxtwo$ will always be even. \robert{(What about boundary vertices? We also need to be careful with the words "interior" and "boundary" here, define properly.)} The \emph{number of disconnected arcs} $\gamma_\coarseIdxtwo$ of the vertex class $\vertclass{\coarseIdxtwo}$ is given by
+    \begin{equation}
+        \gamma_\coarseIdxtwo = \begin{cases}
+            1, \quad & \text{if} \;\; \mathrm{N}_\coarseIdxtwo = 0, \\
+            \tfrac{1}{2} \mathrm{N}_\coarseIdxtwo, \quad & \text{otherwise}.
+        \end{cases}
+    \end{equation}
+    If $\gamma_\coarseIdxtwo \geq 2$, the vertex class $\vertclass{\coarseIdxtwo}$ is a called \emph{pinch} vertex.
+\end{definition}
+
+The two predicates allow us to define \emph{subdivision partitions} as a subset of coverings.
+
+\begin{definition}[Subdivision Partition]
+    \label{def:subdiv_partition}
+    A covering $\C(\T_\L)$ is called a \emph{subdivision partition} if all of its faces $\face{\l}{\coarseIdxone} \in \F(\C)$ are admissible and none of its vertex classes $\vertclass{\coarseIdxtwo} \in \widehat{\V}_\C$ are pinch vertices.
+\end{definition}
+
+Finally, we are going to re-state the two main theorems of \cite{Piel.2026} regarding linear independence and the exactness of the complex.
+
+\begin{theorem}
+    Let $\C$ be a subdivision partition of the mesh $\T_\L$. The active basis functions selected by Def.~\ref{def:active_k_form_dofs} of the adaptive spaces $\hierSDFspace{k}{\C}{\L}$ are linearly independent.
+\end{theorem}
+\begin{proof}
+    Linear dependencies only occur at inadmissible faces but a subdivision partition does not contain any inadmissible faces. See \cite{Piel.2026} for the entire proof.
+\end{proof}
+
+\begin{theorem}
+    Let $\C$ be a covering of the mesh $\T_\L$. The adaptive subdivision $k$-form spaces $\hierSDFspace{k}{\C}{\L}$ constitute the differential complex
+    \begin{equation}
+    \begin{tikzcd}
+        \mathfrak{R}_\C: \qquad 0 \arrow[r] & \mathbb{R} \arrow[r, "\subset"] & \hierSDFspace{0}{\C}{\L} \arrow[r, "\extd"] & \hierSDFspace{1}{\C}{\L} \arrow[r, "\extd"] & \hierSDFspace{2}{\C}{\L} \arrow[r] & 0.
+    \end{tikzcd}
+    \end{equation}
+    The adaptive subdivision $k$-form spaces with vanishing trace \robert{(these are yet to be defined)} form the differential complex
+    \begin{equation}
+    \begin{tikzcd}
+        \mathring{\mathfrak{R}}_\C: \qquad 0 \arrow[r] & \hierSDFspace{0}{\C}{\L} \arrow[r, "\extd"] & \hierSDFspace{1}{\C}{\L} \arrow[r, "\extd"] & \hierSDFspace{2}{\C}{\L} \arrow[r, "\int"] & \mathbb{R} \arrow[r] & 0.
+    \end{tikzcd}
+    \end{equation}
+    If $\C$ is a \robert{subdivision partition of a \emph{simply-connected} domain}, the complexes $\mathfrak{R}_\C$ and $\mathring{\mathfrak{R}}_\C$ are exact.
+\end{theorem}
+
+\begin{proof}
+    See \cite{Piel.2026}.
+\end{proof}
 
 \section{Implementation and adaptive loop}
 
@@ -1214,14 +1266,14 @@ For the mixed vector Laplace problem with $(\sigma_h, u_h) \in \hierSDFspace{0}{
 The first sum contains the elementwise residuals of both equations, and the second sum contains the curl jump across interior edges $e$ of the fine mesh $\T_\L$. The per-face indicator $\eta_{\L,\fineIdxone}^2$ on level $\L$ can be translated back to the subdivision partition $\C$ using Equation~\ref{eq:project_estimator_on_L_to_partition}.
 \end{example}
 
-\noindent We now have estimators $\eta_{\l,\coarseIdxone}$ per face of the subdivision partition $\C$. However, the atomic units of refinement in our scheme are vertex stars because they give rise to clean analysis. To enable vertex-based refinement for the adaptive algorithm, we need to sum up the face estimators $\eta_{\l,\coarseIdxone}$ to vertex estimators. Recall from Section~\ref{subsec:selecting_active_dofs} the vertex equivalence classes $\vertclass{\coarseIdxtwo}$ from Equation~\eqref{eq:def_vertex_class} and their partition stars $\partitionStar(\vertclass{\coarseIdxtwo})$ from Equation~\eqref{eq:def_partition_star}, the active faces of $\C$ incident to the vertex. The vertex-based residual $\nu_\coarseIdxtwo$ our code uses is then defined by
+\noindent We now have estimators $\eta_{\l,\coarseIdxone}$ per face of the subdivision partition $\C$. However, the atomic units of refinement in our scheme are vertex stars because they give rise to clean analysis. To enable vertex-based refinement for the adaptive algorithm, we need to sum up the face estimators $\eta_{\l,\coarseIdxone}$ to vertex estimators. Recall from Section~\ref{subsec:selecting_active_dofs} the vertex equivalence classes $\vertclass{\coarseIdxtwo}$ from Equation~\eqref{eq:def_vertex_class} and their covering stars $\coveringStar(\vertclass{\coarseIdxtwo})$ from Equation~\eqref{eq:def_partition_star}, the active faces of $\C$ incident to the vertex. The vertex-based residual $\nu_\coarseIdxtwo$ our code uses is then defined by
 \begin{equation}
     \label{eq:vertex_residual}
-    \nu^2_\coarseIdxtwo = \tfrac{1}{a_\coarseIdxtwo} \; \sum\limits_{\face{\l}{\coarseIdxone} \; \in \; \partitionStar(\vertclass{\coarseIdxtwo}) \setminus \F_\L} \eta^2_{\l,\coarseIdxone}, \qquad \mathrm{where} \qquad a_\coarseIdxtwo = \sum\limits_{\face{\l}{\coarseIdxone} \; \in \; \partitionStar(\vertclass{\coarseIdxtwo}) \setminus \F_\L} \mathrm{area}(\face{\l}{\coarseIdxone}).
+    \nu^2_\coarseIdxtwo = \tfrac{1}{a_\coarseIdxtwo} \; \sum\limits_{\face{\l}{\coarseIdxone} \; \in \; \coveringStar(\vertclass{\coarseIdxtwo}) \setminus \F_\L} \eta^2_{\l,\coarseIdxone}, \qquad \mathrm{where} \qquad a_\coarseIdxtwo = \sum\limits_{\face{\l}{\coarseIdxone} \; \in \; \coveringStar(\vertclass{\coarseIdxtwo}) \setminus \F_\L} \mathrm{area}(\face{\l}{\coarseIdxone}).
 \end{equation}
 Dividing by the cumulative area of the faces rescales the integral face estimator to a density per vertex. This rescaling makes the marking roughly level- and valence-agnostic. Otherwise, the contribution of coarse faces would be weighted higher and their adjacent vertices would be over-represented during the Dörfler marking step. Note also that we do not take faces on level $\L$ into account since they cannot be refined further, so their error is partically fixed.
 
-Because the partition star includes the coarse face across any interface edge through the vertex, $\nu_\coarseIdxtwo$ accounts for exactly the faces that refining the vertex's star would homogenise during the \textsc{Refine} step, see Section~\ref{subsec:refine}. For this reason, $\nu_\coarseIdxtwo$ measures exactly the error that selecting the vertex would actually resolve in the sense of Dörfler marking, see Section~\ref{subsec:mark}.
+Because the covering star includes the coarse face across any interface edge through the vertex, $\nu_\coarseIdxtwo$ accounts for exactly the faces that refining the vertex's star would homogenise during the \textsc{Refine} step, see Section~\ref{subsec:refine}. For this reason, $\nu_\coarseIdxtwo$ measures exactly the error that selecting the vertex would actually resolve in the sense of Dörfler marking, see Section~\ref{subsec:mark}.
 
 \begin{figure}%[htbp]
     \centering
@@ -1260,7 +1312,7 @@ Our code marks vertices rather than faces. This enables us to refine single vert
 The Dörfler marking algorithm greedily selects the first $q$ vertex equivalence classes with the largest estimators such that the \emph{marked refinable residual}
 \begin{equation}
     \label{eq:marked_refinable_residual}
-    \rho^2_{\R_\theta} \; \coloneqq \sum\limits_{\face{\l}{\coarseIdxone} \; \in \; \R_\theta} \eta^2_{\l, \coarseIdxone}, \qquad \text{where} \qquad \R_\theta = \bigcup\limits_{p=1}^q \partitionStar(\vertclass{\coarseIdxtwo_p}) \setminus \F(\C_\L),
+    \rho^2_{\R_\theta} \; \coloneqq \sum\limits_{\face{\l}{\coarseIdxone} \; \in \; \R_\theta} \eta^2_{\l, \coarseIdxone}, \qquad \text{where} \qquad \R_\theta = \bigcup\limits_{p=1}^q \coveringStar(\vertclass{\coarseIdxtwo_p}) \setminus \F(\C_\L),
 \end{equation}
 captures at least a fraction $\theta$ of the refinable residual $\rho$ of Equation~\eqref{def:total_and_refinable_residuals}, i.e.
 \begin{equation}
@@ -1272,23 +1324,23 @@ where $\theta \in (0, 1]$ is the Dörfler parameter. The set $\R_\theta \subset 
 \subsubsection{Refinement}
 \label{subsec:refine}
 
-The \textsc{Refine} step refines the marked faces $\face{\l}{\coarseIdxone} \in \R_\theta$ of the partition stars of the vertex equivalence classes $\vertclass{\coarseIdxtwo_1}, \, \dots, \, \vertclass{\coarseIdxtwo_q}$ from Equation~\eqref{eq:marked_refinable_residual}. First, we compute source levels $\sourcelevel(\vertclass{\coarseIdxtwo_p})$ and target levels $\targetlevel(\vertclass{\coarseIdxtwo_p})$ for every vertex class by
+The \textsc{Refine} step refines the marked faces $\face{\l}{\coarseIdxone} \in \R_\theta$ of the covering stars of the vertex equivalence classes $\vertclass{\coarseIdxtwo_1}, \, \dots, \, \vertclass{\coarseIdxtwo_q}$ from Equation~\eqref{eq:marked_refinable_residual}. First, we compute source levels $\sourcelevel(\vertclass{\coarseIdxtwo_p})$ and target levels $\targetlevel(\vertclass{\coarseIdxtwo_p})$ for every vertex class by
 \begin{equation}
 \label{eq:source_and_target_level_of_vertex_class}
 \begin{aligned}
-    \sourcelevel_{\coarseIdxtwo_p} = \sourcelevel(\vertclass{\coarseIdxtwo_p}) &= \min \big\{ \l \in \{\lzero, \, \dots, \, \L\}: \; \partitionStar(\vertclass{\coarseIdxtwo_p}) \cap \F(\C_\l) \neq \varnothing \big\}, \\
-    \targetlevel_{\coarseIdxtwo_p} = \targetlevel(\vertclass{\coarseIdxtwo_p}) &= \min \big\{ \max \big\{ \l \in \{\lzero, \, \dots, \, \L\}: \; \partitionStar(\vertclass{\coarseIdxtwo_p}) \cap \F(\C_\l) \neq \varnothing \big\} + 1, \;\; \L \big\}.
+    \sourcelevel_{\coarseIdxtwo_p} = \sourcelevel(\vertclass{\coarseIdxtwo_p}) &= \min \big\{ \l \in \{\lzero, \, \dots, \, \L\}: \; \coveringStar(\vertclass{\coarseIdxtwo_p}) \cap \F(\C_\l) \neq \varnothing \big\}, \\
+    \targetlevel_{\coarseIdxtwo_p} = \targetlevel(\vertclass{\coarseIdxtwo_p}) &= \min \big\{ \max \big\{ \l \in \{\lzero, \, \dots, \, \L\}: \; \coveringStar(\vertclass{\coarseIdxtwo_p}) \cap \F(\C_\l) \neq \varnothing \big\} + 1, \;\; \L \big\}.
 \end{aligned}
 \end{equation}
 
 \todo{Do we need the source level? Shall we make it a generic thing in section 3.4?}
 
-These source and target levels must be computed on the fixed input subdivision partition $\C$ before any refinement takes place, to avoid a cascade of ever increasing target levels. The \textsc{Refine} step then homogenises each marked star to one level beyond its finest: it applies the graded quadrisection $\quadriV{\C}{\targetlevel_{\coarseIdxtwo_p}}\big(\partitionStar(\vertclass{\coarseIdxtwo_p})\big)$ from Equation~\eqref{eq:graded_quadrisection} with target level $\targetlevel_{\coarseIdxtwo_p}$.
+These source and target levels must be computed on the fixed input subdivision partition $\C$ before any refinement takes place, to avoid a cascade of ever increasing target levels. The \textsc{Refine} step then homogenises each marked star to one level beyond its finest: it applies the graded quadrisection $\quadriV{\C}{\targetlevel_{\coarseIdxtwo_p}}\big(\coveringStar(\vertclass{\coarseIdxtwo_p})\big)$ from Equation~\eqref{eq:graded_quadrisection} with target level $\targetlevel_{\coarseIdxtwo_p}$.
 
 The result of the \textsc{Refine} step is the subdivision partition $\C^q$ given by
 \begin{enumerate}
     \item Initialization: subdivision partition $\C^0 = \C$,
-    \item Refine partition stars iteratively for $p \in \{1, \, \dots, \, q\}$: $\C^{p} = \quadriV{\C^{p-1}}{\targetlevel_{\coarseIdxtwo_p}}\big( \partitionStar(\vertclass{\coarseIdxtwo_p})\big)$.
+    \item Refine covering stars iteratively for $p \in \{1, \, \dots, \, q\}$: $\C^{p} = \quadriV{\C^{p-1}}{\targetlevel_{\coarseIdxtwo_p}}\big( \coveringStar(\vertclass{\coarseIdxtwo_p})\big)$.
 \end{enumerate}
 \robert{Because the source and target levels $\sourcelevel_{\coarseIdxtwo_p}, \targetlevel_{\coarseIdxtwo_p}$ are frozen on the input partition $\C$ and each quadrisection only ever homogenises a star upward to its target, the order in which the $q$ stars are processed does not affect the resulting partition $\C^q$. We may therefore apply them in any order; our code processes the coarsest stars first.}
 
@@ -1377,9 +1429,9 @@ centre-vertex and fine-side-vertex groups separated by a divider.}}
 
 \todo{\guidance{Dissolve the worked example here (narrative point~3). Attach Fig.~\ref{fig:pipeline_padding} (pre-pad $\to$ after pinch $\to$ after inadmissible-faces) as the illustration of this paragraph, and \emph{end the padding exposition with the open hand-off} placed below.}}
 
-The \textsc{Refine} step in the previous section yields a partition that might no longer be admissible. The \textsc{Pad} step restores the exactness of the subdivision partition by applying additional refinement around vertex pinches and inadmissible faces, see Definition~\ref{def:exact_subdiv_partition}. The goal is to keep the padded faces to a minimum to avoid inflating the number of DoFs in non-marked regions. The only exception is some grading that we apply around vertices whose partition star covers too many levels. This grading does not change the restored exactness but improves the conditioning of the resulting matrix-vector system. This section covers all three kinds of padding one by one.
+The \textsc{Refine} step in the previous section yields a partition that might no longer be admissible. The \textsc{Pad} step restores the exactness of the subdivision partition by applying additional refinement around vertex pinches and inadmissible faces, see Definition~\ref{def:exact_subdiv_partition}. The goal is to keep the padded faces to a minimum to avoid inflating the number of DoFs in non-marked regions. The only exception is some grading that we apply around vertices whose covering star covers too many levels. This grading does not change the restored exactness but improves the conditioning of the resulting matrix-vector system. This section covers all three kinds of padding one by one.
 
-The \textsc{Pad} needs no machinery beyond the partition star $\partitionStar$ and the two quadrisection operators $\quadriF{\C}$, $\quadriV{\C}{\cdot}$ of Section~\ref{subsec:refinement_operators} since every padding substep is a quadrisection of either a partition-star of a vertex class or of faces that violate an admissibility or grading condition.
+The \textsc{Pad} needs no machinery beyond the covering star $\coveringStar$ and the two quadrisection operators $\quadriF{\C}$, $\quadriV{\C}{\cdot}$ of Section~\ref{subsec:refinement_operators} since every padding substep is a quadrisection of either a partition-star of a vertex class or of faces that violate an admissibility or grading condition.
 
 \paragraph{Resolving vertex pinches.}
 
@@ -1392,7 +1444,7 @@ according to Definition~\ref{def:pinch_vertex}. The subdivision partition $\C^{\
     \label{eq:pinch_resolved_subdiv_partition}
     \C^{\mathrm{pinch}} = \C^{\vert \mathrm{V}_{\mathrm{pinch}} \vert} \; , \quad \text{where} \quad \C^p = \quadriV{\vertclass{\coarseIdxtwo_p}}{\targetlevel_{\coarseIdxtwo_p}}(\C^{p-1}) \;\; \text{for} \;\; p \in \{1, \, \dots, \, \vert \mathrm{V}_{\mathrm{pinch}} \vert \} 
 \end{equation}
-and $\C^0 = \C$ the subdivision partition after the \textsc{Refine} step and $\targetlevel_{\coarseIdxtwo_p}$ the finest level of the faces of the partition star of $\vertclass{\coarseIdxtwo_p}$. In words, for each pinched vertex $\vertclass{\coarseIdxtwo}$, we homogenise its partition star to its finest level, lifting the coarse arcs to $\targetlevel_{\coarseIdxtwo_p}$ and merging them into a single disc. \robert{This resolves the cohomology defect: a coarse region pinched at a vertex would otherwise carry a spurious harmonic. Crucially, the predicate keys on the \emph{connectivity} of the coarse region, not on how many patches meet: where several patches of different levels touch at a vertex but the coarse faces stay a single connected arc, the vertex is not pinched and the predicate correctly does nothing (Fig.~\ref{fig:not_a_pinch}).}
+and $\C^0 = \C$ the subdivision partition after the \textsc{Refine} step and $\targetlevel_{\coarseIdxtwo_p}$ the finest level of the faces of the covering star of $\vertclass{\coarseIdxtwo_p}$. In words, for each pinched vertex $\vertclass{\coarseIdxtwo}$, we homogenise its covering star to its finest level, lifting the coarse arcs to $\targetlevel_{\coarseIdxtwo_p}$ and merging them into a single disc. \robert{This resolves the cohomology defect: a coarse region pinched at a vertex would otherwise carry a spurious harmonic. Crucially, the predicate keys on the \emph{connectivity} of the coarse region, not on how many patches meet: where several patches of different levels touch at a vertex but the coarse faces stay a single connected arc, the vertex is not pinched and the predicate correctly does nothing (Fig.~\ref{fig:not_a_pinch}).}
 
 % --- Figure knobs --------------------------------------------------------
 % \peScale : overall size -- width of EACH of the four subfigures as a
@@ -1562,7 +1614,7 @@ In words, we refine every inadmissible face by one level because the refined fac
 %    \label{fig:grading_example}
 %\end{figure}
 
-\paragraph{Grading partition stars.}
+\paragraph{Grading covering stars.}
 
 The grading is going to smooth out transitions across patches with a large level difference. Unlike the first two rules the grading step does not restore exactness or linear independence, but improves the conditioning of the matrix-vector system and helps to avoid numerical artifacts in these regions. The predicate to identify the vertex classes $\vertclass{\coarseIdxtwo}$ to grade is the \emph{level gap} $\mu_\coarseIdxtwo$ defined by
 \begin{equation}
@@ -1573,14 +1625,14 @@ The grading code iterates over the vertex classes $\vertclass{\coarseIdxtwo}$ of
 \begin{equation}
     \mathrm{V}^{\mathrm{grading}} \coloneq \big\{ \vertclass{\coarseIdxtwo} \; \colon \; \mu_\coarseIdxtwo > 2 \big\}
 \end{equation}
-that contains all vertex classes whose coarsest and finest faces in the partition star are more than $2$ levels apart. Of course, the cut-off value of $2$ can be chosen arbitrarily.
+that contains all vertex classes whose coarsest and finest faces in the covering star are more than $2$ levels apart. Of course, the cut-off value of $2$ can be chosen arbitrarily.
 
 The vertex classes marked for grading are refined using the quadrisection operator to obtain the graded subdivision partition $\C^{\mathrm{grading}}$:
 \begin{equation}
     \label{eq:grading_subdiv_partition}
     \C^{\mathrm{grading}} = \C^{\vert \mathrm{V}_{\mathrm{admissible}} \vert} \; , \quad \text{where} \quad \C^p = \quadriV{\vertclass{\coarseIdxtwo_q}}{\targetlevel_{\coarseIdxtwo_p} - 2}(\C^{p-1}) \;\; \text{for} \;\; p \in \{1, \, \dots, \, \vert \mathrm{V}_{\mathrm{admissible}} \vert \} 
 \end{equation}
-Note the additional $-2$ in the quadrisection operator $\quadriV{\vertclass{\coarseIdxtwo_p}}{\targetlevel_{\coarseIdxtwo_p} - 2}$. It ensure that the partition star $\partitionStarC{\C^p}(\vertclass{\coarseIdxtwo_p})$ on the graded partition $\C^p$ has a level gap of $2$ or less.
+Note the additional $-2$ in the quadrisection operator $\quadriV{\vertclass{\coarseIdxtwo_p}}{\targetlevel_{\coarseIdxtwo_p} - 2}$. It ensure that the covering star $\coveringStarC{\C^p}(\vertclass{\coarseIdxtwo_p})$ on the graded partition $\C^p$ has a level gap of $2$ or less.
 
 \paragraph{Summary.}
 
