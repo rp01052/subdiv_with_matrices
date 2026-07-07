@@ -23,7 +23,7 @@
 \usepackage{adjustbox}
 
 \usepackage{aligned-overset}
-\usepackage{enumerate}
+\usepackage{enumerate, enumitem}
 \usepackage[ruled]{algorithm2e}
 \usepackage{wrapfig}
 \usepackage{placeins}
@@ -249,6 +249,7 @@ Werner Bauer\footnote{University of Surrey, School of Mathematics and Physics, U
 \newcommand{\activeSDFspaces}[2]{\mathcal{S}\activeDoFSet{#1}{#2}}
 
 \newcommand{\hierSDFspace}[3]{\mathcal{S}\activeDoFs^{#1}_{#2 \vert #3}}
+\newcommand{\hierSDFspaceZero}[3]{\mathring{\mathcal{S}}\activeDoFs^{#1}_{#2 \vert #3}}
 \newcommand{\inactiveSDFspace}[3]{\mathcal{S}\inactiveDoFs^{#1}_{#2 \vert #3}}
 \newcommand{\coarseInactiveSDFspace}[3]{\mathcal{S}\inactiveDoFs^{#1, \mathrm{c}}_{#2 \vert #3}}
 \newcommand{\fineInactiveSDFspace}[3]{\mathcal{S}\inactiveDoFs^{#1, \mathrm{f}}_{#2 \vert #3}}
@@ -341,7 +342,7 @@ This paper provides the matrix-level description and algorithms for hierarchical
 
 This section collects the most important properties of the uniform subdivision $k$-form spaces introduced in~\cite{Piel.2026}. We focus on the aspects that enable the construction of hierarchical subdivision $k$-form spaces in a similar way as~\cite{Evans.2020} did for B-splines.
 
-Starting from an initial coarse triangular mesh $\T_\l$ at level $\l = \lzero$, the \emph{subdivision algorithm} produces a sequence of increasingly fine meshes $\T_{\lzero+1}, \ldots, \T_\L$ by repeatedly applying two steps: a \emph{topological refinement} that splits every triangle into four, and a \emph{geometric averaging} step that repositions vertices as weighted averages of neighbouring coarse vertices. We use Loop's subdivision scheme~\cite{Loop.1987} throughout. The resulting \emph{mesh hierarchy} $\{\T_\l\}_{\l=\lzero}^{\L}$ ranges from the coarsest level $\lzero$ to the finest, the \emph{assembly mesh} $\T_\L$. At each level $\l$, we denote the sets of vertices, edges, and faces by $\K^0_\l = \V_\l$, $\K^1_\l = \E_\l$, and $\K^2_\l = \F_\l$, with cardinalities $|\K^k_\l|$.
+Starting from an initial coarse triangular mesh $\T_\l$ at level $\l = \lzero$, the \emph{subdivision algorithm} produces a sequence of increasingly fine meshes $\T_{\lzero+1}, \ldots, \T_\L$ by repeatedly applying two steps: a \emph{topological refinement} that splits every triangle into four, and a \emph{geometric averaging} step that repositions vertices as weighted averages of neighbouring coarse vertices. We use Loop's subdivision scheme~\cite{Loop.1987} throughout. The resulting \emph{mesh hierarchy} $\{\T_\l\}_{\l=\lzero}^{\L}$ ranges from the coarsest level $\lzero$ to the finest mesh $\T_\L$. At each level $\l$, we denote the sets of vertices, edges, and faces by $\K^0_\l = \V_\l$, $\K^1_\l = \E_\l$, and $\K^2_\l = \F_\l$, with cardinalities $|\K^k_\l|$.
 
 On each mesh $\T_\l$, the lowest-order Whitney $k$-form spaces are the standard FEEC spaces
 \begin{equation}
@@ -781,7 +782,7 @@ where $\constrVec{\SDFbases}{k}{\activeDoFs}{\L}$ is the active basis function v
 
 \begin{definition}[Adaptive subdivision differential form spaces]
     \label{def:generic_adaptive_function_spaces}
-    Fix an initial mesh $\T_{\lzero}$ with finest level $\L$ and select the active DoFs $\activeDoFSet{k}{}$. The \textbf{active basis functions} of the space $\activeSDFspaces{k}{}$ are given by
+    Fix an initial mesh $\T_{\lzero}$ with finest level $\L$ and select the active DoFs $\activeDoFSet{k}{}$. The \emph{active basis functions} of the \emph{adaptive subdivision $k$-form spaces} $\activeSDFspaces{k}{}$ are given by
     \begin{equation}
         \constrVec{\SDFbases}{k}{\activeDoFs}{\L} \coloneqq \bigcup_{\simplex{k}{\l}{\coarseIdxone} \in \activeDoFSet{k}{}} \big\{ \constrQ{\SDFbasis}{k}{\l}{\L}{\coarseIdxone} \big\}
     \end{equation}
@@ -793,7 +794,7 @@ where $\constrVec{\SDFbases}{k}{\activeDoFs}{\L}$ is the active basis function v
 
 Not every choice of active DoFs $\activeDoFSet{k}{}$ yields a well-behaved hierarchical spaces $\activeSDFspaces{k}{}$. The active DoFs $\activeDoFSet{k}{}$ must together represent forms that cover the entire domain, must be linearly independent, and should constitute a exact complex. The remainder of this section introduces the tools needed to parameterise the active DoFs $\activeDoFSet{k}{}$ and to reason about these properties of the adaptive subdivision $k$-form spaces $\activeSDFspaces{k}{}$.
 
-The requirements of linear indepence and expressing exterior differentials have a visual interpretation in terms of the refinement and derivative stencils introduced in the previous Sections~\ref{subsec:refinement_of_basis_functions} and~\ref{subsec:derivatives_of_basis_functions}. A selection is linearly \emph{independent} when the active DoFs do not contain a refinement stencil for any individual active basis function. Similarly, the spaces constitute a differential complex if the simplices in derivative stencil of any active basis function are themselves present in the active DoFs, either directly or through a refinement stencil.
+The requirements of linear indepence and expressing exterior differentials have a visual interpretation in terms of the refinement and derivative stencils introduced in the previous Sections~\ref{subsec:refinement_of_basis_functions} and~\ref{subsec:derivatives_of_basis_functions}. A selection of active basis functions is linearly independent when the active DoFs do not contain a refinement stencil for any individual active DoFs. Similarly, the spaces constitute a differential complex if the simplices in derivative stencil of any active basis function are themselves present in the active DoFs, either directly or through a refinement stencil.
 
 \begin{figure}[tb]
 \begin{center}
@@ -902,6 +903,7 @@ A geometrically natural unit for organising the selection of active DoFs is a \e
     \begin{equation}
         \C_{\l} = \bigcup\limits_{n = 1}^{\mathrm{N}_\l} \calP^n_{\l \to \L}, \quad \C_{>\lone} = \bigcup\limits_{\l = \lone + 1}^{\L} \C_\l, \quad \C_{\geq\lone} = \bigcup\limits_{\l = \lone }^{\L} \C_\l, \quad \C_{<\lone} = \bigcup\limits_{\l = \lzero }^{\lone - 1} \C_\l, \quad \C_{\leq\lone} = \bigcup\limits_{\l = \lzero }^{\lone} \C_\l.
     \end{equation}
+    The \emph{boundary} $\partial \C$ of a covering $\C$ is given by $\partial \C \coloneq \bigcup_{\l = \lzero}^{\L} \partial \C_\l$, where $\partial \C_\l \coloneq \C_\l \cap \partial \T_\l$.
 \end{definition}
 
 We refer to the set $\K^k(\C) \coloneq \bigcup_{\l=\lzero}^{\L} \K^k(\C_\l)$ as the \emph{patch DoFs}.
@@ -932,11 +934,11 @@ Unpacking this definition shows: for every patch (\textit{i}) $\calP^n_{\l}$, we
 
 \begin{definition}[Adaptive subdivision $k$-form spaces induced by a covering]
     \label{def:adaptive_function_spaces}
-    The adaptive subdivision $k$-form space $\hierSDFspace{k}{\C}{\L}$ induced by the covering $\C(\T_\L)$ is given by
+    The adaptive subdivision $k$-form spaces $\hierSDFspace{k}{\C}{\L}$ and $\hierSDFspaceZero{k}{\C}{\L}$ (with vanishing trace) induced by the covering $\C(\T_\L)$ are given by
     \begin{equation}
-        \hierSDFspace{k}{\C}{\L} \coloneqq \mathrm{span}\big( \constrVec{\SDFbases}{k}{\activeDoFs(\C)}{\L} \big),
+        \hierSDFspace{k}{\C}{\L} \coloneqq \mathrm{span}\big( \constrVec{\SDFbases}{k}{\activeDoFs(\C)}{\L} \big) \qquad \text{and} \qquad \hierSDFspaceZero{k}{\C}{\L} \coloneqq \mathrm{span}\big( \constrVec{\mathring{\SDFbases}}{k}{\activeDoFs(\C)}{\L} \big),
     \end{equation}
-    where the active basis functions $\constrVec{\SDFbases}{k}{\activeDoFs(\C)}{\L}$ are given by Definition~\ref{def:generic_adaptive_function_spaces}.
+    where the active basis functions $\constrVec{\SDFbases}{k}{\activeDoFs(\C)}{\L}$ and $\constrVec{\mathring{\SDFbases}}{k}{\activeDoFs(\C)}{\L} \coloneq \constrVec{\SDFbases}{k}{(\activeDoFs(\C) \setminus \K^k(\partial \C))}{\L}$ are constructed as in Definition~\ref{def:generic_adaptive_function_spaces}.
 \end{definition}
 
 The selection of the active DoFs in Definition~\ref{def:active_k_form_dofs} guarantees that the adaptive subdivision $k$-form spaces $\hierSDFspace{k}{\C}{\L}$ form a differential complex~\citep{companion_paper}, i.e.
@@ -945,30 +947,47 @@ The selection of the active DoFs in Definition~\ref{def:active_k_form_dofs} guar
     \extd: \; \hierSDFspace{k}{\C}{\L} \to \hierSDFspace{k+1}{\C}{\L} \qquad \text{and} \qquad \extd \circ \extd: \; \hierSDFspace{k}{\C}{\L} = 0.
 \end{equation}
 
-The other essential properties, namely linear independece and correct cohomology of the discrete complex, are tied to the geometry of the patches that constitute the covering, see~\cite{companion_paper}.
+This is also true for the spaces $\hierSDFspaceZero{k}{\C}{\L}$ with vanishing traces.
 
-\hrule
+The other essential properties of the adaptive $k$-form subdivision spaces, namely linear independence and correct cohomology of the discrete complex, are tied to the geometry of the patches that constitute the covering, see~\cite{companion_paper}. This will be the subject of the following Section~\ref{subsec:subdiv_partition}.
 
-\robert{The estimation, marking, refinement, and padding steps below all refine a subdivision partition through \emph{two} operators, which we define here once and refer back to. The \emph{flat quadrisection} $\quadriF{\C}(\simplexsubset{2}{\l})$ refines a \emph{single-level} set of faces $\simplexsubset{2}{\l} \subseteq \F(\C_\l)$ by replacing each face with its four children,
-\begin{equation}
-    \label{eq:quadrisection_operator}
-    \quadriF{\C}(\simplexsubset{2}{\l}) \coloneq \C_{<\l} \; \cup \; \big\{ \C_{\l} \setminus \simplexsubset{2}{\l} \big\} \; \cup \; \big\{ \C_{\l + 1} \cup \Aop{}{\l}{\l + 1} \big(\simplexsubset{2}{\l}\big) \big\} \; \cup \; \C_{>\l + 1};
-\end{equation}
-that is, it removes the faces $\simplexsubset{2}{\l}$ from level $\l$ and adds their children on level $\l+1$, leaving all other levels untouched.}
+\smallskip
 
-\robert{The \emph{graded quadrisection} $\quadriV{\C}{t}(\coveringStar(\vertclass{\coarseIdxtwo}))$ homogenises a whole covering star \emph{up to} a target level $t$ by nested flat quadrisection. With $\sourcelevel(\vertclass{\coarseIdxtwo}) = \min\{\l : \coveringStarl{\l}(\vertclass{\coarseIdxtwo}) \neq \varnothing\}$ the coarsest level the star occupies, it is built by:
-\begin{enumerate}
-    \item Initialization: $\C^{\sourcelevel} = \C$;
-    \item for $\l = \sourcelevel, \, \dots, \, t-1$, flat-refine the level-$\l$ slice of the star \emph{recomputed on the current partition} $\C^\l$,
+The remainder of this section introduces operators that enable the kinds of refinement that we will later need for the adaptive loop in Section~\ref{subsec:adaptive_loop}. The \emph{flat quadrisection operator} $\quadriF{\C}(\simplexsubset{2}{\l})$ refines a \emph{single-level} set of faces $\simplexsubset{2}{\l} \subseteq \F(\C_\l)$ to level $\l+1$ by replacing each face with its four children, that is, it removes the faces $\simplexsubset{2}{\l}$ from level $\l$ and adds their children on level $\l+1$, leaving all other levels untouched.
+
+\begin{definition}[Flat quadrisection operator]
+    \label{def:flat_quadrisection_operator}
+    Let $\C$ be a covering and choose a set $\simplexsubset{2}{\l} \subseteq \F(\C_\l)$. The \emph{flat quadrisection operator} 
     \begin{equation}
-        \label{eq:graded_quadrisection}
-        \C^{\l+1} = \quadriF{\C^\l}\big( \coveringStarCl{\C^\l}{\l}(\vertclass{\coarseIdxtwo}) \big);
+        \label{eq:def_flat_quadrisection_operator}
+        \quadriF{\C}(\simplexsubset{2}{\l}) \coloneq \C_{<\l} \; \cup \; \big\{ \C_{\l} \setminus \simplexsubset{2}{\l} \big\} \; \cup \; \big\{ \C_{\l + 1} \cup \Aop{}{\l}{\l + 1} \big(\simplexsubset{2}{\l}\big) \big\} \; \cup \; \C_{>\l + 1};
     \end{equation}
-    \item set $\quadriV{\C}{t}(\coveringStar(\vertclass{\coarseIdxtwo})) \coloneq \C^{t}$.
-\end{enumerate}
-Recomputing the slice on $\C^\l$ at each step is what drags a coarse interface face up through \emph{every} intermediate level up to $t$. The two operators are distinguished by their superscript --- $\quadriF{}$ refines a set of faces flatly by one level, while $\quadriV{}{\cdot}$ refines a star gradedly toward its vertex --- and only the graded operator carries a target level.}
+\end{definition}
 
-\hrule
+In contrast to the that, the \emph{graded quadrisection operator} $\quadriV{\C}{\targetlevel}(\coveringStar(\vertclass{\coarseIdxtwo}))$ refines a whole covering star up a target level $\targetlevel$ by nested flat quadrisection.
+
+\begin{definition}[Graded quadrisection operator]
+    \label{def:graded_quadrisection_operator}
+    Let $\C$ be a covering and $\vertclass{\coarseIdxtwo} \in \mathrm{V}_\C$ be a vertex class with source level $\sourcelevel_\coarseIdxtwo$. Choose a target level $\targetlevel$ such that $\sourcelevel_\coarseIdxtwo \leq \targetlevel \leq \L$. The \emph{graded quadrisection operator} $\quadriV{\C}{\targetlevel}(\vertclass{\coarseIdxtwo})$ is constructed iteratively by:
+    \begin{enumerate}[topsep=3pt, itemsep=-2pt]%[nolistsep]
+        \item initialize $\C^{\sourcelevel\coarseIdxtwo} = \C$,
+        \item for $\l = \sourcelevel\coarseIdxtwo, \, \dots, \, \targetlevel - 1$, carry out flat quadrisection of the coarsest faces in the covering star $\coveringStarCl{\C^\l}{\l}(\vertclass{\coarseIdxtwo})$ of $\vertclass{\coarseIdxtwo}$ in the covering $\C^\l$, i.e.
+        \begin{equation}
+            \label{eq:graded_quadrisection}
+            \C^{\l+1} = \quadriF{\C^\l}\big( \coveringStarCl{\C^\l}{\l}(\vertclass{\coarseIdxtwo}) \big),
+        \end{equation}
+        \vspace{-7mm}
+        \item set $\quadriV{\C}{\targetlevel}(\vertclass{\coarseIdxtwo}) \coloneq \C^{\targetlevel}$.
+    \end{enumerate}
+\end{definition}
+
+Recomputing the covering star of $\vertclass{\coarseIdxtwo}$ of $\C^\l$ at each step is what drags the coarse faces up through \emph{every} intermediate level up to $\targetlevel$. The two operators are distinguished by their superscript: $\quadriF{\C}$ refines a set of faces flatly from level $\l$ to $\l\!+\!1$, while $\quadriV{\C}{\targetlevel}$ refines a star gradedly toward its vertex, and only the graded operator carries a target level.
+
+The quadrisection operators enable consistent refinement in the sense that
+\begin{equation}
+    \hierSDFspace{k}{\C}{\L} \subseteq \hierSDFspace{k}{\quadriF{\C}(\simplexsubset{2}{\l})}{\L} \qquad \text{and} \qquad \hierSDFspace{k}{\C}{\L} \subseteq \hierSDFspace{k}{\quadriV{\C}{\targetlevel}(\vertclass{\coarseIdxtwo})}{\L}.
+\end{equation}
+The quadrisection operators defined in this section are the basis upon which we will later built the algorithms in the adaptive loop in Section~\ref{subsec:adaptive_loop}.
 
 \subsection{Subdivision partitions and properties of the adaptive spaces}
 \label{subsec:subdiv_partition}
@@ -1064,7 +1083,7 @@ The second predicate is that of a pinch vertex.
     \begin{equation}
         \mathrm{N}_\coarseIdxtwo \coloneq \Big\vert \big\{ \edge{\targetlevel_\coarseIdxtwo}{\coarseIdxone} \in \E\V(\vertex{\targetlevel_\coarseIdxtwo}{\coarseIdxtwo}) \; : \; \F\E(\edge{\targetlevel_\coarseIdxtwo}{\coarseIdxone}) \cap \C_{\targetlevel_\coarseIdxtwo} \neq \varnothing \;\;\; \text{and} \;\;\; \F\E(\edge{\l}{\coarseIdxone}) \setminus \C_{\targetlevel_\coarseIdxtwo} \neq \varnothing \big\} \Big\vert
     \end{equation}
-    of edges whose adjacent faces split into an active and an inactive face on level $\l$. For an interior vertex of $\T_{\targetlevel_\coarseIdxtwo}$, $\mathrm{N}_\coarseIdxtwo$ will always be even. \robert{(What about boundary vertices? We also need to be careful with the words "interior" and "boundary" here, define properly.)} The \emph{number of disconnected arcs} $\gamma_\coarseIdxtwo$ of the vertex class $\vertclass{\coarseIdxtwo}$ is given by
+    of edges whose adjacent faces split into an active and an inactive face on level $\l$. For an interior vertex of $\T_{\targetlevel_\coarseIdxtwo}$, $\mathrm{N}_\coarseIdxtwo$ will always be even. \robert{(What about boundary vertices? We also need to be careful with the words "interior" and "boundary" here, define properly. $\K^k(\partial \C)$)} The \emph{number of disconnected arcs} $\gamma_\coarseIdxtwo$ of the vertex class $\vertclass{\coarseIdxtwo}$ is given by
     \begin{equation}
         \gamma_\coarseIdxtwo = \begin{cases}
             1, \quad & \text{if} \;\; \mathrm{N}_\coarseIdxtwo = 0, \\
@@ -1097,7 +1116,7 @@ Finally, we are going to re-state the two main theorems of \cite{Piel.2026} rega
         \mathfrak{R}_\C: \qquad 0 \arrow[r] & \mathbb{R} \arrow[r, "\subset"] & \hierSDFspace{0}{\C}{\L} \arrow[r, "\extd"] & \hierSDFspace{1}{\C}{\L} \arrow[r, "\extd"] & \hierSDFspace{2}{\C}{\L} \arrow[r] & 0.
     \end{tikzcd}
     \end{equation}
-    The adaptive subdivision $k$-form spaces with vanishing trace \robert{(these are yet to be defined)} form the differential complex
+    The adaptive subdivision $k$-form spaces with vanishing traces form the differential complex
     \begin{equation}
     \begin{tikzcd}
         \mathring{\mathfrak{R}}_\C: \qquad 0 \arrow[r] & \hierSDFspace{0}{\C}{\L} \arrow[r, "\extd"] & \hierSDFspace{1}{\C}{\L} \arrow[r, "\extd"] & \hierSDFspace{2}{\C}{\L} \arrow[r, "\int"] & \mathbb{R} \arrow[r] & 0.
@@ -1111,6 +1130,8 @@ Finally, we are going to re-state the two main theorems of \cite{Piel.2026} rega
 \end{proof}
 
 \section{Implementation and adaptive loop}
+
+\todo{@ claude: Please add a little test here that summarises the section and manages the readers}
 
 \subsection{Assembling the hierarchical subdivision matrix}
 \label{subsec:implementation_active_dofs}
@@ -1175,20 +1196,24 @@ $\mathrm{col} \leftarrow 0$\;
 \Return $\Amat{k}{\activeDoFs}{\L}$\;
 \end{algorithm}}
 
-\robert{Once the necessary adaptive subdivision matrices are assembled, the
-bilinear forms of the spaces $\hierSDFspace{k}{\C}{\L}$ are obtained by \emph{unrefinement} of the assembled operators on the FEEC spaces $\FEECspace{k}{\L}$, see~\cite{Piel.2026} for more details. For example, the matrices of the mixed formulation of the vector Laplacian from Section~\ref{subsec:vector_laplace} can be unrefined by
-\begin{equation}
-    \label{eq:FE_matrix_assembly}
-    \mathbf{M}_\C = (\Amat{0}{\activeDoFs}{\L})^T \; \mathbf{M}_\L \; \Amat{0}{\activeDoFs}{\L},
-    \quad
-    \mathbf{C}_\C = (\Amat{1}{\activeDoFs}{\L})^T \; \mathbf{C}_\L \; \Amat{1}{\activeDoFs}{\L},
-    \quad
-    \mathbf{B}_\C = (\Amat{0}{\activeDoFs}{\L})^T \; \mathbf{B}_\L \; \Amat{1}{\activeDoFs}{\L},
-\end{equation}
-where $\mathbf{M}_\L$, $\mathbf{C}_\L$, $\mathbf{B}_\L$ are the mass, curl--curl,
-and gradient-coupling matrices over $\FEECspace{k}{\L}$.}
+The adaptive subdivision matrices enter the overall adaptive loop during the \emph{unrefinement} in the \textsc{Solve} step. The unrefinement gathers the contributions of the FEEC basis functions $\freeQ{\FEECbasis}{k}{\L}{\fineIdxone}$ of the spaces $\FEECspace{k}{\L}$ to $\hierSDFspace{k}{\C}{\L}$ using the adaptive subdivision matrices $\Amat{k}{\activeDoFs}{\L}$, see Example~\ref{ex:matrix_assembly} and~\cite{Piel.2026} for more details. 
 
-\todo{Do we want this here? I want to give an idea as to where the subdiv matrices enter the algorithms concretely.}
+\begin{example}
+    \label{ex:matrix_assembly}
+    The matrices of the mixed formulation of the vector Laplacian from Section~\ref{subsec:vector_laplace} are unrefined by
+    \begin{equation}
+        \label{eq:FE_matrix_assembly}
+        \mathbf{M}_\C = (\Amat{0}{\activeDoFs}{\L})^T \; \mathbf{M}_\L \; \Amat{0}{\activeDoFs}{\L},
+        \quad
+        \mathbf{C}_\C = (\Amat{1}{\activeDoFs}{\L})^T \; \mathbf{C}_\L \; \Amat{1}{\activeDoFs}{\L},
+        \quad
+        \mathbf{B}_\C = (\Amat{0}{\activeDoFs}{\L})^T \; \mathbf{B}_\L \; \Amat{1}{\activeDoFs}{\L},
+    \end{equation}
+    where $\mathbf{M}_\L$, $\mathbf{C}_\L$, $\mathbf{B}_\L$ are the mass, curl--curl,
+    and gradient-coupling matrices over $\FEECspace{k}{\L}$.
+\end{example}
+
+\todo{@ claude: Do we want this here? I want to give an idea as to where the subdiv matrices enter the algorithms concretely. Shall I just move it to the Solve step section later?}
 
 \FloatBarrier
 
@@ -1431,7 +1456,7 @@ centre-vertex and fine-side-vertex groups separated by a divider.}}
 
 The \textsc{Refine} step in the previous section yields a partition that might no longer be admissible. The \textsc{Pad} step restores the exactness of the subdivision partition by applying additional refinement around vertex pinches and inadmissible faces, see Definition~\ref{def:exact_subdiv_partition}. The goal is to keep the padded faces to a minimum to avoid inflating the number of DoFs in non-marked regions. The only exception is some grading that we apply around vertices whose covering star covers too many levels. This grading does not change the restored exactness but improves the conditioning of the resulting matrix-vector system. This section covers all three kinds of padding one by one.
 
-The \textsc{Pad} needs no machinery beyond the covering star $\coveringStar$ and the two quadrisection operators $\quadriF{\C}$, $\quadriV{\C}{\cdot}$ of Section~\ref{subsec:refinement_operators} since every padding substep is a quadrisection of either a partition-star of a vertex class or of faces that violate an admissibility or grading condition.
+The \textsc{Pad} needs no machinery beyond the covering star $\coveringStar$ and the two quadrisection operators $\quadriF{\C}$, $\quadriV{\C}{\targetlevel}$ of Section~\ref{subsec:refinement_operators} since every padding substep is a quadrisection of either a partition-star of a vertex class or of faces that violate an admissibility or grading condition.
 
 \paragraph{Resolving vertex pinches.}
 
@@ -1636,7 +1661,7 @@ Note the additional $-2$ in the quadrisection operator $\quadriV{\vertclass{\coa
 
 \paragraph{Summary.}
 
-Every stage of the \textsc{Pad} step uses either the vertex-class based quadrisection operator $\quadriV{\C}{\cdot}$ or the face-based $\quadriF{\C}$.
+Every stage of the \textsc{Pad} step uses either the vertex-class based quadrisection operator $\quadriV{\C}{\targetlevel}$ or the face-based $\quadriF{\C}$.
 
 The pinch padding resolves pinch vertices and thus repairs cohomological artifacts and spurious harmonics, while the mostly restores linear independece of the active basis funtions $\activeDoFSet{k}{\C}$. The grading only refines around vertex classes with large level jumps to improve the conditioning of the linear system.
 
