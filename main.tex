@@ -1711,6 +1711,8 @@ We do not \robert{(yet?)} have a proof that $\textsc{Pad}$ terminates. For our i
 \section{Numerical Experiment}
 \label{sec:numerical_experiments}
 
+\todo{@ claude: write a little intro text as a bridge from previous section to the content of the section and to manage the expectations of the reader for the rest of this section.}
+
 \subsection{Exactness and padding on atomic partitions}
 \label{subsec:exactness_atomic}
 
@@ -1830,103 +1832,68 @@ Appendix~\ref{app:figure_gallery}.}
 \subsection{Maxwell Eigenvalue problem}
 \label{subsec:maxwell}
 
-\guidance{Thesis of this subsection, stated up front so it does not read as a Maxwell-flavoured repeat of Section~\ref{subsec:exactness_atomic}: Section~\ref{subsec:exactness_atomic} established that padding restores the correct cohomology; this section shows the practical consequence for an actual eigensolver. Because a spurious harmonic is closed, its Rayleigh quotient is exactly zero, so the admissibility defect lives entirely at $\lambda = 0$ and leaves the physical band uncontaminated --- in sharp contrast to the interleaved pollution of non-compatible elements. That confinement-to-the-kernel is the new point here, not implied by the cohomology counts of Section~\ref{subsec:exactness_atomic}.}
+\todo{@ claude: Did I capture the essence of the following paragraph well in the section?
 
-\robert{The Maxwell cavity (curl--curl) eigenvalue problem is a classical test case for
-structure-preserving discretisations. On the domain $\M = [0,\pi]^2$ its weak form
-is: find $\lambda \in \mathbb{R}$ and $u \in \HocurlM{\M}$, $u \neq 0$, such that
+\guidance{Thesis of this subsection, stated up front so it does not read as a Maxwell-flavoured repeat of Section~\ref{subsec:exactness_atomic}: Section~\ref{subsec:exactness_atomic} established that padding restores the correct cohomology; this section shows the practical consequence for an actual eigensolver. Because a spurious harmonic is closed, its Rayleigh quotient is exactly zero, so the admissibility defect lives entirely at $\lambda = 0$ and leaves the physical band uncontaminated --- in sharp contrast to the interleaved pollution of non-compatible elements. That confinement-to-the-kernel is the new point here, not implied by the cohomology counts of Section~\ref{subsec:exactness_atomic}.}}
+
+This section studies the Maxwell eigenvalue problem, a classical test case to verify the properties of discrete differential complexes. Section~\ref{subsec:exactness_atomic} has already established that the \textsc{Pad} step restores the correct cohomology for the spaces $\hierSDFspace{k}{\C}{\L}$ by repairing the geometric defects of the covering $\C$ so that it becomes a subdivision partition. In constrast, this section studies how the spurious harmonic $1$-forms of a covering concretely affect the solution of the eigenproblem.
+
+The weak form of the Maxwell cavity (curl--curl) eigenvalue problem on the domain $\M = [0,\pi]^2$ with mesh $\T_\L$ is given by: Find $\lambda_{h,\coarseIdxone} \in \mathbb{R}$ and $u_\coarseIdxone \in \hierSDFspaceZero{1}{\C}{\L}$ such that
 \begin{equation}
-  (\extd u, \extd v)_\M = \lambda (u, v)_\M \qquad \forall v \in \HocurlM{\M},
+  (\extd u_i, \extd v)_\M = \lambda_{h,\coarseIdxone} (u_i, v)_\M \qquad \forall v \in \hierSDFspaceZero{1}{\C}{\L}
 \end{equation}
-with analytic spectrum $\lambda = i^2 + j^2$, $(i,j) \in \mathbb{Z}^2_{\geq 0}\setminus\{0\}$,
-i.e.\ $1, 1, 2, 4, 4, 5, \ldots$. We impose homogeneous Dirichlet (vanishing-trace)
-boundary conditions, so the relevant invariant is the \emph{relative} cohomology
-(mod $\partial\M$). Since the square is contractible, its relative first Betti
-number is zero, and \textbf{every harmonic $1$-form appearing in the
-discretisation is therefore spurious}. Applying Loop subdivision alters the domain
-slightly, so we do not compare the discrete spectrum directly with the analytic
-$i^2+j^2$; instead we compare three subdivision partitions that use the same
-approximation of $\M$:
-\begin{itemize}
-    \item \textbf{inexact} --- a mixed-level partition whose interface violates admissibility (Fig.~\ref{fig:Maxwell_inexact_DoFmesh});
-    \item \textbf{exact (padded)} --- the \emph{same} partition after $\textsc{Pad}$ (Fig.~\ref{fig:Maxwell_exact_DoFmesh});
-    \item \textbf{FEEC (uniform)} --- the finest FEEC space $\FEECspaceZero{1}{\L}$, refining the whole domain to level $\L$, which is the verifiably spurious-mode-free reference~\cite{Arnold.FEEC}.
-\end{itemize}}
+with analytic spectrum $\lambda_\coarseIdxone = m^2 + n^2$, where $m$ and $n$ are integers. We will approximate the discrete spectra on the covering $\C^{\mathrm{pinch}}$ with a pinch on level $\l=2$ as displayed in Figure~\ref{fig:Maxwell_inexact_DoFmesh} and its padded version, the subdivision partition $\C^{\mathrm{padded}}$ from Figure~\ref{fig:Maxwell_exact_DoFmesh}. Since the domain is contractible, its relative first Betti number is zero. Thus, $\hierSDFspaceZero{1}{\C^{\mathrm{padded}}}{\L}$ has no $1$-form harmonics because $\C^{\mathrm{padded}}$ is a subdivision partition. The pinch of $\C^{\mathrm{pinch}}$ introduces a two-dimensional spurious harmonic $1$-form space into $\hierSDFspaceZero{1}{\C^{\mathrm{pinch}}}{\L}$. 
 
-\robert{Table~\ref{tab:maxwell_spectrum} and Figure~\ref{fig:Maxwell_eigenvalues} report the
-result. The physical ($\lambda > 0$) band is \emph{identical} across the three
-partitions (to plotted precision) and tracks the analytic values; the only defect
-of the inexact partition is $\dim\mathcal{H}^1 = 2$ spurious harmonics, which
-padding removes ($\dim\mathcal{H}^1 \to 0$). The reason the pollution is confined
-to $\lambda = 0$ follows from the exact-sequence structure. A non-admissible
-interface makes the active space fail to be a subcomplex, and the concrete symptom
-is a discrete $1$-form that is \emph{closed but not exact} --- a spurious harmonic.
-Being closed, $\extd u_h = 0$, so its Rayleigh quotient
-$(\extd u_h, \extd u_h)/(u_h, u_h) = 0$: it can appear \emph{only} at $\lambda = 0$
-and never in the physical band. This contrasts sharply with classical spectral
-pollution for non-compatible elements, where spurious eigenvalues interleave with
-the physical band; here the admissibility failure is confined to the kernel of
-$\extd$, so the physical spectrum stays clean.}
+Applying Loop subdivision alters the domain slightly, so we do not compare the discrete spectrum directly with the analytic spectrum  $\lambda_\coarseIdxone$. Instead, we compare the discrete spectra $\lambda_\coarseIdxone$ with the spectrum of $\FEECspaceZero{k}{\L}$ with $\C^{\mathrm{FEEC}} = \T_\L$, a superspace of both $\hierSDFspaceZero{1}{\C^{\mathrm{pinch}}}{\L}$ and $\hierSDFspaceZero{1}{\C^{\mathrm{padded}}}{\L}$ that verifiably converges to the correct spectrum, see~\cite{Arnold.FEEC}.
 
-\robert{The defect must be read off the rank-based $\dim\mathcal{H}^1$ (from the ranks of
-the discrete $\extd$), \emph{not} the raw count of near-zero eigenvalues. The
-physical kernel $\extd(\hierSDFspace{0}{\C}{\L})$ of gradients is large and
-mesh-dependent, and padding changes the gradient DoF count, so the raw zero-count
-is not comparable between partitions: here it is $125$ (inexact) versus $90$
-(exact), which taken alone would misleadingly suggest padding \emph{removed} modes,
-even as the cohomologically meaningful $\dim\mathcal{H}^1$ falls from $2$ to $0$.}
+\robert{Figure~\ref{fig:Maxwell_eigenvalues} reports the discrete spectra with $\lambda_{h,\coarseIdxone} > 0$ for all three coverings. Outside of small approximation errors, the spectra are identical across the three
+partitions and track the analytic values. That means that the defect caused by the spurious $1$-form harmonics of $\hierSDFspaceZero{1}{\C^{\mathrm{pinch}}}{\L}$ are confined to the eigenspace of $\lambda_{h,\coarseIdxone} = 0$. The reason for that is that the }
 
-\begin{table}[htbp]
+%\begin{table}[htbp]
+%    \centering
+%    \small
+%    \begin{tabular}{@{}l ccc c c@{}}
+%        \toprule
+%        partition & \multicolumn{3}{c}{physical band $\lambda_1, \ldots, \lambda_6$ recovered} & raw zero-modes ($\lambda \leq \tfrac12$) & $\dim\mathcal{H}^1$ \\
+%        \midrule
+%        inexact         & \multicolumn{3}{c}{$1.003,\ 1.008,\ 2.017,\ 4.006,\ 4.028,\ 5.031$} & $125$ & $\mathbf{2}$ \\
+%        exact (padded)  & \multicolumn{3}{c}{$1.003,\ 1.008,\ 2.017,\ 4.006,\ 4.028,\ 5.031$} & $90$  & $\mathbf{0}$ \\
+%        FEEC (uniform)  & \multicolumn{3}{c}{$1.002,\ 1.002,\ 2.010,\ 4.000,\ 4.019,\ 5.024$} & $43$  & --- \\
+%        \bottomrule
+%    \end{tabular}
+%    \caption{\robert{Maxwell cavity spectrum on the inexact, exact (padded), and FEEC
+%    (uniform) partitions. The physical band coincides across all three and tracks
+%    the analytic $i^2+j^2$; the inexact partition's sole defect is
+%    $\dim\mathcal{H}^1 = 2$ spurious harmonics, removed by padding. The raw
+%    zero-mode count is dominated by legitimate gradient modes and is not comparable
+%    across partitions, so the rank-based $\dim\mathcal{H}^1$ is the clean
+%    diagnostic.}}
+%    \label{tab:maxwell_spectrum}
+%\end{table}
+
+\begin{figure}%[htbp]
     \centering
-    \small
-    \begin{tabular}{@{}l ccc c c@{}}
-        \toprule
-        partition & \multicolumn{3}{c}{physical band $\lambda_1, \ldots, \lambda_6$ recovered} & raw zero-modes ($\lambda \leq \tfrac12$) & $\dim\mathcal{H}^1$ \\
-        \midrule
-        inexact         & \multicolumn{3}{c}{$1.003,\ 1.008,\ 2.017,\ 4.006,\ 4.028,\ 5.031$} & $125$ & $\mathbf{2}$ \\
-        exact (padded)  & \multicolumn{3}{c}{$1.003,\ 1.008,\ 2.017,\ 4.006,\ 4.028,\ 5.031$} & $90$  & $\mathbf{0}$ \\
-        FEEC (uniform)  & \multicolumn{3}{c}{$1.002,\ 1.002,\ 2.010,\ 4.000,\ 4.019,\ 5.024$} & $43$  & --- \\
-        \bottomrule
-    \end{tabular}
-    \caption{\robert{Maxwell cavity spectrum on the inexact, exact (padded), and FEEC
-    (uniform) partitions. The physical band coincides across all three and tracks
-    the analytic $i^2+j^2$; the inexact partition's sole defect is
-    $\dim\mathcal{H}^1 = 2$ spurious harmonics, removed by padding. The raw
-    zero-mode count is dominated by legitimate gradient modes and is not comparable
-    across partitions, so the rank-based $\dim\mathcal{H}^1$ is the clean
-    diagnostic.}}
-    \label{tab:maxwell_spectrum}
-\end{table}
-
-\begin{figure}[htbp]
-    \centering
-    \begin{subfigure}[b]{0.23\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{images/maxwell/maxwell_partition_exact.pdf}
-        \caption{Exact (padded) partition.}
-        \label{fig:Maxwell_exact_DoFmesh}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[b]{0.23\textwidth}
+    \begin{subfigure}[t]{0.24\textwidth}
         \centering
         \includegraphics[width=\textwidth]{images/maxwell/maxwell_partition_inexact.pdf}
-        \caption{Inexact partition.}
+        \caption{Covering $\hierSDFspaceZero{1}{\C^{\mathrm{pinch}}}{\L}$}
         \label{fig:Maxwell_inexact_DoFmesh}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[b]{0.5\textwidth}
+    \begin{subfigure}[t]{0.24\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/maxwell/maxwell_partition_exact.pdf}
+        \caption{Subdivision partition  $\hierSDFspaceZero{1}{\C^{\mathrm{padded}}}{\L}$}
+        \label{fig:Maxwell_exact_DoFmesh}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.5\textwidth}
         \centering
         \includegraphics[width=\textwidth]{images/maxwell/maxwell_spectrum.pdf}
         \caption{Physical eigenvalue band.}
         \label{fig:Maxwell_eigenvalues}
     \end{subfigure}
-    \caption{\robert{Maxwell eigenvalue problem: the exact (padded) and inexact subdivision
-    partitions differ only at a single coarse/fine interface (left, centre); the
-    physical ($\lambda > 0$) curl--curl band by mode index for the inexact
-    ($\times$), padded ($+$), and FEEC ($\circ$) discretisations overlaps and tracks
-    $i^2+j^2$ (right). The $\dim\mathcal{H}^1$ spurious harmonics carried by the
-    inexact partition live at $\lambda = 0$, off the physical axis, and are
-    annotated rather than plotted.}}
+    \caption{Coverings and discrete spectra of the spaces $\hierSDFspaceZero{1}{\C^{\mathrm{pinch}}}{\L}$, $\hierSDFspaceZero{1}{\C^{\mathrm{padded}}}{\L}$ and $\FEECspaceZero{k}{\L}$.}
     \label{fig:maxwell_overview}
 \end{figure}
 
