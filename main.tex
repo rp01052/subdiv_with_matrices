@@ -548,7 +548,7 @@ The hierarchical refinement relation in Lemma~\ref{lemma:hiermeshrel} provides a
         \label{equ:refstencilunion}
         \RSt : \K^k_{\l} \to \powerset \Big(\bigcup_{\lone = \l+1}^{\L} \K^k_{\lone} \Big), \quad  \simplex{k}{\l}{\coarseIdxone} \mapsto \RSt \big( \simplex{k}{\l}{\coarseIdxone} \big)
     \end{equation}
-    such that there exist coefficients $\constrQ{c}{k}{\lone}{l}{\fineIdxone} \neq 0$ satisfying
+    such that there exist coefficients $\constrQ{c}{k}{\lone}{\l}{\fineIdxone} \neq 0$ satisfying
     \begin{equation}
         \constrQ{\SDFbasis}{k}{\l}{\L}{\coarseIdxone} = \sum_{\simplex{k}{\lone}{\fineIdxone} \in \RSt \big( \simplex{k}{\l}{\coarseIdxone} \big)} \constrQ{c}{k}{\robert{\lone}}{\robert{\l}}{\fineIdxone} \; \constrQ{\SDFbasis}{k}{\lone}{\L}{\fineIdxone}.
     \end{equation}
@@ -601,7 +601,7 @@ In the following, we will systematically construct refinement stencils by iterat
 
 \node (C1) at (\xC, \yOne)
     {\includegraphics[height=\rowheight cm, trim=10pt 0pt 230pt 0pt, clip]{images/stencils/2_form_simplex.pdf}};
-\node[xshift=-12pt, yshift=8pt, font=\small, text=black] at (C1.center) {$\simplex{2}{\l}{\coarseIdxone}$};
+\node[xshift=0pt, yshift=8pt, font=\small, text=black] at (C1.center) {$\simplex{2}{\l}{\coarseIdxone}$};
 
 % ============================================================
 %  ROW 2 (refinement stencils)
@@ -636,7 +636,8 @@ In the following, we will systematically construct refinement stencils by iterat
 \end{tikzpicture}
 \end{center}
 \vspace{-5mm}
-\caption{\robert{Refinement stencils of $0$-, $1$- and $2$-form basis functions.}}
+\caption{Canonical refinement stencils of $0$-, $1$- and $2$-form basis functions.}
+\label{fig:refinement_stencils}
 \end{figure}
 
 \begin{definition}[Canonical Refinement Stencil]
@@ -646,7 +647,7 @@ In the following, we will systematically construct refinement stencils by iterat
     \end{eqnarray}
 \end{definition}
 
-We call this refinement stencil canonical because it is the only one that contains simplices solely on level $\l\!+\!1$ and is thus uniquely determined by the refinement relation~\eqref{eq:refinement_relation}. \cite{companion_paper} shows that we can construct all meaningful refinement stencils $\RSt$ across the entire mesh hierarchy by recursively applying the canonical refinement stencil to a subset of vertices.
+We call this refinement stencil canonical because it is the only one that contains simplices solely on level $\l\!+\!1$ and is thus uniquely determined by the refinement relation~\eqref{eq:refinement_relation}. Figure~\ref{fig:refinement_stencils} visualises the canonical refinement stencils of $k$-form DoFs and shows that we can obtain the canonical refinement stencil by going to the adjacent faces of $\simplex{k}{\l}{\coarseIdxone}$, refining them, taking their finer vertices and finally all fine $k$-simplices adjacent to these vertices. \cite{companion_paper} shows that we can construct all meaningful refinement stencils $\RSt$ across the entire mesh hierarchy by recursively applying the canonical refinement stencil $\cRSt$.
 
 To guarantee linear independence of the selected active basis functions, we need to ensure that every refinement stencil of every active DoF contains at least one inactive DoF. In this paper, the refinement stencil serves as visual indicator of linear independence and is a key motivation to define the subdivision partition in Section~\ref{subsec:selecting_active_dofs}.
 
@@ -663,13 +664,13 @@ We now set up the differential structure of the subdivision $k$-form spaces. Fir
 \end{equation}
 on all intermediate levels $\l$ with $\lzero \leq \l \leq \l \leq \L$. Throughout this work, we do not distinguish between $\extd : \FEECspace{k}{\l} \to \FEECspace{k+1}{\l}$ and $\auxextd : \SDFspace{k}{\l}{\L} \to \SDFspace{k+1}{\l}{\L}$ like in~\cite{Piel.2026}. We will denote both operators by $\extd$ because they largely coincide for our purposes.
 
-The coordinate expression of the action of the exterior derivative $\extd$ on the spaces $\SDFspace{k}{\l}{\L}$ follows directly from the coarse-level oriented incidence matrix $\Dmat{k}{\l}$~\citep{Hirani.2003,Desbrun.2006,Piel.2026} by
+The coordinate expression of the action of the exterior derivative $\extd$ on the spaces $\SDFspace{k}{\l}{\L}$ follows directly from the coarse-level oriented incidence matrix $\Dmat{k}{\l}$~\citep{Hirani.2003,Desbrun.2006} by
 \begin{equation}
     \label{eq:derivative_relation_basis}
     \extd \constrQ{\SDFbasis}{k}{\l}{\L}{\coarseIdxone} = \sum_{\coarseIdxtwo=1}^{\sumdimlk{\l}{k+1}} \Dmatij{k}{\l}{\coarseIdxtwo}{\coarseIdxone} \, \constrQ{\SDFbasis}{k+1}{\l}{\L}{\coarseIdxtwo}.
 \end{equation}
 
-Since $\Dmat{k}{\l}$ is the signed incidence matrix of $\T_\l$, only the $(k+1)$-simplices of $\T_\l$ adjacent to $\simplex{k}{\l}{\coarseIdxone}$ appear with non-zero coefficients. In the context of splines, this is equivalent to forward-differencing, in particular for triangular splines like box splines~\citep{de_boor_box_1993}.
+Since $\Dmat{k}{\l}$ is the signed incidence matrix of $\T_\l$, only the $(k\!+\!1)$-simplices of $\T_\l$ adjacent to $\simplex{k}{\l}{\coarseIdxone}$ appear with non-zero coefficients. In the context of splines, this is analogous to forward-differencing, in particular for triangular splines like box splines~\citep{de_boor_box_1993}.
 
 \begin{definition}[Derivative Stencil]
     \label{def:derivative_stencil}
@@ -679,31 +680,7 @@ Since $\Dmat{k}{\l}$ is the signed incidence matrix of $\T_\l$, only the $(k+1)$
     \end{equation}
 \end{definition}
 
-Once again, we overload the derivative stencil such that it can also act on sets of simplices:
-\begin{equation}
-    \DSt : \powerset\Big(\K^k_{\l}\Big) \to \powerset \big( \K^{k+1}_{\l} \big), \qquad \simplexsubset{k}{\l} \mapsto \bigcup_{\simplex{k}{\l}{\coarseIdxone} \in \simplexsubset{k}{\l}} \DSt \big( \simplex{k}{\l}{\coarseIdxone} \big)
-\end{equation}
-
-This definition together with Eq.~\eqref{eq:derivative_relation_basis} implies the following two propositions.
-
-\begin{proposition}
-    \label{prop:d_tilde_on_phi}
-    $\extd \constrQ{\SDFbasis}{k}{\l}{\L}{\coarseIdxone} = \sum\limits_{\simplex{k+1}{\l}{\coarseIdxtwo} \in \DSt(\simplex{k}{\l}{\coarseIdxone})} \Dmatij{k}{\l}{\coarseIdxtwo}{\coarseIdxone} \, \constrQ{\SDFbasis}{k+1}{\l}{\L}{\coarseIdxtwo}$
-\end{proposition}
-
-The derivative stencil is key for ensuring that every active $k$-form basis function has its derivative stencil present in the $(k+1)$-form space and that the resulting spaces constitute a differential complex. The following lemma makes the stencil concrete for the Wang schemes~\cite{Wang.2006,Wang.2008} used in this work.
-
-\begin{lemma}[{\cite{companion_paper}}]
-    \label{lemma:derivative_stencil}
-    Let $\freeQ{v}{}{\l}{\coarseIdxone} \in \V_{\l}$ and $\freeQ{e}{}{\l}{\coarseIdxtwo} \in \E_{\l}$ be a vertex and an edge on level $\l$. For the Wang subdivision schemes~\cite{Wang.2006,Wang.2008} (whose $0$-form scheme coincides with Loop subdivision~\cite{Loop.1987}), the derivative stencils are given by
-    \begin{equation}
-        \DSt\big( \freeQ{v}{}{\l}{\coarseIdxone} \big) = \EVl{\l}\big( \freeQ{v}{}{\l}{\coarseIdxone} \big) \quad \text{and} \quad \DSt\big( \freeQ{e}{}{\l}{\coarseIdxtwo} \big) = \FEl{\l}\big( \freeQ{e}{}{\l}{\coarseIdxtwo} \big),
-    \end{equation}
-    or more generally, $\DSt\big(\simplex{k}{\l}{\coarseIdxone}\big) = \K^{k+1}\K^k_{\l}\big(\simplex{k}{\l}{\coarseIdxone}\big)$ for any $\simplex{k}{\l}{\coarseIdxone} \in \K^k_{\l}$.
-\end{lemma}
-\begin{proof}
-    See~\cite{companion_paper}.
-\end{proof}
+The derivative stencil is the key concept to ensure that the derivative of every active $k$-form basis function can be expressed exactly in the $(k\!+\!1)$-form space and that the resulting spaces constitute a differential complex. For the Wang schemes~\citep{Wang.2006,Wang.2008}, Definition~\ref{def:derivative_stencil} implies that the derivative stencil of a $k$-form simplex $\simplex{k}{\l}{\coarseIdxone}$ is given by $\DSt\big(\simplex{k}{\l}{\coarseIdxone}\big) = \K^{k+1}\K^k_{\l}\big(\simplex{k}{\l}{\coarseIdxone}\big)$, see~\cite{Piel.2026}. Figure~\ref{fig:derivative_stencils} visualises these refinement stencils.
 
 To obtain a differential complex, we need to ensure that the derivative stencil of every active $k$-form basis function can be represented by active $k\!+\!1$-form basis functions of the next space in the complex, either because it is contained direcly or because it has an active refinement stencil. This property is a key constraint for the choice of active DoFs in Subsection~\ref{subsec:selecting_active_dofs}.
 
@@ -761,7 +738,8 @@ To obtain a differential complex, we need to ensure that the derivative stencil 
 }
 \end{center}
 \vspace{-3mm}
-\caption{\robert{Derivate stencils of $0$- and $1$-form basis functions, arranged in a single row: each simplex maps under $\DSt$ to its derivative stencil, with the $0$-form and $1$-form groups separated by a divider.}}
+\caption{Derivate stencils of $0$-form (left) and $1$-form basis functions (right).}
+\label{fig:derivative_stencils}
 \end{figure}
 
 \FloatBarrier
@@ -876,11 +854,11 @@ The requirements of linear indepence and expressing exterior differentials have 
 \node (topfig) at (3.9cm, 4.0cm)
     {\includegraphics[width=0.3\textwidth]{images/dofmeshes/correct/subdiv_partition.pdf}};
 
-\node[above=6pt of topfig, font=\bfseries] {subdivision partition};
+\node[above=6pt of topfig, font=\bfseries] {covering};
 
 \end{tikzpicture}
 \end{center}
-\caption{\robert{Active $k$-form DoFs for the three-level subdivision partition shown at top. Columns correspond to form degree $k = 0$ (vertices, dark circles), $k = 1$ (edges, orange), and $k = 2$ (faces, green). Rows correspond to active DoFs at levels $\l = 0$, $1$, $2$ respectively. At each level, interior simplices of the patches at that level are active, together with interface simplices on the coarser side along boundaries with finer-level patches (cf.\ Definition~\ref{def:active_k_form_dofs}).}}
+\caption{Active $k$-form DoFs for a covering with patches at level $0$, $1$ and $2$ shown at the top. Columns correspond to the form degree $k = 0$ (vertices, dark circles), $k = 1$ (edges, orange), and $k = 2$ (faces, green) of the active DoFs chosen according to Definition~\ref{def:active_k_form_dofs}. Rows correspond to active DoFs on levels $\l \in \{0, 1, 2\}$ respectively. At each level, the patch DoFs are activated alongside the interface DoFs that overlap the coarser patch of the interface.}
 \label{fig:active_dofs}
 \end{figure}
 
@@ -904,15 +882,13 @@ Thus, spanning an adaptive space using the patch DoFs of covering $\C$ ensures t
 
 \smallskip
 
-Consider a covering $\C(\T_\L) = \calP^1_0 \cup \calP^1_1$ with $\L \geq 1$ and two patches, one on level $0$ and one on level $1$, and an interface $\I_{(\calP^1_0, \calP^1_1)}$. The derivative stencils of vertex DoFs $\V(\C)$ reveal whether the derivative active basis functions can be expressed exactly. For non-interface vertices, the derivative stencil is indeed a subset of the patch edge DoFs. However, for interface vertices, some edges in its derivative stencil are not contained in the patch. The same rationale applies to interface edges, where one adjacent face in its derivative stencil is not contained in its patch.
+Consider the covering $\C(\T_\L) = \calP^1_0 \cup \calP^1_1 \cup \calP^1_2$ with $\L \geq 2$ shown at the top of Figure~\ref{fig:active_dofs}. The patch DoFs are going to be active for any form degree $k$ and level $\l$. Note that the derivative stencils of interface vertices on level $2$ take us outside of the patch edges, meaning that their derivatives cannot be represented in the current space that contains only patch DoFs. Since we already are on the finest level of the covering, we cannot represent the missing edge DoFs through their refinement stencils. Thus, the only option is to activate these edge DoFs incident to the interface vertices on level $2$. The derivative stencil of these additional active edge DoFs now takes us outside of the patch faces on level $2$. Again, the only option is to add the interface faces on level $2$. Row $\l=2$ of Figure~\ref{fig:active_dofs} shows exactly the active DoFs resulting from this extention around the interfaces of the patch $\calP^1_2$.
 
-This mismatch can be resolved by including one more layer of edges and faces at any interface. The derivative stencils are then satisfied. However, we can now observe linear dependence of the  additional edges and faces added at the interface on level $0$ that overlap the patch $\calP^1_1$ on level $1$. That implies that we only want to add interface DoFs of a patch if these interface DoFs overlap a coarser patch. There are more cases of linear dependency depending on the concrete geometry of the covering $\C(\T_\L)$. These will be eliminated by constraining the geometry, not by selecting the active DoFs differently.
-
-If we refined the patch $\calP^1_1$ of the covering $\C$ to level $2$, the new interface would now be between a patch on level $0$ and a patch on level $2$. The same derivative and refinement stencil checks as above apply but reveal on more crucial missing ingredient: We need to add separate interface DoFs on level $1$. These interface DoFs are the vertices of the interface, and its incident edges and faces that overlap the coarse patch on level $0$.
+The same logic becomes a little more nuanced for the patch $\calP^1_1$ on level $\l=1$. We need to extend the patch DoFs again to be able to represent all derivates. However, if the additional active edge and face DoFs overlap the fine patch $\calP^1_2$, the interface edges and faces of level $\l=2$ make the ones of level $\l=1$ interface linearly dependent. The interface DoFs that overlap the coarser patch $\calP^1_0$ are not linearly dependent. Row $\l=1$ in Figure~\ref{fig:active_dofs} shows that we only add interface DoFs on level $\l=1$ if they overlap the coarser patch. Row $\l=0$ in Figure~\ref{fig:active_dofs} also reveals that we do not need to add any interface DoFs for the coarsest patch $\calP^1_0$ because they are all linearly dependent after adding the interface DoFs of all finer patches. The extra DoFs on level $\l=1$ that are at the interface between the patches at level $\l=0$ and $\l=2$ are also a result of the need to express derivatives of $k$-forms in the $k\!+\!1$-form spaces.
 
 \smallskip
 
-The selection mechanism of alternating refinement and derivative stencils generalises to the following definition of the active DoFs of a covering $\C$ and lets us define the adaptive subdivision differential form spaces.
+This selection mechanism of alternating refinement and derivative stencils generalises to the following definition of the active DoFs of a covering $\C$ and lets us define the adaptive subdivision differential form spaces.
 
 \begin{definition}[Active $k$-form degrees of freedom]
     \label{def:active_k_form_dofs}
@@ -980,6 +956,8 @@ Finally, we define the \emph{source level} $\sourcelevel_\coarseIdxtwo$ and \emp
 \end{align}
 The reason we call those levels source and target level is due to the effect of the quadrisection operator introduced later in Definition~\ref{def:vertex_quadrisection_operator}.
 
+For example, consider the covering in Figure~\ref{fig:active_dofs} again. The vertex equivalence class $\vertclass{c} = \{ \vertex{0}{c}, \, \vertex{1}{c}, \, \vertex{2}{c}\}$ with $\sourcelevel_c = 0$ and $\targetlevel_c = 2$ corresponds to the center vertex of the covering at the intersection of all interfaces. The other interface vertices are in vertex classes with two elements, while the remaining vertiex equivalence classes are singletons.
+
 \smallskip
 
 The next concept we need to introduce is a notion of an inverse face quadrisection. Applying this $\emph{ancestor}$ operator to a fine face returns the coarse face of the covering $\C$ that covers the fine face.
@@ -995,7 +973,7 @@ The next concept we need to introduce is a notion of an inverse face quadrisecti
 
 \smallskip
 
-Combining the vertex equivalence classes $\vertclass{\coarseIdxtwo}$ and the ancestor operator $\ancestor{\cdot}$ allows us to define the \emph{covering star} $\coveringStar(\vertclass{\coarseIdxtwo})$ of a $\vertclass{\coarseIdxtwo}$. This operator returns all faces of a covering $\C$ that ``surround'' the vertex class $\vertclass{\coarseIdxtwo}$ in the following sense.
+Combining the vertex equivalence classes $\vertclass{\coarseIdxtwo}$ and the ancestor operator $\ancestor{\cdot}$ allows us to define the \emph{covering star} $\coveringStar(\vertclass{\coarseIdxtwo})$ of a $\vertclass{\coarseIdxtwo}$. This operator returns all faces of a covering $\C$ that ``surround'' the vertex class $\vertclass{\coarseIdxtwo}$, see Figure~\ref{fig:covering_star}.
 \begin{definition}[Covering star]
     \label{def:covering_star}
     Let $\C$ be a covering with vertex equivalence classes $\vertclass{\coarseIdxtwo} \in \widehat{\V}_\C$. The \emph{covering star} $\coveringStar\; \colon \; \widehat{\V}_\C \to \powerset\big( \F(\C) \big)$ is defined by
@@ -1011,41 +989,6 @@ The covering star operator $\coveringStar(\vertclass{\coarseIdxtwo})$ collects \
     \coveringStarl{\l}(\vertclass{\coarseIdxtwo}) \coloneq \coveringStar(\vertclass{\coarseIdxtwo}) \cap \F(\C_\l).
 \end{equation}
 
-% --- Figure knobs: covering star, quadrisection, and interior-vertex examples (single row, no dividers) ---
-\newcommand{\cvScale}{0.22}
-% #1 (optional) panel width as a fraction of \textwidth, default \cvScale --
-% override per panel when its image has a different aspect ratio (e.g. a
-% colorbar widens the PDF at the same height) and would otherwise come out
-% shorter/taller than the rest once every panel is fit to the same width.
-\newcommand{\cvsubfig}[3][\cvScale]{% #1 width fraction  #2 image path  #3 caption
-    \begin{subfigure}[t]{#1\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{#2}
-        \caption{#3}
-    \end{subfigure}%
-}
-% -------------------------------------------------------------------------
-\begin{figure}
-    \centering
-    \cvsubfig
-        {images/visualisations/neighbour-neighbour_input_with_covering_star.pdf}
-        {Covering star $\coveringStar(\vertclass{\coarseIdxtwo})$ of a mixed-level vertex}
-    \hfill
-    \cvsubfig
-        {images/visualisations/neighbour-neighbour_refined_with_covering_star.pdf}
-        {The same star after $\quadriV{\C}{\targetlevel}(\vertclass{\coarseIdxtwo})$}
-    \hfill
-    \cvsubfig[0.2613] % = \cvScale * (163.462/119.43) / (111.283/96.5664) -- panel-3-to-common PDF aspect-ratio (width/height, via pdfinfo) times \cvScale
-        {images/visualisations/v6_nested_center_lvl3_input_with_interior_verts.pdf}
-        {Vertices coloured by the level at which they are covering-interior}
-    \hfill
-    \cvsubfig
-        {images/visualisations/v6_3rings_horseshoe_input_with_inadmissible_faces.pdf}
-        {A covering with inadmissible faces}
-    \caption{\robert{Covering stars, quadrisection, and the two admissibility predicates of Section~\ref{subsec:subdiv_partition} on concrete coverings. Panel (a) shows the covering star $\coveringStar(\vertclass{\coarseIdxtwo})$ (Definition~\ref{def:covering_star}) of a vertex whose neighbourhood mixes levels, including the coarse face across the interface edge. Panel (b) shows the same neighbourhood after the vertex quadrisection operator $\quadriV{\C}{\targetlevel}(\vertclass{\coarseIdxtwo})$ (Definition~\ref{def:vertex_quadrisection_operator}) homogenises the star to the target level $\targetlevel$. Panel (c) shows a covering containing inadmissible faces (Definition~\ref{def:admissible_face}): the highlighted band has no covering-interior vertex on either side. Panel (d) shows every vertex of a covering coloured by the level at which it is covering-interior (Definition~\ref{def:interior_vertex}), from coarse (outermost) to fine (centre).}}
-    \label{fig:covering_star_interior_examples}
-\end{figure}
-
 \begin{definition}[Covering-interior vertex at level $\l$]
     \label{def:interior_vertex}
     We call a vertex $\vertex{\l}{\coarseIdxtwo} \in \V(\C)$ \emph{interior at level $\l$} if the covering star $\coveringStar{\C}(\vertclass{\coarseIdxtwo})$ of its equivalence class $\vertclass{\coarseIdxtwo} \in \widehat{\V}_\C$ does not contain any face on a level finer than $\l$, i.e.,
@@ -1055,7 +998,9 @@ The covering star operator $\coveringStar(\vertclass{\coarseIdxtwo})$ collects \
     \end{equation}
 \end{definition}
 
-Note that the set of covering-interior vertices of $\C$ does not only contain the interior vertices of the patches of $\C$ but can also contain interface vertices and vertices on the boundary $\partial \C$.
+This definition implies that a vertex class is covering-interior at level $\lone > \l$ if it is covering-interior at level $\l$.
+
+Note that the set of covering-interior vertices of $\C$ does not only contain the interior vertices of the patches of $\C$ but can also contain interface vertices and vertices on the boundary $\partial \C$. For example, Figure~\ref{fig:covering_interior_vertices} displays a covering with nested refinement up to level $3$ towards its center. The vertices are colored by the level at which they become covering-interior. The outermost layer is covering-interior from level $0$ because its covering star contains only faces on level $0$. The next layer is covering-interior from level $1$ because the covering stars of its vertex classes contains only faces on level $0$ and $1$. This logic applies to all layers in the figure until we reach the finest level $3$, at which all the remaining vertex classes become covering-interior.
 
 \smallskip
 
@@ -1074,7 +1019,7 @@ In contrast to the that, the \emph{vertex quadrisection operator} $\quadriV{\C}{
 
 \begin{definition}[Vertex quadrisection operator]
     \label{def:vertex_quadrisection_operator}
-    Let $\C$ be a covering and $\vertclass{\coarseIdxtwo} \in \mathrm{V}_\C$ be a vertex class with source level $\sourcelevel_\coarseIdxtwo$. Choose a target level $\targetlevel$ such that $\sourcelevel_\coarseIdxtwo \leq \targetlevel \leq \L$. The \emph{graded quadrisection operator} $\quadriV{\C}{\targetlevel}(\vertclass{\coarseIdxtwo})$ is constructed iteratively by:
+    Let $\C$ be a covering and $\vertclass{\coarseIdxtwo} \in \mathrm{V}_\C$ be a vertex class with source level $\sourcelevel_\coarseIdxtwo$. Choose a target level $\targetlevel$ such that $\sourcelevel_\coarseIdxtwo \leq \targetlevel \leq \L$. The \emph{vertex quadrisection operator} $\quadriV{\C}{\targetlevel}(\vertclass{\coarseIdxtwo})$ is constructed iteratively by:
     \begin{enumerate}[topsep=3pt, itemsep=-2pt]%[nolistsep]
         \item initialize $\C^{\sourcelevel\coarseIdxtwo} = \C$,
         \item for $\l = \sourcelevel\coarseIdxtwo, \, \dots, \, \targetlevel - 1$, carry out flat quadrisection of the coarsest faces in the covering star $\coveringStarCl{\C^\l}{\l}(\vertclass{\coarseIdxtwo})$ of $\vertclass{\coarseIdxtwo}$ in the covering $\C^\l$, i.e.
@@ -1087,9 +1032,49 @@ In contrast to the that, the \emph{vertex quadrisection operator} $\quadriV{\C}{
     \end{enumerate}
 \end{definition}
 
-Recomputing the covering star of $\vertclass{\coarseIdxtwo}$ of $\C^\l$ at each step is what drags the coarse faces up through \emph{every} intermediate level up to $\targetlevel$. The two operators are distinguished by their superscript: $\quadriF{\C}$ refines a set of faces flatly from level $\l$ to $\l\!+\!1$, while $\quadriV{\C}{\targetlevel}$ refines a star gradedly toward its vertex, and only the graded vertex quadrisection operator carries a target level.
+% --- Figure knobs: covering star, quadrisection, and interior-vertex examples (single row, no dividers) ---
+\newcommand{\cvScale}{0.22}
+% #1 (optional) panel width as a fraction of \textwidth, default \cvScale --
+% override per panel when its image has a different aspect ratio (e.g. a
+% colorbar widens the PDF at the same height) and would otherwise come out
+% shorter/taller than the rest once every panel is fit to the same width.
+\newcommand{\cvsubfig}[4][\cvScale]{% #1 width fraction  #2 image path  #3 caption  #4 label
+    \begin{subfigure}[t]{#1\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{#2}
+        \caption{#3}
+        \label{#4}
+    \end{subfigure}%
+}
+% -------------------------------------------------------------------------
+\begin{figure}
+    \centering
+    \cvsubfig
+        {images/visualisations/neighbour-neighbour_input_with_covering_star.pdf}
+        {The covering star $\coveringStar(\vertclass{\coarseIdxtwo})$ of a mixed-level vertex class $\vertclass{\coarseIdxtwo}$}
+        {fig:covering_star}
+    \hfill
+    \cvsubfig
+        {images/visualisations/neighbour-neighbour_refined_with_covering_star.pdf}
+        {The covering star from (a) after applying $\quadriV{\C}{\targetlevel_\coarseIdxtwo + 1}(\vertclass{\coarseIdxtwo})$}
+        {fig:covering_star_refined}
+    \hfill
+    \cvsubfig[0.2613] % = \cvScale * (163.462/119.43) / (111.283/96.5664) -- panel-3-to-common PDF aspect-ratio (width/height, via pdfinfo) times \cvScale
+        {images/visualisations/v6_nested_center_lvl3_input_with_interior_verts.pdf}
+        {Vertices coloured by the level at which they are covering-interior}
+        {fig:covering_interior_vertices}
+    \hfill
+    \cvsubfig
+        {images/visualisations/v6_3rings_horseshoe_input_with_inadmissible_faces.pdf}
+        {Covering with inadmissible faces by Definition~\ref{def:admissible_face}}
+        {fig:inadmissible_faces}
+    \caption{Visualisations and examples for covering stars and their quadrisection, covering-interior vertices and inadmissible faces.}
+    \label{fig:visualisations}
+\end{figure}
 
-The quadrisection operators enable consistent refinement in the sense that
+Recomputing the covering star of $\vertclass{\coarseIdxtwo}$ of $\C^\l$ at each step is what drags the coarse faces up through \emph{every} intermediate level up to $\targetlevel$. The two operators are distinguished by their superscript: $\quadriF{\C}$ refines a set of faces flatly from level $\l$ to $\l\!+\!1$, while $\quadriV{\C}{\targetlevel}$ refines a star gradedly toward its vertex class, and thus only the graded vertex quadrisection operator carries a target level. Figure~\ref{fig:covering_star_refined} displays the result of applying $\quadriV{\C}{\targetlevel\coarseIdxtwo + 1}(\vertclass{\coarseIdxtwo})$ to the covering star from Figure~\ref{fig:covering_star}. It first homogenises the neighbourhood of $\vertclass{\coarseIdxtwo}$ to its target level $\targetlevel_\coarseIdxtwo$ and then applies one more level of refinement to the now homogeneous active faces on level $\targetlevel_\coarseIdxtwo$ adjacent to $\vertclass{\coarseIdxtwo}$.
+
+The quadrisection operators enable consistent refinement of the adaptive subdivision $k$-form spaces $\hierSDFspace{k}{\C}{\L}$ in the sense that
 \begin{equation}
     \hierSDFspace{k}{\C}{\L} \subseteq \hierSDFspace{k}{\quadriF{\C}(\simplexsubset{2}{\l})}{\L} \qquad \text{and} \qquad \hierSDFspace{k}{\C}{\L} \subseteq \hierSDFspace{k}{\quadriV{\C}{\targetlevel}(\vertclass{\coarseIdxtwo})}{\L}.
 \end{equation}
@@ -1100,8 +1085,6 @@ The quadrisection operators defined in this section are the basis upon which we 
 \subsection{Subdivision partitions and properties of the adaptive spaces}
 \label{subsec:subdiv_partition}
 
-
-
 We are now ready to define the first geometric predicate of face admissibility.
 
 \begin{definition}[admissible face]
@@ -1109,15 +1092,19 @@ We are now ready to define the first geometric predicate of face admissibility.
     We call a face $\face{\l}{\coarseIdxone} \in \F(\C)$ \emph{admissible} if at least one of its vertices $\vertex{\l}{\coarseIdxtwo} \in \V\F\big( \face{\l}{\coarseIdxone} \big)$ is covering-interior at level $\l$. Otherwise, the face is called \emph{inadmissible}.
 \end{definition}
 
+Figure~\ref{fig:inadmissible_faces} shows a covering whose faces on level $1$ are all admissible while the faces on level $0$ (purple) are inadmissible. As we will see in Section~\ref{subsec:exactness_atomic}, the adaptive subdivision $k$-form spaces on this covering have some interesting properties: There are $3$ linearly dependent active vertex DoFs, $18$ linearly dependent active edge DoFs and $15$ linearly dependent active face DoFs. At the same time, the spaces on this covering have the correct cohomology of $\mathrm{dim}(\mathcal{H}^0) = 1$ and $\mathrm{dim}(\mathcal{H}^1) = \mathrm{dim}(\mathcal{H}^2) = 0$.
+
+\smallskip
+
 The second predicate is that of a pinch vertex.
 
 \begin{definition}[pinch vertex]
     \label{def:pinch_vertex}
     Let $\vertclass{\coarseIdxtwo} \in \widehat{\V}_\C$ be a vertex equivalence class of $\C$ with target level $\targetlevel_\coarseIdxtwo$ and compute the number
     \begin{equation}
-        \mathrm{N}_\coarseIdxtwo \coloneq \Big\vert \big\{ \edge{\targetlevel_\coarseIdxtwo}{\coarseIdxone} \in \E\V(\vertex{\targetlevel_\coarseIdxtwo}{\coarseIdxtwo}) \; : \; \F\E(\edge{\targetlevel_\coarseIdxtwo}{\coarseIdxone}) \cap \C_{\targetlevel_\coarseIdxtwo} \neq \varnothing \;\;\; \text{and} \;\;\; \F\E(\edge{\l}{\coarseIdxone}) \setminus \C_{\targetlevel_\coarseIdxtwo} \neq \varnothing \big\} \Big\vert
+        \mathrm{N}_\coarseIdxtwo \coloneq \Big\vert \big\{ \edge{\targetlevel_\coarseIdxtwo}{\coarseIdxone} \in \E\V(\vertex{\targetlevel_\coarseIdxtwo}{\coarseIdxtwo}) \; : \; \F\E(\edge{\targetlevel_\coarseIdxtwo}{\coarseIdxone}) \cap \C_{\targetlevel_\coarseIdxtwo} \neq \varnothing \;\;\; \text{and} \;\;\; \F\E(\edge{\targetlevel_\coarseIdxtwo}{\coarseIdxone}) \setminus \C_{\targetlevel_\coarseIdxtwo} \neq \varnothing \big\} \Big\vert
     \end{equation}
-    of edges whose adjacent faces split into an active and an inactive face on level $\l$. For an interior vertex of $\T_{\targetlevel_\coarseIdxtwo}$, $\mathrm{N}_\coarseIdxtwo$ will always be even. \robert{(What about boundary vertices? We also need to be careful with the words "interior" and "boundary" here, define properly. $\K^k(\partial \C)$)} The \emph{number of disconnected arcs} $\gamma_\coarseIdxtwo$ of the vertex class $\vertclass{\coarseIdxtwo}$ is given by
+    of edges whose adjacent faces split into an active and an inactive face on level $\targetlevel_\coarseIdxtwo$, see Figure~\ref{fig:pinches}. If $\edge{\targetlevel_\coarseIdxtwo}{\coarseIdxone}$ is a boundary edge in $\E(\partial\T_{\targetlevel_\coarseIdxtwo})$, we always count it as having at least one inactive adjacent face DoF to represent the exterior of $\T_{\targetlevel_\coarseIdxtwo}$. The number $\mathrm{N}_\coarseIdxtwo$ will then always be even. \emph{number of disconnected arcs} $\gamma_\coarseIdxtwo$ of the vertex class $\vertclass{\coarseIdxtwo}$ is given by
     \begin{equation}
         \gamma_\coarseIdxtwo = \begin{cases}
             1, \quad & \text{if} \;\; \mathrm{N}_\coarseIdxtwo = 0, \\
@@ -1154,9 +1141,13 @@ The second predicate is that of a pinch vertex.
     \admsubfig
         {images/visualisations/v6_boundary_allcorners_lvl1_pinch_marked.pdf}
         {Pinch vertices at boundary, $\gamma_\coarseIdxtwo = 2$ each}
-    \caption{\robert{Different coverings with potential pinch vertex classes $\vertclass{\coarseIdxtwo}$ marked in yellow, and their adjacent edges that contribute towards $\mathrm{N}_\coarseIdxtwo$ from Definition~\ref{def:pinch_vertex} in purple. Panel (a) shows the prototypical pinch vertex with two arcs that are one level finer than the remaining covering star. This configuration leads to one spurious $1$-form harmonics. Panel (b) displays a 2-pinch, meaning there are three fine arcs. This configuration induces two spurios $1$-form harmonics. Panel (c) does not actually show a pinch vertex because the covering star contains only one fine arc. Panel (d) shows six boundary pinches that contribute one spurious $1$-form harmonic each.}}
-    \label{fig:admissibility_predicates}
+    \caption{Different coverings with potential pinch vertex classes $\vertclass{\coarseIdxtwo}$ marked in yellow, and their adjacent edges that contribute towards $\mathrm{N}_\coarseIdxtwo$ from Definition~\ref{def:pinch_vertex} in purple. Panel (a) shows the prototypical pinch vertex with two arcs that are one level finer than the remaining covering star. This configuration leads to one spurious $1$-form harmonics. Panel (b) displays a 2-pinch, meaning there are three fine arcs. This configuration induces two spurios $1$-form harmonics. Panel (c) does not actually show a pinch vertex because the covering star contains only one fine arc. Panel (d) shows six boundary pinches that contribute one spurious $1$-form harmonic each.}
+    \label{fig:pinches}
 \end{figure}
+
+Figure~\ref{fig:pinches} shows different kinds of pinches and describes the spurious $1$-form harmonics they cause.
+
+\smallskip
 
 The two predicates allow us to define \emph{subdivision partitions} as a subset of coverings.
 
@@ -1198,7 +1189,7 @@ Finally, we are going to re-state the two main theorems of \cite{companion_paper
 
 \section{Implementation and adaptive loop}
 
-\todo{@ claude: Please add a little text here that summarises the section and manages the readers expectations.}
+This section turns the constructions of Section~\ref{sec:construction_of_hierarchical_subdiv_spaces} into a working adaptive algorithm. Section~\ref{subsec:implementation_active_dofs} shows how the active DoF selection and the adaptive subdivision matrices $\Amat{k}{\activeDoFs}{\L}$ are assembled in practice. Section~\ref{subsec:adaptive_loop} then embeds this machinery in a standard \textsc{Solve}--\textsc{Estimate}--\textsc{Mark}--\textsc{Refine}--\textsc{Pad} adaptive loop, where the additional \textsc{Pad} restores the covering output by \textsc{Refine} to a subdivision partition (Definition~\ref{def:subdiv_partition}) after each refinement via pinch resolution, admissibility padding, and grading.
 
 \subsection{Assembling the hierarchical subdivision matrix}
 \label{subsec:implementation_active_dofs}
@@ -1319,12 +1310,12 @@ This system is symmetric indefinite, so we use \emph{MINRES} with a block-diagon
 \subsubsection{Estimation}
 \label{subsec:estimate}
 
-We compute error indicators $\eta_{\l,\coarseIdxone}$ per face $\face{\l}{\coarseIdxone} \in \C$ of the subdivision partition. The residual is evaluated on the finest level $\L$ and then aggregated to the coarse parent faces:
+We compute error indicators $\eta_{\l,\coarseIdxone}$ per face $\face{\l}{\coarseIdxone} \in \C$ of the covering $\C$. The residual is evaluated on the finest level $\L$ and then aggregated to the coarse parent faces:
 \begin{equation}
     \label{eq:project_estimator_on_L_to_partition}
     \eta^2_{\l,\coarseIdxone} = \sum\limits_{\face{\L}{\fineIdxone} \; \in \; \Aop{}{\l}{\L}(\face{\l}{\coarseIdxone})} \eta^2_{\L,\fineIdxone},
 \end{equation}
-where $f_h$ is obtained by applying the discrete PDE operator to $u_h$. Note that the interface DoFs are excluded from the indicator computation. In the following, we will refer to $\eta^2$ and $\rho^2$ as the \emph{total} and \emph{refinable} residuals, respectively, defined as
+where $\eta^2_{\L,\fineIdxone}$ is a standard FEEC residual we can evaluate in $\FEECspace{k}{\L}$. Note the residuals are only computed for faces in the covering and the interface faces are excluded to avoid overlap and double-counting. In the following, we will refer to $\eta^2$ and $\rho^2$ as the \emph{total} and \emph{refinable} residuals, respectively, defined as
 \begin{equation}
     \label{def:total_and_refinable_residuals}
     \eta^2 = \sum\limits_{\l=\lzero}^{\L} \; \eta^2_\l \qquad \text{and} \qquad \rho^2 = \sum\limits_{\l=\lzero}^{\L-1} \; \eta^2_\l = \eta^2 - \eta^2_{\L} \qquad \text{with} \qquad \eta^2_{\l} = \sum\limits_{\face{\l}{\coarseIdxone} \; \in \; \F(\C_\l)} \eta^2_{\l,\coarseIdxone}.
@@ -1361,31 +1352,29 @@ Because the covering star includes the coarse face across any interface edge thr
     \begin{subfigure}[b]{0.3\textwidth}
         \centering
         \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig1a.pdf}
-        \caption{Per-face residual $\eta_f$.}
+        \caption{Coarse covering coloured by the per-face residual $\eta^2_{\l,\coarseIdxone}$ from Equation~\eqref{eq:project_estimator_on_L_to_partition}. }
+        \label{fig:pipeline_marking_a}
     \end{subfigure}\hfill
     \begin{subfigure}[b]{0.3\textwidth}
         \centering
         \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig1b.pdf}
-        \caption{Per-vertex residual $\nu_v$.}
+        \caption{Per-vertex error residual $\nu^2_\coarseIdxtwo$ after applying Equation~\eqref{eq:vertex_residual}}
+        \label{fig:pipeline_marking_b}
     \end{subfigure}\hfill
 \begin{subfigure}[b]{0.3\textwidth}
         \centering
         \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig1c.pdf}
-        \caption{After refinement.}
+        \caption{Covering after refining the covering stars of marked vertices to their target levels.}
+        \label{fig:pipeline_marking_c}
     \end{subfigure}
-    \caption{\robert{Marking stage of the worked example
-    (Eq.~\eqref{eq:worked_example_eta}). (a) the coarse mesh coloured by the
-    per-face residual $\eta_f$; (b) the per-vertex error density $\nu_\coarseIdxtwo$, the
-    ranking key the marker sorts by, evaluated at each vertex's coarsest active
-    level; (c) the partition after refining the marked stars, before any padding,
-    with the selected vertices overlaid on the density scale of~(b).}}
+    \caption{\robert{Visualisations of the individual stages of the \textsc{Mark} and \textsc{Refine} steps.}}
     \label{fig:pipeline_marking}
 \end{figure}
 
 \subsubsection{Marking}
 \label{subsec:mark}
 
-Our code marks vertices rather than faces. This enables us to use the quadrisection operator $\quadriV{\C}{\targetlevel}$ to refine single vertex stars, the central combinatorial object of the admissibility argument in~\cite{companion_paper}. We rank the vertices by the vertex estimator $\nu_\coarseIdxtwo$, see Equation~\eqref{eq:vertex_residual} from Section~\ref{subsec:estimate}. For this purpose, we enumerate the $\vert \mathrm{V}_\C \vert$ vertex equivalence classes $\vertclass{\coarseIdxtwo}$ of $\C$ in order of decreasing residual, so that $\nu_{\coarseIdxtwo_1} \geq \nu_{\coarseIdxtwo_2} \geq \ldots \geq \nu_{\coarseIdxtwo_{\mathrm{V}-1}} \geq \nu_{\coarseIdxtwo_{\vert \mathrm{V}_\C \vert}}$.
+Our code marks vertices rather than faces. This enables us to use the quadrisection operator $\quadriV{\C}{\targetlevel}$ to refine single vertex stars, the central combinatorial object of the admissibility arguments in~\cite{companion_paper}. We rank the vertices by the vertex estimator $\nu_\coarseIdxtwo$, see Equation~\eqref{eq:vertex_residual} from Section~\ref{subsec:estimate}. For this purpose, we enumerate the $\vert \mathrm{V}_\C \vert$ vertex equivalence classes $\vertclass{\coarseIdxtwo}$ of $\C$ in order of decreasing residual, so that $\nu_{\coarseIdxtwo_1} \geq \nu_{\coarseIdxtwo_2} \geq \ldots \geq \nu_{\coarseIdxtwo_{\mathrm{V}-1}} \geq \nu_{\coarseIdxtwo_{\vert \mathrm{V}_\C \vert}}$.
 
 The Dörfler marking algorithm builds the set $\mathrm{V}_\C^\mathrm{mark} \coloneq \{ \vertclass{\coarseIdxtwo_1}, \, \dots, \, \vertclass{\coarseIdxtwo_q} \}$ by greedily selecting the first $q$ vertex equivalence classes with the largest estimators such that the \emph{marked refinable residual}
 \begin{equation}
@@ -1466,10 +1455,7 @@ Because the expected target levels $\tilde{\targetlevel}_{\coarseIdxtwo}$ are co
 }
 \end{center}
 \vspace{-3mm}
-\caption{\robert{Marked-star refinement on a valence-$6$ level-$0$/level-$2$ interface, for two
-positions of the marked vertex (highlighted in the input panels), arranged in a single
-row: each input maps under $\textsc{Refine}$ to the refined partition, with the
-centre-vertex and fine-side-vertex groups separated by a divider.}}
+\caption{\robert{Refinement of the covering stars of two vertex classes $\vertclass{\coarseIdxtwo}$ (yellow) to $\targetlevel_\coarseIdxtwo\!+\!1$.}}
 \label{fig:refine_interface}
 \end{figure}
 
@@ -1478,24 +1464,24 @@ centre-vertex and fine-side-vertex groups separated by a divider.}}
 \subsubsection{Padding}
 \label{subsec:padding}
 
-\begin{figure}[htbp]
+\begin{figure}%[htbp]
     \centering
     \begin{subfigure}[b]{0.3\textwidth}
         \centering
         \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig2a.pdf}
-        \caption{Before padding.}
+        \caption{Covering after \textsc{Refine} step, cf. Figure~\ref{fig:pipeline_marking_c}}
     \end{subfigure}\hfill
     \begin{subfigure}[b]{0.3\textwidth}
         \centering
         \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig2b.pdf}
-        \caption{resolved vertex pinches.}
+        \caption{Vertex pinch resolution, introduces inadmissible face}
     \end{subfigure}\hfill
     \begin{subfigure}[b]{0.3\textwidth}
         \centering
         \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig2c.pdf}
-        \caption{inadmissible-faces pad.}
+        \caption{Face padding restores admissibility of all faces}
     \end{subfigure}
-    \caption{\robert{Padding stage of the worked example. (a) repeats
+    \caption{\robert{Visualisation of the individual stages of the \textsc{Pad} step. (a) repeats
     Fig.~\ref{fig:pipeline_marking}(c), the partition before padding; (b) after
     $\textsc{ResolveVertexPinches}$, the centre pinch is gone; (c) after the
     inadmissible-faces pad, the one remaining inadmissible face is refined, giving the
@@ -1520,7 +1506,7 @@ according to Definition~\ref{def:pinch_vertex}. The subdivision partition $\C^{\
 \end{equation}
 and $\C^0 = \C^\mathrm{refine}$ the subdivision partition after the \textsc{Refine} step and $\targetlevel_{\coarseIdxtwo_p}$ the target level of $\vertclass{\coarseIdxtwo_p}$ in $\C^p$. In words, for each pinched vertex $\vertclass{\coarseIdxtwo} \in \mathrm{V}_\C$, we homogenise its covering star to its target level, lifting the coarse arcs to $\targetlevel_{\coarseIdxtwo_p}$ and merging them into a single disc. 
 
-\robert{Every pinch vertex carries a cohomology defect. The severeness of the defect depends on how fine the pinch vertex is compared to the other faces in the covering star and the number $\gamma_\coarseIdxtwo$ of fine arcs that form the pinch, see Definition~\ref{def:pinch_vertex}. Section~\ref{subsec:exactness_atomic} shows that resolving the coarse region around a pinch vertex successfully repairs these defects.}
+Every pinch vertex carries a cohomology defect. The severeness of the defect depends on the concrete configuration of the pinch, see Definition~\ref{def:pinch_vertex} and Figure~\ref{fig:pinches}. Section~\ref{subsec:exactness_atomic} later confirms that resolving the coarse region around a pinch vertex successfully repairs these defects.
 
 % --- Figure knobs --------------------------------------------------------
 % \peScale : overall size -- width of EACH of the four subfigures as a
@@ -1544,7 +1530,7 @@ and $\C^0 = \C^\mathrm{refine}$ the subdivision partition after the \textsc{Refi
     \end{subfigure}%
 }
 % -------------------------------------------------------------------------
-\begin{figure}[htbp]
+\begin{figure}%[htbp]
     \centering
     \begin{tabular}{@{}c@{\hspace{\peGap}}|@{\hspace{\peGap}}c@{\hspace{\peGap}}|@{\hspace{\peGap}}c@{\hspace{\peGap}}|@{\hspace{\peGap}}c@{}}
         \pinchsubfig
@@ -1612,7 +1598,7 @@ In words, we refine every inadmissible face by one level because the refined fac
     \end{subfigure}%
 }
 % -------------------------------------------------------------------------
-\begin{figure}[htbp]
+\begin{figure}%[htbp]
     \centering
     \begin{tabular}{@{}c@{\hspace{\meGap}}|@{\hspace{\meGap}}c@{\hspace{\meGap}}|@{\hspace{\meGap}}c@{\hspace{\meGap}}|@{\hspace{\meGap}}c@{}}
         \mePinchsubfig
