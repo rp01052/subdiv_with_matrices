@@ -1159,6 +1159,7 @@ The two predicates allow us to define \emph{subdivision partitions} as a subset 
 Finally, we are going to re-state the two main theorems of \cite{companion_paper} regarding linear independence and the exactness of the complex.
 
 \begin{theorem}
+    \label{theorem:linear_independence}
     Let $\C$ be a subdivision partition of the mesh $\T_\L$. The active basis functions selected by Def.~\ref{def:active_k_form_dofs} of the adaptive spaces $\hierSDFspace{k}{\C}{\L}$ are linearly independent.
 \end{theorem}
 \begin{proof}
@@ -1166,6 +1167,7 @@ Finally, we are going to re-state the two main theorems of \cite{companion_paper
 \end{proof}
 
 \begin{theorem}
+    \label{theorem:exactness}
     Let $\C$ be a covering of the mesh $\T_\L$. The adaptive subdivision $k$-form spaces $\hierSDFspace{k}{\C}{\L}$ constitute the differential complex
     \begin{equation}
     \begin{tikzcd}
@@ -1508,61 +1510,6 @@ and $\C^0 = \C^\mathrm{refine}$ the subdivision partition after the \textsc{Refi
 
 Every pinch vertex carries a cohomology defect. The severeness of the defect depends on the concrete configuration of the pinch, see Definition~\ref{def:pinch_vertex} and Figure~\ref{fig:pinches}. Section~\ref{subsec:exactness_atomic} later confirms that resolving the coarse region around a pinch vertex successfully repairs these defects.
 
-% --- Figure knobs --------------------------------------------------------
-% \peScale : overall size -- width of EACH of the four subfigures as a
-%            fraction of \textwidth. Lower it if the row runs too wide.
-% \peVsep  : vertical gap between the two stacked images in each subfigure.
-% \peGap   : horizontal space on each side of the vertical divider line.
-% \peDivH  : length (height) of the divider line -- lower it to make the
-%            dividers shorter (they stay centred on the images).
-\newcommand{\peScale}{0.22}
-\newcommand{\peVsep}{4pt}
-\newcommand{\peGap}{6pt}
-\newcommand{\peDivH}{0.42\textwidth}
-% Helper: one subfigure = inexact image (top) stacked over exact image
-% (bottom), with its own caption. Swap the two image paths freely.
-\newcommand{\pinchsubfig}[3]{% #1 inexact(top) #2 exact(bottom) #3 caption
-    \begin{subfigure}[t]{\peScale\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{#1}\\[\peVsep]
-        \includegraphics[width=\textwidth]{#2}
-        \caption{#3}
-    \end{subfigure}%
-}
-% -------------------------------------------------------------------------
-\begin{figure}%[htbp]
-    \centering
-    \begin{tabular}{@{}c@{\hspace{\peGap}}|@{\hspace{\peGap}}c@{\hspace{\peGap}}|@{\hspace{\peGap}}c@{\hspace{\peGap}}|@{\hspace{\peGap}}c@{}}
-        \pinchsubfig
-            {images/exactness/v8_quarters_lvl2_mixedcoarse_input.pdf}   % inexact (top)
-            {images/exactness/v8_quarters_lvl2_mixedcoarse_padded.pdf}  % exact (bottom)
-            {Level $2$ pinch with background on levels $0$ and $1$.}
-        &
-        \pinchsubfig
-            {images/exactness/v9_cff_lvl1_input.pdf}   % inexact (top)  -- PLACEHOLDER
-            {images/exactness/v9_cff_lvl1_padded.pdf}  % exact (bottom) -- PLACEHOLDER
-            {Level $1$ double-pinch with uniform background.}
-        &
-        \pinchsubfig
-            {images/exactness/v6_boundary_allcorners_lvl1_input.pdf}   % inexact (top)  -- PLACEHOLDER
-            {images/exactness/v6_boundary_allcorners_lvl1_padded.pdf}  % exact (bottom) -- PLACEHOLDER
-            {Six level $1$ boundary pinches with uniform background.}
-        &
-        \pinchsubfig
-            {images/exactness/v8_graded_top_bottom_sides_input.pdf}   % inexact (top)  -- PLACEHOLDER
-            {images/exactness/v8_graded_top_bottom_sides_padded.pdf}  % exact (bottom) -- PLACEHOLDER
-            {Partition without pinch.}
-    \end{tabular}
-    \caption{\robert{Pinch resolution on a valence-$8$ centre vertex. Left pair: a
-    two-level pinch, whose two coarse arcs give $\dim\mathcal{H}^1 = 2$
-    (Table~\ref{tab:atomic-cohomology}, ``Valence-$8$ pinch, level~2''); pinch
-    resolution grades the coarse arcs to the finest level and removes the defect.
-    Right pair: the two coarse patches sit at \emph{different} levels ($0$ and $1$),
-    which is why the pinch is detected at each vertex's finest level with contiguous
-    coarse runs merged across levels.}}
-    \label{fig:pinch_resolution}
-\end{figure}
-
 \paragraph{Resolving inadmissible faces.}
 
 Similarly to resolving pinches, we iterate over all face $\face{\l}{\coarseIdxone}$ of the subdivision partition $\C^{\mathrm{pinch}}$ to build the set of inadmissible faces
@@ -1575,61 +1522,6 @@ according to Definition~\ref{def:admissible_face}. The subdivision partition $\C
     \C^{\mathrm{admissible}} = \quadriF{\F_{\mathrm{inadmissible}}} (\C^{\mathrm{pinch}}).
 \end{equation}
 In words, we refine every inadmissible face by one level because the refined faces are guaranteed to have an admissible vertex on level $\l+1$.
-
-% --- Figure knobs --------------------------------------------------------
-% \meScale : overall size -- width of EACH of the four subfigures as a
-%            fraction of \textwidth. Lower it if the row runs too wide.
-% \meVsep  : vertical gap between the two stacked images in each subfigure.
-% \meGap   : horizontal space on each side of the vertical divider line.
-% \mmeDivH  : length (height) of the divider line -- lower it to make the
-%            dividers shorter (they stay centred on the images).
-\newcommand{\meScale}{0.22}
-\newcommand{\meVsep}{4pt}
-\newcommand{\meGap}{6pt}
-\newcommand{\meDivH}{0.42\textwidth}
-% Helper: one subfigure = inexact image (top) stacked over exact image
-% (bottom), with its own caption. Swap the two image paths freely.
-\newcommand{\mePinchsubfig}[3]{% #1 inexact(top) #2 exact(bottom) #3 caption
-    \begin{subfigure}[t]{\meScale\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{#1}\\[\meVsep]
-        \includegraphics[width=\textwidth]{#2}
-        \caption{#3}
-    \end{subfigure}%
-}
-% -------------------------------------------------------------------------
-\begin{figure}%[htbp]
-    \centering
-    \begin{tabular}{@{}c@{\hspace{\meGap}}|@{\hspace{\meGap}}c@{\hspace{\meGap}}|@{\hspace{\meGap}}c@{\hspace{\meGap}}|@{\hspace{\meGap}}c@{}}
-        \mePinchsubfig
-            {images/exactness/v6_3rings_inner_outer_refined_input.pdf}   % inexact (top)
-            {images/exactness/v6_3rings_inner_outer_refined_padded.pdf}  % exact (bottom)
-            {Level $2$ pinch with uniform background on level $0$.}
-        &
-        \mePinchsubfig
-            {images/exactness/v6_3rings_horseshoe_lvl2_input.pdf}   % inexact (top)
-            {images/exactness/v6_3rings_horseshoe_lvl2_padded.pdf}  % exact (bottom)
-            {Level $2$ pinch with background on levels $0$ and $1$.}
-        &
-        \mePinchsubfig
-            {images/exactness/v6_3rings_middle_refined_input.pdf}   % inexact (top)  -- PLACEHOLDER
-            {images/exactness/v6_3rings_middle_refined_input.pdf}  % exact (bottom) -- PLACEHOLDER
-            {Six level $1$ boundary pinches with uniform background.}
-        &
-        \mePinchsubfig
-            {images/exactness/v6_4rings_inner_outer_refined_input.pdf}   % inexact (top)  -- PLACEHOLDER
-            {images/exactness/v6_4rings_inner_outer_refined_input.pdf}  % exact (bottom) -- PLACEHOLDER
-            {Two partitions without pinches (bottom still to be chosen).}
-    \end{tabular}
-    \caption{\robert{Pinch resolution on a valence-$8$ centre vertex. Left pair: a
-    two-level pinch, whose two coarse arcs give $\dim\mathcal{H}^1 = 2$
-    (Table~\ref{tab:atomic-cohomology}, ``Valence-$8$ pinch, level~2''); pinch
-    resolution grades the coarse arcs to the finest level and removes the defect.
-    Right pair: the two coarse patches sit at \emph{different} levels ($0$ and $1$),
-    which is why the pinch is detected at each vertex's finest level with contiguous
-    coarse runs merged across levels.}}
-    \label{fig:admissibility_padding}
-\end{figure}
 
 % --- Figure knobs --------------------------------------------------------
 % \geScale : overall size -- width of EACH of the three subfigures as a
@@ -1711,121 +1603,179 @@ We do not \robert{(yet?)} have a proof that $\textsc{Pad}$ terminates. For our i
 \section{Numerical Experiment}
 \label{sec:numerical_experiments}
 
-\todo{@ claude: write a little intro text as a bridge from previous section to the content of the section and to manage the expectations of the reader for the rest of this section.}
+\robert{Having assembled the adaptive spaces and the \textsc{Pad} step that keeps
+every covering a subdivision partition, we now put the construction to the test. We
+proceed from the inside out. Section~\ref{subsec:exactness_atomic} isolates the two
+ways an inadmissible covering can break the de~Rham complex and verifies, on a
+battery of atomic single-vertex partitions, that padding removes each of them.
+Section~\ref{subsec:maxwell} then confirms on the Maxwell eigenvalue problem that
+the padded spaces carry no spurious modes, and Section~\ref{subsec:vector_laplace}
+exercises the full adaptive loop on a vector Laplace problem with a singular
+solution. The emphasis throughout is on \emph{exactness} --- that the discrete
+spaces reproduce the cohomology of the domain --- rather than on approximation
+rates.}
 
 \subsection{Exactness and padding on atomic partitions}
 \label{subsec:exactness_atomic}
 
-\guidance{This subsection is the verification promised at the end of the \textsc{Pad} discussion: it establishes that pinch resolution and inadmissible-faces padding \emph{reliably} restore the correct cohomology across the admissibility boundary, not just on the single constructed input of the (dissolved) worked example.}
+% --- Atomic-test figure macros: mesh + inline k-form data mini-table ---
+\newcommand{\atomicImgW}{0.19\textwidth}
+\newcommand{\atomicimg}[1]{\begin{minipage}[c]{\atomicImgW}\centering\includegraphics[width=\linewidth]{#1}\end{minipage}}
+% natural-BC mini-table: #1-#3 |A^k|, #4-#6 dim S^k, #7-#9 dim H^k
+\newcommand{\minitab}[9]{{%
+    \small\setlength{\tabcolsep}{5pt}\renewcommand{\arraystretch}{1.15}%
+    \begin{tabular}[c]{@{}l@{\hspace{6pt}}ccc@{}}
+        \toprule
+        $k$ & $0$ & $1$ & $2$ \\
+        \midrule
+        $\lvert \activeDoFSet{k}{} \rvert$ & #1 & #2 & #3 \\
+        $\dim V^k$                         & #4 & #5 & #6 \\
+        $\dim \mathcal{H}^k$               & #7 & #8 & #9 \\
+        \bottomrule
+    \end{tabular}}}
+% Dirichlet (vanishing-trace) variant: ring space + relative harmonics
+\newcommand{\minitabD}[9]{{%
+    \small\setlength{\tabcolsep}{5pt}\renewcommand{\arraystretch}{1.15}%
+    \begin{tabular}[c]{@{}l@{\hspace{6pt}}ccc@{}}
+        \toprule
+        $k$ & $0$ & $1$ & $2$ \\
+        \midrule
+        $\lvert \activeDoFSet{k}{} \rvert$ & #1 & #2 & #3 \\
+        $\dim \mathring{V}^k$              & #4 & #5 & #6 \\
+        $\dim \mathring{\mathcal{H}}^k$    & #7 & #8 & #9 \\
+        \bottomrule
+    \end{tabular}}}
+% ------------------------------------------------------------------------------
+\begin{figure}%[htbp]
+    \centering
+    \begin{subfigure}{\textwidth}
+        \raggedright
+        \begin{tabular}{@{}cc@{\hspace{2em}}cc@{}}
+            \atomicimg{images/exactness/v8_quarters_lvl1_input.pdf}  & \minitab{66}{174}{108}{66}{174}{108}{1}{1}{0} &
+            \atomicimg{images/exactness/v8_quarters_lvl1_padded.pdf} & \minitab{73}{192}{120}{73}{192}{120}{1}{0}{0} \\
+        \end{tabular}
+        \centering
+        \caption{Valence-$8$ pinch, level $1$.}
+        \label{fig:pinch_level_1}
+    \end{subfigure}
+    \par\medskip
+    \begin{subfigure}{\textwidth}
+        \raggedright
+        \begin{tabular}{@{}cc@{\hspace{2em}}cc@{}}
+            \atomicimg{images/exactness/v8_quarters_lvl2_input.pdf}  & \minitab{195}{556}{360}{195}{556}{360}{1}{2}{0} &
+            \atomicimg{images/exactness/v8_quarters_lvl2_padded.pdf} & \minitab{209}{592}{384}{209}{592}{384}{1}{0}{0} \\
+        \end{tabular}
+        \centering
+        \caption{Valence-$8$ pinch, level $2$ (the defect doubles).}
+        \label{fig:pinch_level_2}
+    \end{subfigure}
+    \par\medskip
+    \begin{subfigure}{\textwidth}
+        \raggedright
+        \begin{tabular}{@{}cc@{\hspace{2em}}cc@{}}
+            \atomicimg{images/exactness/v10_mixed_level_arcs_input.pdf}  & \minitab{222}{627}{404}{222}{627}{404}{1}{2}{0} &
+            \atomicimg{images/exactness/v10_mixed_level_arcs_padded.pdf} & \minitab{239}{674}{436}{239}{674}{436}{1}{0}{0} \\
+        \end{tabular}
+        \centering
+        \caption{Valence-$10$ pinch with mixed-level arcs.}
+        \label{fig:pinch_mixed_level}
+    \end{subfigure}
+    \par\medskip
+    \begin{subfigure}{\textwidth}
+        \raggedright
+        \begin{tabular}{@{}cc@{\hspace{2em}}cc@{}}
+            \atomicimg{images/exactness/v9_cff_lvl1_input.pdf}  & \minitab{89}{234}{144}{89}{234}{144}{1}{2}{0} &
+            \atomicimg{images/exactness/v9_cff_lvl1_padded.pdf} & \minitab{91}{234}{144}{91}{234}{144}{1}{0}{0} \\
+        \end{tabular}
+        \centering
+        \caption{Valence-$9$ $2$-pinch ($\gamma = 3$).}
+        \label{fig:double_pinch}
+    \end{subfigure}
+    \par\medskip
+    \begin{subfigure}{\textwidth}
+        \raggedright
+        \begin{tabular}{@{}cc@{\hspace{2em}}cc@{}}
+            \atomicimg{images/exactness/v6_boundary_allcorners_lvl1_input.pdf}  & \minitabD{31}{132}{96}{31}{132}{96}{0}{6}{1} &
+            \atomicimg{images/exactness/v6_boundary_allcorners_lvl1_padded.pdf} & \minitabD{37}{132}{96}{37}{132}{96}{0}{0}{1} \\
+        \end{tabular}
+        \centering
+        \caption{Six boundary pinches (Dirichlet).}
+        \label{fig:pinch_resolution_boundary_pinches}
+    \end{subfigure}
+    \caption{Coverings with pinches before (left) and after padding (right). Each covering $\C$ is annotated with the number $\lvert\activeDoFSet{k}{}\rvert$ of active $k$-form DoFs, the dimension $\dim(V^k)$ of the adaptive subdivision $k$-form spaces $V^k = \hierSDFspace{k}{\C}{\L}$, and the dimension $\dim(\mathcal{H}^k)$ of the spaces of harmonic $k$-forms of $\hierSDFspace{k}{\C}{\L}$. Note that panel (e) shows $\dim(\mathring{V}^k)$ and $\dim(\mathring{\mathcal{H}}^k)$ for the spaces $\hierSDFspaceZero{k}{\C}{\L}$ with vanishing trace boundary conditions.}
+    \label{fig:pinch_resolution}
+\end{figure}
 
-\robert{Before applying the adaptive loop to a PDE, we validate the admissibility
-construction directly on a suite of atomic test cases and the two failure modes it
-is designed to prevent. Each case is a small concentric-ring mesh around a single
-interior vertex of chosen valence --- a topological \emph{disk}, so that
-\emph{every} discrete harmonic that appears is spurious. For each partition we
-compute the de Rham cohomology of the active space (from the ranks of the discrete
-$\extd$) before and after $\textsc{Pad}$; Table~\ref{tab:atomic-cohomology}
-collects the results under both natural and vanishing-trace (Dirichlet) boundary
-conditions.}
+Before applying the adaptive loop to a PDE, we validate the admissibility
+construction directly on a suite of coverings that represent minimal test cases. This allows us to study the different modes of failure of adaptive subdivision $k$-form spaces and to confirm that padding repairs them correctly so that the assumptions of the Theorems~\ref{theorem:linear_independence} and~\ref{theorem:exactness} are satisfied again. Each covering is a small concentric-ring mesh around a single, irregular vertex of chosen valence at the centre.
 
-\robert{A non-admissible partition can fail in two qualitatively different ways.
-In a \emph{hard failure} the kernel/image of $\extd$ on the active space genuinely
-changes, producing a spurious harmonic --- a discrete $k$-form that is closed but
-not exact with no topological counterpart --- which corrupts the Hodge
-decomposition and, for Maxwell, injects the spurious zero modes of
-Section~\ref{subsec:worked_example}. In a \emph{soft failure} the active basis is
-merely linearly \emph{dependent}: its column space is still an exact subcomplex, so
-the cohomology is correct, but the naive DoF count overstates the space dimension
-and the mass matrix is singular. In Table~\ref{tab:atomic-cohomology} a hard
-failure shows up as a nonzero harmonic $\dim\mathcal{H}^1$ on a disk, while a soft
-failure shows up as a rank deficit $n_k - \dim V^k > 0$; both distort the Euler
-characteristic $\chi$ away from the disk value $\chi = 1$, and both are removed by
-padding.}
+We want to verify the linear independence of all active DoFs $\activeDoFSet{k}{}(\C)$ of the respective coverings $\C$. We will test that by computing $\vert \activeDoFSet{k}{}(\C) \vert$ by counting elements and $\mathrm{dim}(\hierSDFspace{k}{\C}{\L}) \!=\! \mathrm{rank} (\Amat{k}{\C}{\L})$. If these two coincide, all active DoFs are indeed linearly independent.
 
-\robert{The controlled examples delineate the admissibility boundary precisely:}
-\begin{itemize}
-    \item \robert{\textbf{A coarse loop injects a spurious $\mathcal{H}^1$.} A
-    one-band-wide coarse annulus (the ``$3$-ring, inner$+$outer refined'' row) is
-    \emph{both} a hard failure ($\dim\mathcal{H}^1 = 1$) and a soft failure
-    ($n_1 = 360$, $\operatorname{rank} = 342$, deficit $18$): the single richest
-    case. Padding refines the middle band and restores an exact, independent basis.}
-    \item \robert{\textbf{Break the loop and the defect vanishes.} Replacing the
-    closed annulus by an open arc (``horseshoe'') makes the coarse region a disk
-    again: no spurious harmonic, confirming that the defect is topological (the
-    closed loop), not a mesh-size artifact.}
-    \item \robert{\textbf{It is specifically a one-band effect.} A
-    \emph{two}-band-wide coarse annulus (the ``$4$-ring, middle refined'' negative
-    control) is already admissible --- padding is a no-op --- so the defect is a
-    one-band-strip phenomenon, not a property of any coarse annulus.}
-    \item \robert{\textbf{Boundary notches are a Dirichlet-only, additive defect.}
-    Refining the stars of boundary ``corner'' vertices leaves coarse notches; under
-    natural BCs these are harmless slits, but under Dirichlet each is a relative
-    loop, and independent notches \emph{add} (six symmetric notches give exactly six
-    Dirichlet harmonics).}
-\end{itemize}
-\robert{The two-level \emph{pinch} and its \emph{doubling law}
-($\dim\mathcal{H}^1 = 2$, $\chi = -1$ before padding, both restored after) are the
-``Valence-$8$ pinch, level~2'' row of Table~\ref{tab:atomic-cohomology}, already
-illustrated in Fig.~\ref{fig:pinch_examples}. Further atomic cases are collected in
-Appendix~\ref{app:figure_gallery}.}
+Further, we want to test whether the adaptive $k$-form subdivision spaces $\hierSDFspace{k}{\C}{\L}$ possess the correct cohomology. Since the domains are topological disks, we expect the spaces of harmonic $k$-form to have the dimensions $\mathrm{dim}(\mathcal{H}^0) \!=\! 1$ and $\mathrm{dim}(\mathcal{H}^1) \!=\! \mathrm{dim}(\mathcal{H}^2) \!=\! 0$ for $\hierSDFspace{k}{\C}{\L}$ without boundary conditions. For each covering and its respective adaptive subdivision $k$-form space, we compute $\mathrm{dim}(\mathcal{H}^k) \!=\! \mathrm{dim}(\mathrm{ker}(\extd^{k})) - \mathrm{rank}(\extd^{k-1})$ explicitly from the rank of the discrete $k$-form derivative $\extd^k$ before and after padding.
 
-\begin{table}[htbp]
-  \centering
-  \small
-  \setlength{\tabcolsep}{4pt}
-  \begin{tabular}{@{}ll l ccc ccc ccc c@{}}
-    \toprule
-    & & & \multicolumn{3}{c}{active DoFs $n_k$} & \multicolumn{3}{c}{$\dim V^k=\operatorname{rank}A_k$} & \multicolumn{3}{c}{harmonic $\dim \mathcal{H}^k$} & \\
-    \cmidrule(lr){4-6}\cmidrule(lr){7-9}\cmidrule(lr){10-12}
-    case & BC & state & $0$ & $1$ & $2$ & $0$ & $1$ & $2$ & $0$ & $1$ & $2$ & $\chi$ \\
-    \midrule
-    \multirow{4}{*}{Valence-6 pinch, level 1} & \multirow{2}{*}{natural} & input & 60 & 156 & 96 & 60 & 156 & 96 & 1 & 1 & 0 & 0 \\
-     &  & padded & 61 & 156 & 96 & 61 & 156 & 96 & 1 & 0 & 0 & 1 \\
-    \cmidrule(l){2-13}
-     & \multirow{2}{*}{Dirichlet} & input & 36 & 132 & 96 & 36 & 132 & 96 & 0 & 1 & 1 & 0 \\
-     &  & padded & 37 & 132 & 96 & 37 & 132 & 96 & 0 & 0 & 1 & 1 \\
-    \midrule
-    \multirow{4}{*}{Valence-8 pinch, level 1} & \multirow{2}{*}{natural} & input & 66 & 174 & 108 & 66 & 174 & 108 & 1 & 1 & 0 & 0 \\
-     &  & padded & 73 & 192 & 120 & 73 & 192 & 120 & 1 & 0 & 0 & 1 \\
-    \cmidrule(l){2-13}
-     & \multirow{2}{*}{Dirichlet} & input & 38 & 146 & 108 & 38 & 146 & 108 & 0 & 1 & 1 & 0 \\
-     &  & padded & 45 & 164 & 120 & 45 & 164 & 120 & 0 & 0 & 1 & 1 \\
-    \midrule
-    \multirow{4}{*}{Valence-8 pinch, level 2} & \multirow{2}{*}{natural} & input & 195 & 556 & 360 & 195 & 556 & 360 & 1 & 2 & 0 & -1 \\
-     &  & padded & 209 & 592 & 384 & 209 & 592 & 384 & 1 & 0 & 0 & 1 \\
-    \cmidrule(l){2-13}
-     & \multirow{2}{*}{Dirichlet} & input & 147 & 508 & 360 & 147 & 508 & 360 & 0 & 2 & 1 & -1 \\
-     &  & padded & 161 & 544 & 384 & 161 & 544 & 384 & 0 & 0 & 1 & 1 \\
-    \midrule
-    \multirow{4}{*}{3-ring, inner+outer refined} & \multirow{2}{*}{natural} & input & 127 & 360 & 234 & 126 & 342 & 216 & 1 & 1 & 0 & 1 \\
-     &  & padded & 127 & 342 & 216 & 127 & 342 & 216 & 1 & 0 & 0 & 1 \\
-    \cmidrule(l){2-13}
-     & \multirow{2}{*}{Dirichlet} & input & 91 & 324 & 234 & 90 & 306 & 216 & 0 & 1 & 1 & 1 \\
-     &  & padded & 91 & 306 & 216 & 91 & 306 & 216 & 0 & 0 & 1 & 1 \\
-    \midrule
-    \multirow{4}{*}{4-ring, middle refined} & \multirow{2}{*}{natural} & input & 169 & 504 & 336 & 169 & 504 & 336 & 1 & 0 & 0 & 1 \\
-     &  & padded & 169 & 504 & 336 & 169 & 504 & 336 & 1 & 0 & 0 & 1 \\
-    \cmidrule(l){2-13}
-     & \multirow{2}{*}{Dirichlet} & input & 145 & 480 & 336 & 145 & 480 & 336 & 0 & 0 & 1 & 1 \\
-     &  & padded & 145 & 480 & 336 & 145 & 480 & 336 & 0 & 0 & 1 & 1 \\
-    \midrule
-    \multirow{4}{*}{Nested centre, level 3} & \multirow{2}{*}{natural} & input & 73 & 240 & 168 & 73 & 240 & 168 & 1 & 0 & 0 & 1 \\
-     &  & padded & 73 & 240 & 168 & 73 & 240 & 168 & 1 & 0 & 0 & 1 \\
-    \cmidrule(l){2-13}
-     & \multirow{2}{*}{Dirichlet} & input & 61 & 228 & 168 & 61 & 228 & 168 & 0 & 0 & 1 & 1 \\
-     &  & padded & 61 & 228 & 168 & 61 & 228 & 168 & 0 & 0 & 1 & 1 \\
-    \bottomrule
-  \end{tabular}
-  \caption{\robert{De Rham cohomology of the atomic subdivision-partition test cases, before
-  (\emph{input}) and after (\emph{padded}) pinch resolution and admissibility
-  padding, under natural and Dirichlet boundary conditions. $n_k$ is the number of
-  active $k$-form DoFs; $\dim V^k=\operatorname{rank}A_k$ is the true dimension of
-  the active space (a deficit $n_k-\dim V^k>0$ signals a linearly dependent basis);
-  $\dim\mathcal{H}^k$ is the rank-corrected harmonic dimension (Betti number). The
-  disk has Euler characteristic $\chi=1$ under both BCs; the pinched inputs deviate,
-  the padded spaces recover it.}}
-  \label{tab:atomic-cohomology}
-\end{table}
+\smallskip
+
+Figures~\ref{fig:pinch_resolution} and~\ref{fig:admissibility_padding} show the test coverings on the left and the padded coverings on the right, annotating every covering with its active $k$-form DoF count $\lvert\activeDoFSet{k}{}\rvert$, the true space dimension $\dim V^k = \operatorname{rank}(\Aop{k}{\C}{\L})$, and the harmonic dimension $\dim(\mathcal{H}^k)$. Note that we denote $V^k = \hierSDFspace{k}{\C}{\L}$ here to save horizontal space. The reported data belongs to $\hierSDFspace{k}{\C}{\L}$ throughout because the geometric defects of the covering are confined to the interior and thus, the vanishing-trace spaces $\hierSDFspaceZero{k}{\C}{\L}$ exhibit the same algebraic defects and are repaired identically by the padding. The sole exception is the covering in Figure~\ref{fig:pinch_resolution_boundary_pinches} with boundary pinches for which we present data for $\hierSDFspaceZero{k}{\C}{\L}$.
+
+\smallskip
+
+We can identify two trends in the data that are consistent with the theoretical predictions. First, Figure~\ref{fig:pinch_resolution} shows that vertex pinches lead to spurious $1$-form harmonics but do not introduce any linear dependencies since $\vert \activeDoFSet{k}{} \vert = \mathrm{dim}(\hierSDFspace{k}{\C}{\L})$ in any case, before and after padding. We can observe that padding indeed removes these spurious $1$-form harmonics.
+
+The individual panels show that the dimensions $\mathrm{dim}(\mathcal{H}^1)$ of the spurious harmonic $1$-form spaces increase with the level difference of target level and the second finest level of the faces in the covering star of the pinch vertex. For instance, the covering in Figure~\ref{fig:pinch_level_1} has a pinch on level $1$ with the next finest level being $0$. This leads to $\mathrm{dim}(\mathcal{H}^1) \! = \! 1$. In contrast, Figure~\ref{fig:pinch_level_2} has its pinch on level $2$ and $\mathrm{dim}(\mathcal{H}^1) \! = \! 2$. Figure~\ref{fig:pinch_mixed_level} also has a pinch on level $2$ but the second finest level is $1$, and hence $\mathrm{dim}(\mathcal{H}^1) \! = \! 1$ again.
+
+The dimensions $\mathrm{dim}(\mathcal{H}^1)$ of the spurious harmonic $1$-form spaces also increase with the number $\gamma$ of fine arcs around the pinch, see Definition~\ref{def:pinch_vertex}. Figure~\ref{fig:pinch_level_1} has $\gamma = 2$ and $\mathrm{dim}(\mathcal{H}^1) = 1$, while Figure~\ref{fig:double_pinch} has $\gamma = 3$ and $\mathrm{dim}(\mathcal{H}^1) \!=\! 2$.
+
+Figure~\ref{fig:pinch_resolution_boundary_pinches} presents data of the spaces $\hierSDFspaceZero{k}{\C}{\L}$ with vanishing boundary conditions, and thus we expect $\mathrm{dim}(\mathring{\mathcal{H}}^0) \!=\! \mathrm{dim}(\mathring{\mathcal{H}}^1) \!=\! 0$ and $\mathrm{dim}(\mathring{\mathcal{H}}^2) \!=\! 1$. The covering in the figure has six pinches at the boundary. The table reports $\mathrm{dim}(\mathring{\mathcal{H}}^1) = 6$ before padding, implying that the spurious harmonics act additively for multiple pinches.
+
+\smallskip
+
+The second observation is concerned with inadmissible faces and the defects they cause. The covering in Figure~\ref{fig:coarse_ring} exhibits both linear dependence and spurious cohomology. The active $0$-form DoFs have $1$ linear dependence, while the $1$-form and $2$-form DoFs have $18$ linear dependencies each. Further, we find $\mathrm{dim}(\mathcal{H}^1) \!=\! 1$. The padding step refines the entire coarse loop from level $0$ to level $1$.
+
+The covering in Figure~\ref{fig:horsehoe} opens the loop and decouples the two modes of failure: We observe linear dependencies but no spurious harmonics. The linear dependencies split into $3$ $0$-form DoFs, $18$ $1$-form DoFs, and $15$ $2$-form DoFs. The padding space removes these linearly dependent DoFs while maintaining the correct cohomology.
+
+Finally, Figure~\ref{fig:nested_center} shows the prototypical configuration around a vertex that has been refined gradedly by the vertex quadrisection operator from Definition~\ref{def:vertex_quadrisection_operator}. We see that the covering has no inadmissible faces since all vertices become interior at just the right level, see Figure~\ref{fig:covering_interior_vertices}. This means that we can run the \textsc{Pad} step unconditionally in the adaptive loop without any risks of over-refining regions that are already admissible.
+
+\smallskip
+
+This section confirms that the \textsc{Pad} step correctly restores the geometric defects of the covering produced by the \text{Refine} and makes it a subdivision partition. Thus, it also restores the important algebraic properties of linear independence and exactness of the complex of the adaptive subdivision $k$-form spaces, both with and without vanishing trace boundary conditions.
+
+\begin{figure}[tb]
+    \centering
+    \begin{subfigure}{\textwidth}
+        \raggedright
+        \begin{tabular}{@{}cc@{\hspace{2em}}cc@{}}
+            \atomicimg{images/exactness/v6_3rings_inner_outer_refined_input.pdf}  & \minitab{127}{360}{234}{126}{342}{216}{1}{1}{0} &
+            \atomicimg{images/exactness/v6_3rings_inner_outer_refined_padded.pdf} & \minitab{127}{342}{216}{127}{342}{216}{1}{0}{0} \\
+        \end{tabular}
+        \centering
+        \caption{$3$-ring, inner$+$outer refined (closed one-band annulus).}
+        \label{fig:coarse_ring}
+    \end{subfigure}
+    \par\medskip
+    \begin{subfigure}{\textwidth}
+        \raggedright
+        \begin{tabular}{@{}cc@{\hspace{2em}}cc@{}}
+            \atomicimg{images/exactness/v6_3rings_horseshoe_lvl2_input.pdf}  & \minitab{433}{1259}{827}{430}{1241}{812}{1}{0}{0} &
+            \atomicimg{images/exactness/v6_3rings_horseshoe_lvl2_padded.pdf} & \minitab{430}{1241}{812}{430}{1241}{812}{1}{0}{0} \\
+        \end{tabular}
+        \centering
+        \caption{$3$-ring horseshoe, level $2$ (open arc).}
+        \label{fig:horsehoe}
+    \end{subfigure}
+    \par\medskip
+    \begin{subfigure}{\textwidth}
+        \raggedright
+        \begin{tabular}{@{}cc@{\hspace{2em}}cc@{}}
+            \atomicimg{images/exactness/v6_nested_center_lvl3_input.pdf}  & \minitab{73}{240}{168}{73}{240}{168}{1}{0}{0} &
+            \atomicimg{images/exactness/v6_nested_center_lvl3_padded.pdf} & \minitab{73}{240}{168}{73}{240}{168}{1}{0}{0} \\
+        \end{tabular}
+        \centering
+        \caption{Nested centre, level $3$ (deep but admissible).}
+        \label{fig:nested_center}
+    \end{subfigure}
+    \caption{Coverings with inadmissible faces before (left) and after (right) padding. Each covering $\C$ is annotated with the number $\lvert\activeDoFSet{k}{}\rvert$ of active $k$-form DoFs, the dimension $\dim V^k$ of the adaptive subdivision $k$-form spaces $V^k \coloneq \hierSDFspace{k}{\C}{\L}$, and the dimension $\dim\mathcal{H}^k$ of the spaces of harmonic $k$-forms of $\hierSDFspace{k}{\C}{\L}$.}
+    \label{fig:admissibility_padding}
+\end{figure}
 
 \FloatBarrier
 
@@ -2202,7 +2152,8 @@ $\mathrm{pendingVerts} \leftarrow \emptyset$\;
 \robert{This gallery collects the remaining atomic subdivision-partition test cases
 that are not reproduced in the main text (Section~\ref{subsec:exactness_atomic}).
 Each case is shown as an input/padded pair; the corresponding cohomology of the
-richer cases is quantified in Table~\ref{tab:atomic-cohomology}. The
+richer cases is annotated in Figs.~\ref{fig:pinch_resolution}
+and~\ref{fig:admissibility_padding}. The
 \texttt{v10} trio (Fig.~\ref{fig:gallery_v10}) stress-tests the coarser-gap guard
 in the pinch-arc detector, and is included for completeness as supplementary
 material.}
