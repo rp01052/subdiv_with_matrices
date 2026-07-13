@@ -1782,10 +1782,6 @@ This section confirms that the \textsc{Pad} step correctly restores the geometri
 \subsection{Maxwell Eigenvalue problem}
 \label{subsec:maxwell}
 
-\todo{@ claude: Did I capture the essence of the following paragraph well in the section?
-
-\guidance{Thesis of this subsection, stated up front so it does not read as a Maxwell-flavoured repeat of Section~\ref{subsec:exactness_atomic}: Section~\ref{subsec:exactness_atomic} established that padding restores the correct cohomology; this section shows the practical consequence for an actual eigensolver. Because a spurious harmonic is closed, its Rayleigh quotient is exactly zero, so the admissibility defect lives entirely at $\lambda = 0$ and leaves the physical band uncontaminated --- in sharp contrast to the interleaved pollution of non-compatible elements. That confinement-to-the-kernel is the new point here, not implied by the cohomology counts of Section~\ref{subsec:exactness_atomic}.}}
-
 This section studies the Maxwell eigenvalue problem, a classical test case to verify the properties of discrete differential complexes. Section~\ref{subsec:exactness_atomic} has already established that the \textsc{Pad} step restores the correct cohomology for the spaces $\hierSDFspace{k}{\C}{\L}$ by repairing the geometric defects of the covering $\C$ so that it becomes a subdivision partition. In constrast, this section studies how the spurious harmonic $1$-forms of a covering concretely affect the solution of the eigenproblem.
 
 The weak form of the Maxwell cavity (curl--curl) eigenvalue problem on the domain $\M = [0,\pi]^2$ with mesh $\T_\L$ is given by: Find $\lambda_{h,\coarseIdxone} \in \mathbb{R}$ and $u_\coarseIdxone \in \hierSDFspaceZero{1}{\C}{\L}$ such that
@@ -1796,8 +1792,12 @@ with analytic spectrum $\lambda_\coarseIdxone = m^2 + n^2$, where $m$ and $n$ ar
 
 Applying Loop subdivision alters the domain slightly, so we do not compare the discrete spectrum directly with the analytic spectrum  $\lambda_\coarseIdxone$. Instead, we compare the discrete spectra $\lambda_\coarseIdxone$ with the spectrum of $\FEECspaceZero{k}{\L}$ with $\C^{\mathrm{FEEC}} = \T_\L$, a superspace of both $\hierSDFspaceZero{1}{\C^{\mathrm{pinch}}}{\L}$ and $\hierSDFspaceZero{1}{\C^{\mathrm{padded}}}{\L}$ that verifiably converges to the correct spectrum, see~\cite{Arnold.FEEC}.
 
-\robert{Figure~\ref{fig:Maxwell_eigenvalues} reports the discrete spectra with $\lambda_{h,\coarseIdxone} > 0$ for all three coverings. Outside of small approximation errors, the spectra are identical across the three
-partitions and track the analytic values. That means that the defect caused by the spurious $1$-form harmonics of $\hierSDFspaceZero{1}{\C^{\mathrm{pinch}}}{\L}$ are confined to the eigenspace of $\lambda_{h,\coarseIdxone} = 0$. The reason for that is that the }
+\robert{Figure~\ref{fig:Maxwell_eigenvalues} reports the discrete spectra with $\lambda_{h,\coarseIdxone} > 0$ for all three coverings. Outside of small approximation errors, the spectra agree across all the three
+partitions. That means that the defects caused by the spurious $1$-form harmonics of $\hierSDFspaceZero{1}{\C^{\mathrm{pinch}}}{\L}$ are confined to the eigenspace of $\lambda_{h,\coarseIdxone} = 0$. The reason for that is that $\extd \circ \extd \equiv 0$ holds \emph{pointwise} on $\hierSDFspaceZero{0}{\C}{\L}$ by construction of the subdivision basis, regardless of whether $\C$ satisfies the subdivision partition conditions. Consequently, the discrete Hodge--Helmholtz decomposition
+\begin{equation}
+  \hierSDFspaceZero{1}{\C}{\L} = \extd\big[\hierSDFspaceZero{0}{\C}{\L}\big] \oplus \mathcal{H}^1 \oplus \extd^*\big[\hierSDFspaceZero{2}{\C}{\L}\big]
+\end{equation}
+splits $L^2$-orthogonally for every covering $\C$, admissible or not, where $\extd^*$ denotes the $L^2$-adjoint of $\extd$ on the finite-dimensional spaces (not the continuous Hodge codifferential). Writing $u = u_0 + u_H + u_*$ for the components of $u \in \hierSDFspaceZero{1}{\C}{\L}$ in the three summands, $\extd u_0 = \extd \extd \varphi = 0$ for the potential $\varphi \in \hierSDFspaceZero{0}{\C}{\L}$ generating $u_0$, and $\extd u_H = 0$ since $\mathcal{H}^1 \subset \ker(\extd)$ by definition. Hence $\extd u = \extd u_*$ for every $u$: no admissibility defect of $\C$ can leak $\extd$-content into the potential component $u_0$, because that would require $\extd \extd \varphi \neq 0$ for some $\varphi$, contradicting the identity above. A pinch can therefore only ever enlarge $\mathcal{H}^1$ beyond its topologically expected dimension, inflating the multiplicity of the $\lambda_{h,\coarseIdxone} = 0$ eigenspace, and never the magnitude of $\extd u_*$ that produces the physical, $\lambda_{h,\coarseIdxone} > 0$ band. It is this pointwise validity of $\extd \circ \extd = 0$ -- not merely the closedness of $\mathcal{H}^1$ -- that rules out the interleaved spurious eigenvalues typical of non-compatible discretisations (e.g.\ nodal vector Lagrange elements for $\mathbf{H}(\mathrm{curl})$), where $\extd \circ \extd \neq 0$ discretely and gradient-like modes leak nonzero curl content directly into the physical band.}
 
 %\begin{table}[htbp]
 %    \centering
@@ -1849,114 +1849,145 @@ partitions and track the analytic values. That means that the defect caused by t
 
 \FloatBarrier
 
-\subsection{Vector Laplace problem}
+\subsection{$1$-Form Laplace problem}
 \label{subsec:vector_laplace}
 
 The $1$-form Laplace problem is given by
 \begin{equation}
-  (\extd \boldsymbol{\delta} + \boldsymbol{\delta} \extd) u = f
+    \label{eq:strong_laplace}
+    (\extd \boldsymbol{\delta} + \boldsymbol{\delta} \extd) u = f
 \end{equation}
-on a domain $\M$. Since the operator $\boldsymbol{\delta}$ is not well-defined for a (subdivision) $1$-form, we introduce the auxiliary variable $\boldsymbol{\delta} \sigma = u$ and use the FEEC-typical mixed weak formulation
+on a domain $\M$. Since the operator $\boldsymbol{\delta}$ is not well-defined for a (subdivision) $1$-form, we introduce the auxiliary variable $\boldsymbol{\delta} \sigma = u$ and use the FEEC-typical mixed weak formulation: Find $\sigma \in H^1(\M)$ and $u \in \HcurlM{\M}$ such that
 \begin{align}
     \label{eq:mixed_laplacian1}
     (\sigma, \tau)_\M - (u, \extd \tau)_\M &= 0 \qquad \forall \tau \in H^1(\M), \\
     \label{eq:mixed_laplacian2}
-    (\extd \sigma, v)_\M + (\extd u, \extd v)_\M &= (f, v)_\M \qquad \forall v \in \HocurlM{\M}.
+    (\extd \sigma, v)_\M + (\extd u, \extd v)_\M &= (f, v)_\M \qquad \forall v \in \HcurlM{\M}.
 \end{align}
 
-This section studies the \emph{circular layer} test case from \cite{Cabanas.2026} as an $L$-sweep that exercises the full \textsc{Solve}--\textsc{Estimate}--\textsc{Mark}--\textsc{Refine}--\textsc{Pad} loop. Its analytical solution is given by
+This section studies the circular layer test case from \cite{Cabanas.2026} to exercise the entire adaptive loop of \textsc{Solve}--\textsc{Estimate}--\textsc{Mark}--\textsc{Refine}--\textsc{Pad}. Its analytical solution is given by
 \begin{equation}
     \label{eq:circular_layer_test_case}
     \Vec{u}_{\mathrm{CL}}(x) = \tanh \big(\alpha (\vvert{\vvert{x}}^2 - R^2) \big) \; \Vec{b}(x) \quad \text{with} \quad \Vec{b}(x) = \begin{bmatrix}
-        \sin(\pi x_1) \\
-        \sin(\pi x_2)
-    \end{bmatrix}
+        2 x_2^2 (x_2 - 1)^2 (x_1^2 - x_1) (2 x_1 - 1) \\[2pt]
+        2 x_1^2 (x_1 - 1)^2 (x_2^2 - x_2) (2 x_2 - 1)
+    \end{bmatrix},
 \end{equation}
-and $\alpha = 100$ and $R = 0.3$. The vector part $\Vec{b}(x)$ provides a background field while the $\tanh$ term adds a sharp, radially symmetric transition between $+\Vec{b}$ and $-\Vec{b}$ localised on the ring $\vvert{\vvert{x}} = R$. The right-hand side $f_{\mathrm{CL}}$ corresponding to $\Vec{u}_{\mathrm{CL}}$ can be computed using the (strong) vector Laplace equation. The exact solution is thus smooth almost everywhere and steep only on a thin annulus --- the canonical setting for adaptivity. We impose \emph{natural} boundary conditions (no trace on $u$), in contrast to the Dirichlet Maxwell case of Section~\ref{subsec:maxwell}.
+where $\alpha = 100$, $R = 0.3$, and $\Vec{u}_{\mathrm{CL}}$ is the vector-proxy of the $1$-form $u_{\mathrm{CL}}$. The vector part $\Vec{b}(x)$ provides a background field while the $\tanh$ term adds a sharp, radially symmetric transition between $+\Vec{b}$ and $-\Vec{b}$ localised on the ring $\vvert{\vvert{x}} = R$. The right-hand side $f_{\mathrm{CL}}$ corresponding to $\Vec{u}_{\mathrm{CL}}$ can be computed using the (strong) Laplace equation~\eqref{eq:strong_laplace}. 
 
-\robert{Because $\Vec{u}_{\mathrm{CL}}$ is known in closed form, every solve reports two quantities: the computable residual estimator $\eta$ of Section~\ref{subsec:estimate}, which \emph{drives marking}; and the true error $\Ltwoerror \coloneqq \vvert{u_h - \Vec{u}_{\mathrm{CL}}}_{L^2(\M)}$, computed against $\Vec{u}_{\mathrm{CL}}$ interpolated into a degree-$3$ vector-CG space on the finest mesh, which \emph{measures accuracy} and is never used for marking. Marking by an estimator and measuring by the truth is what makes the error-versus-DoF comparison below meaningful.}
+\begin{figure}[tb]
+    \centering
+    \begin{minipage}[c]{0.88\textwidth}
+        \centering
+        \begin{subfigure}[b]{0.33\linewidth}
+            \includegraphics[width=\textwidth]{images/laplace_case/u_L4_step1.pdf}
+            \caption{Step $1$.}
+        \end{subfigure}\hfill
+        \begin{subfigure}[b]{0.33\linewidth}
+            \includegraphics[width=\textwidth]{images/laplace_case/u_L4_step2.pdf}
+            \caption{Step $2$.}
+        \end{subfigure}\hfill
+        \begin{subfigure}[b]{0.33\linewidth}
+            \includegraphics[width=\textwidth]{images/laplace_case/u_L4_step3.pdf}
+            \caption{Step $3$.}
+        \end{subfigure}
+        \\[6pt]
+        \begin{subfigure}[b]{0.33\linewidth}
+            \includegraphics[width=\textwidth]{images/laplace_case/u_L4_step4.pdf}
+            \caption{Step $4$.}
+        \end{subfigure}\hfill
+        \begin{subfigure}[b]{0.33\linewidth}
+            \includegraphics[width=\textwidth]{images/laplace_case/u_L4_step5.pdf}
+            \caption{Step $5$.}
+        \end{subfigure}\hfill
+        \begin{subfigure}[b]{0.33\linewidth}
+            \includegraphics[width=\textwidth]{images/laplace_case/u_L4_step6.pdf}
+            \caption{Step $6$.}
+        \end{subfigure}
+    \end{minipage}\hfill
+    \begin{minipage}[c]{0.12\textwidth}
+        \centering
+        \includegraphics[trim = 0mm 0mm 5mm 0mm, clip, height=6.2cm]{images/laplace_case/u_colorbar_L4.pdf}
+    \end{minipage}
+    \caption{Snapshot of the adaptive solution $\vvert{\Vec{u}^n}$ after $n$ steps, approximated using $\hierSDFspace{k}{\C}{4}$ with $\L = 4$, overlaid with the subdivision partition $\C^n$ as a grey wireframe. The colorbar represents the magnitude $\vvert{\Vec{u}^6}$ after step $6$ and is applied across all steps.}
+    \label{fig:adaptive_solution}
+\end{figure}
 
-\paragraph{Experimental design.} \robert{For each maximum refinement depth $L \in \{3, 4, 5\}$ we run the adaptive loop (per-vertex Dörfler marking with $\theta = 0.9$, followed by \textsc{Pad}) to estimator saturation, and, as a reference, a single \emph{uniform} solve at level $L$. The saturation criterion is discussed below; it stops the L=3 run at step $4$, L=4 at step $6$, and L=5 at step $8$. Table~\ref{tab:cl_headline} collects the headline numbers at the final, saturated adaptive step. The adaptive scheme reaches the accuracy of the uniform level-$L$ solve at a small fraction of its $1$-form DoFs $n_1$, and the saving \emph{grows with depth} --- $3.3\times$, $4.6\times$, $5.9\times$ at $L = 3, 4, 5$ --- because the layer needs fine resolution only locally, so the deeper the refinement allowed, the more uniform refinement wastes on the smooth bulk. Figure~\ref{fig:cl_solution} shows the mechanism directly: the partition concentrates refinement on the circular layer while leaving the interior and exterior coarse.}
+Figure~\ref{fig:adaptive_solution} displays the solution $u^n$ after $n$ steps of the adaptive loop for $\L=4$, meaning that the covering cannot be refined beyond that level. The refinement stays concentrated around the circle to capture the sharp transition of the analytical solution. The simulations further confirm that the fine annuli formed by the refined regions do not add spurious harmonics. 
 
-\begin{table}[htbp]
+The marking is driven by the computable vertex-based estimator $\nu^2_\coarseIdxtwo$ from Equation~\eqref{eq:vertex_residual}. Figure~\ref{fig:cl_convergence} shows how this marking drives the $L^2$ error $\Ltwoerror \coloneq \vvert{u - \Vec{u}_{\mathrm{CL}}}_{L^2(\T_\L)}$ computed against the analytical solution $\Vec{u}_{\mathrm{CL}}$ for $\L \in \{3, 4, 5\}$. The left panel~\ref{fig:cl_saturation_fig} compares the total estimator $\eta$ and the refinable estimator $\rho$ from Equation~\eqref{def:total_and_refinable_residuals}. For the first few levels, the two coincide. The two estimators diverge as soon as the partition $\C^n$ contains faces on the finest level $\L$ because the residuals of these faces are not included in the refinable estimator. The total estimator stagnates at a non-zero value that depends on $\L$, whereas the refinable estimator converges towards $0$ as the partition $\C^n$ transitions towards $\T_\L$. The simulation in Figure~\ref{fig:adaptive_solution} used exactly that behaviour as stopping criterion, terminating the simulation as soon as the refinable-to-total ratio fell below $0.05$.
+
+\begin{figure}[tb]
+    \centering
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/laplace_case/fig_estimator_saturation.pdf}
+        \caption{Estimator saturation.}
+        \label{fig:cl_saturation_fig}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/laplace_case/fig_l2_vs_dofs.pdf}
+        \caption{Error versus DoFs.}
+        \label{fig:cl_l2_vs_dofs}
+    \end{subfigure}
+    \caption{\robert{(a) True $L^2$ error against active $1$-form DoFs $n_1$ for the adaptive runs (solid, one envelope) and uniform references (hollow squares) at $L = 3, 4, 5$; the horizontal gap at matched accuracy is the DoF saving. (b) Total estimator $\eta$ (dashed) and its refineable part (solid, the contribution from faces below the finest level $L$) against $n_1$; the refineable part collapsing below the total is the signature of hitting the $L$-ceiling.}}
+    \label{fig:cl_convergence}
+\end{figure}
+
+\paragraph{Estimator saturation and a stopping criterion.} \robert{Figure~\ref{fig:cl_convergence} (left) plots, for each $L$, the total estimator $\eta$ against its refineable part --- the contribution from faces not yet at the finest level $L$. As the sweep exhausts the depth-$L$ ceiling, the refineable part collapses below the total: the remaining error sits at level $L$ and cannot be refined further. We stop the loop on the dimensionless \emph{refineable energy fraction}
+\begin{equation}
+    \xi = \frac{\text{refineableEtaSq}}{\text{totalEtaSq}}, \qquad \text{stop when } \xi \leq 0.05,
+\end{equation}
+where the numerator is the estimated error energy on faces below level $L$ --- precisely the energy Dörfler can still act on. This is the right metric for three reasons: it is exactly the quantity the plot tracks; it is computable (no exact solution needed, unlike the $L^2$ error); and it is dimensionless, so the same $\xi$ works across $L$ --- unlike the absolute $\eta$, whose $L$-dependent floor makes no single tolerance portable. The $L = 3$ run illustrates it: $\rho$ holds at $1.0$ for steps $0$--$2$ (nothing at level $L$ yet), then drops $0.300 \to 0.026$ and stops at step $4$.}
+
+\paragraph{The DoF saving grows with $L$.} \robert{Figure~\ref{fig:cl_convergence} (right) plots the true $L^2$ error against $n_1$ on log--log axes. The three adaptive runs sit on a single convergence envelope, while each uniform reference (hollow square, with a dotted floor at its error) lies far to the right at the same accuracy: the horizontal gap \emph{is} the DoF saving, $3.3\times \to 4.6\times \to 5.9\times$, growing with $L$ because the layer needs fine resolution only locally, so the deeper the refinement allowed, the more uniform refinement wastes on the smooth bulk. We compare in the true $L^2$ error rather than in $\eta$ because $\eta$ is not comparable across $L$ (it carries the finest cell size $h_\L = h_0/2^L$ in its scaling, see below), whereas the $L^2$ error is a genuine norm with no finest-mesh normalisation --- it is identical at step $0$ for every $L$, as it must be.}
+
+\begin{table}[tb]
     \centering
     \small
-    \begin{tabular}{@{}r c rr rr cc@{}}
+    \begin{tabular}{@{}r c cc cc cc@{}}
         \toprule
-        & & \multicolumn{2}{c}{adaptive (saturated)} & \multicolumn{2}{c}{uniform level $L$} & & \\
-        \cmidrule(lr){3-4}\cmidrule(lr){5-6}
-        $L$ & step & $n_1$ & $\Ltwoerror$ & $n_1$ & $\Ltwoerror$ & DoF saving & $L^2$ gap \\
+        & \multicolumn{3}{c}{adaptive (saturated at $\xi = 0.05$)} & \multicolumn{2}{c}{uniform level $L$} & & \\
+        \cmidrule(lr){2-4}\cmidrule(lr){5-6}
+        $L$ & step & $\vert \activeDoFSet{1}{} \vert$ & $\Ltwoerror$ & $\vert \activeDoFSet{1}{} \vert$ & $\Ltwoerror$ & DoF saving & $L^2$ gap \\
         \midrule
         3 & 4 & $3\,265$  & $9.09\cdot10^{-4}$ & $10\,688$  & $8.34\cdot10^{-4}$ & $\mathbf{3.3\times}$ & $1.09\times$ \\
         4 & 6 & $9\,235$  & $5.13\cdot10^{-4}$ & $42\,496$  & $3.70\cdot10^{-4}$ & $\mathbf{4.6\times}$ & $1.39\times$ \\
         5 & 8 & $28\,588$ & $4.06\cdot10^{-4}$ & $169\,472$ & $2.00\cdot10^{-4}$ & $\mathbf{5.9\times}$ & $2.03\times$ \\
         \bottomrule
     \end{tabular}
-    \caption{\robert{The $L$-sweep at the saturated adaptive step. The adaptive scheme matches the uniform level-$L$ accuracy at $3.3\text{--}5.9\times$ fewer $1$-form DoFs $n_1$, with the saving growing with $L$. The adaptive $L^2$ error floors slightly above the uniform value at the same $L$ (the ``$L^2$ gap''), a consequence of marking in the energy norm while measuring in $L^2$; this is decomposed in Table~\ref{tab:cl_decomp}. The DoF count is not flat across $L$ because saturation is deliberately conservative (see the stopping criterion below); a looser stop sharpens the saving to $3.7\times / 5.4\times / 9.3\times$.}}
+    \caption{\robert{Headline numbers at the final, saturated adaptive step ($\xi \leq 0.05$) for each $L$, against a uniform level-$L$ reference. `DoF saving' is the uniform/adaptive ratio of $\vert \activeDoFSet{1}{} \vert$ at matched accuracy; `$L^2$ gap' is the adaptive/uniform ratio of $\Ltwoerror$, decomposed in Table~\ref{tab:cl_decomp}.}}
     \label{tab:cl_headline}
 \end{table}
 
-\begin{figure}[htbp]
+
+\begin{table}[tb]
     \centering
-    \begin{minipage}[c]{0.80\textwidth}
-        \centering
-        \begin{subfigure}[b]{0.31\linewidth}
-            \includegraphics[width=\textwidth]{images/laplace_case/u_L5_step0.pdf}
-            \caption{Step $0$.}
-        \end{subfigure}\hfill
-        \begin{subfigure}[b]{0.31\linewidth}
-            \includegraphics[width=\textwidth]{images/laplace_case/u_L5_step2.pdf}
-            \caption{Step $2$.}
-        \end{subfigure}\hfill
-        \begin{subfigure}[b]{0.31\linewidth}
-            \includegraphics[width=\textwidth]{images/laplace_case/u_L5_step4.pdf}
-            \caption{Step $4$.}
-        \end{subfigure}
-        \\[6pt]
-        \begin{subfigure}[b]{0.31\linewidth}
-            \includegraphics[width=\textwidth]{images/laplace_case/u_L5_step6.pdf}
-            \caption{Step $6$.}
-        \end{subfigure}\hfill
-        \begin{subfigure}[b]{0.31\linewidth}
-            \includegraphics[width=\textwidth]{images/laplace_case/u_L5_step7.pdf}
-            \caption{Step $7$.}
-        \end{subfigure}\hfill
-        \begin{subfigure}[b]{0.31\linewidth}
-            \includegraphics[width=\textwidth]{images/laplace_case/u_L5_step8.pdf}
-            \caption{Step $8$.}
-        \end{subfigure}
-    \end{minipage}\hfill
-    \begin{minipage}[c]{0.14\textwidth}
-        \centering
-        \includegraphics[height=5.2cm]{images/laplace_case/u_colorbar_L5.pdf}
-    \end{minipage}
-    \caption{\robert{Adaptive sweep at $L = 5$: the magnitude $\vvert{\Vec{u}^n_{\mathrm{CL}}}$ on the finest mesh (viridis) with the subdivision partition $\C^n_{\mathrm{CL}}$ overlaid as a thin grey wireframe, at selected steps $n$. Step by step the loop concentrates refinement tightly on the circular layer where $\vvert{\Vec{u}_{\mathrm{CL}}}$ is steep, leaving the smooth interior and exterior coarse. The colour range is fixed from the final, most-converged step (shared colorbar, right), so that under-resolved early steps do not blow out the scale.}}
-    \label{fig:cl_solution}
-\end{figure}
+    \small
+    \begin{tabular}{@{}r@{\hspace{20pt}}ccc@{\hspace{20pt}}ccc@{\hspace{20pt}}ccc@{}}
+        \toprule
+        & \multicolumn{3}{c}{$\xi \leq 0.3$} & \multicolumn{3}{c}{$\xi \leq 0.2$} & \multicolumn{3}{c}{$\xi \leq 0.05$ (as in Figure~\ref{fig:cl_convergence})} \\
+        \cmidrule(r{20pt}){2-4}\cmidrule(r{20pt}){5-7}\cmidrule(r{8pt}){8-10}
+        \multirow{2}{*}{$L$} & last & \multirow{2}{*}{$\vert \activeDoFSet{1}{} \vert$} & DoF & last & \multirow{2}{*}{$\vert \activeDoFSet{1}{} \vert$} & DoF & last & \multirow{2}{*}{$\vert \activeDoFSet{1}{} \vert$} & DoF \\
+         & step & & saving & step & & saving & step & & saving \\
+        \midrule
+        3 & 3 & $2\,869$   & $\mathbf{3.7\times}$ & 4 & $3\,265$  & $3.3\times$ & 4 & $3\,265$  & $3.3\times$ \\
+        4 & 5 & $7\,874$   & $\mathbf{5.4\times}$ & 5 & $7\,874$  & $5.4\times$ & 6 & $9\,235$  & $4.6\times$ \\
+        5 & 6 & $18\,280$  & $\mathbf{9.3\times}$ & 7 & $24\,143$ & $7.0\times$ & 8 & $28\,588$ & $5.9\times$ \\
+        \bottomrule
+    \end{tabular}
+    \caption{\robert{Stopping step, DoF count, and DoF saving as the saturation tolerance $\xi$ is varied (read from the as-run trajectories, no re-solve). The looser $\xi \approx 0.2\text{--}0.3$ recovers nearly all the accuracy --- within $1.5\%$ of the saturated $L^2$ error --- at a markedly better DoF saving, avoiding the runaway final solves of the strict tail.}}
+    \label{tab:cl_tol}
+\end{table}
 
-\paragraph{The DoF saving grows with $L$.} \robert{Figure~\ref{fig:cl_convergence} (left) plots the true $L^2$ error against $n_1$ on log--log axes. The three adaptive runs sit on a single convergence envelope, while each uniform reference (hollow square, with a dotted floor at its error) lies far to the right at the same accuracy: the horizontal gap \emph{is} the DoF saving, $3.3\times \to 4.6\times \to 5.9\times$, growing with $L$. We compare in the true $L^2$ error rather than in $\eta$ because $\eta$ is not comparable across $L$ (it carries the finest cell size $h_\L = h_0/2^L$ in its scaling, see below), whereas the $L^2$ error is a genuine norm with no finest-mesh normalisation --- it is identical at step $0$ for every $L$, as it must be.}
+\robert{But $\xi = 0.05$ is deliberately conservative. Once the refineable part has decoupled from the total ($\rho$ first falls below $1$), the true $L^2$ error is already essentially converged; the remaining steps buy almost nothing. Reading the stopping step off the same trajectories for a range of tolerances (Table~\ref{tab:cl_tol}, all computable from one run --- no re-solve), the $L^2$ error at $\xi = 0.3$ is within $1.5\%$ of the fully-saturated value for every $L$. The strict tail hurts most exactly where it is most expensive: for $L = 5$, tightening $\xi$ from $0.3$ to $0.05$ adds $+10\,308$ DoFs ($+56\%$) and $\approx 6.0$ hours of solve time for a $1.2\%$ $L^2$ gain, because the marginal faces it refines carry vanishing error. A tolerance $\xi \approx 0.2\text{--}0.3$ --- stopping once the refineable part has clearly decoupled rather than nearly vanished --- is the better operating point, sharpening the DoF saving to $3.7\times / 5.4\times / 9.3\times$. The absolute vertical offset between the $L$ curves in Figure~\ref{fig:cl_convergence} (left) is largely normalisation ($\eta \sim h_\L$), not accuracy, so each panel is read \emph{within} its $L$; cross-$L$ accuracy is the job of Figure~\ref{fig:cl_convergence} (right).}
 
-\robert{The adaptive $L^2$ error floors slightly \emph{above} the uniform value at the same $L$, and this ``$L^2$ gap'' widens with $L$ (Table~\ref{tab:cl_headline}, last column). This is not a solver defect but the exact signature of marking in the energy norm while measuring in $L^2$, and it decomposes cleanly. Split the domain into the \emph{ring} annulus, where the $\tanh$ layer lives, and the smooth \emph{bulk}. Their supports are disjoint, so the squared $L^2$ error adds in quadrature, $\vvert{u_h - u}^2 = \int_{\mathrm{ring}} \vvert{e}^2 + \int_{\mathrm{bulk}} \vvert{e}^2 = R^2 + B^2$. Both schemes drive the ring to level $L$, so they share the same ring error $R$; uniform also resolves the bulk ($B \approx 0$), so $\vvert{u_h - u}_{\mathrm{unif}} \approx R$, while adaptive leaves the bulk coarse, so $\vvert{u_h - u}_{\mathrm{adap}} = \sqrt{R^2 + B^2}$. Backing the bulk term $B = \sqrt{\text{adaptive}^2 - \text{uniform}^2}$ out of the measured errors (Table~\ref{tab:cl_decomp}) shows that $B$ is essentially \emph{constant} at $\approx 3.5\cdot10^{-4}$ across $L$ --- energy-based marking never sees enough error \emph{density} in the smooth bulk to refine it, so the bulk floor is $L$-independent --- while the uniform (ring) error $R$ halves per level. The gap is therefore $\sqrt{R^2 + B^2}/R = \sqrt{1 + (B/R)^2}$ with $B$ fixed and $R$ shrinking, so it must \emph{diverge} with $L$; the value $2.03$ at $L = 5$ is merely $R$ passing through $\approx 0.57\,B$. A goal-oriented estimator targeting the $L^2$ functional would refine the bulk and close the gap; the energy-optimal estimator used here does not, so this is a \emph{DoF/memory} claim at matched \emph{estimator} accuracy, with the $L^2$ gap explained rather than hidden.}
+The squares in the figure indicate the $L^2$ errors of the uniform spaces $\SDFspace{k}{0}{\L}$. The $L^2$ error of the adaptive spaces $\hierSDFspace{k}{\C}{\L}$ begins to stagnate above the error of the uniform spaces; Table~\ref{tab:cl_headline} summarises the state at the end of the adaptive loop for $\L\in\{3, 4, 5\}$. The higher floor for the adaptive spaces can be explained by the following argument.
 
-\begin{figure}[htbp]
-    \centering
-    \begin{subfigure}[b]{0.48\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{images/laplace_case/fig_l2_vs_dofs.pdf}
-        \caption{Error versus DoFs.}
-        \label{fig:cl_l2_vs_dofs}
-    \end{subfigure}\hfill
-    \begin{subfigure}[b]{0.48\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{images/laplace_case/fig_estimator_saturation.pdf}
-        \caption{Estimator saturation.}
-        \label{fig:cl_saturation_fig}
-    \end{subfigure}
-    \caption{\robert{(a) True $L^2$ error against active $1$-form DoFs $n_1$ for the adaptive runs (solid, one envelope) and uniform references (hollow squares) at $L = 3, 4, 5$; the horizontal gap at matched accuracy is the DoF saving. (b) Total estimator $\eta$ (dashed) and its refineable part (solid, the contribution from faces below the finest level $L$) against $n_1$; the refineable part collapsing below the total is the signature of hitting the $L$-ceiling.}}
-    \label{fig:cl_convergence}
-\end{figure}
+\robert{The adaptive $L^2$ error floors slightly \emph{above} the uniform value at the same $L$, and this ``$L^2$ gap'' widens with $L$ (Table~\ref{tab:cl_headline}, last column) --- not a solver defect, but the price of saving DoFs. Marking in the energy norm concentrates refinement on the sharp $\tanh$ \emph{ring}, where the residual lives, and leaves the smooth \emph{bulk} coarse; the higher $L$, the more the ring alone absorbs the adaptive budget, so the (fixed) bulk error makes up a growing share of the remaining $L^2$ error, and the gap widens. Backing the bulk error $B$ out of the measured errors (Table~\ref{tab:cl_decomp}) confirms this: $B$ is constant to within $2.5\%$ across $L$ while the ring error halves per level, exactly the signature of a real, structural effect rather than an interface or subdivision-basis artifact.}
 
-\begin{table}[htbp]
+\begin{table}[tb]
     \centering
     \small
     \begin{tabular}{@{}r rrr rr@{}}
@@ -1972,100 +2003,59 @@ and $\alpha = 100$ and $R = 0.3$. The vector part $\Vec{b}(x)$ provides a backgr
     \label{tab:cl_decomp}
 \end{table}
 
-\paragraph{Estimator saturation and a stopping criterion.} \robert{Figure~\ref{fig:cl_convergence} (right) plots, for each $L$, the total estimator $\eta$ against its refineable part --- the contribution from faces not yet at the finest level $L$. As the sweep exhausts the depth-$L$ ceiling, the refineable part collapses below the total: the remaining error sits at level $L$ and cannot be refined further. We stop the loop on the dimensionless \emph{refineable energy fraction}
-\begin{equation}
-    \rho = \frac{\text{refineableEtaSq}}{\text{totalEtaSq}}, \qquad \text{stop when } \rho < \tau,\ \tau = 0.05,
-\end{equation}
-where the numerator is the estimated error energy on faces below level $L$ --- precisely the energy Dörfler can still act on. This is the right metric for three reasons: it is exactly the quantity the plot tracks; it is computable (no exact solution needed, unlike the $L^2$ error); and it is dimensionless, so the same $\tau$ works across $L$ --- unlike the absolute $\eta$, whose $L$-dependent floor makes no single tolerance portable. The $L = 3$ run illustrates it: $\rho$ holds at $1.0$ for steps $0$--$2$ (nothing at level $L$ yet), then drops $0.300 \to 0.026$ and stops at step $4$.}
+\paragraph{Padding and interface overhead stay modest.} \robert{Table~\ref{tab:padding_interface_L4} tracks two frontier costs over the $L=4$ sweep: the admissibility padding added on top of the Dörfler-marked faces, and the interface DoFs needed to keep the active basis conforming across the coarse/fine boundary (the same frontier that is also the seat of the loop-monodromy spurious harmonic addressed by padding). Both live on that boundary, whose length scales like the mesh circumference ($\sim 2^L$) rather than the enclosed area, so neither is expected to keep pace with $n_1$, which grows by two orders of magnitude over the sweep. The table confirms this: padding never exceeds $22$ faces (step $5$), under $8\%$ of that step's $452$ marked faces and $<0.3\%$ of its $7\,874$ active DoFs, and always converges in a single pinch-resolution/admissibility-padding cycle; the interface fraction stays confined to roughly $20$--$28\%$ throughout, neither vanishing nor growing with the sweep.}
 
-\robert{But $\tau = 0.05$ is deliberately conservative. Once the refineable part has decoupled from the total ($\rho$ first falls below $1$), the true $L^2$ error is already essentially converged; the remaining steps buy almost nothing. Reading the stopping step off the same trajectories for a range of tolerances (Table~\ref{tab:cl_tol}, all computable from one run --- no re-solve), the $L^2$ error at $\tau = 0.3$ is within $1.5\%$ of the fully-saturated value for every $L$. The strict tail hurts most exactly where it is most expensive: for $L = 5$, tightening $\tau$ from $0.3$ to $0.05$ adds $+10\,308$ DoFs ($+56\%$) and $\approx 6.0$ hours of solve time for a $1.2\%$ $L^2$ gain, because the marginal faces it refines carry vanishing error. A tolerance $\tau \approx 0.2\text{--}0.3$ --- stopping once the refineable part has clearly decoupled rather than nearly vanished --- is the better operating point, sharpening the DoF saving to $3.7\times / 5.4\times / 9.3\times$. The absolute vertical offset between the $L$ curves in Figure~\ref{fig:cl_convergence} (right) is largely normalisation ($\eta \sim h_\L$), not accuracy, so each panel is read \emph{within} its $L$; cross-$L$ accuracy is the job of Figure~\ref{fig:cl_convergence} (left).}
-
-\begin{table}[htbp]
-    \centering
-    \small
-    \begin{tabular}{@{}r ccc@{}}
-        \toprule
-        $L$ & $\tau = 0.3$ & $\tau = 0.2$ & $\tau = 0.05$ (as run) \\
-        \midrule
-        3 & step $3$, $n_1\,2\,869$, $\mathbf{3.7\times}$ & step $4$, $3\,265$, $3.3\times$ & step $4$, $3\,265$, $3.3\times$ \\
-        4 & step $5$, $n_1\,7\,874$, $\mathbf{5.4\times}$ & step $5$, $7\,874$, $5.4\times$ & step $6$, $9\,235$, $4.6\times$ \\
-        5 & step $6$, $n_1\,18\,280$, $\mathbf{9.3\times}$ & step $7$, $24\,143$, $7.0\times$ & step $8$, $28\,588$, $5.9\times$ \\
-        \bottomrule
-    \end{tabular}
-    \caption{\robert{Stopping step, DoF count, and DoF saving as the saturation tolerance $\tau$ is varied (read from the as-run trajectories, no re-solve). The looser $\tau \approx 0.2\text{--}0.3$ recovers nearly all the accuracy --- within $1.5\%$ of the saturated $L^2$ error --- at a markedly better DoF saving, avoiding the runaway final solves of the strict tail.}}
-    \label{tab:cl_tol}
+\begin{table}[tb]
+  \centering
+  \begin{tabular}{r@{\hspace{40pt}}r@{\hspace{16pt}}rrr@{\hspace{40pt}}rrr}
+    \toprule
+    \multirow{2}{*}{step} & \multirow{2}{*}{$\vert \activeDoFSet{1}{} \vert$} & \multicolumn{3}{c}{splits into} & \multirow{2}{*}{$\vert \activeDoFSet{2}{} \vert$} & \multicolumn{2}{c}{of which refined} \\
+    \cmidrule(r{40pt}){3-5}\cmidrule(lr){7-8}
+    & & patch & interface & fraction & & marked & padded \\
+    \midrule
+    0 & 181  & 181  & 0    & $0\%$  & 110  & 38  & 0  \\
+    1 & 495  & 390  & 105  & $21\%$ & 328  & 94  & 4  \\
+    2 & 1245 & 897  & 348  & $28\%$ & 847  & 229 & 9  \\
+    3 & 2936 & 2112 & 824  & $28\%$ & 2016 & 452 & 12 \\
+    4 & 6260 & 4545 & 1715 & $27\%$ & 4314 & 314 & 9  \\
+    5 & 7874 & 6035 & 1839 & $23\%$ & 5385 & 279 & 22 \\
+    6 & 9235 & 7335 & 1900 & $21\%$ & 6293 & ---   & ---  \\
+    \bottomrule
+  \end{tabular}
+  \caption{\robert{Padding and interface overhead over the $L=4$ adaptive sweep. $\vert \activeDoFSet{1}{} \vert$ splits into a `patch' (native) and `interface' (conforming-overhead) part, with `fraction' the interface share. $\vert \activeDoFSet{2}{} \vert$ is the active face count, of which `marked' are the Dörfler-marked faces and `padded' the faces added by admissibility padding, both counted at the step where the marking decision was made, before that step's faces are refined into the next step's partition.}}
+  \label{tab:padding_interface_L4}
 \end{table}
 
-\paragraph{Padding overhead is lower-dimensional.} \robert{The admissibility padding is a frontier overhead, not an area cost. Table~\ref{tab:padding} lists the active $1$-form DoFs, Dörfler-marked faces, and padded faces per step. Its worst-case size does grow with $L$ (max padded per step $12 \to 22 \to 80$ at $L = 3, 4, 5$) because the padding lives on the \emph{interface} around the refined region, whose length scales like the finest-mesh circumference ($\sim 2^L$), not on its area. Measured against what it pads it stays small: even at $L = 5$ the $80$ padded faces sit against $919$ marked faces ($\approx 9\%$) and $24\,143$ $1$-form DoFs ($< 0.5\%$), and padding converges in a single cycle throughout the whole sweep (pinch resolution and inadmissible-faces padding and grading reach a fixed point in one pass). Padding is thus an $O(\text{interface})$ cost --- one dimension below the $O(\text{area})$ cost of the refinement it supports --- with a fixed one-pass overhead; it is a table, not a figure, because the overhead never approaches the leading DoF cost.}
+\paragraph{Solve cost does not follow the DoF saving.} \robert{The one honest cost is the linear solver. Table~\ref{tab:solve_stats_L4} reports wall-clock, DoFs, iterations, the preconditioned condition number $\kappa(P^{-1}K)$, and nnz/DoF over the $L=4$ sweep against the uniform level-$L$ reference. Wall-clock \emph{grows} and is dramatically worse than uniform despite fewer DoFs: at the final step, adaptive takes $1380.9\,\mathrm{s}$ and $692$ iterations at $9\,235$ DoFs, versus $10.6\,\mathrm{s}$ and $25$ iterations at $42\,496$ DoFs for uniform --- a $4.6\times$ DoF saving turned into a $130\times$ slowdown. The measured time is the MINRES \texttt{solve} call only (not dofset construction, assembly, or the preconditioner factorisation), so it is genuine solve cost.
+
+$\kappa(P^{-1}K)$ --- the condition number of the operator MINRES actually solves, not of raw $K$, whose condition number is dominated by an unrelated mesh-size effect and is not reported here --- rises only while new hierarchical levels are still being added ($9.98 \to 83 \to 108 \to 113$ over steps $0$--$3$, tracking levels $1$ through $4$ becoming active) and then plateaus once all five levels are active from step $4$ on ($111 \to 112 \to 103$), around $25$--$27\times$ the uniform value ($4.11$). Conditioning therefore saturates with hierarchy \emph{depth}, not with problem size, and does not by itself explain the continued growth of wall-clock: iterations still creep up within the plateau ($656 \to 672 \to 692$) while $\kappa(P^{-1}K)$ is flat or falling, so the naive $\text{iterations} \sim \sqrt{\kappa}$ bound under-predicts the gap to uniform, and the residual reflects the finer eigenvalue distribution rather than this two-eigenvalue estimate.
+
+The dominant effect is instead operator density: nnz/DoF for $\mathbf{C}_\C$ stays $11$--$23\times$ the uniform value ($4.98$) throughout the sweep, because the globally supported subdivision basis fills in every finer level that has since refined a coarse DoF's support --- whereas the uniform operators stay sparse with a bounded number of nonzeros per row. The numbers decompose cleanly into iterations $\times$ per-iteration cost: iterations are $27.7\times$ higher and the per-iteration cost is $4.7\times$ higher despite $4.6\times$ fewer DoFs (i.e.\ $\approx 21.6\times$ more work per DoF per iteration), and $27.7 \times 4.7 \approx 130\times$ reproduces the observed slowdown with no residual left over. The adaptivity win here is thus in DoFs and memory, not wall-clock, with the current solver. A \emph{truncated} hierarchical basis, in the spirit of THB-splines, is left for future work: truncating each coarse active basis function's representation over the region already covered by finer active DoFs would remove exactly the redundant coarse/fine support overlap responsible for both the fill-in and the depth-driven conditioning, without changing the discrete space itself --- targeting both measured mechanisms directly, rather than working around them with a different solver, and reinforcing the case for the looser $\xi$ above.}
 
 \begin{table}[t]
   \centering
-  \caption{\robert{Padding overhead over the adaptive sweep. For each refinement depth $L$ and step, $n_1$ is the number of active 1-form DoFs, `marked' the number of D\"orfler-marked faces, and `padded' the faces added by admissibility padding. Padding stays $O(1)$ while $n_1$ grows by orders of magnitude. (Padding always converged in a single cycle.)}}
-  \label{tab:padding}
-  \begin{tabular}{r r r r r}
+  \begin{tabular}{r rrrrr}
     \toprule
-    $L$ & step & $n_1$ & marked & padded \\
+    step & wallclock time & $\vert \activeDoFSet{1}{} \vert$ & iterations & $\kappa(P^{-1}K)$ & nnz/DoF \\
     \midrule
-    3 & 0 & 181 & 40 & 0 \\
-    3 & 1 & 504 & 106 & 2 \\
-    3 & 2 & 1299 & 207 & 12 \\
-    3 & 3 & 2869 & 65 & 5 \\
-    3 & 4 & 3265 & 0 & 0 \\
+    uniform & $10.6\,\mathrm{s}$   & $42\,496$ & 25  & 4.11  & 4.98  \\
     \midrule
-    4 & 0 & 181 & 38 & 0 \\
-    4 & 1 & 495 & 94 & 4 \\
-    4 & 2 & 1245 & 229 & 9 \\
-    4 & 3 & 2936 & 452 & 12 \\
-    4 & 4 & 6260 & 314 & 9 \\
-    4 & 5 & 7874 & 279 & 22 \\
-    4 & 6 & 9235 & 0 & 0 \\
-    \midrule
-    5 & 0 & 181 & 43 & 0 \\
-    5 & 1 & 516 & 97 & 7 \\
-    5 & 2 & 1250 & 240 & 19 \\
-    5 & 3 & 3062 & 266 & 12 \\
-    5 & 4 & 4943 & 653 & 29 \\
-    5 & 5 & 9483 & 1514 & 26 \\
-    5 & 6 & 18280 & 1222 & 69 \\
-    5 & 7 & 24143 & 919 & 80 \\
-    5 & 8 & 28588 & 0 & 0 \\
+    0 & $0.06\,\mathrm{s}$    & 181  & 63  & 9.98  & 51.9  \\
+    1 & $1.57\,\mathrm{s}$    & 495  & 241 & 82.7  & 84.4  \\
+    2 & $18.4\,\mathrm{s}$    & 1\,245  & 474 & 107.7 & 113.1 \\
+    3 & $125.1\,\mathrm{s}$   & 2\,936  & 606 & 112.8 & 92.3  \\
+    4 & $602.5\,\mathrm{s}$   & 6\,260  & 656 & 111.4 & 67.9  \\
+    5 & $974.0\,\mathrm{s}$   & 7\,874  & 672 & 111.6 & 61.2  \\
+    6 & $1380.9\,\mathrm{s}$  & 9\,235  & 692 & 103.2 & 55.7  \\
     \bottomrule
   \end{tabular}
+  \caption{\robert{Solve cost over the $L=4$ sweep, with the uniform level-$L$ solve as reference. $\kappa(P^{-1}K)$ is the estimated condition number of the preconditioned operator MINRES actually solves ($P$ the block-diagonal preconditioner), via power/inverse-power iteration. nnz/DoF is $\mathrm{nnz}(\mathbf{C}_\C)/n_1$, the mean nonzeros per row of the curl--curl block.}}
+  \label{tab:solve_stats_L4}
 \end{table}
 
-\paragraph{Patch versus interface DoFs.} \robert{Figure~\ref{fig:cl_patch_interface} splits, per $L$ and step, each subdivision level's $1$-form DoFs into their \emph{patch} (native) part --- outlined in black --- and their \emph{interface} part, left unboxed. Interface DoFs are the overhead of making the active basis conforming across the coarse/fine frontier (the frontier loop is also the seat of the loop-monodromy spurious harmonic addressed by padding). The figure shows this overhead stays a modest share of the patch DoFs and that refinement progressively shifts DoFs onto finer levels as the sweep proceeds.}
+\FloatBarrier
 
-\begin{figure}[htbp]
-    \centering
-    \begin{subfigure}[b]{0.32\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{images/laplace_case/fig_patch_interface_L3.pdf}
-        \caption{$L = 3$.}
-    \end{subfigure}\hfill
-    \begin{subfigure}[b]{0.32\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{images/laplace_case/fig_patch_interface_L4.pdf}
-        \caption{$L = 4$.}
-    \end{subfigure}\hfill
-    \begin{subfigure}[b]{0.32\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{images/laplace_case/fig_patch_interface_L5.pdf}
-        \caption{$L = 5$.}
-    \end{subfigure}
-    \caption{\robert{Active $1$-form DoFs over the adaptive steps, stacked by subdivision level. Each level's bar is split into a patch (native, black outline) and an interface (unboxed) part. The interface overhead of conformity stays modest and the DoF mass shifts onto finer levels as the sweep progresses.}}
-    \label{fig:cl_patch_interface}
-\end{figure}
-
-\paragraph{Solve cost does not follow the DoF saving.} \robert{The one honest cost is the linear solver. Figure~\ref{fig:cl_minres} reports MINRES iterations (bars) and pure solve time (twin axis) over the sweep. Wall-clock \emph{grows} over the sweep and is dramatically worse than uniform despite far fewer DoFs: adaptive $L = 5$ takes $\approx 3.4$ hours and $654$ iterations at $28\,588$ DoFs, while uniform $L = 5$ takes $46$ seconds and $21$ iterations at $169\,472$ DoFs --- a $5.9\times$ DoF saving turned into a $270\times$ slowdown. The measured time is the MINRES \texttt{solve} call only (not dofset construction, assembly, or the preconditioner factorisation), so it is genuine solve cost, from two compounding causes: the block-diagonal preconditioner degrades on irregular adaptive meshes, and each iteration gets more expensive because the Galerkin-projected operators \emph{densify} --- the subdivision basis functions are globally supported, so the projection fills far more nonzeros per row than a nodal matrix of the same DoF count, whereas the uniform operators stay sparse and well-conditioned ($\approx 20$ iterations). The adaptivity win here is thus in DoFs and memory, not wall-clock, with the current solver; the preconditioner is the bottleneck and a subdivision-compatible multigrid variant is left for future work (which reinforces the case for the looser $\tau$ above).}
-
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.75\textwidth]{images/laplace_case/fig_minres_cost_all.pdf}
-    \caption{\robert{MINRES iteration count over the adaptive sweep, grouped across $L = 3, 4, 5$. The iteration count climbs as the block-diagonal preconditioner degrades on irregular adaptive meshes and the globally supported subdivision basis densifies the Galerkin-projected operators; the uniform references (not shown) converge in $\approx 20$ iterations. The DoF saving is a memory saving, not (yet) a wall-clock one.}}
-    \label{fig:cl_minres}
-\end{figure}
-
-\robert{In summary, on a manufactured problem with a sharp circular layer and a known exact solution, adaptive subdivision refinement reaches the accuracy of a uniform level-$L$ solve at a small fraction of its DoFs, and the saving grows with depth ($3.3\times, 4.6\times, 5.9\times$ to saturation; $3.7\times, 5.4\times, 9.3\times$ at a looser stop). The refineable/total estimator split identifies when a depth $L$ is exhausted and yields a portable, computable stopping criterion; the admissibility padding costs only $O(\text{interface})$ extra faces per step; and the conformity interface DoFs are a modest, bounded overhead. The one honest cost is the solver: because the projected operators densify under the globally supported basis and the block preconditioner weakens on irregular meshes, the DoF saving is a memory saving rather than, yet, a wall-clock one.}
+\robert{In summary, on a manufactured problem with a sharp circular layer and a known exact solution, adaptive subdivision refinement reaches the accuracy of a uniform level-$L$ solve at a small fraction of its DoFs, and the saving grows with depth ($3.3\times, 4.6\times, 5.9\times$ to saturation; $3.7\times, 5.4\times, 9.3\times$ at a looser stop). The refineable/total estimator split identifies when a depth $L$ is exhausted and yields a portable, computable stopping criterion; the admissibility padding costs only $O(\text{interface})$ extra faces per step; and the conformity interface DoFs are a modest, bounded overhead. The one honest cost is the solver: the preconditioned condition number $\kappa(P^{-1}K)$ rises only while new hierarchical levels are being added and then plateaus once the full depth is active, so the growing wall-clock is not a conditioning effect but a density effect --- the projected operators densify under the globally supported basis, raising the cost of each iteration --- so the DoF saving is a memory saving rather than, yet, a wall-clock one; a truncated hierarchical basis is a targeted fix for both the density and the depth-driven conditioning, left for future work.}
 
 \section{Conclusion}
 
@@ -2145,74 +2135,5 @@ $\mathrm{pendingVerts} \leftarrow \emptyset$\;
 }
 \Return $\D$\;
 \end{algorithm}
-
-\section{Atomic-test figure gallery}
-\label{app:figure_gallery}
-
-\robert{This gallery collects the remaining atomic subdivision-partition test cases
-that are not reproduced in the main text (Section~\ref{subsec:exactness_atomic}).
-Each case is shown as an input/padded pair; the corresponding cohomology of the
-richer cases is annotated in Figs.~\ref{fig:pinch_resolution}
-and~\ref{fig:admissibility_padding}. The
-\texttt{v10} trio (Fig.~\ref{fig:gallery_v10}) stress-tests the coarser-gap guard
-in the pinch-arc detector, and is included for completeness as supplementary
-material.}
-
-\begin{figure}[htbp]
-    \centering
-    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v10_last3_200_input.pdf}\caption*{200 in}\end{subfigure}\hfill
-    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v10_last3_200_padded.pdf}\caption*{200 pad}\end{subfigure}\hfill
-    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v10_last3_211_input.pdf}\caption*{211 in}\end{subfigure}\hfill
-    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v10_last3_211_padded.pdf}\caption*{211 pad}\end{subfigure}\hfill
-    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v10_mixed_level_arcs_input.pdf}\caption*{mixed in}\end{subfigure}\hfill
-    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v10_mixed_level_arcs_padded.pdf}\caption*{mixed pad}\end{subfigure}
-    \caption{\robert{Valence-$10$ detector-guard cases: \texttt{v10\_last3\_200} (resolves), \texttt{v10\_last3\_211} (deliberately slips through the guard), \texttt{v10\_mixed\_level\_arcs} (resolves).}}
-    \label{fig:gallery_v10}
-\end{figure}
-
-\begin{figure}[htbp]
-    \centering
-    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v6_3rings_middle_refined_input.pdf}\caption*{3r-mid in}\end{subfigure}\hfill
-    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v6_3rings_middle_refined_padded.pdf}\caption*{3r-mid pad}\end{subfigure}\hfill
-    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v6_4rings_inner_outer_refined_input.pdf}\caption*{4r-io in}\end{subfigure}\hfill
-    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v6_4rings_inner_outer_refined_padded.pdf}\caption*{4r-io pad}\end{subfigure}\hfill
-    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v6_4rings_third_coarse_input.pdf}\caption*{4r-3rd in}\end{subfigure}\hfill
-    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v6_4rings_third_coarse_padded.pdf}\caption*{4r-3rd pad}\end{subfigure}
-    \caption{\robert{Further ring cases: $3$-ring middle-refined, $4$-ring inner$+$outer refined, and $4$-ring third-coarse partitions.}}
-    \label{fig:gallery_rings}
-\end{figure}
-
-\begin{figure}[htbp]
-    \centering
-    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v6_boundary_lvl1_input.pdf}\caption*{bd-1 in}\end{subfigure}\hfill
-    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v6_boundary_lvl1_padded.pdf}\caption*{bd-1 pad}\end{subfigure}\hfill
-    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v6_boundary_lvl2_input.pdf}\caption*{bd-2 in}\end{subfigure}\hfill
-    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v6_boundary_lvl2_padded.pdf}\caption*{bd-2 pad}\end{subfigure}\hfill
-    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v6_leftright_lvl1_input.pdf}\caption*{lr-1 in}\end{subfigure}\hfill
-    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v6_leftright_lvl1_padded.pdf}\caption*{lr-1 pad}\end{subfigure}
-    \\[6pt]
-    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v6_leftright_lvl2_input.pdf}\caption*{lr-2 in}\end{subfigure}\hfill
-    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v6_leftright_lvl2_padded.pdf}\caption*{lr-2 pad}\end{subfigure}\hfill
-    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v6_refine_center_input.pdf}\caption*{ctr in}\end{subfigure}\hfill
-    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v6_refine_center_padded.pdf}\caption*{ctr pad}\end{subfigure}\hfill
-    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v6_nested_center_lvl3_input.pdf}\caption*{nest in}\end{subfigure}\hfill
-    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v6_nested_center_lvl3_padded.pdf}\caption*{nest pad}\end{subfigure}
-    \caption{\robert{Boundary, left/right, single-centre, and nested-centre partitions (valence $6$).}}
-    \label{fig:gallery_boundary_misc}
-\end{figure}
-
-\begin{figure}[htbp]
-    \centering
-    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v8_quarters_lvl1_input.pdf}\caption*{v8-1 in}\end{subfigure}\hfill
-    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v8_quarters_lvl1_padded.pdf}\caption*{v8-1 pad}\end{subfigure}\hfill
-    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v9_cff_lvl1_input.pdf}\caption*{v9-1 in}\end{subfigure}\hfill
-    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v9_cff_lvl1_padded.pdf}\caption*{v9-1 pad}\end{subfigure}\hfill
-    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v9_cff_lvl2_input.pdf}\caption*{v9-2 in}\end{subfigure}\hfill
-    \begin{subfigure}[b]{0.16\textwidth}\centering\includegraphics[width=\textwidth]{images/exactness/v9_cff_lvl2_padded.pdf}\caption*{v9-2 pad}\end{subfigure}
-    \caption{\robert{Valence-$8$ single-level quarters and valence-$9$ mixed-arc (\texttt{cff}) partitions.}}
-    \label{fig:gallery_v8v9}
-\end{figure}
-
-\FloatBarrier
 
 \end{document}
