@@ -5,13 +5,13 @@
 \usepackage[nosumlimits]{amsmath}
 \usepackage{amssymb,stmaryrd,amsthm,MnSymbol}
 \usepackage{amsfonts,amssymb,amsopn}
+\usepackage{mathrsfs}
  \usepackage[colorlinks=true,
             linkcolor=red,
             filecolor=red,
             citecolor=blue,
             urlcolor=blue,]{hyperref}
 \usepackage[dvipsnames]{xcolor}
-\usepackage{bbold}
 \usepackage{phoenician}
 
 \usepackage{comment}
@@ -77,6 +77,7 @@ Werner Bauer\footnote{University of Surrey, School of Mathematics and Physics, U
 %\renewcommand{\checkit}[1]{{\color{red}#1}}
 \newcommand{\tbd}[1]{{\color{red}#1}}
 \newcommand{\highlight}[1]{{\color{cyan} #1}}
+\newcommand{\needcite}{\highlight{(CITE)}} % flag a spot that likely needs a citation
 % narrative guidance (draft scaffolding): lime-coloured text that reminds the
 % reader/author how a piece fits the overall story. Concrete reader-facing
 % guidance is used bare as \guidance{...}; not-yet-final refactoring reminders
@@ -241,6 +242,8 @@ Werner Bauer\footnote{University of Surrey, School of Mathematics and Physics, U
 \newcommand{\II}{\mathbb{I}}
 \newcommand{\calP}{\mathcal{P}}
 \newcommand{\heth}{\textphnc{H}}
+\newcommand{\allcoverings}{\mathscr{C}}
+\newcommand{\allpartitions}{\mathscr{C}^{\mathrm{sp}}}
 
 \newcommand{\activeDoFs}{\mathbb{A}}
 \newcommand{\inactiveDoFs}{\mathbb{I}}
@@ -318,9 +321,9 @@ For the adaptive solution of PDEs, we describe a \textsc{Solve}--\textsc{Estimat
 
 \section{Introduction}
 
-The finite element exterior calculus (FEEC)~\cite{Arnold.FEEC} provides a systematic framework for constructing stable, structure-preserving discretisations of partial differential equations (PDEs) involving differential forms. Its central structure is the discrete de Rham complex: a sequence of finite-dimensional function spaces connected by the exterior derivative $\extd$. Exactness of this complex is the key algebraic property that prevents spurious modes in Maxwell eigenvalue problems, guarantees inf-sup stability in mixed formulations, and underpins the commuting diagram that makes error analysis tractable. Classical realisations of the FEEC use the lowest-order Whitney forms, also known as the continuous Galerkin ($\mathrm{CG}_1$), N\'ed\'elec ($\mathrm{NED}_1$), and discontinuous ($\mathrm{DG}_0$) spaces.
+The finite element exterior calculus (FEEC)~\cite{Arnold.FEEC} provides a systematic framework for constructing stable, structure-preserving discretisations of partial differential equations (PDEs) involving differential forms. Its central structure is the discrete de Rham complex: a sequence of finite-dimensional function spaces connected by the exterior derivative $\extd$. Exactness of this complex is the key algebraic property that prevents spurious modes in Maxwell eigenvalue problems, guarantees inf-sup stability in mixed formulations, and underpins the commuting diagram that makes error analysis tractable.\needcite{} Classical realisations of the FEEC use the lowest-order Whitney forms, also known as the continuous Galerkin ($\mathrm{CG}_1$), N\'ed\'elec ($\mathrm{NED}_1$), and discontinuous ($\mathrm{DG}_0$) spaces.\needcite{}
 
-Subdivision algorithms, originally developed for geometric modelling, produce limit functions that are globally smooth on arbitrary triangular meshes. For example, Loop's scheme~\citep{Loop.1987} generates globally $\mathcal{C}^1$ scalar limit functions. Wang~\citep{Wang.2006,Wang.2008} introduce subdivision schemes for $1$- and $2$-forms that commute with the discrete exterior derivative from Discrete Exterior Calculus (DEC, \cite{Hirani.2003,Desbrun.2006}). These subdivision schemes give rise to subdivision $k$-form spaces in the DEC sense \citep{Goes.2015}. \cite{Piel.2026} translate their work to finite elements and introduce a framework for subdivision-based finite elements that form discrete de Rham complexes on meshes with uniform refinement.
+Subdivision algorithms, originally developed for geometric modelling, produce limit functions that are globally smooth on arbitrary triangular meshes.\needcite{} For example, Loop's scheme~\citep{Loop.1987} generates globally $\mathcal{C}^1$ scalar limit functions. Wang~\citep{Wang.2006,Wang.2008} introduce subdivision schemes for $1$- and $2$-forms that commute with the discrete exterior derivative from Discrete Exterior Calculus (DEC, \cite{Hirani.2003,Desbrun.2006}). These subdivision schemes give rise to subdivision $k$-form spaces in the DEC sense \citep{Goes.2015}. \cite{Piel.2026} translate their work to finite elements and introduce a framework for subdivision-based finite elements that form discrete de Rham complexes on meshes with uniform refinement.
 
 Such uniform subdivision spaces assign the same resolution everywhere: every basis function has a support whose size is determined by the coarse mesh $\T_\lzero$. This is adequate for globally smooth solutions but wasteful when the PDE solution is rough only in a small part of the domain. In isogeometric analysis, the analogous limitation of globally refined B-spline spaces has been addressed through hierarchical B-spline spaces~\citep{Evans.2020}, which mix basis functions from different refinement levels to obtain spatially varying resolution while retaining linear independence. Extending this idea to spaces of differential forms is non-trivial: activating basis functions at different levels can break the exactness of the de Rham complex unless the selection is governed by a compatible combinatorial rule.
 The analogous construction for B-spline de Rham complexes has been studied in~\cite{Buffa2011,Evans.2020,Shepherd.2024,Dijkstra.2025}, where admissibility conditions on the hierarchical mesh ensure exactness of the complex.
@@ -344,7 +347,7 @@ This section collects the most important properties of the uniform subdivision $
 
 Starting from an initial coarse triangular mesh $\T_\l$ at level $\l = \lzero$, the \emph{subdivision algorithm} produces a sequence of increasingly fine meshes $\T_{\lzero+1}, \ldots, \T_\L$ by repeatedly applying two steps: a \emph{topological refinement} that splits every triangle into four, and a \emph{geometric averaging} step that repositions vertices as weighted averages of neighbouring coarse vertices. We use Loop's subdivision scheme~\cite{Loop.1987} throughout. The resulting \emph{mesh hierarchy} $\{\T_\l\}_{\l=\lzero}^{\L}$ ranges from the coarsest level $\lzero$ to the finest mesh $\T_\L$. At each level $\l$, we denote the sets of vertices, edges, and faces by $\K^0_\l = \V_\l$, $\K^1_\l = \E_\l$, and $\K^2_\l = \F_\l$, with cardinalities $|\K^k_\l|$.
 
-On each mesh $\T_\l$, the lowest-order Whitney $k$-form spaces are the standard FEEC spaces
+On each mesh $\T_\l$, the lowest-order Whitney $k$-form spaces\needcite{} are the standard FEEC spaces
 \begin{equation}
     \FEECspace{0}{\l} = \mathrm{CG}_1(\T_\l), \qquad \FEECspace{1}{\l} = \mathrm{RT}_0(\T_\l), \qquad \FEECspace{2}{\l} = \mathrm{DG}_0(\T_\l),
 \end{equation}
@@ -358,6 +361,7 @@ whose coordinate representation with respect to the Whitney bases of $\FEECspace
 
 The \emph{subdivision $k$-form space} on level $\l$ is defined as the image of $\FEECspace{k}{\l}$ under $\Aop{k}{\l}{\L}$,
 \begin{equation}
+    \label{def:uniform_spaces_as_image_of_subdiv_operator}
     \SDFspace{k}{\l}{\L}\big(\T_\l\big) \coloneqq \Aop{k}{\l}{\L}\!\big(\FEECspace{k}{\l}\big),
 \end{equation}
 spanned by the \emph{subdivision basis functions} $\constrQ{\SDFbasis}{k}{\l}{\L}{\coarseIdxone} \coloneqq \Aop{k}{\l}{\L}\, \freeQ{\FEECbasis}{k}{\l}{\coarseIdxone}$, i.e.\ the columns of $\Amat{k}{\l}{\L}$ expressed in the fine Whitney basis. At the finest level, $\SDFspace{k}{\L}{\L} = \FEECspace{k}{\L}$ by definition. The key properties of the spaces $\SDFspace{k}{\l}{\L}$ were established in~\cite{Piel.2026} and will be recalled in Section~\ref{sec:construction_of_hierarchical_subdiv_spaces}.
@@ -365,9 +369,14 @@ spanned by the \emph{subdivision basis functions} $\constrQ{\SDFbasis}{k}{\l}{\L
 \subsection{Computational representations}
 \label{subsec:computational_representations}
 
+This section establishes the computational representation of uniform subdivision $k$-form spaces and how it extends to mixed-level representations spanned by basis functions across multiple levels. The resulting framework is fixed for the remainder of this work, and Table~\ref{tab:properties_map} identifies the properties we need to ensure for the spanned spaces.
+
+\subsubsection{Uniform representation}
+\label{subsubsec:uniform_representation}
+
 A $k$-form $\constrVec{\omega}{k}{\l}{\L} \in \SDFspace{k}{\l}{\L}$ can be written as
 \begin{equation}
-    \constrVec{\omega}{k}{\l}{\L} = \sum\limits_{\coarseIdxone = 1}^{\sumdimlk{\l}{k}} \freeQ{c}{k}{\l}{\coarseIdxone} \constrQ{\SDFbasis}{k}{\l}{\L}{\coarseIdxone} = \sum\limits_{i = 1}^{\sumdimlk{\l}{k}} \freeQ{c}{k}{\l}{\coarseIdxone} \Big( \sum\limits_{\fineIdxone = 1}^{\sumdimlk{\L}{k}} \Amatij{k}{\l}{\L}{\fineIdxone}{\coarseIdxone} \freeQ{\FEECbasis}{k}{\L}{\fineIdxone} \Big).
+    \constrVec{\omega}{k}{\l}{\L} = \sum\limits_{\coarseIdxone = 1}^{\sumdimlk{\l}{k}} \freeQ{c}{k}{\l}{\coarseIdxone} \constrQ{\SDFbasis}{k}{\l}{\L}{\coarseIdxone} = \sum\limits_{i = 1}^{\sumdimlk{\l}{k}} \freeQ{c}{k}{\l}{\coarseIdxone} \; \Big( \sum\limits_{\fineIdxone = 1}^{\sumdimlk{\L}{k}} \Amatij{k}{\l}{\L}{\fineIdxone}{\coarseIdxone} \freeQ{\FEECbasis}{k}{\L}{\fineIdxone} \Big).
 \end{equation}
 We can vectorise this equation by introducing the vectors
 \begin{equation}
@@ -392,21 +401,25 @@ We can vectorise this equation by introducing the vectors
 \end{equation}
 We can then re-write $\constrVec{\omega}{k}{\l}{\L} \in \SDFspace{k}{\l}{\L}$ as
 \begin{equation}
-    \constrVec{\omega}{k}{\l}{\L} = \big( \constrVec{\SDFbases}{k}{\l}{\L} \big)^T \cdot \freeVec{\bar{c}}{k}{\l} = \big( \freeVec{\FEECbases}{k}{\L} \big)^T \cdot \Amat{k}{\l}{\L} \cdot \freeVec{\bar{c}}{k}{\l}.
+    \constrVec{\omega}{k}{\l}{\L} = \big( \constrVec{\SDFbases}{k}{\l}{\L} \big)^\top \cdot \freeVec{\bar{c}}{k}{\l} = \big( \freeVec{\FEECbases}{k}{\L} \big)^\top \cdot \Amat{k}{\l}{\L} \cdot \freeVec{\bar{c}}{k}{\l}.
 \end{equation}
 This implies
 \begin{equation}
-    \big( \freeVec{\FEECbases}{k}{\L} \big)^T \cdot \Amat{k}{\l}{\L} = \big( \constrVec{\SDFbases}{k}{\l}{\L} \big)^T = \begin{bmatrix}
+    \big( \freeVec{\FEECbases}{k}{\L} \big)^\top \cdot \Amat{k}{\l}{\L} = \big( \constrVec{\SDFbases}{k}{\l}{\L} \big)^\top = \begin{bmatrix}
         \constrQ{\SDFbasis}{k}{\l}{\L}{1} & \constrQ{\SDFbasis}{k}{\l}{\L}{2} & \dots & \constrQ{\SDFbasis}{k}{\l}{\L}{\sumdimlk{\l}{k}}
     \end{bmatrix}
 \end{equation}
 and thus shows that the columns of the subdivision matrix $\Amat{k}{\l}{\L}$ contain the coefficients of the subdivision basis functions $\constrQ{\SDFbasis}{k}{\l}{\L}{\coarseIdxone}$ in the fine FEEC space $\FEECspace{k}{\L}$.
 
-Uniform subdivision spaces $\SDFspace{k}{\lone}{\L}$ resolve the domain at a single global scale, which is wasteful when the PDE solution contains localised features. Hierarchical spaces break this uniformity by mixing basis functions from \emph{different} levels $\lone$: A level-$0$ function has broad support capturing large-scale variation, while a level-$2$ function has a much smaller support and can resolve local detail. Selecting which levels to activate in which part of the domain yields an approximation space whose resolution adapts spatially to the solution.
+\subsubsection{Mixed-level representation}
+\label{subsubsec:hierarchical_representation}
 
-In the uniform space $\SDFspace{k}{\l}{\L}$, every $k$-simplex of $\T_\l$ contributes a basis function, so $\activeDoFSet{k}{\l} = \K^k_\l$. The hierarchical space relaxes this: it selects $\activeDoFSet{k}{\l} \subset \K^k_\l$ at each level, mixing coarse basis functions (broad support, large-scale variation) and fine basis functions (small support, local detail) to adapt spatial resolution using the active DoFs $\activeDoFs^k \coloneq \bigcup_{\l = \lzero}^\L \activeDoFSet{k}{\l}$. Not every choice of $\activeDoFSet{k}{\l}$ yields a well-behaved space. For example, the active basis functions may fail to be linearly independent, or the spaces may fail to constitute an exact differential complex. Section~\ref{sec:construction_of_hierarchical_subdiv_spaces} develops the theory of admissible choices.
+Uniform subdivision spaces $\SDFspace{k}{\l}{\L}$ resolve the domain at a single global scale, which is wasteful when the PDE solution contains localised features. We now construct spaces that break this uniformity by mixing basis functions from different levels $\l$. For example, a level-$0$ basis function $\constrQ{\SDFbasis}{k}{\lzero}{\L}{\coarseIdxone}$ corresponding to $\simplex{k}{\lzero}{\coarseIdxone}$ has broad support capturing large-scale variation, while a level-$2$ basis function $\constrQ{\SDFbasis}{k}{2}{\L}{\coarseIdxone}$ corresponding to $\simplex{k}{2}{\coarseIdxone}$ has a much smaller support and can resolve local detail. We refer to the selection of simplices as the \emph{active DoFs} and denote them by $\activeDoFSet{k}{}$, while $\activeDoFSet{k}{\l}$ denotes all active DoFs on level $\l$. The \emph{active basis functions} are denoted by
+\begin{equation}
+    \constrVec{\SDFbases}{k}{\activeDoFSet{}{}}{\L} \coloneq \bigcup\limits_{\l = \lzero}^\L \; \bigcup\limits_{\simplex{k}{\l}{\coarseIdxone} \in \activeDoFSet{k}{\l}} \; \constrQ{\SDFbasis}{k}{\l}{\L}{\coarseIdxone}.
+\end{equation}
 
-The same representation extends to the hierarchical space $\hierSDFspace{k}{\C}{\L}$. A form $\constrVec{\omega}{k}{\activeDoFs}{\L} \in \hierSDFspace{k}{\C}{\L}$ is a linear combination of active basis functions drawn from all levels,
+The representation of Section~\ref{subsubsec:uniform_representation} extends to the active DoFs $\activeDoFSet{k}{}$. A mixed-level form $\constrVec{\omega}{k}{\activeDoFs}{\L} \in \mathrm{span}(\constrVec{\SDFbases}{k}{\activeDoFSet{}{}}{\L})$ is a linear combination of the active basis functions drawn from all levels, i.e.
 \begin{equation}
     \label{eq:hierarchical_form_sum}
     \constrVec{\omega}{k}{\activeDoFs}{\L}
@@ -416,19 +429,19 @@ The same representation extends to the hierarchical space $\hierSDFspace{k}{\C}{
 The active DoFs use the same simplex indices $\coarseIdxone$ as in the uniform space $\SDFspace{k}{\l}{\L}$, but restricted to $\activeDoFSet{k}{\l} \subset \K^k_\l$. To form explicit vectors we enumerate the active simplices on level $\l$ in increasing index order as $\simplex{k}{\l}{\coarseIdxone_1}, \ldots, \simplex{k}{\l}{\coarseIdxone_{|\activeDoFSet{k}{\l}|}}$ with $\coarseIdxone_1 < \cdots < \coarseIdxone_{|\activeDoFSet{k}{\l}|}$. The concatenated basis-function and coefficient vectors, grouped by level with blocks separated by vertical bars, are
 \begin{equation}
     \label{eq:hierarchical_dof_vector}
-    \big(\freeVec{\bar{c}}{k}{\activeDoFs}\big)^T
+    \big(\freeVec{\bar{c}}{k}{\activeDoFs}\big)^\top
     = \Bigl[\;
         \underbrace{
             \freeQ{c}{k}{0}{\coarseIdxone_1}
             \;\; \cdots \;\;
             \freeQ{c}{k}{0}{\coarseIdxone_{|\activeDoFSet{k}{0}|}}
-        }_{\displaystyle (\freeVec{\bar{c}}{k}{0})^T}
+        }_{\displaystyle (\freeVec{\bar{c}}{k}{0})^\top}
         \;\Big|\;
         \underbrace{
             \freeQ{c}{k}{1}{\coarseIdxone_1}
             \;\; \cdots \;\;
             \freeQ{c}{k}{1}{\coarseIdxone_{|\activeDoFSet{k}{1}|}}
-        }_{\displaystyle (\freeVec{\bar{c}}{k}{1})^T}
+        }_{\displaystyle (\freeVec{\bar{c}}{k}{1})^\top}
         \;\Big|\;
         \cdots
         \;\Big|\;
@@ -436,12 +449,12 @@ The active DoFs use the same simplex indices $\coarseIdxone$ as in the uniform s
             \freeQ{c}{k}{\L}{\coarseIdxone_1}
             \;\; \cdots \;\;
             \freeQ{c}{k}{\L}{\coarseIdxone_{|\activeDoFSet{k}{\L}|}}
-        }_{\displaystyle (\freeVec{\bar{c}}{k}{\L})^T}
+        }_{\displaystyle (\freeVec{\bar{c}}{k}{\L})^\top}
     \;\Bigr],
 \end{equation}
 \begin{equation}
     \label{eq:hierarchical_basis_vector}
-    \big(\constrVec{\SDFbases}{k}{\activeDoFs}{\L}\big)^T
+    \constrVec{\SDFbases}{k}{\activeDoFs}{\L}
     = \Bigl[\;
         \underbrace{
             \constrQ{\SDFbasis}{k}{0}{\L}{\coarseIdxone_1}
@@ -464,37 +477,88 @@ The active DoFs use the same simplex indices $\coarseIdxone$ as in the uniform s
         }_{\activeDoFSet{k}{\L}}
     \;\Bigr].
 \end{equation}
-With the active subdivision basis $\constrVec{\SDFbases}{k}{\activeDoFs}{\L}$ chosen and the fine Whitney basis $\freeVec{\FEECbases}{k}{\L}$ fixed, the form $\constrVec{\omega}{k}{\activeDoFs}{\L}$ admits two representations that must agree. Equating them and comparing coefficients in $\FEECspace{k}{\L}$ defines the hierarchical subdivision matrix $\Amat{k}{\activeDoFs}{\L}$:
+With the active subdivision basis $\constrVec{\SDFbases}{k}{\activeDoFs}{\L}$ chosen and the fine FEEC basis $\freeVec{\FEECbases}{k}{\L}$ fixed, the form $\constrVec{\omega}{k}{\activeDoFs}{\L}$ admits two representations that must agree. Equating them and comparing coefficients in $\FEECspace{k}{\L}$ defines the hierarchical subdivision matrix $\Amat{k}{\activeDoFs}{\L}$:
 \begin{equation}
     \label{eq:hierarchical_form_compact}
     \constrVec{\omega}{k}{\activeDoFs}{\L}
-    = \big(\constrVec{\SDFbases}{k}{\activeDoFs}{\L}\big)^T \cdot \freeVec{\bar{c}}{k}{\activeDoFs}
-    = \big(\freeVec{\FEECbases}{k}{\L}\big)^T \cdot \Amat{k}{\activeDoFs}{\L} \cdot \freeVec{\bar{c}}{k}{\activeDoFs}.
+    = \big(\constrVec{\SDFbases}{k}{\activeDoFs}{\L}\big)^\top \cdot \freeVec{\bar{c}}{k}{\activeDoFs}
+    = \big(\freeVec{\FEECbases}{k}{\L}\big)^\top \cdot \Amat{k}{\activeDoFs}{\L} \cdot \freeVec{\bar{c}}{k}{\activeDoFs}.
 \end{equation}
-This implies $\big(\freeVec{\FEECbases}{k}{\L}\big)^T \cdot \Amat{k}{\activeDoFs}{\L} = \big(\constrVec{\SDFbases}{k}{\activeDoFs}{\L}\big)^T$, showing that the columns of $\Amat{k}{\activeDoFs}{\L}$ are the coefficients of the active subdivision basis functions in $\FEECspace{k}{\L}$. The level grouping of $\freeVec{\bar{c}}{k}{\activeDoFs}$ mirrors the block column structure of $\Amat{k}{\activeDoFs}{\L}$:
+This implies $\big(\freeVec{\FEECbases}{k}{\L}\big)^\top \cdot \Amat{k}{\activeDoFs}{\L} = \big(\constrVec{\SDFbases}{k}{\activeDoFs}{\L}\big)^\top$, showing that the columns of $\Amat{k}{\activeDoFs}{\L}$ are the coefficients of the active subdivision basis functions in $\FEECspace{k}{\L}$. The level grouping of $\freeVec{\bar{c}}{k}{\activeDoFs}$ mirrors the block column structure of $\Amat{k}{\activeDoFs}{\L}$:
 \begin{equation}
     \label{eq:hierarchical_matrix_blocks}
     \Amat{k}{\activeDoFs}{\L}
     =
     \Bigl[
-        \underbrace{\bigl(\Amat{k}{0}{\L}\bigr)_{\activeDoFSet{k}{0}}}_{\mathbb{R}^{|\K^k_\L| \times |\activeDoFSet{k}{0}|}}
+        \underbrace{\bigl(\Amat{k}{0}{\L}\bigr)_{\activeDoFSet{k}{0}}}_{\in \mathbb{R}^{|\K^k_\L| \times |\activeDoFSet{k}{0}|}}
         \;\Big|\;
-        \underbrace{\bigl(\Amat{k}{1}{\L}\bigr)_{\activeDoFSet{k}{1}}}_{\mathbb{R}^{|\K^k_\L| \times |\activeDoFSet{k}{1}|}}
+        \underbrace{\bigl(\Amat{k}{1}{\L}\bigr)_{\activeDoFSet{k}{1}}}_{\in \mathbb{R}^{|\K^k_\L| \times |\activeDoFSet{k}{1}|}}
         \;\Big|\;
         \cdots
         \;\Big|\;
-        \underbrace{\bigl(\Amat{k}{\L}{\L}\bigr)_{\activeDoFSet{k}{\L}}}_{\mathbb{R}^{|\K^k_\L| \times |\activeDoFSet{k}{\L}|}}
+        \underbrace{\bigl(\Amat{k}{\L}{\L}\bigr)_{\activeDoFSet{k}{\L}}}_{\in \mathbb{R}^{|\K^k_\L| \times |\activeDoFSet{k}{\L}|}}
     \Bigr],
 \end{equation}
-so that the block $(\freeVec{\bar{c}}{k}{\l})^T$ multiplies precisely the $|\activeDoFSet{k}{\l}|$ columns of $\Amat{k}{\activeDoFs}{\L}$ originating from level $\l$, contributing $\sum_{\simplex{k}{\l}{\coarseIdxone} \in \activeDoFSet{k}{\l}} \freeQ{c}{k}{\l}{\coarseIdxone} \, \constrQ{\SDFbasis}{k}{\l}{\L}{\coarseIdxone}$ to $\constrVec{\omega}{k}{\activeDoFs}{\L}$.
+so that the block $(\freeVec{\bar{c}}{k}{\l})^\top$ multiplies precisely the $|\activeDoFSet{k}{\l}|$ columns of $\Amat{k}{\activeDoFs}{\L}$ originating from level $\l$, contributing $\sum_{\simplex{k}{\l}{\coarseIdxone} \in \activeDoFSet{k}{\l}} \freeQ{c}{k}{\l}{\coarseIdxone} \, \constrQ{\SDFbasis}{k}{\l}{\L}{\coarseIdxone}$ to $\constrVec{\omega}{k}{\activeDoFs}{\L}$.
 
-In practice it is the $\big(\freeVec{\FEECbases}{k}{\L}\big)^T \cdot \Amat{k}{\activeDoFs}{\L}$ picture that drives the implementation, rather than the $\big(\constrVec{\SDFbases}{k}{\activeDoFs}{\L}\big)^T$ picture. A bilinear form with fine-level matrix $\mathbf{M}$ on $\FEECspace{k}{\L}$ restricts to the hierarchical space as $(\Amat{k}{\activeDoFs}{\L})^T \mathbf{M}\, \Amat{k}{\activeDoFs}{\L}$, so the discrete system is assembled in $\FEECspace{k}{\L}$ via standard FEniCS routines and compressed by two sparse matrix multiplications. The fine Whitney basis $\freeVec{\FEECbases}{k}{\L}$ is handled implicitly by FEniCS and never appears explicitly in code.
+\smallskip
 
-The PDE is then solved for the hierarchical DoF vector $\freeVec{\bar{c}}{k}{\activeDoFs}$, which collects the coefficients of the solution in the active subdivision basis. Once $\freeVec{\bar{c}}{k}{\activeDoFs}$ is known, the fine-level Whitney representation of the solution is recovered as $\Amat{k}{\activeDoFs}{\L} \cdot \freeVec{\bar{c}}{k}{\activeDoFs}$. This matrix--vector product is the coordinate expression of the inclusion $\iota \colon \hierSDFspace{k}{\C}{\L} \hookrightarrow \FEECspace{k}{\L}$, and the resulting fine-level vector can be used directly for post-processing, visualisation, and residual estimation on $\T_\L$.
+From here the matrix picture is fixed. The object $\Amat{k}{\activeDoFs}{\L}$ is always a selection of columns from the accummulated subdivision matrices $\Amat{k}{\l}{\L}$ for all $\l \in \{\lzero, \, \dots, \, \L\}$. The remaining task is thus to select the active DoFs $\activeDoFSet{k}{}$ to enable the concrete construction of $\Amat{k}{\activeDoFs}{\L}$. The following section shows that designing a selection algorithm that guarantees desirable properties for the spanned spaces turns out to be a subtle matter.
 
-The concrete task that remains is therefore constructing $\Amat{k}{\activeDoFs}{\L}$, which reduces to choosing the active DoFs $\activeDoFSet{k}{\l}$. The remainder of this paper focuses on defining $\activeDoFSet{k}{\l}$ such that the resulting hierarchical spaces are linearly independent and preserve a discrete de Rham complex, and on assembling $\Amat{k}{\activeDoFs}{\L}$ from those choices.
+\subsection{Unrefinement, the solve, and the case for admissibility}
+\label{subsec:unrefinement_and_solve}
 
-From here the matrix picture is fixed. The object $\Amat{k}{\activeDoFs}{\L}$ is always a selection of columns from the hierarchy $\{\Amat{k}{\l}{\L}\}_\l$. The entire remaining question is therefore combinatorial: \emph{which} column selections are admissible, meaning they yield linearly independent $k$-form bases that span an exact complex. The rest of the paper characterises the admissible selections (Section~\ref{sec:construction_of_hierarchical_subdiv_spaces}), presents an adaptive mesh refinement and padding strategy that preserves admissibility (Section~\ref{subsec:adaptive_loop}), and verifies the resulting properties computationally (Section~\ref{sec:numerical_experiments}).
+This section provides a high-level overview of the assembly of a linear form into a linear system using the active DoFs $\activeDoFSet{k}{}$, and how to solve this system. Every active basis function $\constrQ{\SDFbasis}{k}{\l}{\L}{\coarseIdxone} \in \activeDoFSet{k}{}$ is an element of the finest FEEC space $\FEECspace{k}{\L}$, and we use this inclusion to assemble matrices for the active DoFs. Given we assembled a linear form into the matrix $M_\L$ with respect to the FEEC spaces $\FEECspace{k}{\L}$, the corresponding matrix $M_{\activeDoFSet{k}{}}$ is given by
+\begin{equation}
+    \label{eq:unrefinement}
+    M_{\activeDoFs^k} \; \coloneq \; \big( \Amat{k}{\activeDoFs}{\L} \big)^{\!\top} \, \cdot \, M_\L \, \cdot \, \Amat{k}{\activeDoFs}{\L}.
+\end{equation}
+
+We call this restriction onto the active DoFs $\activeDoFSet{k}{}$ the \emph{unrefinement}. The right-hand side $b_{\activeDoFSet{k}{}}$ of the linear form is obtained in a similar way. Example~\ref{ex:matrix_assembly} spells out the unrefinement for the mixed Laplace system~\eqref{eq:mixed_block_system} used to test our algorithms later. The resulting linear system is given by
+\begin{equation}
+    \label{eq:abstract_solve}
+    M_{\activeDoFSet{k}{}} \, \freeVec{\bar{c}}{k}{\activeDoFs} = b_{\activeDoFSet{k}{}}
+\end{equation}
+for the adaptive coefficient vector $\freeVec{\bar{c}}{k}{\activeDoFs}$ as in Equation~\eqref{eq:hierarchical_form_compact}. This system is well posed iff the matrix $M_{\activeDoFSet{k}{}}$ has full rank, and thus no kernel. Assuming that the problem is well posed in $\FEECspace{k}{\L}$, the matrix $M_\L$ has full rank. This means that a kernel of $M_{\activeDoFSet{k}{}}$ has to enter through a kernel in $\Amat{k}{\activeDoFs}{\L}$. If $\Amat{k}{\activeDoFs}{\L}$ has no non-trivial kernel, we call the selection of active DoFs \emph{admissible}.
+
+\smallskip
+
+There are two cases that cause inadmissibility because $\Amat{k}{\activeDoFs}{\L}$ picks up a kernel. First, multiple active DoFs in $\activeDoFSet{k}{}$ can be linearly dependent, and thus introduce a kernel into $\Amat{k}{\activeDoFs}{\L}$. Second, even if all active DoFs are linearly independent, $\Amat{k}{\activeDoFs}{\L}$ can carry a spurious kernel by inflating the space of harmonic forms in the differential complex beyond the true harmonics.
+
+Controlling both linear independence and the cohomology of the discrete complex spanned by the active DoFs $\activeDoFSet{k}{}$ implies well-posedness of the linear system in Equation~\eqref{eq:abstract_solve}. Section~\ref{sec:construction_of_hierarchical_subdiv_spaces} introduces the necessary tools and operators to enable a systematic construction of admissible active DoFs, and Section~\ref{subsec:adaptive_loop} extends that to a series of nested spaces to enable adaptive, local refinement. The resulting algorithms are verified numericall in Section~\ref{sec:numerical_experiments}. Table~\ref{tab:properties_map} maps the desirable properties of the spaces and algorithms to where they are studied in the remainder of this paper. The table provides the structure of the presentation, clarifies the claims and serves as and an ongoing reference as this paper is read.
+
+\begin{table}[!tb]
+\centering
+\small
+{\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}c p{0.25\textwidth} p{0.32\textwidth} p{0.28\textwidth}@{}}
+\toprule
+ & Property & Established theoretically & Verified numerically \\
+\midrule
+$\bullet$ & Domain coverage & Definitions~\ref{def:covering},~\ref{def:active_k_form_dofs} (Sec.~\ref{subsec:selecting_active_dofs}) & every covering in Section~\ref{sec:numerical_experiments} \\
+\addlinespace
+$\circ$ & Linear independence & Theorem~\ref{theorem:linear_independence} (Section~\ref{subsec:subdiv_partition}) & Figures~\ref{fig:pinch_resolution} and~\ref{fig:admissibility_padding} (Sec.~\ref{subsec:exactness_atomic}) \\
+\addlinespace
+\multirow[t]{2}{*}{$\bullet$} & \multirow[t]{2}{0.24\textwidth}{Differential complex ($\extd\circ\extd \equiv 0$ pointwise)} & Theorem~\ref{theorem:differential_complex} (Section~\ref{subsec:selecting_active_dofs}) & \multirow[t]{2}{0.28\textwidth}{Section~\ref{subsec:maxwell}} \\
+ & & & \\
+\addlinespace
+\multirow[t]{2}{*}{$\circ$} & \multirow[t]{2}{0.24\textwidth}{Exactness / correct cohomology} & \multirow[t]{2}{0.32\textwidth}{Theorem~\ref{theorem:exactness} (Section~\ref{subsec:subdiv_partition})} & Figures~\ref{fig:pinch_resolution} and~\ref{fig:admissibility_padding} (Sec.~\ref{subsec:exactness_atomic}), \\
+ & & & Section~\ref{subsec:maxwell} \\
+\addlinespace
+$\bullet$ & Nestedness under refinement & Equation~\eqref{eq:quadrisection_monotone} & --- \\
+\addlinespace
+ & Bounded, local padding & Section~\ref{subsec:padding} (no termination proof) & Table~\ref{tab:padding_interface_L4} \\
+\addlinespace
+ & DoF efficiency versus uniform & --- & Tables~\ref{tab:cl_headline} and~\ref{tab:cl_tol} \\
+\addlinespace
+ & Well-conditioned solve & --- (open) & Table~\ref{tab:solve_stats_L4} \\
+\bottomrule
+\end{tabular}}
+\caption{Desirable properties of the adaptive subdivision $k$-form spaces spanned by the active DoFs $\activeDoFSet{k}{}$, and where each is established theoretically and/or verified numerically. The symbol $\bullet$ indicates that the property holds for every covering $\C$ (Definition~\ref{def:covering}), while $\circ$ holds only if $\C$ is a subdivision partition (Definition~\ref{def:subdiv_partition}). Omitting the symbol marks a computational-cost or performance property.}
+\label{tab:properties_map}
+\end{table}
+
+\FloatBarrier
 
 \section{Constructing hierarchical subdivision spaces}
 \label{sec:construction_of_hierarchical_subdiv_spaces}
@@ -520,7 +584,7 @@ This proposition implies the refinement relation for the subdivision basis funct
     \label{equ:basisrel}
     \constrQ{\SDFbasis}{k}{\l}{\L}{\coarseIdxone} = \Aop{k}{\l}{\L} \freeQ{\FEECbasis}{k}{\l}{\coarseIdxone} = \sum_{\fineIdxone = 1}^{\sumdimlk{\l}{k}} \Amatij{k}{\l}{\L}{\fineIdxone}{\coarseIdxone} \; \freeQ{\FEECbasis}{k}{\L}{\fineIdxone} \, ,
 \end{equation}
-where $\Amat{k}{\l}{\L}$ is the subdivision matrix, cf.~\cite{Piel.2026}. Splitting the accumulated subdivision operator $\Aop{k}{\l}{\L}$ reveals the following relation between the basis functions $\constrVec{\Phi}{k}{\l}{\L}$ and $\constrVec{\Phi}{k}{\l + 1}{\L}$ on neighbouring levels.
+where $\Amat{k}{\l}{\L}$ is the subdivision matrix, cf. Equation~\ref{def:uniform_spaces_as_image_of_subdiv_operator} and~\cite{Piel.2026}. Splitting the accumulated subdivision operator $\Aop{k}{\l}{\L}$ reveals the following relation between the basis functions $\constrVec{\Phi}{k}{\l}{\L}$ and $\constrVec{\Phi}{k}{\l + 1}{\L}$ on neighbouring levels.
 
 \begin{lemma}[Refinement Relation, {\cite{Piel.2026}}]
     \label{lemma:hiermeshrel}
@@ -763,7 +827,7 @@ We now provide a generic definition of the adaptive subdivision $k$-form spaces 
     \end{equation}
 \end{definition}
 
-Not every choice of active DoFs $\activeDoFSet{k}{}$ yields a well-behaved hierarchical spaces $\activeSDFspaces{k}{}$. The active DoFs $\activeDoFSet{k}{}$ must together represent forms that cover the entire domain, must be linearly independent, and should constitute a exact complex. The remainder of this section introduces the tools needed to parameterise the active DoFs $\activeDoFSet{k}{}$ and to reason about these properties of the adaptive subdivision $k$-form spaces $\activeSDFspaces{k}{}$.
+Not every choice of active DoFs $\activeDoFSet{k}{}$ yields a well-behaved hierarchical spaces $\activeSDFspaces{k}{}$, cf. Section~\ref{subsec:unrefinement_and_solve}. Most importantly, the active DoFs $\activeDoFSet{k}{}$ must together represent forms that cover the entire domain, must be linearly independent, and should constitute a exact complex. The remainder of this section introduces the tools needed to parameterise the active DoFs $\activeDoFSet{k}{}$ and to reason about these properties of the adaptive subdivision $k$-form spaces $\activeSDFspaces{k}{}$.
 
 The requirements of linear indepence and expressing exterior differentials have a visual interpretation in terms of the refinement and derivative stencils introduced in the previous Sections~\ref{subsec:refinement_of_basis_functions} and~\ref{subsec:derivatives_of_basis_functions}. A selection of active basis functions is linearly independent when the active DoFs do not contain a refinement stencil for any individual active DoFs. Similarly, the spaces constitute a differential complex if the simplices in derivative stencil of any active basis function are themselves present in the active DoFs, either directly or through a refinement stencil.
 
@@ -874,21 +938,22 @@ A geometrically natural unit for organising the selection of active DoFs is a \e
     \begin{equation}
         \C_{\l} = \bigcup\limits_{n = 1}^{\mathrm{N}_\l} \calP^n_{\l \to \L}, \quad \C_{>\lone} = \bigcup\limits_{\l = \lone + 1}^{\L} \C_\l, \quad \C_{\geq\lone} = \bigcup\limits_{\l = \lone }^{\L} \C_\l, \quad \C_{<\lone} = \bigcup\limits_{\l = \lzero }^{\lone - 1} \C_\l, \quad \C_{\leq\lone} = \bigcup\limits_{\l = \lzero }^{\lone} \C_\l.
     \end{equation}
-    The \emph{boundary} $\partial \C$ of a covering $\C$ is given by $\partial \C \coloneq \bigcup_{\l = \lzero}^{\L} \partial \C_\l$, where $\partial \C_\l \coloneq \C_\l \cap \partial \T_\l$.
+    The \emph{boundary} $\partial \C$ of a covering $\C$ is given by $\partial \C \coloneq \bigcup_{\l = \lzero}^{\L} \partial \C_\l$, where $\partial \C_\l \coloneq \C_\l \cap \partial \T_\l$. We write $\allcoverings(\T_\L)$, or $\allcoverings$ when $\T_\L$ is clear from context, for the set of all coverings of $\T_\L$.
 \end{definition}
 
 We refer to the set $\K^k(\C) \coloneq \bigcup_{\l=\lzero}^{\L} \K^k(\C_\l)$ as the \emph{patch DoFs}.
-Thus, spanning an adaptive space using the patch DoFs of covering $\C$ ensures that the entire domain is covered with active basis functions. It does not yet guarantee either linear independece or a differential complex. In the following, we will develop an intuition for the selection of additional active degrees of freedom and constraints regarding the covering.
+Thus, spanning an adaptive space using the patch DoFs of covering $\C$ ensures that the entire domain is covered with active basis functions. It does not yet guarantee either linear independece or a differential complex. The following examples develops an intuition for the selection of additional active degrees of freedom and constraints regarding the covering.
 
 \smallskip
 
-Consider the covering $\C(\T_\L) = \calP^1_0 \cup \calP^1_1 \cup \calP^1_2$ with $\L \geq 2$ shown at the top of Figure~\ref{fig:active_dofs}. The patch DoFs are going to be active for any form degree $k$ and level $\l$. Note that the derivative stencils of interface vertices on level $2$ take us outside of the patch edges, meaning that their derivatives cannot be represented in the current space that contains only patch DoFs. Since we already are on the finest level of the covering, we cannot represent the missing edge DoFs through their refinement stencils. Thus, the only option is to activate these edge DoFs incident to the interface vertices on level $2$. The derivative stencil of these additional active edge DoFs now takes us outside of the patch faces on level $2$. Again, the only option is to add the interface faces on level $2$. Row $\l=2$ of Figure~\ref{fig:active_dofs} shows exactly the active DoFs resulting from this extention around the interfaces of the patch $\calP^1_2$.
+\begin{example}
+    \label{ex:selection}
+    Consider the covering $\C(\T_\L) = \calP^1_0 \cup \calP^1_1 \cup \calP^1_2$ with $\L \geq 2$ shown at the top of Figure~\ref{fig:active_dofs}. The patch DoFs are going to be active for any form degree $k$ and level $\l$. Note that the derivative stencils of interface vertices on level $2$ take us outside of the patch edges, meaning that their derivatives cannot be represented in the current space that contains only patch DoFs. Since we already are on the finest level of the covering, we cannot represent the missing edge DoFs through their refinement stencils. Thus, the only option is to activate these edge DoFs incident to the interface vertices on level $2$. The derivative stencil of these additional active edge DoFs now takes us outside of the patch faces on level $2$. Again, the only option is to add the interface faces on level $2$. Row $\l=2$ of Figure~\ref{fig:active_dofs} shows exactly the active DoFs resulting from this extention around the interfaces of the patch $\calP^1_2$.
 
-The same logic becomes a little more nuanced for the patch $\calP^1_1$ on level $\l=1$. We need to extend the patch DoFs again to be able to represent all derivates. However, if the additional active edge and face DoFs overlap the fine patch $\calP^1_2$, the interface edges and faces of level $\l=2$ make the ones of level $\l=1$ interface linearly dependent. The interface DoFs that overlap the coarser patch $\calP^1_0$ are not linearly dependent. Row $\l=1$ in Figure~\ref{fig:active_dofs} shows that we only add interface DoFs on level $\l=1$ if they overlap the coarser patch. Row $\l=0$ in Figure~\ref{fig:active_dofs} also reveals that we do not need to add any interface DoFs for the coarsest patch $\calP^1_0$ because they are all linearly dependent after adding the interface DoFs of all finer patches. The extra DoFs on level $\l=1$ that are at the interface between the patches at level $\l=0$ and $\l=2$ are also a result of the need to express derivatives of $k$-forms in the $k\!+\!1$-form spaces.
+    The same logic becomes a little more nuanced for the patch $\calP^1_1$ on level $\l=1$. We need to extend the patch DoFs again to be able to represent all derivates. However, if the additional active edge and face DoFs overlap the fine patch $\calP^1_2$, the interface edges and faces of level $\l=2$ make the ones of level $\l=1$ interface linearly dependent. The interface DoFs that overlap the coarser patch $\calP^1_0$ are not linearly dependent. Row $\l=1$ in Figure~\ref{fig:active_dofs} shows that we only add interface DoFs on level $\l=1$ if they overlap the coarser patch. Row $\l=0$ in Figure~\ref{fig:active_dofs} also reveals that we do not need to add any interface DoFs for the coarsest patch $\calP^1_0$ because they are all linearly dependent after adding the interface DoFs of all finer patches. The extra DoFs on level $\l=1$ that are at the interface between the patches at level $\l=0$ and $\l=2$ are also a result of the need to express derivatives of $k$-forms in the $k\!+\!1$-form spaces.
+\end{example}
 
-\smallskip
-
-This selection mechanism of alternating refinement and derivative stencils generalises to the following definition of the active DoFs of a covering $\C$ and lets us define the adaptive subdivision differential form spaces.
+The selection mechanism of alternating refinement and derivative stencils described in Example~\ref{ex:selection} generalises to the following definition of the active DoFs of a covering $\C$ and lets us define the adaptive subdivision differential form spaces.
 
 \begin{definition}[Active $k$-form degrees of freedom]
     \label{def:active_k_form_dofs}
@@ -910,19 +975,28 @@ Unpacking this definition shows: for every patch (\textit{i}) $\calP^n_{\l}$, we
     where the active basis functions $\constrVec{\SDFbases}{k}{\activeDoFs(\C)}{\L}$ and $\constrVec{\mathring{\SDFbases}}{k}{\activeDoFs(\C)}{\L} \coloneq \constrVec{\SDFbases}{k}{(\activeDoFs(\C) \setminus \K^k(\partial \C))}{\L}$ are constructed as in Definition~\ref{def:generic_adaptive_function_spaces}.
 \end{definition}
 
-The selection of the active DoFs in Definition~\ref{def:active_k_form_dofs} guarantees that the adaptive subdivision $k$-form spaces $\hierSDFspace{k}{\C}{\L}$ form a differential complex~\citep{companion_paper}, i.e.
-\begin{equation}
-    \label{eq:differential_complex}
-    \extd: \; \hierSDFspace{k}{\C}{\L} \to \hierSDFspace{k+1}{\C}{\L} \qquad \text{and} \qquad \extd \circ \extd: \; \hierSDFspace{k}{\C}{\L} = 0.
-\end{equation}
-
-This is also true for the spaces $\hierSDFspaceZero{k}{\C}{\L}$ with vanishing traces.
+\begin{theorem}
+    \label{theorem:differential_complex}
+    Let $\C$ be a covering of the mesh $\T_\L$. The adaptive subdivision $k$-form spaces $\hierSDFspace{k}{\C}{\L}$ constitute the differential complex
+    \begin{equation}
+    \begin{tikzcd}
+        \mathfrak{R}_\C: \qquad 0 \arrow[r] & \mathbb{R} \arrow[r, "\subset"] & \hierSDFspace{0}{\C}{\L} \arrow[r, "\extd"] & \hierSDFspace{1}{\C}{\L} \arrow[r, "\extd"] & \hierSDFspace{2}{\C}{\L} \arrow[r] & 0.
+    \end{tikzcd}
+    \end{equation}
+    The adaptive subdivision $k$-form spaces with vanishing traces form the differential complex
+    \begin{equation}
+    \begin{tikzcd}
+        \mathring{\mathfrak{R}}_\C: \qquad 0 \arrow[r] & \hierSDFspace{0}{\C}{\L} \arrow[r, "\extd"] & \hierSDFspace{1}{\C}{\L} \arrow[r, "\extd"] & \hierSDFspace{2}{\C}{\L} \arrow[r, "\int"] & \mathbb{R} \arrow[r] & 0.
+    \end{tikzcd}
+    \end{equation}
+\end{theorem}
 
 The other essential properties of the adaptive $k$-form subdivision spaces, namely linear independence and correct cohomology of the discrete complex, are tied to the geometry of the patches that constitute the covering, see~\cite{companion_paper}. This will be the subject of the following Section~\ref{subsec:subdiv_partition}.
 
 \FloatBarrier
 
 \subsection{Operations on coverings}
+\label{subsec:operations_on_coverings}
 
 This section develops the necessary concepts to describe the two particular configurations that compromise linear independence and the cohomology of the complex. These foundations enable us to introduce the geometric predicates of pinch vertices and inadmissible faces in Section~\ref{subsec:subdiv_partition} which allow us to constrain the geometry of coverings and indicate the need for padding in the adaptive loop in Section~\ref{subsec:adaptive_loop}.
 
@@ -1076,9 +1150,12 @@ Recomputing the covering star of $\vertclass{\coarseIdxtwo}$ of $\C^\l$ at each 
 
 The quadrisection operators enable consistent refinement of the adaptive subdivision $k$-form spaces $\hierSDFspace{k}{\C}{\L}$ in the sense that
 \begin{equation}
+    \label{eq:quadrisection_monotone}
     \hierSDFspace{k}{\C}{\L} \subseteq \hierSDFspace{k}{\quadriF{\C}(\simplexsubset{2}{\l})}{\L} \qquad \text{and} \qquad \hierSDFspace{k}{\C}{\L} \subseteq \hierSDFspace{k}{\quadriV{\C}{\targetlevel}(\vertclass{\coarseIdxtwo})}{\L}.
 \end{equation}
 The quadrisection operators defined in this section are the basis upon which we will later built the algorithms in the adaptive loop in Section~\ref{subsec:adaptive_loop}.
+
+\todo{\guidance{Note that $\allcoverings$ is closed under both quadrisection operators: $\quadriF{\C}(\cdot), \quadriV{\C}{\targetlevel}(\cdot) \in \allcoverings$ whenever $\C \in \allcoverings$. But $\allpartitions$ is \emph{not} closed under them --- a quadrisection of an admissible $\C$ can introduce a pinch vertex or an inadmissible face. This is exactly why \textsc{Refine} (built from these operators) can leave $\allpartitions$, and why \textsc{Pad} (Section~\ref{subsec:adaptive_loop}) is needed at all.}}
 
 \FloatBarrier
 
@@ -1153,14 +1230,14 @@ The two predicates allow us to define \emph{subdivision partitions} as a subset 
 
 \begin{definition}[Subdivision Partition]
     \label{def:subdiv_partition}
-    A covering $\C(\T_\L)$ is called a \emph{subdivision partition} if all of its faces $\face{\l}{\coarseIdxone} \in \F(\C)$ are admissible and none of its vertex classes $\vertclass{\coarseIdxtwo} \in \widehat{\V}_\C$ are pinch vertices.
+    A covering $\C(\T_\L)$ is called a \emph{subdivision partition} if all of its faces $\face{\l}{\coarseIdxone} \in \F(\C)$ are admissible and none of its vertex classes $\vertclass{\coarseIdxtwo} \in \widehat{\V}_\C$ are pinch vertices. We write $\allpartitions(\T_\L) \subset \allcoverings(\T_\L)$, or $\allpartitions$, for the set of all subdivision partitions of $\T_\L$.
 \end{definition}
 
 Finally, we are going to re-state the two main theorems of \cite{companion_paper} regarding linear independence and the exactness of the complex.
 
 \begin{theorem}
     \label{theorem:linear_independence}
-    Let $\C$ be a subdivision partition of the mesh $\T_\L$. The active basis functions selected by Def.~\ref{def:active_k_form_dofs} of the adaptive spaces $\hierSDFspace{k}{\C}{\L}$ are linearly independent.
+    Let $\C \in \allpartitions$ be a subdivision partition of the mesh $\T_\L$. The active basis functions selected by Def.~\ref{def:active_k_form_dofs} of the adaptive spaces $\hierSDFspace{k}{\C}{\L}$ are linearly independent.
 \end{theorem}
 \begin{proof}
     Linear dependencies only occur at inadmissible faces but a subdivision partition does not contain any inadmissible faces. See \cite{companion_paper} for the entire proof.
@@ -1168,19 +1245,7 @@ Finally, we are going to re-state the two main theorems of \cite{companion_paper
 
 \begin{theorem}
     \label{theorem:exactness}
-    Let $\C$ be a covering of the mesh $\T_\L$. The adaptive subdivision $k$-form spaces $\hierSDFspace{k}{\C}{\L}$ constitute the differential complex
-    \begin{equation}
-    \begin{tikzcd}
-        \mathfrak{R}_\C: \qquad 0 \arrow[r] & \mathbb{R} \arrow[r, "\subset"] & \hierSDFspace{0}{\C}{\L} \arrow[r, "\extd"] & \hierSDFspace{1}{\C}{\L} \arrow[r, "\extd"] & \hierSDFspace{2}{\C}{\L} \arrow[r] & 0.
-    \end{tikzcd}
-    \end{equation}
-    The adaptive subdivision $k$-form spaces with vanishing traces form the differential complex
-    \begin{equation}
-    \begin{tikzcd}
-        \mathring{\mathfrak{R}}_\C: \qquad 0 \arrow[r] & \hierSDFspace{0}{\C}{\L} \arrow[r, "\extd"] & \hierSDFspace{1}{\C}{\L} \arrow[r, "\extd"] & \hierSDFspace{2}{\C}{\L} \arrow[r, "\int"] & \mathbb{R} \arrow[r] & 0.
-    \end{tikzcd}
-    \end{equation}
-    If $\C$ is a \robert{subdivision partition of a \emph{simply-connected} domain}, the complexes $\mathfrak{R}_\C$ and $\mathring{\mathfrak{R}}_\C$ are exact.
+    Let $\C \in \allpartitions$ be a \robert{subdivision partition of a \emph{simply-connected} domain}. Then, the complexes $\mathfrak{R}_\C$ and $\mathring{\mathfrak{R}}_\C$ of adaptive $k$-form subdivision spaces from Theorem~\ref{theorem:differential_complex} are exact.
 \end{theorem}
 
 \begin{proof}
@@ -1270,7 +1335,7 @@ This section describes the adaptive loop used in the numerical experiments. The 
 \end{tikzcd}
 \end{equation}
 
-and is initialized with a subdivision partition $\C^0$. Throughout the adaptive loop, the general picture of the computational objects in Section~\ref{subsec:computational_representations} stays the same, the loop only refines $\C$ iteratively, and with that the active DoFs $\activeDoFSet{k}{}(\C)$ and the adaptive subdivision $k$-form spaces $\hierSDFspace{k}{\C}{\L}$. The \textsc{Pad} step is necessary because the \textsc{Refine} step produces only a covering, not a subdivision partition, see Definition~\ref{def:subdiv_partition}. This means that the \textsc{Pad} step effectively restores linear independence and exactness of the complex.
+and is initialized with a subdivision partition $\C^0$. Throughout the adaptive loop, the general picture of the computational objects in Section~\ref{subsec:computational_representations} stays the same, the loop only refines $\C$ iteratively, and with that the active DoFs $\activeDoFSet{k}{}(\C)$ and the adaptive subdivision $k$-form spaces $\hierSDFspace{k}{\C}{\L}$. \guidance{The \textsc{Pad} step is necessary because the \textsc{Refine} step only guarantees $\C^{\mathrm{refine}} \in \allcoverings$, not $\C^{\mathrm{refine}} \in \allpartitions$, see Definition~\ref{def:subdiv_partition}.} This means that the \textsc{Pad} step effectively restores linear independence and exactness of the complex.
 
 \subsubsection{Solve}
 \label{subsec:solve}
@@ -1306,7 +1371,7 @@ The mixed vector Laplace problem can then be assembled into the block matrix sys
         f_\C
     \end{bmatrix}
 \end{equation}
-This system is symmetric indefinite, so we use \emph{MINRES} with a block-diagonal SPD preconditioner. Section~\ref{subsec:vector_laplace} confirms that the number of iterations stays flat over the iterations over the adaptive loop.
+This system is symmetric indefinite, so we use \emph{MINRES} with a block-diagonal SPD preconditioner.\needcite{} \guidance{Section~\ref{subsec:vector_laplace} shows that the number of iterations rises as new hierarchical levels activate and plateaus once the full depth $\L$ is active.}
 \end{example}
 
 \subsubsection{Estimation}
@@ -1317,7 +1382,7 @@ We compute error indicators $\eta_{\l,\coarseIdxone}$ per face $\face{\l}{\coars
     \label{eq:project_estimator_on_L_to_partition}
     \eta^2_{\l,\coarseIdxone} = \sum\limits_{\face{\L}{\fineIdxone} \; \in \; \Aop{}{\l}{\L}(\face{\l}{\coarseIdxone})} \eta^2_{\L,\fineIdxone},
 \end{equation}
-where $\eta^2_{\L,\fineIdxone}$ is a standard FEEC residual we can evaluate in $\FEECspace{k}{\L}$. Note the residuals are only computed for faces in the covering and the interface faces are excluded to avoid overlap and double-counting. In the following, we will refer to $\eta^2$ and $\rho^2$ as the \emph{total} and \emph{refinable} residuals, respectively, defined as
+where $\eta^2_{\L,\fineIdxone}$ is a standard FEEC residual\needcite{} we can evaluate in $\FEECspace{k}{\L}$. Note the residuals are only computed for faces in the covering and the interface faces are excluded to avoid overlap and double-counting. In the following, we will refer to $\eta^2$ and $\rho^2$ as the \emph{total} and \emph{refinable} residuals, respectively, defined as
 \begin{equation}
     \label{def:total_and_refinable_residuals}
     \eta^2 = \sum\limits_{\l=\lzero}^{\L} \; \eta^2_\l \qquad \text{and} \qquad \rho^2 = \sum\limits_{\l=\lzero}^{\L-1} \; \eta^2_\l = \eta^2 - \eta^2_{\L} \qquad \text{with} \qquad \eta^2_{\l} = \sum\limits_{\face{\l}{\coarseIdxone} \; \in \; \F(\C_\l)} \eta^2_{\l,\coarseIdxone}.
@@ -1330,7 +1395,7 @@ The refinable residual discards the contributions of faces $\face{\L}{\coarseIdx
 This \emph{saturation rate} $\xi \in [0,1]$ provides a good analytic tool and a concrete stopping criterion for the adaptive loop.
 
 \begin{example}[Vector Laplace estimator]
-For the mixed vector Laplace problem with $(\sigma_h, u_h) \in \hierSDFspace{0}{\C}{\L} \times \hierSDFspace{1}{\C}{\L}$ from Section~\ref{subsec:vector_laplace}, the basis functions are piecewise linear approximations of the subdivision limit functions. Hence $\extd (\iota u_h)$ is piecewise constant in $\FEECspace{2}{\L}$ and $\boldsymbol{\delta}\extd (\iota u_h)$ vanishes elementwise, while its contribution appears in the curl jumps across edges. In $\FEECspace{2}{\L}$, the indicator takes the form
+For the mixed vector Laplace problem with $(\sigma_h, u_h) \in \hierSDFspace{0}{\C}{\L} \times \hierSDFspace{1}{\C}{\L}$ from Section~\ref{subsec:vector_laplace}, the basis functions are piecewise linear approximations of the subdivision limit functions. \guidance{Writing $\iota \colon \hierSDFspace{k}{\C}{\L} \hookrightarrow \FEECspace{k}{\L}$ for the inclusion of the hierarchical space into the fine FEEC space,} $\extd (\iota u_h)$ is piecewise constant in $\FEECspace{2}{\L}$ and $\boldsymbol{\delta}\extd (\iota u_h)$ vanishes elementwise, while its contribution appears in the curl jumps across edges. In $\FEECspace{2}{\L}$, the indicator takes the form
 \begin{equation}
 \begin{aligned}
     \eta_{\L,\fineIdxone}^2 = \quad &\sum\limits_{\face{\L}{\coarseIdxone} \,\in\, \F_\L} \!\! \robert{h_{\face{\L}{\fineIdxone}}^2} \big( \|f - \extd \sigma_h\|_{L^2(\face{\L}{\fineIdxone})}^2 + \|\sigma_h + \boldsymbol{\delta} u_h\|_{L^2(\face{\L}{\fineIdxone})}^2 \big) \\
@@ -1347,7 +1412,10 @@ The first sum contains the elementwise residuals of both equations, and the seco
 \end{equation}
 Dividing by the cumulative area of the faces rescales the integral face estimator to a density per vertex. This rescaling makes the marking roughly level- and valence-agnostic. Otherwise, the contribution of coarse faces would be weighted higher and their adjacent vertices would be over-represented during the Dörfler marking step. Note also that we do not take faces on level $\L$ into account since they cannot be refined further, so their error is partically fixed.
 
-Because the covering star includes the coarse face across any interface edge through the vertex, $\nu_\coarseIdxtwo$ accounts for exactly the faces that refining the vertex's star would homogenise during the \textsc{Refine} step, see Section~\ref{subsec:refine}. For this reason, $\nu_\coarseIdxtwo$ measures exactly the error that selecting the vertex would actually resolve in the sense of Dörfler marking, see Section~\ref{subsec:mark}.
+\guidance{\begin{remark}[Why rank by the vertex-based estimator]
+\label{rem:vertex_estimator_rationale}
+Because the covering star includes the coarse face across any interface edge through the vertex, $\nu_\coarseIdxtwo$ accounts for exactly the faces that refining the vertex's star would homogenise during the \textsc{Refine} step (Section~\ref{subsec:refine}). For this reason, $\nu_\coarseIdxtwo$ measures exactly the error that selecting the vertex would actually resolve in the sense of Dörfler marking (Section~\ref{subsec:mark}).
+\end{remark}}
 
 \begin{figure}%[htbp]
     \centering
@@ -1376,9 +1444,9 @@ Because the covering star includes the coarse face across any interface edge thr
 \subsubsection{Marking}
 \label{subsec:mark}
 
-Our code marks vertices rather than faces. This enables us to use the quadrisection operator $\quadriV{\C}{\targetlevel}$ to refine single vertex stars, the central combinatorial object of the admissibility arguments in~\cite{companion_paper}. We rank the vertices by the vertex estimator $\nu_\coarseIdxtwo$, see Equation~\eqref{eq:vertex_residual} from Section~\ref{subsec:estimate}. For this purpose, we enumerate the $\vert \mathrm{V}_\C \vert$ vertex equivalence classes $\vertclass{\coarseIdxtwo}$ of $\C$ in order of decreasing residual, so that $\nu_{\coarseIdxtwo_1} \geq \nu_{\coarseIdxtwo_2} \geq \ldots \geq \nu_{\coarseIdxtwo_{\mathrm{V}-1}} \geq \nu_{\coarseIdxtwo_{\vert \mathrm{V}_\C \vert}}$.
+Our code marks vertices rather than faces. This enables us to use the quadrisection operator $\quadriV{\C}{\targetlevel}$ to refine single vertex stars, the central combinatorial object of the admissibility arguments in~\cite{companion_paper}. We rank the vertices by the vertex estimator $\nu_\coarseIdxtwo$, see Equation~\eqref{eq:vertex_residual} from Section~\ref{subsec:estimate}. \guidance{By Remark~\ref{rem:vertex_estimator_rationale}, this estimator measures exactly the error that marking a vertex would resolve.} For this purpose, we enumerate the $\vert \mathrm{V}_\C \vert$ vertex equivalence classes $\vertclass{\coarseIdxtwo}$ of $\C$ in order of decreasing residual, so that $\nu_{\coarseIdxtwo_1} \geq \nu_{\coarseIdxtwo_2} \geq \ldots \geq \nu_{\coarseIdxtwo_{\mathrm{V}-1}} \geq \nu_{\coarseIdxtwo_{\vert \mathrm{V}_\C \vert}}$.
 
-The Dörfler marking algorithm builds the set $\mathrm{V}_\C^\mathrm{mark} \coloneq \{ \vertclass{\coarseIdxtwo_1}, \, \dots, \, \vertclass{\coarseIdxtwo_q} \}$ by greedily selecting the first $q$ vertex equivalence classes with the largest estimators such that the \emph{marked refinable residual}
+The Dörfler marking algorithm\needcite{} builds the set $\mathrm{V}_\C^\mathrm{mark} \coloneq \{ \vertclass{\coarseIdxtwo_1}, \, \dots, \, \vertclass{\coarseIdxtwo_q} \}$ by greedily selecting the first $q$ vertex equivalence classes with the largest estimators such that the \emph{marked refinable residual}
 \begin{equation}
     \label{eq:marked_refinable_residual}
     \rho^2_{\R_\theta} \; \coloneqq \sum\limits_{\face{\l}{\coarseIdxone} \; \in \; \R_\theta} \eta^2_{\l, \coarseIdxone}, \qquad \text{where} \qquad \R_\theta = \bigcup\limits_{p=1}^q \coveringStar(\vertclass{\coarseIdxtwo_p}) \setminus \F(\C_\L),
@@ -1588,15 +1656,28 @@ The vertex classes marked for grading are refined using the quadrisection operat
 \end{equation}
 and $\C^0 = \C^{\mathrm{admissible}}$. Note the additional $-2$ in the quadrisection operator $\quadriV{\vertclass{\coarseIdxtwo_p}}{\targetlevel_{\coarseIdxtwo_p} - 2}$. It ensures that the covering star $\coveringStarC{\C^p}(\vertclass{\coarseIdxtwo_p})$ on the graded partition $\C^p$ has a level gap of $2$ or less.
 
+\todo{\guidance{The claim that grading "improves the conditioning of the matrix-vector system" is currently asserted, not measured --- Section~\ref{subsec:vector_laplace}'s conditioning table (Table~\ref{tab:solve_stats_L4}) reports $\kappa(P^{-1}K_\C)$ for the full adaptive loop (grading included) but has no ablation isolating grading's own contribution. Either soften this claim to "is intended to..." or add a with/without-grading comparison to Table~\ref{tab:solve_stats_L4} (or a dedicated table) before asserting it as a measured effect.}}
+
 \paragraph{Summary.}
 
 Every stage of the \textsc{Pad} step uses either the vertex-class based quadrisection operator $\quadriV{\C}{\targetlevel}$ or the face-based $\quadriF{\C}$.
 
 The pinch padding resolves pinch vertices and thus repairs cohomological artifacts and spurious harmonics, while the admissibility padding mostly restores linear independece of the active basis funtions $\activeDoFSet{k}{\C}$. The grading only refines around vertex classes with large level jumps to improve the conditioning of the resulting linear system.
 
-Every rule only ever refines and adds a few faces that locally repair its violation, and no face is refined beyond level $\L$. The order of the padding stages matters. In particular, resolving a pinch vertex can lead to an admissible face becoming inadmissible, cf. Figure~\ref{fig:pipeline_padding}.
+Every rule only ever refines and adds a few faces that locally repair its violation, and no face is refined beyond level $\L$.
+
+\guidance{\begin{remark}[Padding order matters]
+\label{rem:padding_order}
+The three padding substeps do not commute: resolving a pinch vertex can lead to an admissible face becoming inadmissible (Figure~\ref{fig:pipeline_padding}), which is why $\textsc{Pad}$ always runs pinch resolution before inadmissible-face padding, before grading.
+\end{remark}}
 
 We do not \robert{(yet?)} have a proof that $\textsc{Pad}$ terminates. For our implementation, we wrapped the pinch resolution, face admissibility padding and the grading in a loop that terminates once a pass no longer refines any face, i.e., none of the predicates fires. A counter records the productive passes, which has not exceeded the minimum of $1$ in any test case we ran.
+
+\todo{\guidance{State $\textsc{Pad}$ using the new notation, with two caveats to hedge carefully:
+\begin{itemize}
+    \item \emph{Idempotence, only up to grading.} Pinch resolution and inadmissible-face padding act trivially on any $\C \in \allpartitions$, since their trigger sets $\mathrm{V}_\C^{\mathrm{pinch}}$ and $\F_{\mathrm{inadmissible}}$ are empty by definition of $\allpartitions$. But grading can still fire on $\C \in \allpartitions$ if some vertex class has level gap $\mu_\coarseIdxtwo > 2$ --- so $\textsc{Pad}|_{\allpartitions} \neq \mathrm{id}$ in general, only up to grading.
+    \item \emph{Termination is not proven.} Since we do not have a general termination proof, avoid stating $\textsc{Pad} : \allcoverings \to \allpartitions$ as an unconditional total map or theorem. At most: whenever $\textsc{Pad}$ terminates on input $\C \in \allcoverings$, its output lies in $\allpartitions$.
+\end{itemize}}}
 
 \FloatBarrier
 
@@ -1782,7 +1863,7 @@ This section confirms that the \textsc{Pad} step correctly restores the geometri
 \subsection{Maxwell Eigenvalue problem}
 \label{subsec:maxwell}
 
-This section studies the Maxwell eigenvalue problem, a classical test case to verify the properties of discrete differential complexes. Section~\ref{subsec:exactness_atomic} has already established that the \textsc{Pad} step restores the correct cohomology for the spaces $\hierSDFspace{k}{\C}{\L}$ by repairing the geometric defects of the covering $\C$ so that it becomes a subdivision partition. In constrast, this section studies how the spurious harmonic $1$-forms of a covering concretely affect the solution of the eigenproblem.
+This section studies the Maxwell eigenvalue problem, a classical test case to verify the properties of discrete differential complexes.\needcite{} Section~\ref{subsec:exactness_atomic} has already established that the \textsc{Pad} step restores the correct cohomology for the spaces $\hierSDFspace{k}{\C}{\L}$ by repairing the geometric defects of the covering $\C$ so that it becomes a subdivision partition. In constrast, this section studies how the spurious harmonic $1$-forms of a covering concretely affect the solution of the eigenproblem.
 
 The weak form of the Maxwell cavity (curl--curl) eigenvalue problem on the domain $\M = [0,\pi]^2$ with mesh $\T_\L$ is given by: Find $\lambda_{h,\coarseIdxone} \in \mathbb{R}$ and $u_\coarseIdxone \in \hierSDFspaceZero{1}{\C}{\L}$ such that
 \begin{equation}
@@ -1793,11 +1874,11 @@ with analytic spectrum $\lambda_\coarseIdxone = m^2 + n^2$, where $m$ and $n$ ar
 Applying Loop subdivision alters the domain slightly, so we do not compare the discrete spectrum directly with the analytic spectrum  $\lambda_\coarseIdxone$. Instead, we compare the discrete spectra $\lambda_\coarseIdxone$ with the spectrum of $\FEECspaceZero{k}{\L}$ with $\C^{\mathrm{FEEC}} = \T_\L$, a superspace of both $\hierSDFspaceZero{1}{\C^{\mathrm{pinch}}}{\L}$ and $\hierSDFspaceZero{1}{\C^{\mathrm{padded}}}{\L}$ that verifiably converges to the correct spectrum, see~\cite{Arnold.FEEC}.
 
 \robert{Figure~\ref{fig:Maxwell_eigenvalues} reports the discrete spectra with $\lambda_{h,\coarseIdxone} > 0$ for all three coverings. Outside of small approximation errors, the spectra agree across all the three
-partitions. That means that the defects caused by the spurious $1$-form harmonics of $\hierSDFspaceZero{1}{\C^{\mathrm{pinch}}}{\L}$ are confined to the eigenspace of $\lambda_{h,\coarseIdxone} = 0$. The reason for that is that $\extd \circ \extd \equiv 0$ holds \emph{pointwise} on $\hierSDFspaceZero{0}{\C}{\L}$ by construction of the subdivision basis, regardless of whether $\C$ satisfies the subdivision partition conditions. Consequently, the discrete Hodge--Helmholtz decomposition
+partitions. That means that the defects caused by the spurious $1$-form harmonics of $\hierSDFspaceZero{1}{\C^{\mathrm{pinch}}}{\L}$ are confined to the eigenspace of $\lambda_{h,\coarseIdxone} = 0$. \guidance{As Remark~\ref{rem:complex_vs_exactness} shows,} the reason for that is that $\extd \circ \extd \equiv 0$ holds \emph{pointwise} on $\hierSDFspaceZero{0}{\C}{\L}$ by construction of the subdivision basis, regardless of whether $\C$ satisfies the subdivision partition conditions. Consequently, the discrete Hodge--Helmholtz decomposition
 \begin{equation}
   \hierSDFspaceZero{1}{\C}{\L} = \extd\big[\hierSDFspaceZero{0}{\C}{\L}\big] \oplus \mathcal{H}^1 \oplus \extd^*\big[\hierSDFspaceZero{2}{\C}{\L}\big]
 \end{equation}
-splits $L^2$-orthogonally for every covering $\C$, admissible or not, where $\extd^*$ denotes the $L^2$-adjoint of $\extd$ on the finite-dimensional spaces (not the continuous Hodge codifferential). Writing $u = u_0 + u_H + u_*$ for the components of $u \in \hierSDFspaceZero{1}{\C}{\L}$ in the three summands, $\extd u_0 = \extd \extd \varphi = 0$ for the potential $\varphi \in \hierSDFspaceZero{0}{\C}{\L}$ generating $u_0$, and $\extd u_H = 0$ since $\mathcal{H}^1 \subset \ker(\extd)$ by definition. Hence $\extd u = \extd u_*$ for every $u$: no admissibility defect of $\C$ can leak $\extd$-content into the potential component $u_0$, because that would require $\extd \extd \varphi \neq 0$ for some $\varphi$, contradicting the identity above. A pinch can therefore only ever enlarge $\mathcal{H}^1$ beyond its topologically expected dimension, inflating the multiplicity of the $\lambda_{h,\coarseIdxone} = 0$ eigenspace, and never the magnitude of $\extd u_*$ that produces the physical, $\lambda_{h,\coarseIdxone} > 0$ band. It is this pointwise validity of $\extd \circ \extd = 0$ -- not merely the closedness of $\mathcal{H}^1$ -- that rules out the interleaved spurious eigenvalues typical of non-compatible discretisations (e.g.\ nodal vector Lagrange elements for $\mathbf{H}(\mathrm{curl})$), where $\extd \circ \extd \neq 0$ discretely and gradient-like modes leak nonzero curl content directly into the physical band.}
+splits $L^2$-orthogonally for every covering $\C$, admissible or not, where $\extd^*$ denotes the $L^2$-adjoint of $\extd$ on the finite-dimensional spaces (not the continuous Hodge codifferential). Writing $u = u_0 + u_H + u_*$ for the components of $u \in \hierSDFspaceZero{1}{\C}{\L}$ in the three summands, $\extd u_0 = \extd \extd \varphi = 0$ for the potential $\varphi \in \hierSDFspaceZero{0}{\C}{\L}$ generating $u_0$, and $\extd u_H = 0$ since $\mathcal{H}^1 \subset \ker(\extd)$ by definition. Hence $\extd u = \extd u_*$ for every $u$: no admissibility defect of $\C$ can leak $\extd$-content into the potential component $u_0$, because that would require $\extd \extd \varphi \neq 0$ for some $\varphi$, contradicting the identity above. A pinch can therefore only ever enlarge $\mathcal{H}^1$ beyond its topologically expected dimension, inflating the multiplicity of the $\lambda_{h,\coarseIdxone} = 0$ eigenspace, and never the magnitude of $\extd u_*$ that produces the physical, $\lambda_{h,\coarseIdxone} > 0$ band. It is this pointwise validity of $\extd \circ \extd = 0$ -- not merely the closedness of $\mathcal{H}^1$ -- that rules out the interleaved spurious eigenvalues typical of non-compatible discretisations (e.g.\ nodal vector Lagrange elements for $\mathbf{H}(\mathrm{curl})$), where $\extd \circ \extd \neq 0$ discretely and gradient-like modes leak nonzero curl content directly into the physical band.\needcite{}}
 
 %\begin{table}[htbp]
 %    \centering
@@ -1851,6 +1932,8 @@ splits $L^2$-orthogonally for every covering $\C$, admissible or not, where $\ex
 
 \subsection{$1$-Form Laplace problem}
 \label{subsec:vector_laplace}
+
+\subsubsection{Approximation}
 
 The $1$-form Laplace problem is given by
 \begin{equation}
@@ -1913,42 +1996,42 @@ where $\alpha = 100$, $R = 0.3$, and $\Vec{u}_{\mathrm{CL}}$ is the vector-proxy
     \label{fig:adaptive_solution}
 \end{figure}
 
-Figure~\ref{fig:adaptive_solution} displays the solution $u^n$ after $n$ steps of the adaptive loop for $\L=4$, meaning that the covering cannot be refined beyond that level. The refinement stays concentrated around the circle to capture the sharp transition of the analytical solution. The simulations further confirm that the fine annuli formed by the refined regions do not add spurious harmonics. 
+\smallskip
 
-The marking is driven by the computable vertex-based estimator $\nu^2_\coarseIdxtwo$ from Equation~\eqref{eq:vertex_residual}. Figure~\ref{fig:cl_convergence} shows how this marking drives the $L^2$ error $\Ltwoerror \coloneq \vvert{u - \Vec{u}_{\mathrm{CL}}}_{L^2(\T_\L)}$ computed against the analytical solution $\Vec{u}_{\mathrm{CL}}$ for $\L \in \{3, 4, 5\}$. The left panel~\ref{fig:cl_saturation_fig} compares the total estimator $\eta$ and the refinable estimator $\rho$ from Equation~\eqref{def:total_and_refinable_residuals}. For the first few levels, the two coincide. The two estimators diverge as soon as the partition $\C^n$ contains faces on the finest level $\L$ because the residuals of these faces are not included in the refinable estimator. The total estimator stagnates at a non-zero value that depends on $\L$, whereas the refinable estimator converges towards $0$ as the partition $\C^n$ transitions towards $\T_\L$. The simulation in Figure~\ref{fig:adaptive_solution} used exactly that behaviour as stopping criterion, terminating the simulation as soon as the refinable-to-total ratio fell below $0.05$.
+Figure~\ref{fig:adaptive_solution} displays the solution $u^n$ after $n$ steps of the adaptive loop for $\L=4$, meaning that the covering cannot be refined beyond that level. The refinement stays concentrated around the circle to capture the sharp transition of the analytical solution.
+
+The marking is driven by the vertex-based estimator $\nu^2_\coarseIdxtwo$ from Equation~\eqref{eq:vertex_residual}. Figure~\ref{fig:cl_convergence} shows how this marking drives the $L^2$ error $\Ltwoerror \coloneq \vvert{u - \Vec{u}_{\mathrm{CL}}}_{L^2(\T_\L)}$ computed against the analytical solution $\Vec{u}_{\mathrm{CL}}$ for $\L \in \{3, 4, 5\}$. The left panel~\ref{fig:cl_saturation_fig} compares the total estimator $\eta$ and the refinable estimator $\rho$ from Equation~\eqref{def:total_and_refinable_residuals}. For the first few levels, the two coincide. The two estimators diverge as soon as the partition $\C^n$ contains faces on the finest level $\L$ because the residuals of these faces are not included in the refinable estimator. The total estimator stagnates at a non-zero value that depends on $\L$, whereas the refinable estimator converges towards $0$ as the partition $\C^n$ transitions towards $\T_\L$. The simulation in Figure~\ref{fig:adaptive_solution} used exactly that behaviour as stopping criterion, terminating the simulation as soon as the saturation rate $\xi = \rho^2 / \eta^2$ from Equation~\eqref{eq:saturation_rate} satisfies $\xi \leq 0.05$.
+
+Fig 13b
 
 \begin{figure}[tb]
     \centering
     \begin{subfigure}[b]{0.49\textwidth}
         \centering
         \includegraphics[width=\textwidth]{images/laplace_case/fig_estimator_saturation.pdf}
-        \caption{Estimator saturation.}
+        \caption{Total and refinable estimators}
         \label{fig:cl_saturation_fig}
     \end{subfigure}\hfill
     \begin{subfigure}[b]{0.49\textwidth}
         \centering
         \includegraphics[width=\textwidth]{images/laplace_case/fig_l2_vs_dofs.pdf}
-        \caption{Error versus DoFs.}
+        \caption{$L^2$ error versus active DoF count}
         \label{fig:cl_l2_vs_dofs}
     \end{subfigure}
-    \caption{\robert{(a) True $L^2$ error against active $1$-form DoFs $n_1$ for the adaptive runs (solid, one envelope) and uniform references (hollow squares) at $L = 3, 4, 5$; the horizontal gap at matched accuracy is the DoF saving. (b) Total estimator $\eta$ (dashed) and its refineable part (solid, the contribution from faces below the finest level $L$) against $n_1$; the refineable part collapsing below the total is the signature of hitting the $L$-ceiling.}}
+    \caption{Panel (a) displays the total estimator $\eta$ and the refineable estimator $\rho$ against the number $\vert \activeDoFSet{1}{} \vert$ of active $1$-form DoFs for $\L \in \{3, 4, 5\}$. Every dot marks a step. Together, these estimators drive and eventually terminate the adaptive loop. Panel (b) shows the true $L^2$ error against $\vert \activeDoFSet{1}{} \vert$ for the adaptive methods (solid lines with dots to mark steps) and FEEC references $\FEECspace{1}{\L}$ (hollow squares) for $\L \in \{3, 4, 5\}$.}
     \label{fig:cl_convergence}
 \end{figure}
 
-\paragraph{Estimator saturation and a stopping criterion.} \robert{Figure~\ref{fig:cl_convergence} (left) plots, for each $L$, the total estimator $\eta$ against its refineable part --- the contribution from faces not yet at the finest level $L$. As the sweep exhausts the depth-$L$ ceiling, the refineable part collapses below the total: the remaining error sits at level $L$ and cannot be refined further. We stop the loop on the dimensionless \emph{refineable energy fraction}
-\begin{equation}
-    \xi = \frac{\text{refineableEtaSq}}{\text{totalEtaSq}}, \qquad \text{stop when } \xi \leq 0.05,
-\end{equation}
-where the numerator is the estimated error energy on faces below level $L$ --- precisely the energy Dörfler can still act on. This is the right metric for three reasons: it is exactly the quantity the plot tracks; it is computable (no exact solution needed, unlike the $L^2$ error); and it is dimensionless, so the same $\xi$ works across $L$ --- unlike the absolute $\eta$, whose $L$-dependent floor makes no single tolerance portable. The $L = 3$ run illustrates it: $\rho$ holds at $1.0$ for steps $0$--$2$ (nothing at level $L$ yet), then drops $0.300 \to 0.026$ and stops at step $4$.}
+Table~\ref{tab:cl_headline} compares the final states of the adaptive method using $\hierSDFspace{k}{\C}{\L}$ terminated at $\xi \leq 0.05$ with the FEEC reference using $\FEECspace{k}{\L}$ on the finest level $\L$. The DoF saving factor is computed by dividing the counts of $1$-form DoFs of the FEEC reference by that of the adaptive space. The DoF saving factor increases from $3.3$ to $4.6$ to $5.9$ as $\L$ increases from $3$ to $5$. The reason for that behavior is that the circle will always be refined with the finest level $\L$ possible, and the higher $\L$, the more fine DoFs are left inactive in the bulk of the solution.
 
-\paragraph{The DoF saving grows with $L$.} \robert{Figure~\ref{fig:cl_convergence} (right) plots the true $L^2$ error against $n_1$ on log--log axes. The three adaptive runs sit on a single convergence envelope, while each uniform reference (hollow square, with a dotted floor at its error) lies far to the right at the same accuracy: the horizontal gap \emph{is} the DoF saving, $3.3\times \to 4.6\times \to 5.9\times$, growing with $L$ because the layer needs fine resolution only locally, so the deeper the refinement allowed, the more uniform refinement wastes on the smooth bulk. We compare in the true $L^2$ error rather than in $\eta$ because $\eta$ is not comparable across $L$ (it carries the finest cell size $h_\L = h_0/2^L$ in its scaling, see below), whereas the $L^2$ error is a genuine norm with no finest-mesh normalisation --- it is identical at step $0$ for every $L$, as it must be.}
+The tabulated $L^2$ errors $\Ltwoerror$ for the adaptive and reference spaces also allows us to compute the \emph{$L^2$ gap} by dividing one by the other. It reveals that, as $\L$ and thus the DoF saving factor increase, so does the $L^2$ gap of the approximation errors. The reason for that will be explained in more detail later in this section.
 
 \begin{table}[tb]
     \centering
     \small
     \begin{tabular}{@{}r c cc cc cc@{}}
         \toprule
-        & \multicolumn{3}{c}{adaptive (saturated at $\xi = 0.05$)} & \multicolumn{2}{c}{uniform level $L$} & & \\
+        & \multicolumn{3}{c}{adaptive (saturated at $\xi \leq 0.05$)} & \multicolumn{2}{c}{FEEC reference $\FEECspace{1}{\L}$} & & \\
         \cmidrule(lr){2-4}\cmidrule(lr){5-6}
         $L$ & step & $\vert \activeDoFSet{1}{} \vert$ & $\Ltwoerror$ & $\vert \activeDoFSet{1}{} \vert$ & $\Ltwoerror$ & DoF saving & $L^2$ gap \\
         \midrule
@@ -1957,7 +2040,7 @@ where the numerator is the estimated error energy on faces below level $L$ --- p
         5 & 8 & $28\,588$ & $4.06\cdot10^{-4}$ & $169\,472$ & $2.00\cdot10^{-4}$ & $\mathbf{5.9\times}$ & $2.03\times$ \\
         \bottomrule
     \end{tabular}
-    \caption{\robert{Headline numbers at the final, saturated adaptive step ($\xi \leq 0.05$) for each $L$, against a uniform level-$L$ reference. `DoF saving' is the uniform/adaptive ratio of $\vert \activeDoFSet{1}{} \vert$ at matched accuracy; `$L^2$ gap' is the adaptive/uniform ratio of $\Ltwoerror$, decomposed in Table~\ref{tab:cl_decomp}.}}
+    \caption{Comparisons of the states of the adaptive loop after the final step with the FEEC references $\FEECspace{1}{\L}$ for $\L \in \{3, 4, 5\}$. \emph{DoF saving} is the ratio of DoFs of the reference to the adaptive method, and the \emph{$\L^2$ gap} is the ratio of the respective $\Ltwoerror$ for both methods.}
     \label{tab:cl_headline}
 \end{table}
 
@@ -1965,51 +2048,66 @@ where the numerator is the estimated error energy on faces below level $L$ --- p
 \begin{table}[tb]
     \centering
     \small
-    \begin{tabular}{@{}r@{\hspace{20pt}}ccc@{\hspace{20pt}}ccc@{\hspace{20pt}}ccc@{}}
+    \begin{tabular}{@{}r@{\hspace{30pt}}cccc@{\hspace{30pt}}cccc@{}}
         \toprule
-        & \multicolumn{3}{c}{$\xi \leq 0.3$} & \multicolumn{3}{c}{$\xi \leq 0.2$} & \multicolumn{3}{c}{$\xi \leq 0.05$ (as in Figure~\ref{fig:cl_convergence})} \\
-        \cmidrule(r{20pt}){2-4}\cmidrule(r{20pt}){5-7}\cmidrule(r{8pt}){8-10}
-        \multirow{2}{*}{$L$} & last & \multirow{2}{*}{$\vert \activeDoFSet{1}{} \vert$} & DoF & last & \multirow{2}{*}{$\vert \activeDoFSet{1}{} \vert$} & DoF & last & \multirow{2}{*}{$\vert \activeDoFSet{1}{} \vert$} & DoF \\
-         & step & & saving & step & & saving & step & & saving \\
+        & \multicolumn{4}{c}{$\xi \leq 0.3$} & \multicolumn{4}{c}{$\xi \leq 0.05$ (as in Figure~\ref{fig:cl_convergence})} \\
+        \cmidrule(r{30pt}){2-5}\cmidrule(r{0pt}){6-9}
+        \multirow{2}{*}{$L$} & last & \multirow{2}{*}{$\vert \activeDoFSet{1}{} \vert$} & DoF & $L^2$ & last & \multirow{2}{*}{$\vert \activeDoFSet{1}{} \vert$} & DoF & $L^2$ \\
+         & step & & saving & gap & step & & saving & gap \\
         \midrule
-        3 & 3 & $2\,869$   & $\mathbf{3.7\times}$ & 4 & $3\,265$  & $3.3\times$ & 4 & $3\,265$  & $3.3\times$ \\
-        4 & 5 & $7\,874$   & $\mathbf{5.4\times}$ & 5 & $7\,874$  & $5.4\times$ & 6 & $9\,235$  & $4.6\times$ \\
-        5 & 6 & $18\,280$  & $\mathbf{9.3\times}$ & 7 & $24\,143$ & $7.0\times$ & 8 & $28\,588$ & $5.9\times$ \\
+        3 & 3 & $2\,869$   & $\mathbf{3.7\times}$ & $1.10\times$ & 4 & $3\,265$  & $3.3\times$ & $1.09\times$ \\
+        4 & 5 & $7\,874$   & $\mathbf{5.4\times}$ & $1.41\times$ & 6 & $9\,235$  & $4.6\times$ & $1.39\times$ \\
+        5 & 6 & $18\,280$  & $\mathbf{9.3\times}$ & $2.06\times$ & 8 & $28\,588$ & $5.9\times$ & $2.03\times$ \\
         \bottomrule
     \end{tabular}
-    \caption{\robert{Stopping step, DoF count, and DoF saving as the saturation tolerance $\xi$ is varied (read from the as-run trajectories, no re-solve). The looser $\xi \approx 0.2\text{--}0.3$ recovers nearly all the accuracy --- within $1.5\%$ of the saturated $L^2$ error --- at a markedly better DoF saving, avoiding the runaway final solves of the strict tail.}}
+    \caption{Comparison of final states of the adaptive method with $\xi \leq 0.05$ and $\xi \leq 0.3 \,$.}
     \label{tab:cl_tol}
 \end{table}
 
-\robert{But $\xi = 0.05$ is deliberately conservative. Once the refineable part has decoupled from the total ($\rho$ first falls below $1$), the true $L^2$ error is already essentially converged; the remaining steps buy almost nothing. Reading the stopping step off the same trajectories for a range of tolerances (Table~\ref{tab:cl_tol}, all computable from one run --- no re-solve), the $L^2$ error at $\xi = 0.3$ is within $1.5\%$ of the fully-saturated value for every $L$. The strict tail hurts most exactly where it is most expensive: for $L = 5$, tightening $\xi$ from $0.3$ to $0.05$ adds $+10\,308$ DoFs ($+56\%$) and $\approx 6.0$ hours of solve time for a $1.2\%$ $L^2$ gain, because the marginal faces it refines carry vanishing error. A tolerance $\xi \approx 0.2\text{--}0.3$ --- stopping once the refineable part has clearly decoupled rather than nearly vanished --- is the better operating point, sharpening the DoF saving to $3.7\times / 5.4\times / 9.3\times$. The absolute vertical offset between the $L$ curves in Figure~\ref{fig:cl_convergence} (left) is largely normalisation ($\eta \sim h_\L$), not accuracy, so each panel is read \emph{within} its $L$; cross-$L$ accuracy is the job of Figure~\ref{fig:cl_convergence} (right).}
+\robert{Terminating at $\xi = 0.05$ is a rather conservative choice. According to Figure~\ref{fig:cl_convergence}, once the refineable estimator has decoupled from the total ($\xi$ first falls below $1$), the true $L^2$ error is close to converged. The remaining steps buy almost nothing in terms of the $L^2$ error. Table~\ref{tab:cl_tol} confirms that the $L^2$ gap at $\xi \leq 0.3$ is within $1.5\%$ of the $\L^2$ gap of the fully-saturated value for every $\L$. The strict tail hurts most exactly where it is most expensive: for $L = 5$, tightening $\xi$ from $0.3$ to $0.05$ adds $10\,308$ DoFs ($+56\%$) for a marginal $L^2$ gain. As a result, loosening $\xi \leq 0.05$ to $\xi \leq 0.3$ sharpens the DoF savings to $3.7\times, \; 5.4\times$ and $9.3\times$ for $\L = 3, \; 4$ and $5$, respectively.}
 
 The squares in the figure indicate the $L^2$ errors of the uniform spaces $\SDFspace{k}{0}{\L}$. The $L^2$ error of the adaptive spaces $\hierSDFspace{k}{\C}{\L}$ begins to stagnate above the error of the uniform spaces; Table~\ref{tab:cl_headline} summarises the state at the end of the adaptive loop for $\L\in\{3, 4, 5\}$. The higher floor for the adaptive spaces can be explained by the following argument.
 
-\robert{The adaptive $L^2$ error floors slightly \emph{above} the uniform value at the same $L$, and this ``$L^2$ gap'' widens with $L$ (Table~\ref{tab:cl_headline}, last column) --- not a solver defect, but the price of saving DoFs. Marking in the energy norm concentrates refinement on the sharp $\tanh$ \emph{ring}, where the residual lives, and leaves the smooth \emph{bulk} coarse; the higher $L$, the more the ring alone absorbs the adaptive budget, so the (fixed) bulk error makes up a growing share of the remaining $L^2$ error, and the gap widens. Backing the bulk error $B$ out of the measured errors (Table~\ref{tab:cl_decomp}) confirms this: $B$ is constant to within $2.5\%$ across $L$ while the ring error halves per level, exactly the signature of a real, structural effect rather than an interface or subdivision-basis artifact.}
+\newcommand{\Ltwogap}{g}
+\robert{The adaptive $L^2$ error floors \emph{above} the reference error at the same $L$. We refer to this distance as the \emph{$L^2$ gap} $\Ltwogap(\C, \L)$ given by the fraction
+\begin{equation}
+    \Ltwogap(\C, \L) \coloneq \Ltwoerror(\hierSDFspace{1}{\C}{\L}) \; / \; \Ltwoerror(\FEECspace{1}{\L}).
+\end{equation}
+This gap widens with $\L$ (Table~\ref{tab:cl_headline}, last column). This is not a solver defect, but the price of saving DoFs: marking in the energy norm concentrates refinement on the sharp $\tanh$ ring, where the residual lives, and leaves the smooth bulk coarse. We verify this directly at $L=3,4$ by integrating $\vvert{u_h-u}^2$ against a sharp indicator of width $w=0.05$ tracking the transition circle (the ``ring'') and its exact CG1-nodal complement (the ``bulk''), so that the two contributions add up to the total $L^2$ error exactly, $\Ltwoerror^2 = R^2 + B^2$, for both the adaptive solution and the uniform reference at the same $L$. At both levels the measured ring error is essentially identical between the two methods (ratio $1.00$), so we treat it as a single shared quantity $R$; only the bulk error differs between the adaptive solution ($B_{\mathrm{ada}}$) and the uniform reference ($B_{\mathrm{uni}}$). The gap then follows directly from these three measured numbers, with no assumption on either method's bulk error:
+\begin{equation}
+    \Ltwogap(\C, \L) = \sqrt{\dfrac{R^2 + B_{\mathrm{ada}}^2}{R^2 + B_{\mathrm{uni}}^2}},
+\end{equation}
+which reproduces the gap of Table~\ref{tab:cl_headline} at both $L=3$ and $L=4$ (Table~\ref{tab:cl_decomp}). Since $R$ is shared, it cancels almost entirely between numerator and denominator, leaving the gap as essentially a function of $B_{\mathrm{ada}}$ and $B_{\mathrm{uni}}$ alone: the widening gap is a direct, measured consequence of the bulk error growing apart between the two methods, not an artifact of the ring.}
+
+\robert{Two distinct effects are worth separating here. First, a \emph{structural floor}: $\hierSDFspace{1}{\C}{\L} \subsetneq \FEECspace{1}{\L}$ whenever any DoFs are inactive, and best-approximation error over a nested subspace is monotone in the size of the subspace, in any norm. So some gap $\Ltwogap(\C,\L) \geq 1$ is guaranteed the moment fewer than the full DoF count is used, regardless of the criterion used to choose which DoFs to keep: marking by the energy-residual estimator, by the true elementwise $L^2$ error, or by any other rule would all still leave \emph{some} gap, simply because the coarsened space cannot outperform the space it is nested in.}
+
+\robert{Second, \emph{where} that unavoidable gap concentrates is a choice, not a necessity. This is where reading the adaptive loop backwards, as \emph{greedy coarsening} of the fine reference space rather than incremental refinement of a coarse one, is useful: Dörfler marking greedily decides, step by step, which part of the fine space to keep active, based on the residual estimator. Because the sharp $\tanh$ ring dominates that estimator, coarsening is cheapest in estimator terms everywhere except the ring, so the bulk is coarsened away first and absorbs almost all of the structural floor from the first effect. Marking directly by the (oracle) $L^2$ error instead would likely shrink the gap, by steering some of the DoF budget back into the bulk, but it would not remove it -- that part is fixed by the first effect. Seen this way, the gap is not a defect to be explained away: part of it is unavoidable given the DoF budget, and the remainder is the expected footprint of a criterion that greedily targets the residual estimator rather than the $L^2$ error we report.}
 
 \begin{table}[tb]
     \centering
     \small
-    \begin{tabular}{@{}r rrr rr@{}}
+    \begin{tabular}{@{}r rrr r@{}}
         \toprule
-        $L$ & uniform $R$ & adaptive $\sqrt{R^2+B^2}$ & recovered $B$ & $B/R$ & gap \\
+        $L$ & ring $R$ & bulk $B_{\mathrm{ada}}$ & bulk $B_{\mathrm{uni}}$ & gap \\
         \midrule
-        3 & $8.34\cdot10^{-4}$ & $9.09\cdot10^{-4}$ & $\mathbf{3.62\cdot10^{-4}}$ & $0.43$ & $1.09$ \\
-        4 & $3.70\cdot10^{-4}$ & $5.13\cdot10^{-4}$ & $\mathbf{3.55\cdot10^{-4}}$ & $0.96$ & $1.39$ \\
-        5 & $2.00\cdot10^{-4}$ & $4.06\cdot10^{-4}$ & $\mathbf{3.53\cdot10^{-4}}$ & $1.77$ & $2.03$ \\
+        3 & $6.83\cdot10^{-4}$ & $\mathbf{6.01\cdot10^{-4}}$ & $4.79\cdot10^{-4}$ & $1.09$ \\
+        4 & $3.30\cdot10^{-4}$ & $\mathbf{3.93\cdot10^{-4}}$ & $1.69\cdot10^{-4}$ & $1.39$ \\
+        5 & --- & --- & --- & $2.03$ \\
         \bottomrule
     \end{tabular}
-    \caption{\robert{Ring/bulk decomposition of the $L^2$ gap. The recovered bulk error $B = \sqrt{\text{adaptive}^2 - \text{uniform}^2}$ is constant to $\sim 2.5\%$ across $L$ (the $L$-independent bulk floor), while the ring error $R$ halves per level; the gap $\sqrt{1 + (B/R)^2}$ therefore grows without bound. That $B$ is constant is strong evidence the ring/bulk split, not an interface or subdivision-basis artifact, is the real mechanism.}}
+    \caption{\robert{Ring/bulk decomposition of the $L^2$ gap, measured directly at $L=3,4$ (see main text): a sharp indicator of width $w=0.05$ tracking the transition circle, and its exact CG1-nodal complement, are integrated against $\vvert{u_h-u}^2$ to give the ring error $R$ and the bulk errors $B_{\mathrm{ada}}$ (adaptive) and $B_{\mathrm{uni}}$ (uniform) separately, with $\Ltwoerror^2=R^2+B^2$ holding exactly for both methods. $R$ is shared to within $1\%$ between the two methods at both levels, so a single value is reported; only the bulk error differs. The gap column is $\sqrt{(R^2+B_{\mathrm{ada}}^2)/(R^2+B_{\mathrm{uni}}^2)}$, which reproduces Table~\ref{tab:cl_headline}'s gap at $L=3,4$ exactly. $B_{\mathrm{ada}}$ grows relative to $B_{\mathrm{uni}}$ with $L$ (ratio $1.25$ at $L=3$, $2.33$ at $L=4$), directly localising the widening gap to the bulk. This direct measurement was only carried out at $L=3,4$; the $L=5$ gap is quoted from Table~\ref{tab:cl_headline} and has not yet been decomposed.}}
     \label{tab:cl_decomp}
 \end{table}
 
-\paragraph{Padding and interface overhead stay modest.} \robert{Table~\ref{tab:padding_interface_L4} tracks two frontier costs over the $L=4$ sweep: the admissibility padding added on top of the Dörfler-marked faces, and the interface DoFs needed to keep the active basis conforming across the coarse/fine boundary (the same frontier that is also the seat of the loop-monodromy spurious harmonic addressed by padding). Both live on that boundary, whose length scales like the mesh circumference ($\sim 2^L$) rather than the enclosed area, so neither is expected to keep pace with $n_1$, which grows by two orders of magnitude over the sweep. The table confirms this: padding never exceeds $22$ faces (step $5$), under $8\%$ of that step's $452$ marked faces and $<0.3\%$ of its $7\,874$ active DoFs, and always converges in a single pinch-resolution/admissibility-padding cycle; the interface fraction stays confined to roughly $20$--$28\%$ throughout, neither vanishing nor growing with the sweep.}
+\subsubsection{Performance metrics}
+
+\paragraph{Padding and interface overhead stay modest.} \robert{Table~\ref{tab:padding_interface_L4} tracks metrics regarding the number of active DoFs and how they split into patch versus interface and marked versus padded for the simulation with $\L=4$. First, the table shows that the fraction of active $1$-form DoFs that are added at the interface is between $20\%$ and $30\%$. Since the underlying geometry is a thin annulus, this is already a pessimistic estimate. Nevertheless, the interface DoFs never dominate the patch DoFs. Second, padding never exceeds $22$ faces (step $5$), under $8\%$ of the $279$ marked faces of that step. This implies that neither the interface DoFs nor the padding constitute the bulk of the overall active DoFs.}
 
 \begin{table}[tb]
   \centering
   \begin{tabular}{r@{\hspace{40pt}}r@{\hspace{16pt}}rrr@{\hspace{40pt}}rrr}
     \toprule
-    \multirow{2}{*}{step} & \multirow{2}{*}{$\vert \activeDoFSet{1}{} \vert$} & \multicolumn{3}{c}{splits into} & \multirow{2}{*}{$\vert \activeDoFSet{2}{} \vert$} & \multicolumn{2}{c}{of which refined} \\
+    \multirow{2}{*}{step} & \multirow{2}{*}{$\vert \activeDoFSet{1}{} \vert$} & \multicolumn{3}{c}{splits into} & \multirow{2}{*}{$\vert \F(\C) \vert$} & \multicolumn{2}{c}{of which refined} \\
     \cmidrule(r{40pt}){3-5}\cmidrule(lr){7-8}
     & & patch & interface & fraction & & marked & padded \\
     \midrule
@@ -2022,40 +2120,47 @@ The squares in the figure indicate the $L^2$ errors of the uniform spaces $\SDFs
     6 & 9235 & 7335 & 1900 & $21\%$ & 6293 & ---   & ---  \\
     \bottomrule
   \end{tabular}
-  \caption{\robert{Padding and interface overhead over the $L=4$ adaptive sweep. $\vert \activeDoFSet{1}{} \vert$ splits into a `patch' (native) and `interface' (conforming-overhead) part, with `fraction' the interface share. $\vert \activeDoFSet{2}{} \vert$ is the active face count, of which `marked' are the Dörfler-marked faces and `padded' the faces added by admissibility padding, both counted at the step where the marking decision was made, before that step's faces are refined into the next step's partition.}}
+  \caption{Metrics for all steps of the adaptive loop with $\L=4$. The first half shows the $1$-form DoFs and how they split into patch and interface DoFs, alongside the fraction of overall DoFs that are interface DoFs. The second half reports the number of faces of the subdivision partition $\C$ at the end of the step, and how they split into marked faces based on the estimator and additional refinement due to padding.}
   \label{tab:padding_interface_L4}
 \end{table}
 
-\paragraph{Solve cost does not follow the DoF saving.} \robert{The one honest cost is the linear solver. Table~\ref{tab:solve_stats_L4} reports wall-clock, DoFs, iterations, the preconditioned condition number $\kappa(P^{-1}K)$, and nnz/DoF over the $L=4$ sweep against the uniform level-$L$ reference. Wall-clock \emph{grows} and is dramatically worse than uniform despite fewer DoFs: at the final step, adaptive takes $1380.9\,\mathrm{s}$ and $692$ iterations at $9\,235$ DoFs, versus $10.6\,\mathrm{s}$ and $25$ iterations at $42\,496$ DoFs for uniform --- a $4.6\times$ DoF saving turned into a $130\times$ slowdown. The measured time is the MINRES \texttt{solve} call only (not dofset construction, assembly, or the preconditioner factorisation), so it is genuine solve cost.
+\smallskip
 
-$\kappa(P^{-1}K)$ --- the condition number of the operator MINRES actually solves, not of raw $K$, whose condition number is dominated by an unrelated mesh-size effect and is not reported here --- rises only while new hierarchical levels are still being added ($9.98 \to 83 \to 108 \to 113$ over steps $0$--$3$, tracking levels $1$ through $4$ becoming active) and then plateaus once all five levels are active from step $4$ on ($111 \to 112 \to 103$), around $25$--$27\times$ the uniform value ($4.11$). Conditioning therefore saturates with hierarchy \emph{depth}, not with problem size, and does not by itself explain the continued growth of wall-clock: iterations still creep up within the plateau ($656 \to 672 \to 692$) while $\kappa(P^{-1}K)$ is flat or falling, so the naive $\text{iterations} \sim \sqrt{\kappa}$ bound under-predicts the gap to uniform, and the residual reflects the finer eigenvalue distribution rather than this two-eigenvalue estimate.
+The most relevant shortcoming of methods the adaptive subdivision $k$-form spaces is that saving DoFs does not \robert{yet} translate to faster solves. Table~\ref{tab:solve_stats_L4} summarises the important metrics around the solve, including the wallclock time needed by the MINRES solver alongside the DoF count, the number of iterations, the condition number of the overall system matrix $K$, and the number of non-zero elements of $K_\C$ per DoF. Finally, we list the metrics for the FEEC reference $\FEECspace{k}{\L}$.
 
-The dominant effect is instead operator density: nnz/DoF for $\mathbf{C}_\C$ stays $11$--$23\times$ the uniform value ($4.98$) throughout the sweep, because the globally supported subdivision basis fills in every finer level that has since refined a coarse DoF's support --- whereas the uniform operators stay sparse with a bounded number of nonzeros per row. The numbers decompose cleanly into iterations $\times$ per-iteration cost: iterations are $27.7\times$ higher and the per-iteration cost is $4.7\times$ higher despite $4.6\times$ fewer DoFs (i.e.\ $\approx 21.6\times$ more work per DoF per iteration), and $27.7 \times 4.7 \approx 130\times$ reproduces the observed slowdown with no residual left over. The adaptivity win here is thus in DoFs and memory, not wall-clock, with the current solver. A \emph{truncated} hierarchical basis, in the spirit of THB-splines, is left for future work: truncating each coarse active basis function's representation over the region already covered by finer active DoFs would remove exactly the redundant coarse/fine support overlap responsible for both the fill-in and the depth-driven conditioning, without changing the discrete space itself --- targeting both measured mechanisms directly, rather than working around them with a different solver, and reinforcing the case for the looser $\xi$ above.}
+The wallclock times reveal that the solver performance degrades rapidly as the adaptive iterations increase. In fact, the FEEC reference method is about $130$ times faster than solve of step $6$ even though it has roughly $4.7$ times as many DoFs. The reasons for that are found in the last three columns of Table~\ref{tab:solve_stats_L4}. First, the number of iterations needed for the MINRES solver to converge skyrocket initially until they start to become flat around step $4$. This happens due to the successive activation of basis functions across finer and finer levels, until at step $4$ the finest possible basis functions are first included in the adaptive space. This means that the condition number $\kappa(P^{-1}K_\C)$ increases until then, explaining the increased number of iterations. \guidance{This is a conditioning effect distinct from the rank-deficiency discussed in Section~\ref{subsec:unrefinement_and_solve}: $\C$ remains a subdivision partition throughout the loop, so $\Amat{k}{\activeDoFs}{\L}$ has full column rank at every step, yet $\kappa(P^{-1}K_\C)$ still grows.} The second reason for the large wallclock times is that the increased number of nonzero entries $\text{nnz}(K_\C)/(\vert \activeDoFSet{0}{} \vert + \vert \activeDoFSet{1}{} \vert)$ of $K$ per active DoF increases the number of operations per MINRES iteration. The increase of non-zero entries is due to the smoothing nature of subdivision, meaning that coarse basis functions have larger supports and thus cover a lot of triangles of $\T_\L$. The unrefinement step in Equation~\ref{eq:FE_matrix_assembly} extends this large number of non-zeros to $K_\C$.
+
+\smallskip
+
+The adaptive method thus only wins in DoFs and memory, not wall-clock, with the current solver. A \emph{truncated} basis in the spirit of THB-splines \citep{Gianelli.2016} might be able to mitigate that problem. Truncating each coarse active basis function's representation over the region already covered by finer active DoFs would remove exactly the redundant coarse/fine support overlap responsible for the ill-conditioning and reduces the number of non-zeros, both without changing the discrete space itself. This means we would target both measured mechanisms directly, rather than working around them with a different solver.
 
 \begin{table}[t]
   \centering
-  \begin{tabular}{r rrrrr}
+  \begin{tabular}{r@{\hspace{16pt}}r@{\hspace{16pt}}r@{\hspace{16pt}}r@{\hspace{16pt}}r@{\hspace{16pt}}r}
     \toprule
-    step & wallclock time & $\vert \activeDoFSet{1}{} \vert$ & iterations & $\kappa(P^{-1}K)$ & nnz/DoF \\
+    \multirow{2}{*}{step} & wallclock & DoF count & \multirow{2}{*}{iterations} & \multirow{2}{*}{$\kappa(P^{-1}K_\C)$} & \multirow{2}{*}{$\dfrac{\mathrm{nnz}(K_\C)}{\vert \activeDoFSet{0}{} \vert + \vert \activeDoFSet{1}{} \vert}$} \\
+     & time & $\vert \activeDoFSet{0}{} \vert + \vert \activeDoFSet{1}{} \vert$ & & & \\
     \midrule
-    uniform & $10.6\,\mathrm{s}$   & $42\,496$ & 25  & 4.11  & 4.98  \\
+    0 & $0.06\,\mathrm{s}$    & 253  & 63  & 9.98  & 77.7  \\
+    1 & $1.57\,\mathrm{s}$    & 663  & 241 & 82.7  & 129.6 \\
+    2 & $18.4\,\mathrm{s}$    & 1\,644  & 474 & 107.7 & 177.8 \\
+    3 & $125.1\,\mathrm{s}$   & 3\,857  & 606 & 112.8 & 156.5 \\
+    4 & $602.5\,\mathrm{s}$   & 8\,207  & 656 & 111.4 & 126.1 \\
+    5 & $974.0\,\mathrm{s}$   & 10\,364  & 672 & 111.6 & 116.0 \\
+    6 & $1380.9\,\mathrm{s}$  & 12\,178  & 692 & 103.2 & 106.2 \\
     \midrule
-    0 & $0.06\,\mathrm{s}$    & 181  & 63  & 9.98  & 51.9  \\
-    1 & $1.57\,\mathrm{s}$    & 495  & 241 & 82.7  & 84.4  \\
-    2 & $18.4\,\mathrm{s}$    & 1\,245  & 474 & 107.7 & 113.1 \\
-    3 & $125.1\,\mathrm{s}$   & 2\,936  & 606 & 112.8 & 92.3  \\
-    4 & $602.5\,\mathrm{s}$   & 6\,260  & 656 & 111.4 & 67.9  \\
-    5 & $974.0\,\mathrm{s}$   & 7\,874  & 672 & 111.6 & 61.2  \\
-    6 & $1380.9\,\mathrm{s}$  & 9\,235  & 692 & 103.2 & 55.7  \\
+    $\FEECspace{k}{4}$ & $10.6\,\mathrm{s}$   & $56\,833$ & 25  & 4.11  & 11.4  \\
     \bottomrule
   \end{tabular}
-  \caption{\robert{Solve cost over the $L=4$ sweep, with the uniform level-$L$ solve as reference. $\kappa(P^{-1}K)$ is the estimated condition number of the preconditioned operator MINRES actually solves ($P$ the block-diagonal preconditioner), via power/inverse-power iteration. nnz/DoF is $\mathrm{nnz}(\mathbf{C}_\C)/n_1$, the mean nonzeros per row of the curl--curl block.}}
+  \caption{Solve metrics for all steps of the adaptive simulation with $\L=4$. The fine superspace $\FEECspace{k}{4}$ is included as a reference. $\kappa(P^{-1}K_\C)$ is the estimated condition number of the preconditioned operator after unrefinement, see Equation~\ref{eq:FE_matrix_assembly} and \robert{the preconditioner information in the solve step}. The term \emph{nnz} refers to the number of non-zero elements of a matrix, and to obtain $\mathrm{nnz}(K_\C)/(\vert \activeDoFSet{0}{} \vert + \vert \activeDoFSet{1}{} \vert)$ we normalised by the number of active DoFs.}
   \label{tab:solve_stats_L4}
 \end{table}
 
-\FloatBarrier
+\medskip
 
 \robert{In summary, on a manufactured problem with a sharp circular layer and a known exact solution, adaptive subdivision refinement reaches the accuracy of a uniform level-$L$ solve at a small fraction of its DoFs, and the saving grows with depth ($3.3\times, 4.6\times, 5.9\times$ to saturation; $3.7\times, 5.4\times, 9.3\times$ at a looser stop). The refineable/total estimator split identifies when a depth $L$ is exhausted and yields a portable, computable stopping criterion; the admissibility padding costs only $O(\text{interface})$ extra faces per step; and the conformity interface DoFs are a modest, bounded overhead. The one honest cost is the solver: the preconditioned condition number $\kappa(P^{-1}K)$ rises only while new hierarchical levels are being added and then plateaus once the full depth is active, so the growing wall-clock is not a conditioning effect but a density effect --- the projected operators densify under the globally supported basis, raising the cost of each iteration --- so the DoF saving is a memory saving rather than, yet, a wall-clock one; a truncated hierarchical basis is a targeted fix for both the density and the depth-driven conditioning, left for future work.}
+
+\todo{\guidance{The Introduction claims exactness "guarantees inf-sup stability in mixed formulations" (line~324), and the mixed vector Laplace problem of this section is exactly the kind of mixed formulation that claim is about --- but this section never explicitly closes that loop. Consider adding a sentence connecting the MINRES behaviour observed here back to inf-sup stability, but be careful: the iteration count is not flat, it rises then plateaus (as corrected above), so any inf-sup claim should be scoped to "bounded once full depth $\L$ is active," not to mesh-independence in the usual uniform-in-$h$ sense. Decide whether the evidence here is strong enough to make that connection explicit, or whether it's safer to leave the Introduction's claim general and unconnected to this specific experiment.}}
 
 \section{Conclusion}
 
