@@ -1671,13 +1671,45 @@ Every rule only ever refines and adds a few faces that locally repair its violat
 The three padding substeps do not commute: resolving a pinch vertex can lead to an admissible face becoming inadmissible (Figure~\ref{fig:pipeline_padding}), which is why $\textsc{Pad}$ always runs pinch resolution before inadmissible-face padding, before grading.
 \end{remark}}
 
-We do not \robert{(yet?)} have a proof that $\textsc{Pad}$ terminates. For our implementation, we wrapped the pinch resolution, face admissibility padding and the grading in a loop that terminates once a pass no longer refines any face, i.e., none of the predicates fires. A counter records the productive passes, which has not exceeded the minimum of $1$ in any test case we ran.
+We do not \robert{(yet?)} have a proof that $\textsc{Pad}$ terminates. For our implementation, we wrapped the pinch resolution, face admissibility padding and the grading in a loop that terminates once a pass no longer refines any face, i.e., none of the predicates fires. A counter records the productive passes, which is $1$ for the large majority of test cases we ran, but is not always $1$: Figure~\ref{fig:two_padding_iterations} shows a small hand-constructed covering that needs two passes to stabilise.
 
 \todo{\guidance{State $\textsc{Pad}$ using the new notation, with two caveats to hedge carefully:
 \begin{itemize}
     \item \emph{Idempotence, only up to grading.} Pinch resolution and inadmissible-face padding act trivially on any $\C \in \allpartitions$, since their trigger sets $\mathrm{V}_\C^{\mathrm{pinch}}$ and $\F_{\mathrm{inadmissible}}$ are empty by definition of $\allpartitions$. But grading can still fire on $\C \in \allpartitions$ if some vertex class has level gap $\mu_\coarseIdxtwo > 2$ --- so $\textsc{Pad}|_{\allpartitions} \neq \mathrm{id}$ in general, only up to grading.
     \item \emph{Termination is not proven.} Since we do not have a general termination proof, avoid stating $\textsc{Pad} : \allcoverings \to \allpartitions$ as an unconditional total map or theorem. At most: whenever $\textsc{Pad}$ terminates on input $\C \in \allcoverings$, its output lies in $\allpartitions$.
 \end{itemize}}}
+
+\robert{Figure~\ref{fig:two_padding_iterations} shows a hand-constructed valence-$6$ covering where a single $\textsc{Pad}$ pass is not enough. The covering marks every level-$0$ face whose barycentre lies outside the band $y \in [0,1]$ for refinement, leaving that band -- which straddles two of the mesh's irregular vertex stars -- coarse. As Remark~\ref{rem:padding_order} anticipates, resolving the pinches created by the first pass' refinement reintroduces inadmissible faces (and vice versa), so the loop only stabilises after a second productive pass; a third, confirmatory pass makes no further change.}
+
+\begin{figure}
+    \centering
+    \begin{subfigure}[t]{0.23\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/exactness/v6_two_padding_iterations_stage_pass1_after_pinch.pdf}
+        \caption{Pass 1, after \textsc{ResolveVertexPinches}}
+        \label{fig:two_padding_iterations_pass1_pinch}
+    \end{subfigure}\hfill
+    \begin{subfigure}[t]{0.23\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/exactness/v6_two_padding_iterations_stage_pass1_after_pad.pdf}
+        \caption{Pass 1, after admissibility padding}
+        \label{fig:two_padding_iterations_pass1_pad}
+    \end{subfigure}\hfill
+    \begin{subfigure}[t]{0.23\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/exactness/v6_two_padding_iterations_stage_pass2_after_pinch.pdf}
+        \caption{Pass 2, after \textsc{ResolveVertexPinches}}
+        \label{fig:two_padding_iterations_pass2_pinch}
+    \end{subfigure}\hfill
+    \begin{subfigure}[t]{0.23\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/exactness/v6_two_padding_iterations_stage_pass2_after_pad.pdf}
+        \caption{Pass 2, after admissibility padding (stable, cf. Remark~\ref{rem:padding_order})}
+        \label{fig:two_padding_iterations_pass2_pad}
+    \end{subfigure}
+    \caption{\robert{The four intermediate coverings of the two productive $\textsc{Pad}$ passes needed to stabilise the hand-constructed example described above. Pass 1 (a,b) does not yet reach a fixed point: its admissibility padding (b) reintroduces work for pinch resolution, so a second pass (c,d) is required before (d) is stable.}}
+    \label{fig:two_padding_iterations}
+\end{figure}
 
 \FloatBarrier
 
