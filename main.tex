@@ -1155,8 +1155,6 @@ The quadrisection operators enable consistent refinement of the adaptive subdivi
 \end{equation}
 The quadrisection operators defined in this section are the basis upon which we will later built the algorithms in the adaptive loop in Section~\ref{subsec:adaptive_loop}.
 
-\todo{\guidance{Note that $\allcoverings$ is closed under both quadrisection operators: $\quadriF{\C}(\cdot), \quadriV{\C}{\targetlevel}(\cdot) \in \allcoverings$ whenever $\C \in \allcoverings$. But $\allpartitions$ is \emph{not} closed under them --- a quadrisection of an admissible $\C$ can introduce a pinch vertex or an inadmissible face. This is exactly why \textsc{Refine} (built from these operators) can leave $\allpartitions$, and why \textsc{Pad} (Section~\ref{subsec:adaptive_loop}) is needed at all.}}
-
 \FloatBarrier
 
 \subsection{Subdivision partitions and properties of the adaptive spaces}
@@ -1245,12 +1243,14 @@ Finally, we are going to re-state the two main theorems of \cite{companion_paper
 
 \begin{theorem}
     \label{theorem:exactness}
-    Let $\C \in \allpartitions$ be a \robert{subdivision partition of a \emph{simply-connected} domain}. Then, the complexes $\mathfrak{R}_\C$ and $\mathring{\mathfrak{R}}_\C$ of adaptive $k$-form subdivision spaces from Theorem~\ref{theorem:differential_complex} are exact.
+    Let $\C \in \allpartitions$ be a subdivision partition. Then, the cohomology groups of the complexes $\mathfrak{R}_\C$ and $\mathring{\mathfrak{R}}_\C$ of adaptive $k$-form subdivision spaces from Theorem~\ref{theorem:differential_complex} are isomorphic to the ones of absolute and relative de Rham complexes, respectively.
 \end{theorem}
 
 \begin{proof}
-    See \cite{companion_paper}.
+    The proof is built upon the arguments in~\cite{Evans.2020} around removing coarse spaces and inserting fine spaces instead, while keeping track of their cohomologies. See \cite{companion_paper} for the detailed proof in the subdivision context.
 \end{proof}
+
+Subdivision partitions respect the geometric constraints necessary for linear independence and reproducing the correct cohomology. Unfortunately, in contrast to general coverings $\allcoverings$, subdivision partitions are not closed under the quadrisection operator $\quadriF{\C}(\cdot)$ and $\quadriV{\C}{\targetlevel}(\cdot)$, meaning that they are maps $\allpartitions \to \allcoverings$. Thus, naive refinement of subdivision partitions can reintroduce inadmissible geometry, for example a pinch vertex. This is exactly why Section~\ref{subsec:adaptive_loop} sets up a padding step that repairs these geometric defects and turns the covering into a subdivision partition again.
 
 \FloatBarrier
 
@@ -1335,7 +1335,7 @@ This section describes the adaptive loop used in the numerical experiments. The 
 \end{tikzcd}
 \end{equation}
 
-and is initialized with a subdivision partition $\C^0$. Throughout the adaptive loop, the general picture of the computational objects in Section~\ref{subsec:computational_representations} stays the same, the loop only refines $\C$ iteratively, and with that the active DoFs $\activeDoFSet{k}{}(\C)$ and the adaptive subdivision $k$-form spaces $\hierSDFspace{k}{\C}{\L}$. \guidance{The \textsc{Pad} step is necessary because the \textsc{Refine} step only guarantees $\C^{\mathrm{refine}} \in \allcoverings$, not $\C^{\mathrm{refine}} \in \allpartitions$, see Definition~\ref{def:subdiv_partition}.} This means that the \textsc{Pad} step effectively restores linear independence and exactness of the complex.
+and is initialized with a subdivision partition $\C^0$. Throughout the adaptive loop, the general picture of the computational objects in Section~\ref{subsec:computational_representations} stays the same, the loop only refines $\C$ iteratively, and with that the active DoFs $\activeDoFSet{k}{}(\C)$ and the adaptive subdivision $k$-form spaces $\hierSDFspace{k}{\C}{\L}$. The \textsc{Pad} step is necessary because the \textsc{Refine} step only guarantees $\C^{\mathrm{refine}} \in \allcoverings$, not $\C^{\mathrm{refine}} \in \allpartitions$, see Definition~\ref{def:subdiv_partition}. This means that the \textsc{Pad} step effectively restores linear independence and exactness of the complex.
 
 \subsubsection{Solve}
 \label{subsec:solve}
@@ -1382,7 +1382,7 @@ We compute error indicators $\eta_{\l,\coarseIdxone}$ per face $\face{\l}{\coars
     \label{eq:project_estimator_on_L_to_partition}
     \eta^2_{\l,\coarseIdxone} = \sum\limits_{\face{\L}{\fineIdxone} \; \in \; \Aop{}{\l}{\L}(\face{\l}{\coarseIdxone})} \eta^2_{\L,\fineIdxone},
 \end{equation}
-where $\eta^2_{\L,\fineIdxone}$ is a standard FEEC residual\needcite{} we can evaluate in $\FEECspace{k}{\L}$. Note the residuals are only computed for faces in the covering and the interface faces are excluded to avoid overlap and double-counting. In the following, we will refer to $\eta^2$ and $\rho^2$ as the \emph{total} and \emph{refinable} residuals, respectively, defined as
+where $\eta^2_{\L,\fineIdxone}$ is evaluated in $\FEECspace{k}{\L}$. Note the residuals are only computed for faces in the covering and the interface faces are excluded to avoid overlap and double-counting. In the following, we will refer to $\eta^2$ and $\rho^2$ as the \emph{total} and \emph{refinable} residuals, respectively, defined as
 \begin{equation}
     \label{def:total_and_refinable_residuals}
     \eta^2 = \sum\limits_{\l=\lzero}^{\L} \; \eta^2_\l \qquad \text{and} \qquad \rho^2 = \sum\limits_{\l=\lzero}^{\L-1} \; \eta^2_\l = \eta^2 - \eta^2_{\L} \qquad \text{with} \qquad \eta^2_{\l} = \sum\limits_{\face{\l}{\coarseIdxone} \; \in \; \F(\C_\l)} \eta^2_{\l,\coarseIdxone}.
@@ -1395,7 +1395,7 @@ The refinable residual discards the contributions of faces $\face{\L}{\coarseIdx
 This \emph{saturation rate} $\xi \in [0,1]$ provides a good analytic tool and a concrete stopping criterion for the adaptive loop.
 
 \begin{example}[Vector Laplace estimator]
-For the mixed vector Laplace problem with $(\sigma_h, u_h) \in \hierSDFspace{0}{\C}{\L} \times \hierSDFspace{1}{\C}{\L}$ from Section~\ref{subsec:vector_laplace}, the basis functions are piecewise linear approximations of the subdivision limit functions. \guidance{Writing $\iota \colon \hierSDFspace{k}{\C}{\L} \hookrightarrow \FEECspace{k}{\L}$ for the inclusion of the hierarchical space into the fine FEEC space,} $\extd (\iota u_h)$ is piecewise constant in $\FEECspace{2}{\L}$ and $\boldsymbol{\delta}\extd (\iota u_h)$ vanishes elementwise, while its contribution appears in the curl jumps across edges. In $\FEECspace{2}{\L}$, the indicator takes the form
+For the mixed vector Laplace problem with $(\sigma_h, u_h) \in \hierSDFspace{0}{\C}{\L} \times \hierSDFspace{1}{\C}{\L}$ from Section~\ref{subsec:vector_laplace}, the basis functions are piecewise linear approximations of the subdivision limit functions. Writing $\iota \colon \hierSDFspace{k}{\C}{\L} \hookrightarrow \FEECspace{k}{\L}$ for the inclusion of the hierarchical space into the fine FEEC space, $\extd (\iota u_h)$ is piecewise constant in $\FEECspace{2}{\L}$ and $\boldsymbol{\delta}\extd (\iota u_h)$ vanishes elementwise, while its contribution appears in the curl jumps across edges. In $\FEECspace{2}{\L}$, the indicator takes the form
 \begin{equation}
 \begin{aligned}
     \eta_{\L,\fineIdxone}^2 = \quad &\sum\limits_{\face{\L}{\coarseIdxone} \,\in\, \F_\L} \!\! \robert{h_{\face{\L}{\fineIdxone}}^2} \big( \|f - \extd \sigma_h\|_{L^2(\face{\L}{\fineIdxone})}^2 + \|\sigma_h + \boldsymbol{\delta} u_h\|_{L^2(\face{\L}{\fineIdxone})}^2 \big) \\
@@ -1411,11 +1411,6 @@ The first sum contains the elementwise residuals of both equations, and the seco
     \nu^2_\coarseIdxtwo = \tfrac{1}{a_\coarseIdxtwo} \; \sum\limits_{\face{\l}{\coarseIdxone} \; \in \; \coveringStar(\vertclass{\coarseIdxtwo}) \setminus \F_\L} \eta^2_{\l,\coarseIdxone}, \qquad \mathrm{where} \qquad a_\coarseIdxtwo = \sum\limits_{\face{\l}{\coarseIdxone} \; \in \; \coveringStar(\vertclass{\coarseIdxtwo}) \setminus \F_\L} \mathrm{area}(\face{\l}{\coarseIdxone}).
 \end{equation}
 Dividing by the cumulative area of the faces rescales the integral face estimator to a density per vertex. This rescaling makes the marking roughly level- and valence-agnostic. Otherwise, the contribution of coarse faces would be weighted higher and their adjacent vertices would be over-represented during the Dörfler marking step. Note also that we do not take faces on level $\L$ into account since they cannot be refined further, so their error is partically fixed.
-
-\guidance{\begin{remark}[Why rank by the vertex-based estimator]
-\label{rem:vertex_estimator_rationale}
-Because the covering star includes the coarse face across any interface edge through the vertex, $\nu_\coarseIdxtwo$ accounts for exactly the faces that refining the vertex's star would homogenise during the \textsc{Refine} step (Section~\ref{subsec:refine}). For this reason, $\nu_\coarseIdxtwo$ measures exactly the error that selecting the vertex would actually resolve in the sense of Dörfler marking (Section~\ref{subsec:mark}).
-\end{remark}}
 
 \begin{figure}%[htbp]
     \centering
@@ -1444,7 +1439,7 @@ Because the covering star includes the coarse face across any interface edge thr
 \subsubsection{Marking}
 \label{subsec:mark}
 
-Our code marks vertices rather than faces. This enables us to use the quadrisection operator $\quadriV{\C}{\targetlevel}$ to refine single vertex stars, the central combinatorial object of the admissibility arguments in~\cite{companion_paper}. We rank the vertices by the vertex estimator $\nu_\coarseIdxtwo$, see Equation~\eqref{eq:vertex_residual} from Section~\ref{subsec:estimate}. \guidance{By Remark~\ref{rem:vertex_estimator_rationale}, this estimator measures exactly the error that marking a vertex would resolve.} For this purpose, we enumerate the $\vert \mathrm{V}_\C \vert$ vertex equivalence classes $\vertclass{\coarseIdxtwo}$ of $\C$ in order of decreasing residual, so that $\nu_{\coarseIdxtwo_1} \geq \nu_{\coarseIdxtwo_2} \geq \ldots \geq \nu_{\coarseIdxtwo_{\mathrm{V}-1}} \geq \nu_{\coarseIdxtwo_{\vert \mathrm{V}_\C \vert}}$.
+Our code marks vertices rather than faces. This enables us to use the quadrisection operator $\quadriV{\C}{\targetlevel}$ to refine single vertex stars, the central combinatorial object of the admissibility arguments in~\cite{companion_paper}. We rank the vertices by the vertex estimator $\nu_\coarseIdxtwo$, see Equation~\eqref{eq:vertex_residual} from Section~\ref{subsec:estimate}. For this purpose, we enumerate the $\vert \mathrm{V}_\C \vert$ vertex equivalence classes $\vertclass{\coarseIdxtwo}$ of $\C$ in order of decreasing residual, so that $\nu_{\coarseIdxtwo_1} \geq \nu_{\coarseIdxtwo_2} \geq \ldots \geq \nu_{\coarseIdxtwo_{\mathrm{V}-1}} \geq \nu_{\coarseIdxtwo_{\vert \mathrm{V}_\C \vert}}$.
 
 The Dörfler marking algorithm\needcite{} builds the set $\mathrm{V}_\C^\mathrm{mark} \coloneq \{ \vertclass{\coarseIdxtwo_1}, \, \dots, \, \vertclass{\coarseIdxtwo_q} \}$ by greedily selecting the first $q$ vertex equivalence classes with the largest estimators such that the \emph{marked refinable residual}
 \begin{equation}
@@ -1850,6 +1845,10 @@ Finally, Figure~\ref{fig:nested_center} shows the prototypical configuration aro
 
 \smallskip
 
+A third observation concerns whether padding preserves genuine, non-spurious cohomology rather than merely repairing spurious harmonics: every covering considered so far is a topological disk, so the only harmonic $1$-forms observed have been the defect-driven ones that padding removes. Figure~\ref{fig:genuine_cohomology} punches two literal holes into a valence-$6$ ring mesh -- deleting entire vertex stars rather than merely refining around them -- giving a domain with true first Betti number $b_1 \!=\! 2$, and additionally scatters level-$1$ refinement around both holes to introduce the usual pinch and inadmissible-face defects on top. The input covering has $11$ linearly dependent $1$-form DoFs and $\mathrm{dim}(\mathcal{H}^1) \!=\! 5$: the $2$ genuine harmonics from the two holes plus $3$ spurious ones from the introduced defects. After padding, all DoFs are independent again and $\mathrm{dim}(\mathcal{H}^1) \!=\! 2$ exactly: padding removes precisely the spurious contribution while leaving both genuine harmonics untouched.
+
+\smallskip
+
 This section confirms that the \textsc{Pad} step correctly restores the geometric defects of the covering produced by the \text{Refine} and makes it a subdivision partition. Thus, it also restores the important algebraic properties of linear independence and exactness of the complex of the adaptive subdivision $k$-form spaces, both with and without vanishing trace boundary conditions.
 
 \begin{figure}[tb]
@@ -1890,6 +1889,22 @@ This section confirms that the \textsc{Pad} step correctly restores the geometri
     \label{fig:admissibility_padding}
 \end{figure}
 
+\begin{figure}[tb]
+    \centering
+    \begin{subfigure}{\textwidth}
+        \raggedright
+        \begin{tabular}{@{}cc@{\hspace{2em}}cc@{}}
+            \atomicimg{images/exactness/v6_annulus_two_holes_input.pdf}  & \minitab{246}{698}{449}{245}{687}{438}{1}{5}{0} &
+            \atomicimg{images/exactness/v6_annulus_two_holes_padded.pdf} & \minitab{248}{687}{438}{248}{687}{438}{1}{2}{0} \\
+        \end{tabular}
+        \centering
+        \caption{Two genuine holes (vertex-star deletion) plus scattered defects.}
+        \label{fig:genuine_holes}
+    \end{subfigure}
+    \caption{A covering with two literal holes (true $b_1 \!=\! 2$, punched by deleting vertex stars) and additional scattered pinch/inadmissible-face defects, before (left) and after (right) padding; images rotated $90^\circ$ to fit the page. Unlike Figures~\ref{fig:pinch_resolution} and~\ref{fig:admissibility_padding}, whose domains are topological disks, this covering's genuine cohomology is nonzero: padding must remove only the spurious contribution ($3$ of the $5$ harmonic $1$-forms) while leaving the $2$ genuine ones from the holes intact, rather than driving $\dim(\mathcal{H}^1)$ to zero.}
+    \label{fig:genuine_cohomology}
+\end{figure}
+
 \subsection{Maxwell Eigenvalue problem}
 \label{subsec:maxwell}
 
@@ -1899,7 +1914,7 @@ The weak form of the Maxwell cavity (curl--curl) eigenvalue problem on the domai
 \begin{equation}
   (\extd u_i, \extd v)_\M = \lambda_{h,\coarseIdxone} (u_i, v)_\M \qquad \forall v \in \hierSDFspaceZero{1}{\C}{\L}
 \end{equation}
-with analytic spectrum $\lambda_\coarseIdxone = m^2 + n^2$, where $m$ and $n$ are integers. We will approximate the discrete spectra on the covering $\C^{\mathrm{pinch}}$ with a pinch on level $\l=2$ as displayed in Figure~\ref{fig:Maxwell_inexact_DoFmesh} and its padded version, the subdivision partition $\C^{\mathrm{padded}}$ from Figure~\ref{fig:Maxwell_exact_DoFmesh}. Since the domain is contractible, its relative first Betti number is zero. Thus, $\hierSDFspaceZero{1}{\C^{\mathrm{padded}}}{\L}$ has no $1$-form harmonics because $\C^{\mathrm{padded}}$ is a subdivision partition. The pinch of $\C^{\mathrm{pinch}}$ introduces a two-dimensional spurious harmonic $1$-form space into $\hierSDFspaceZero{1}{\C^{\mathrm{pinch}}}{\L}$. 
+with analytic spectrum $\lambda_\coarseIdxone = m^2 + n^2$, where $m$ and $n$ are integers. We will approximate the discrete spectra on the covering $\C^{\mathrm{pinch}}$ with a pinch on level $\robert{\l=1}$ as displayed in Figure~\ref{fig:Maxwell_inexact_DoFmesh} and its padded version, the subdivision partition $\C^{\mathrm{padded}}$ from Figure~\ref{fig:Maxwell_exact_DoFmesh}. Since the domain is contractible, its relative first Betti number is zero. Thus, $\hierSDFspaceZero{1}{\C^{\mathrm{padded}}}{\L}$ has no $1$-form harmonics because $\C^{\mathrm{padded}}$ is a subdivision partition. The pinch of $\C^{\mathrm{pinch}}$ introduces \robert{a one-dimensional} spurious harmonic $1$-form space into $\hierSDFspaceZero{1}{\C^{\mathrm{pinch}}}{\L}$.
 
 Applying Loop subdivision alters the domain slightly, so we do not compare the discrete spectrum directly with the analytic spectrum  $\lambda_\coarseIdxone$. Instead, we compare the discrete spectra $\lambda_\coarseIdxone$ with the spectrum of $\FEECspaceZero{k}{\L}$ with $\C^{\mathrm{FEEC}} = \T_\L$, a superspace of both $\hierSDFspaceZero{1}{\C^{\mathrm{pinch}}}{\L}$ and $\hierSDFspaceZero{1}{\C^{\mathrm{padded}}}{\L}$ that verifiably converges to the correct spectrum, see~\cite{Arnold.FEEC}.
 
@@ -1936,24 +1951,24 @@ partitions. That means that the defects caused by the spurious $1$-form harmonic
 
 \begin{figure}%[htbp]
     \centering
-    \begin{subfigure}[t]{0.24\textwidth}
+    \begin{subfigure}[b]{0.24\textwidth}
         \centering
         \includegraphics[width=\textwidth]{images/maxwell/maxwell_partition_inexact.pdf}
-        \caption{Covering $\C^{\mathrm{pinch}}$}
+        \caption{Initial covering $\C^{\mathrm{pinch}}$ with pinch}
         \label{fig:Maxwell_inexact_DoFmesh}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[t]{0.24\textwidth}
+    \begin{subfigure}[b]{0.24\textwidth}
         \centering
         \includegraphics[width=\textwidth]{images/maxwell/maxwell_partition_exact.pdf}
         \caption{Subdivision partition  $\C^{\mathrm{padded}}$}
         \label{fig:Maxwell_exact_DoFmesh}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[t]{0.5\textwidth}
+    \begin{subfigure}[b]{0.45\textwidth}
         \centering
         \includegraphics[width=\textwidth]{images/maxwell/maxwell_spectrum.pdf}
-        \caption{Physical eigenvalue band.}
+        \caption{Computed EVs over EV index}
         \label{fig:Maxwell_eigenvalues}
     \end{subfigure}
     \caption{Coverings and discrete spectra of the spaces $\hierSDFspaceZero{1}{\C^{\mathrm{pinch}}}{\L}$, $\hierSDFspaceZero{1}{\C^{\mathrm{padded}}}{\L}$ and $\FEECspaceZero{k}{\L}$.}
@@ -1966,29 +1981,6 @@ partitions. That means that the defects caused by the spurious $1$-form harmonic
 \label{subsec:vector_laplace}
 
 \subsubsection{Approximation}
-
-The $1$-form Laplace problem is given by
-\begin{equation}
-    \label{eq:strong_laplace}
-    (\extd \boldsymbol{\delta} + \boldsymbol{\delta} \extd) u = f
-\end{equation}
-on a domain $\M$. Since the operator $\boldsymbol{\delta}$ is not well-defined for a (subdivision) $1$-form, we introduce the auxiliary variable $\boldsymbol{\delta} \sigma = u$ and use the FEEC-typical mixed weak formulation: Find $\sigma \in H^1(\M)$ and $u \in \HcurlM{\M}$ such that
-\begin{align}
-    \label{eq:mixed_laplacian1}
-    (\sigma, \tau)_\M - (u, \extd \tau)_\M &= 0 \qquad \forall \tau \in H^1(\M), \\
-    \label{eq:mixed_laplacian2}
-    (\extd \sigma, v)_\M + (\extd u, \extd v)_\M &= (f, v)_\M \qquad \forall v \in \HcurlM{\M}.
-\end{align}
-
-This section studies the circular layer test case from \cite{Cabanas.2026} to exercise the entire adaptive loop of \textsc{Solve}--\textsc{Estimate}--\textsc{Mark}--\textsc{Refine}--\textsc{Pad}. Its analytical solution is given by
-\begin{equation}
-    \label{eq:circular_layer_test_case}
-    \Vec{u}_{\mathrm{CL}}(x) = \tanh \big(\alpha (\vvert{\vvert{x}}^2 - R^2) \big) \; \Vec{b}(x) \quad \text{with} \quad \Vec{b}(x) = \begin{bmatrix}
-        2 x_2^2 (x_2 - 1)^2 (x_1^2 - x_1) (2 x_1 - 1) \\[2pt]
-        2 x_1^2 (x_1 - 1)^2 (x_2^2 - x_2) (2 x_2 - 1)
-    \end{bmatrix},
-\end{equation}
-where $\alpha = 100$, $R = 0.3$, and $\Vec{u}_{\mathrm{CL}}$ is the vector-proxy of the $1$-form $u_{\mathrm{CL}}$. The vector part $\Vec{b}(x)$ provides a background field while the $\tanh$ term adds a sharp, radially symmetric transition between $+\Vec{b}$ and $-\Vec{b}$ localised on the ring $\vvert{\vvert{x}} = R$. The right-hand side $f_{\mathrm{CL}}$ corresponding to $\Vec{u}_{\mathrm{CL}}$ can be computed using the (strong) Laplace equation~\eqref{eq:strong_laplace}. 
 
 \begin{figure}[tb]
     \centering
@@ -2028,18 +2020,45 @@ where $\alpha = 100$, $R = 0.3$, and $\Vec{u}_{\mathrm{CL}}$ is the vector-proxy
     \label{fig:adaptive_solution}
 \end{figure}
 
+The $1$-form Laplace problem is given by
+\begin{equation}
+    \label{eq:strong_laplace}
+    (\extd \boldsymbol{\delta} + \boldsymbol{\delta} \extd) u = f
+\end{equation}
+on a domain $\M$. Since the operator $\boldsymbol{\delta}$ is not well-defined for a (subdivision) $1$-form, we introduce the auxiliary variable $\boldsymbol{\delta} \sigma = u$ and use the FEEC-typical mixed weak formulation: Find $\sigma \in H^1(\M)$ and $u \in \HcurlM{\M}$ such that
+\begin{align}
+    \label{eq:mixed_laplacian1}
+    (\sigma, \tau)_\M - (u, \extd \tau)_\M &= 0 \qquad \forall \tau \in H^1(\M), \\
+    \label{eq:mixed_laplacian2}
+    (\extd \sigma, v)_\M + (\extd u, \extd v)_\M &= (f, v)_\M \qquad \forall v \in \HcurlM{\M}.
+\end{align}
+
+This section studies the circular layer test case from \cite{Cabanas.2026} to exercise the entire adaptive loop of \textsc{Solve}--\textsc{Estimate}--\textsc{Mark}--\textsc{Refine}--\textsc{Pad}. Its analytical solution is given by
+\begin{equation}
+    \label{eq:circular_layer_test_case}
+    \Vec{u}_{\mathrm{CL}}(x) = \tanh \big(\alpha (\vvert{\vvert{x}}^2 - R^2) \big) \; \Vec{b}(x) \quad \text{with} \quad \Vec{b}(x) = \begin{bmatrix}
+        2 x_2^2 (x_2 - 1)^2 (x_1^2 - x_1) (2 x_1 - 1) \\[2pt]
+        2 x_1^2 (x_1 - 1)^2 (x_2^2 - x_2) (2 x_2 - 1)
+    \end{bmatrix},
+\end{equation}
+where $\alpha = 100$, $R = 0.3$, and $\Vec{u}_{\mathrm{CL}}$ is the vector-proxy of the $1$-form $u_{\mathrm{CL}}$. The vector part $\Vec{b}(x)$ provides a background field while the $\tanh$ term adds a sharp, radially symmetric transition between $+\Vec{b}$ and $-\Vec{b}$ localised on the ring $\vvert{\vvert{x}} = R$. The right-hand side $f_{\mathrm{CL}}$ corresponding to $\Vec{u}_{\mathrm{CL}}$ can be computed using the (strong) Laplace equation~\eqref{eq:strong_laplace}. 
+
 \smallskip
 
-Figure~\ref{fig:adaptive_solution} displays the solution's vector proxy $\Vec{u}^n$ after $n$ steps of the adaptive loop for $\L=4$, meaning that the covering cannot be refined beyond that level. The refinement stays concentrated around the circle to capture the sharp transition of the analytical solution. We denote the coverings across the steps by $\C^n$.
+\newcommand{\laststep}{{\mathrm{N}_\L}}
+
+Figure~\ref{fig:adaptive_solution} displays the solution's vector proxy $\Vec{u}^n$ after $n$ steps of the adaptive loop with Do\"rfler parameter $\theta = 0.9$ and $\L=4$, meaning that the covering cannot be refined beyond that level. The refinement stays concentrated around the circle to capture the sharp transition of the analytical solution. We denote the coverings across the steps by $\C^n$ and the final step of the adaptive loop by $\laststep$.
 
 The marking is driven by the vertex-based estimator $\nu^2_\coarseIdxtwo$ from Equation~\eqref{eq:vertex_residual}. Figure~\ref{fig:cl_convergence} shows how this marking drives the $L^2$ error
 \begin{equation}
     \label{def:L2_error}
     \Ltwoerror^n \coloneq \vert\vert \vec{u}^n - \Vec{u}_{\mathrm{CL}} \vert\vert_{L^2(\T_\L)}
 \end{equation}
-computed against the analytical solution $\Vec{u}_{\mathrm{CL}}$ for $\L \in \{3, 4, 5\}$. The left panel~\ref{fig:cl_saturation_fig} compares the total estimator $\eta$ and the refinable estimator $\rho$ from Equation~\eqref{def:total_and_refinable_residuals}. For the first few levels, the two coincide. The two estimators diverge as soon as the partition $\C^n$ contains faces on the finest level $\L$ because the residuals of these faces are not included in the refinable estimator. The total estimator stagnates at a non-zero value that depends on $\L$, whereas the refinable estimator converges towards $0$ as the partition $\C^n$ transitions towards $\T_\L$. The simulation in Figure~\ref{fig:adaptive_solution} used exactly that behaviour as stopping criterion, terminating the simulation as soon as the saturation rate $\xi = \rho^2 / \eta^2$ from Equation~\eqref{eq:saturation_rate} satisfies $\xi \leq 0.05$.
+computed against the analytical solution $\Vec{u}_{\mathrm{CL}}$ for $\L \in \{3, 4, 5\}$. We omit the superscript $n$ whenever it does not matter or we address the error of a reference solution using $\FEECspace{1}{\L}$.
 
-Figure~\ref{fig:cl_l2_vs_dofs} reports the errors $\Ltwoerror^n$ depending on the number of active $1$-form DoFs $\vvert{\activeDoFSet{1}{}(\C^n)}$. We see that the errors converge quickly in the first steps but as the estimators start diverging from each other, the $L^2$ errors $\Ltwoerror^n$ start to plateau. In particular, we observe that this plateau is above the error of the FEEC reference solutions using $\FEECspace{1}{\L}$
+The left panel~\ref{fig:cl_saturation_fig} compares the total estimator $\eta$ and the refinable estimator $\rho$ from Equation~\eqref{def:total_and_refinable_residuals}. For the first few levels, the two coincide. The two estimators diverge as soon as the partition $\C^n$ contains faces on the finest level $\L$ because the residuals of these faces are not included in the refinable estimator. The total estimator stagnates at a non-zero value that depends on $\L$, whereas the refinable estimator converges towards $0$ as the partition $\C^n$ transitions towards $\T_\L$. The simulation in Figure~\ref{fig:adaptive_solution} used exactly that behaviour as stopping criterion, terminating the simulation as soon as the saturation rate $\xi = \rho^2 / \eta^2$ from Equation~\eqref{eq:saturation_rate} satisfies $\xi \leq 0.05$.
+
+Figure~\ref{fig:cl_l2_vs_dofs} reports the errors $\Ltwoerror^n$ depending on the number of active $1$-form DoFs $\vvert{\activeDoFSet{1}{}(\C^n)}$. Note that the figure also include the FEEC references $\FEECspace{1}{\L}$ (hollow squares). The errors of the adaptive method converge quickly in the first steps but as the estimators diverge from each other, the $L^2$ errors $\Ltwoerror^n$ start to plateau. We consider that plateau to be the converged state of the adaptive solver. Figure~\ref{fig:cl_l2_vs_dofs} and Table~\ref{tab:cl_headline} confirm that the converged adaptive solution with $\xi \leq 0.05$ has $3.3$, $4.6$ and $5.9$ times less $1$-form DoFs than the reference solutions of $\FEECspace{1}{\L}$ for $\L=3$, $4$ and $5$, respectively. Loosening the stopping criterion to $\xi\leq 0.3$ increases the DoF saving to $3.7$, $5.4$ and $9.3$, cf. Table~\ref{tab:cl_headline}.
 
 \begin{figure}[tb]
     \centering
@@ -2058,10 +2077,6 @@ Figure~\ref{fig:cl_l2_vs_dofs} reports the errors $\Ltwoerror^n$ depending on th
     \caption{Panel (a) displays the total estimator $\eta$ and the refineable estimator $\rho$ against the number $\vert \activeDoFSet{1}{} \vert$ of active $1$-form DoFs for $\L \in \{3, 4, 5\}$. Every dot marks a step. Together, these estimators drive and eventually terminate the adaptive loop. Panel (b) shows the true $L^2$ error against $\vert \activeDoFSet{1}{} \vert$ for the adaptive methods (solid lines with dots to mark steps) and FEEC references $\FEECspace{1}{\L}$ (hollow squares) for $\L \in \{3, 4, 5\}$.}
     \label{fig:cl_convergence}
 \end{figure}
-
-Table~\ref{tab:cl_headline} compares the final states of the adaptive method using $\hierSDFspace{k}{\C}{\L}$ terminated at $\xi \leq 0.05$ with the FEEC reference using $\FEECspace{k}{\L}$ on the finest level $\L$. The DoF saving factor is computed by dividing the counts of $1$-form DoFs of the FEEC reference by that of the adaptive space. The reason for that behavior is that the circle will always be refined with the finest level $\L$ possible, and the higher $\L$, the more fine DoFs are left inactive in the bulk of the solution.
-
-The tabulated $L^2$ errors $\Ltwoerror$ for the adaptive and reference spaces also allows us to compute the \emph{$L^2$ gap} by dividing one by the other. It reveals that, as $\L$ and thus the DoF saving factor increase, so does the $L^2$ gap of the approximation errors. The reason for that will be explained in more detail later in this section.
 
 \begin{table}[tb]
     \centering
@@ -2082,24 +2097,21 @@ The tabulated $L^2$ errors $\Ltwoerror$ for the adaptive and reference spaces al
     \label{tab:cl_headline}
 \end{table}
 
-\robert{Terminating at $\xi = 0.05$ is a rather conservative choice. According to Figure~\ref{fig:cl_convergence}, once the refineable estimator has decoupled from the total ($\xi$ first falls below $1$), the true $L^2$ error is close to converged. The remaining steps buy almost nothing in terms of the $L^2$ error. Table~\ref{tab:cl_headline} confirms that the $L^2$ gap at $\xi \leq 0.3$ is within $1.5\%$ of the $\L^2$ gap of the fully-saturated value for every $\L$. The strict tail hurts most exactly where it is most expensive: for $L = 5$, tightening $\xi$ from $0.3$ to $0.05$ adds $10\,308$ DoFs ($+56\%$) for a marginal $L^2$ gain.}
-
-The squares in the figure indicate the $L^2$ errors of the uniform spaces $\SDFspace{k}{0}{\L}$. The $L^2$ error of the adaptive spaces $\hierSDFspace{k}{\C}{\L}$ begins to stagnate above the error of the uniform spaces; Table~\ref{tab:cl_headline} summarises the state at the end of the adaptive loop for $\L\in\{3, 4, 5\}$. The higher floor for the adaptive spaces can be explained by the following argument.
-
 \newcommand{\Ltwogap}{g}
-\robert{The adaptive $L^2$ error floors \emph{above} the reference error at the same $L$. We refer to this distance as the \emph{$L^2$ gap} $\Ltwogap(\C, \L)$ given by the fraction
+Notably, Figure~\ref{fig:cl_l2_vs_dofs} shows that the converged $L^2$ error $\Ltwoerror^\laststep(\hierSDFspace{1}{\C}{\L})$ of the adaptive method does not coincide with the reference $L^2$ error $\Ltwoerror(\FEECspace{1}{\L})$. Table~\ref{tab:cl_headline} compares the final states of the adaptive method terminated at $\xi \leq 0.05$ and $\xi \leq 0.3$ with the FEEC reference. The tabulated $L^2$ errors allow us to compute the \emph{$L^2$ gap} $\Ltwogap(\L)$ by
 \begin{equation}
-    \Ltwogap(\C, \L) \coloneq \Ltwoerror(\hierSDFspace{1}{\C}{\L}) \; / \; \Ltwoerror(\FEECspace{1}{\L}).
+    \Ltwogap(\L) \coloneq \Ltwoerror^\laststep(\hierSDFspace{1}{\C}{\L}) \; / \; \Ltwoerror(\FEECspace{1}{\L}).
 \end{equation}
-This gap widens with $\L$ (Table~\ref{tab:cl_headline}, $L^2$ gap columns). This is not a solver defect, but the price of saving DoFs: marking in the energy norm concentrates refinement on the sharp $\tanh$ ring, where the residual lives, and leaves the smooth bulk coarse. We verify this directly at $L=4$ by integrating $\vvert{u_h-u}^2$ against a sharp indicator of width $w=0.05$ tracking the transition circle (the ``ring'') and its exact CG1-nodal complement (the ``bulk''), so that the two contributions add up to the total $L^2$ error exactly, $\Ltwoerror^2 = R^2 + B^2$, for both the adaptive solution and the uniform reference at the same $L$. We measure $R_{\mathrm{ada}} = 3.30\cdot10^{-4}$, $R_{\mathrm{uni}} = 3.30\cdot10^{-4}$, $B_{\mathrm{ada}} = 3.93\cdot10^{-4}$ and $B_{\mathrm{uni}} = 1.69\cdot10^{-4}$: the ring error agrees closely between the two methods (differing by only $0.02\%$), while the bulk error differs substantially ($B_{\mathrm{ada}}/B_{\mathrm{uni}} = 2.33$). The gap then follows directly from these measured numbers, with no assumption on either method's bulk error:
+Table~\ref{tab:cl_headline} reveals that, as $\L$ and thus the DoF saving factor increase, so does the $L^2$ gap of the approximation errors. This is not a solver defect, but the price of saving DoFs. Marking in the energy norm concentrates refinement on the sharp $\tanh$ ring, where the residual is large, and leaves the smooth bulk coarse.
+
+We verify this directly for $L=4$ by integrating $\vvert{u_h-u}^2$ against a sharp indicator function of width $w=0.05$ tracking the transition circle to obtain the ring error $r$. Integrating against the indicator's nodal complement in $\CG_1$ yields to the bulk error $b$. The two contributions add up exactly to the total $L^2$ error so that $\Ltwoerror^2 = r^2 + b^2$, for both the adaptive solution and the FEEC reference at the same $\L$. For $\L=4$, we measured
 \begin{equation}
-    \Ltwogap(\C, \L) = \sqrt{\dfrac{R_{\mathrm{ada}}^2 + B_{\mathrm{ada}}^2}{R_{\mathrm{uni}}^2 + B_{\mathrm{uni}}^2}},
+\begin{alignedat}{4}
+    &r(\hierSDFspace{1}{\C}{4}) &&= 3.30\cdot10^{-4} \, , \qquad &&b(\hierSDFspace{1}{\C}{4}) &&= 3.93\cdot10^{-4} \, ,\\
+    &r(\FEECspace{1}{4}) &&= 3.30\cdot10^{-4} \,, \qquad &&b(\FEECspace{1}{4}) &&= 1.69\cdot10^{-4}.
+\end{alignedat}
 \end{equation}
-which reproduces the gap of Table~\ref{tab:cl_headline} exactly at $L=4$. Since $R_{\mathrm{ada}} \approx R_{\mathrm{uni}}$, the ring terms nearly cancel between numerator and denominator, leaving the gap as essentially a function of $B_{\mathrm{ada}}$ and $B_{\mathrm{uni}}$ alone: the widening gap is a direct, measured consequence of the bulk error growing apart between the two methods, not an artifact of the ring. The same mechanism accounts for the gaps at $L=3$ and $L=5$ (Table~\ref{tab:cl_headline}): the ring error tracks equally closely between the adaptive and uniform solutions at every level, so the widening gap is, again, entirely a bulk-error effect.}
-
-\robert{Two distinct effects are worth separating here. First, a \emph{structural floor}: $\hierSDFspace{1}{\C}{\L} \subsetneq \FEECspace{1}{\L}$ whenever any DoFs are inactive, and best-approximation error over a nested subspace is monotone in the size of the subspace, in any norm. So some gap $\Ltwogap(\C,\L) \geq 1$ is guaranteed the moment fewer than the full DoF count is used, regardless of the criterion used to choose which DoFs to keep: marking by the energy-residual estimator, by the true elementwise $L^2$ error, or by any other rule would all still leave \emph{some} gap, simply because the coarsened space cannot outperform the space it is nested in.}
-
-\robert{Second, \emph{where} that unavoidable gap concentrates is a choice, not a necessity. This is where reading the adaptive loop backwards, as \emph{greedy coarsening} of the fine reference space rather than incremental refinement of a coarse one, is useful: Dörfler marking greedily decides, step by step, which part of the fine space to keep active, based on the residual estimator. Because the sharp $\tanh$ ring dominates that estimator, coarsening is cheapest in estimator terms everywhere except the ring, so the bulk is coarsened away first and absorbs almost all of the structural floor from the first effect.}
+The ring error agrees closely between the two methods (differing by only $0.02\%$), while the bulk error differs substantially. This implies that the $L^2$ gap is a function of the bulk errors growing apart between the two methods, not an artifact of the ring. In this sense, the $L^2$ gap explicitly measures the loss of accuracy incurred by saving DoFs. Where that unavoidable gap concentrates is a choice, not a necessity. This is where reading the adaptive loop backwards, as \emph{greedy coarsening} of the fine reference space rather than incremental refinement of a coarse one, is useful: Dörfler marking greedily decides, step by step, which part of the fine space to keep active, based on the residual estimator. Because the sharp $\tanh$ ring dominates that estimator, coarsening is cheapest in estimator terms everywhere except the ring, so the bulk is coarsened away first and absorbs almost all of the $L^2$ gap.
 
 \subsubsection{Performance metrics}
 
@@ -2130,7 +2142,7 @@ Table~\ref{tab:padding_interface_L4} tracks the number of active DoFs and how th
 
 \smallskip
 
-The most relevant shortcoming of methods the adaptive subdivision $k$-form spaces is that saving DoFs does not \robert{yet} translate to faster solves. Table~\ref{tab:solve_stats_L4} summarises the important metrics around the solve, including the wallclock time needed by the MINRES solver alongside the DoF count, the number of iterations, the condition number of the preconditioned system matrix $P^{-1}K_{\C^n}$, and the number of non-zero elements of $K_{\C^n}$ per DoF. Finally, we list the metrics for the fine FEEC reference $\FEECspace{k}{\L}$ with $\L=4$.
+The most relevant shortcoming of methods the adaptive subdivision $k$-form spaces is that saving DoFs does not translate to faster solves. Table~\ref{tab:solve_stats_L4} summarises the important metrics around the solve, including the wallclock time needed by the MINRES solver alongside the DoF count, the number of iterations, the condition number of the preconditioned system matrix $P^{-1}K_{\C^n}$, and the number of non-zero elements of $K_{\C^n}$ per DoF. Finally, we list the metrics for the fine FEEC reference $\FEECspace{k}{\L}$ with $\L=4$.
 
 The wallclock times reveal that the solver performance degrades rapidly as the adaptive iterations increase. In fact, the FEEC reference method is about $130$ times faster than the adaptive solve of step $6$ even though it has roughly $4.7$ times as many DoFs. The reasons for that are found in the last three columns of Table~\ref{tab:solve_stats_L4}. First, the number of iterations needed for the MINRES solver to converge skyrocket initially until they start to become flat around step $4$. This happens due to the successive activation of basis functions across finer and finer levels, until at step $4$ the finest possible basis functions are first included in the adaptive space. This means that the condition number $\kappa(P^{-1}K_{\C^n})$ increases until then, explaining the increased number of iterations. This is a conditioning effect distinct from the rank-deficiency discussed in Section~\ref{subsec:unrefinement_and_solve}. $\C^n$ remains a subdivision partition throughout the loop, so $\Amat{k}{\activeDoFs}{\L}$ has full column rank at every step, yet $\kappa(P^{-1}K_{\C^n})$ still grows. The second reason for the large wallclock times is that the increased number of nonzero entries $\text{nnz}(K_{\C^n})/(\vert \activeDoFSet{0}{} \vert + \vert \activeDoFSet{1}{} \vert)$ per active DoF increases the number of operations per MINRES iteration. The increase of non-zero entries is due to the smoothing nature of subdivision, meaning that coarse basis functions have larger supports and thus cover a lot of triangles of $\T_\L$. The unrefinement step in Equation~\ref{eq:FE_matrix_assembly} extends this large number of non-zeros to $K_\C$.
 
