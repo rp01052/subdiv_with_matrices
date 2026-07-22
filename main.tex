@@ -347,7 +347,7 @@ This section collects the most important properties of the uniform subdivision $
 
 Starting from an initial coarse triangular mesh $\T_\l$ at level $\l = \lzero$, the \emph{subdivision algorithm} produces a sequence of increasingly fine meshes $\T_{\lzero+1}, \ldots, \T_\L$ by repeatedly applying two steps: a \emph{topological refinement} that splits every triangle into four, and a \emph{geometric averaging} step that repositions vertices as weighted averages of neighbouring coarse vertices. We use Loop's subdivision scheme~\cite{Loop.1987} throughout. The resulting \emph{mesh hierarchy} $\{\T_\l\}_{\l=\lzero}^{\L}$ ranges from the coarsest level $\lzero$ to the finest mesh $\T_\L$. At each level $\l$, we denote the sets of vertices, edges, and faces by $\K^0_\l = \V_\l$, $\K^1_\l = \E_\l$, and $\K^2_\l = \F_\l$, with cardinalities $|\K^k_\l|$.
 
-On each mesh $\T_\l$, the lowest-order Whitney $k$-form spaces\needcite{} are the standard FEEC spaces
+On each mesh $\T_\l$ along the mesh hierarchy, the lowest-order Whitney $k$-form spaces are the standard FEEC spaces~\citep{Arnold.2006}
 \begin{equation}
     \FEECspace{0}{\l} = \mathrm{CG}_1(\T_\l), \qquad \FEECspace{1}{\l} = \mathrm{RT}_0(\T_\l), \qquad \FEECspace{2}{\l} = \mathrm{DG}_0(\T_\l),
 \end{equation}
@@ -1371,7 +1371,18 @@ The mixed vector Laplace problem can then be assembled into the block matrix sys
         f_\C
     \end{bmatrix}
 \end{equation}
-This system is symmetric indefinite, so we use \emph{MINRES} with a block-diagonal SPD preconditioner.\needcite{} \guidance{Section~\ref{subsec:vector_laplace} shows that the number of iterations rises as new hierarchical levels activate and plateaus once the full depth $\L$ is active.}
+We denote this block system matrix by $K_\C$. $K_\C$ is symmetric indefinite, so we use \emph{MINRES} with a block-diagonal SPD preconditioner
+\begin{equation}
+    \label{eq:preconditioner}
+    \mathbf{P} =
+    \begin{pmatrix}
+        \mathbf{M}_\C & 0 \\
+        0 & \mathbf{S}
+    \end{pmatrix},
+    \qquad
+    \mathbf{S} = \mathbf{C}_\C + \mathbf{B}_\C^\top\, \mathrm{diag}(\mathbf{M}_\C \mathbf{1})^{-1}\, \mathbf{B}_\C,
+\end{equation}
+where $\mathbf{S}$ approximates the Schur complement of the $(1,1)$ block by replacing $\mathbf{M}_\C^{-1}$ with a row-sum lumped inverse ($\mathbf{1}$ the all-ones vector of length $\vert \activeDoFSet{0}{} \vert$). A multilevel preconditioner (e.g. BPX or a subdivision-aware multigrid V-cycle) would be the natural choice to exploit the hierarchical structure of $\hierSDFspace{k}{\C}{\L}$, but constructing one for the subdivision basis is nontrivial. We instead use the simpler, level-agnostic block-diagonal preconditioner above. Section~\ref{subsec:vector_laplace} investigates the impact of that choice on the solver performance.
 \end{example}
 
 \subsubsection{Estimation}
@@ -1382,7 +1393,7 @@ We compute error indicators $\eta_{\l,\coarseIdxone}$ per face $\face{\l}{\coars
     \label{eq:project_estimator_on_L_to_partition}
     \eta^2_{\l,\coarseIdxone} = \sum\limits_{\face{\L}{\fineIdxone} \; \in \; \Aop{}{\l}{\L}(\face{\l}{\coarseIdxone})} \eta^2_{\L,\fineIdxone},
 \end{equation}
-where $\eta^2_{\L,\fineIdxone}$ is evaluated in $\FEECspace{k}{\L}$. Note the residuals are only computed for faces in the covering and the interface faces are excluded to avoid overlap and double-counting. In the following, we will refer to $\eta^2$ and $\rho^2$ as the \emph{total} and \emph{refinable} residuals, respectively, defined as
+where $\eta^2_{\L,\fineIdxone}$ is evaluated in $\FEECspace{k}{\L}$. Figure~\ref{fig:pipeline_marking_a} shows an example covering with residual $\eta^2_{\l,\coarseIdxone}$. Note the residuals are only computed for faces in the covering and the interface faces are excluded to avoid overlap and double-counting. In the following, we will refer to $\eta^2$ and $\rho^2$ as the \emph{total} and \emph{refinable} residuals, respectively, defined as
 \begin{equation}
     \label{def:total_and_refinable_residuals}
     \eta^2 = \sum\limits_{\l=\lzero}^{\L} \; \eta^2_\l \qquad \text{and} \qquad \rho^2 = \sum\limits_{\l=\lzero}^{\L-1} \; \eta^2_\l = \eta^2 - \eta^2_{\L} \qquad \text{with} \qquad \eta^2_{\l} = \sum\limits_{\face{\l}{\coarseIdxone} \; \in \; \F(\C_\l)} \eta^2_{\l,\coarseIdxone}.
@@ -1405,7 +1416,7 @@ For the mixed vector Laplace problem with $(\sigma_h, u_h) \in \hierSDFspace{0}{
 The first sum contains the elementwise residuals of both equations, and the second sum contains the curl jump across interior edges $e$ of the fine mesh $\T_\L$. The per-face indicator $\eta_{\L,\fineIdxone}^2$ on level $\L$ can be translated back to the subdivision partition $\C$ using Equation~\eqref{eq:project_estimator_on_L_to_partition}.
 \end{example}
 
-\noindent We now have estimators $\eta_{\l,\coarseIdxone}$ per face of the subdivision partition $\C$. However, the atomic units of refinement in our scheme are vertex stars because they give rise to clean analysis. To enable vertex-based refinement for the adaptive algorithm, we need to sum up the face estimators $\eta_{\l,\coarseIdxone}$ to vertex estimators. Recall from Section~\ref{subsec:selecting_active_dofs} the vertex equivalence classes $\vertclass{\coarseIdxtwo}$ from Equation~\eqref{eq:def_vertex_class} and their covering stars $\coveringStar(\vertclass{\coarseIdxtwo})$ from Equation~\eqref{eq:def_partition_star}, the active faces of $\C$ that touch the vertex. The vertex-based residual $\nu_\coarseIdxtwo$ our code uses is defined by
+\noindent We now have estimators $\eta_{\l,\coarseIdxone}$ per face of the subdivision partition $\C$. However, the atomic units of refinement in our scheme are vertex stars because they give rise to clean analysis. To enable vertex-based refinement for the adaptive algorithm, we need to sum up the face estimators $\eta_{\l,\coarseIdxone}$ to vertex estimators as shown in Figure~\ref{fig:pipeline_marking_b}. Recall from Section~\ref{subsec:selecting_active_dofs} the vertex equivalence classes $\vertclass{\coarseIdxtwo}$ from Equation~\eqref{eq:def_vertex_class} and their covering stars $\coveringStar(\vertclass{\coarseIdxtwo})$ from Equation~\eqref{eq:def_partition_star}, the active faces of $\C$ that touch the vertex. The vertex-based residual $\nu_\coarseIdxtwo$ our code uses is defined by
 \begin{equation}
     \label{eq:vertex_residual}
     \nu^2_\coarseIdxtwo = \tfrac{1}{a_\coarseIdxtwo} \; \sum\limits_{\face{\l}{\coarseIdxone} \; \in \; \coveringStar(\vertclass{\coarseIdxtwo}) \setminus \F_\L} \eta^2_{\l,\coarseIdxone}, \qquad \mathrm{where} \qquad a_\coarseIdxtwo = \sum\limits_{\face{\l}{\coarseIdxone} \; \in \; \coveringStar(\vertclass{\coarseIdxtwo}) \setminus \F_\L} \mathrm{area}(\face{\l}{\coarseIdxone}).
@@ -1432,7 +1443,7 @@ Dividing by the cumulative area of the faces rescales the integral face estimato
         \caption{Covering after refining the covering stars of marked vertices to their target levels.}
         \label{fig:pipeline_marking_c}
     \end{subfigure}
-    \caption{\robert{Visualisations of the individual stages of the \textsc{Mark} and \textsc{Refine} steps.}}
+    \caption{Visualisations of the individual stages of the \textsc{Mark} and \textsc{Refine} steps.}
     \label{fig:pipeline_marking}
 \end{figure}
 
@@ -1456,9 +1467,9 @@ where $\theta \in (0, 1]$ is the Dörfler parameter. The set $\R_\theta \subset 
 \subsubsection{Refinement}
 \label{subsec:refine}
 
-The \textsc{Refine} step refines the marked faces $\face{\l}{\coarseIdxone} \in \R_\theta$ of the covering stars of the vertex equivalence classes $\vertclass{\coarseIdxtwo} \in \mathrm{V}_\C^{\mathrm{mark}}$ from Equation~\eqref{eq:marked_refinable_residual}. Recall that the source level $\sourcelevel_\coarseIdxtwo$ and the target level $\targetlevel_\coarseIdxtwo$ measure the coarsest and finest levels at which a vertex of the vertex class $\vertclass{\coarseIdxtwo}$ occurs in the covering $\C$, see Definition~\ref{def:vertex_classed}. Since we want to refine the faces around the vertex class by one level (unless $\targetlevel_\coarseIdxtwo = \L$), we compute the target level $\tilde{\targetlevel}_\coarseIdxtwo = \min(\targetlevel_{\coarseIdxtwo_p} \! + \! 1, \L)$ that is expected after refining around the vertex class $\vertclass{\coarseIdxtwo}$. The expected target levels $\tilde{\targetlevel}_\coarseIdxtwo$ must be computed on the fixed input subdivision partition $\C$ before any refinement takes place to avoid a cascade of ever increasing target levels. 
+The \textsc{Refine} step refines the marked faces $\face{\l}{\coarseIdxone} \in \R_\theta$ of the covering stars of the vertex equivalence classes $\vertclass{\coarseIdxtwo} \in \mathrm{V}_\C^{\mathrm{mark}}$ from Equation~\eqref{eq:marked_refinable_residual} as shown in Figure~\ref{fig:pipeline_marking_c}. Recall that the source level $\sourcelevel_\coarseIdxtwo$ and the target level $\targetlevel_\coarseIdxtwo$ measure the coarsest and finest levels at which a vertex of the vertex class $\vertclass{\coarseIdxtwo}$ occurs in the covering $\C$, see Definition~\ref{def:vertex_classed}. Since we want to refine the faces around the vertex class by one level (unless $\targetlevel_\coarseIdxtwo = \L$), we compute the target level $\tilde{\targetlevel}_\coarseIdxtwo = \min(\targetlevel_{\coarseIdxtwo_p} \! + \! 1, \L)$ that is expected after refining around the vertex class $\vertclass{\coarseIdxtwo}$. The expected target levels $\tilde{\targetlevel}_\coarseIdxtwo$ must be computed on the fixed input subdivision partition $\C$ before any refinement takes place to avoid a cascade of ever increasing target levels. 
 
-The \textsc{Refine} step homogenises the partition star of each marked vertex class $\vertclass{\coarseIdxtwo} \in \mathrm{V}_\C^{\mathrm{mark}}$ to one level beyond its target level $\targetlevel_\coarseIdxtwo$. Formally, we can express that using the graded quadrisection $\quadriV{\C}{\tilde{\targetlevel}_\coarseIdxtwo}(\vertclass{\coarseIdxtwo})$ from Equation~\eqref{eq:vertex_quadrisection}.
+The \textsc{Refine} step homogenises the covering star of each marked vertex class $\vertclass{\coarseIdxtwo} \in \mathrm{V}_\C^{\mathrm{mark}}$ to one level beyond its target level $\targetlevel_\coarseIdxtwo$. Figure~\ref{fig:refine_interface} displays two examples of this refinement for vertex classes at an interface. Formally, we can express the refinement using the graded quadrisection $\quadriV{\C}{\tilde{\targetlevel}_\coarseIdxtwo}(\vertclass{\coarseIdxtwo})$ from Equation~\eqref{eq:vertex_quadrisection}.
 
 The result of the \textsc{Refine} step is the subdivision partition $\C^{\mathrm{refine}}$ given by
 \begin{enumerate}[topsep=3pt, itemsep=-2pt]
@@ -1520,7 +1531,7 @@ Because the expected target levels $\tilde{\targetlevel}_{\coarseIdxtwo}$ are co
 }
 \end{center}
 \vspace{-3mm}
-\caption{\robert{Refinement of the covering stars of two vertex classes $\vertclass{\coarseIdxtwo}$ (yellow) to $\targetlevel_\coarseIdxtwo\!+\!1$.}}
+\caption{Refinement of the covering stars of two vertex classes $\vertclass{\coarseIdxtwo}$ (yellow) to $\targetlevel_\coarseIdxtwo\!+\!1$.}
 \label{fig:refine_interface}
 \end{figure}
 
@@ -1529,30 +1540,30 @@ Because the expected target levels $\tilde{\targetlevel}_{\coarseIdxtwo}$ are co
 \subsubsection{Padding}
 \label{subsec:padding}
 
-\begin{figure}%[htbp]
-    \centering
-    \begin{subfigure}[b]{0.3\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig2a.pdf}
-        \caption{Covering after \textsc{Refine} step, cf. Figure~\ref{fig:pipeline_marking_c}}
-    \end{subfigure}\hfill
-    \begin{subfigure}[b]{0.3\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig2b.pdf}
-        \caption{Vertex pinch resolution, introduces inadmissible face}
-    \end{subfigure}\hfill
-    \begin{subfigure}[b]{0.3\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig2c.pdf}
-        \caption{Face padding restores admissibility of all faces}
-    \end{subfigure}
-    \caption{\robert{Visualisation of the individual stages of the \textsc{Pad} step. (a) repeats
-    Fig.~\ref{fig:pipeline_marking}(c), the partition before padding; (b) after
-    $\textsc{ResolveVertexPinches}$, the centre pinch is gone; (c) after the
-    inadmissible-faces pad, the one remaining inadmissible face is refined, giving the
-    final admissible partition (grading does not fire here).}}
-    \label{fig:pipeline_padding}
-\end{figure}
+%\begin{figure}%[htbp]
+%    \centering
+%    \begin{subfigure}[b]{0.3\textwidth}
+%        \centering
+%        \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig2a.pdf}
+%        \caption{Covering after \textsc{Refine} step, cf. Figure~\ref{fig:pipeline_marking_c}}
+%    \end{subfigure}\hfill
+%    \begin{subfigure}[b]{0.3\textwidth}
+%        \centering
+%        \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig2b.pdf}
+%        \caption{Vertex pinch resolution, introduces inadmissible face}
+%    \end{subfigure}\hfill
+%    \begin{subfigure}[b]{0.3\textwidth}
+%        \centering
+%        \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig2c.pdf}
+%        \caption{Face padding restores admissibility of all faces}
+%    \end{subfigure}
+%    \caption{\robert{Visualisation of the individual stages of the \textsc{Pad} step. (a) repeats
+%    Fig.~\ref{fig:pipeline_marking}(c), the partition before padding; (b) after
+%    $\textsc{ResolveVertexPinches}$, the centre pinch is gone; (c) after the
+%    inadmissible-faces pad, the one remaining inadmissible face is refined, giving the
+%    final admissible partition (grading does not fire here).}}
+%    \label{fig:pipeline_padding}
+%\end{figure}
 
 The \textsc{Refine} step in the previous section produces the covering $\C^{\mathrm{refine}}$. Crucially, $\C^{\mathrm{refine}}$ is not a subdivision partition because $\C^{\mathrm{refine}}$ might now contain pinch vertices or inadmissible faces. The \textsc{Pad} step repairs these defects and turns $\C^{\mathrm{refine}}$ in the subdivision partition $\C^{\mathrm{pad}}$. The goal is to keep the padded faces added during this process to a minimum to avoid inflating the number of DoFs in non-marked regions. The only exception is some grading that we apply around vertices whose covering star covers too many levels. This grading does not change the restored admissibility properties but improves the conditioning of the resulting matrix-vector system. This section covers all three kinds of padding one by one.
 
@@ -1633,7 +1644,7 @@ In words, we refine every inadmissible face by one level because the refined fac
 
 \paragraph{Grading covering stars.}
 
-The grading is supposed to smooth out transitions across vertex classes $\vertclass{\coarseIdxtwo} \in \mathrm{V}_{\C^{\mathrm{admissible}}}$ with large level differences. Unlike the first two rules, the grading step does not restore exactness or linear independence but improves the conditioning of the matrix-vector system and helps to avoid numerical artifacts in these regions. The predicate to identify the vertex classes $\vertclass{\coarseIdxtwo}$ to grade is the \emph{level gap} $\mu_\coarseIdxtwo$ defined by
+The grading is supposed to smooth out transitions across vertex classes $\vertclass{\coarseIdxtwo} \in \mathrm{V}_{\C^{\mathrm{admissible}}}$ with large level differences. Unlike the first two rules, the grading step does not restore exactness or linear independence but is intended to improve the conditioning of the matrix-vector system and to avoid numerical artifacts in these regions. The predicate to identify the vertex classes $\vertclass{\coarseIdxtwo}$ to grade is the \emph{level gap} $\mu_\coarseIdxtwo$ defined by
 \begin{equation}
     \label{def:level_gap}
     \mu_\coarseIdxtwo \coloneq \targetlevel_\coarseIdxtwo - \sourcelevel_\coarseIdxtwo.
@@ -1651,8 +1662,6 @@ The vertex classes marked for grading are refined using the quadrisection operat
 \end{equation}
 and $\C^0 = \C^{\mathrm{admissible}}$. Note the additional $-2$ in the quadrisection operator $\quadriV{\vertclass{\coarseIdxtwo_p}}{\targetlevel_{\coarseIdxtwo_p} - 2}$. It ensures that the covering star $\coveringStarC{\C^p}(\vertclass{\coarseIdxtwo_p})$ on the graded partition $\C^p$ has a level gap of $2$ or less.
 
-\todo{\guidance{The claim that grading "improves the conditioning of the matrix-vector system" is currently asserted, not measured --- Section~\ref{subsec:vector_laplace}'s conditioning table (Table~\ref{tab:solve_stats_L4}) reports $\kappa(P^{-1}K_\C)$ for the full adaptive loop (grading included) but has no ablation isolating grading's own contribution. Either soften this claim to "is intended to..." or add a with/without-grading comparison to Table~\ref{tab:solve_stats_L4} (or a dedicated table) before asserting it as a measured effect.}}
-
 \paragraph{Summary.}
 
 Every stage of the \textsc{Pad} step uses either the vertex-class based quadrisection operator $\quadriV{\C}{\targetlevel}$ or the face-based $\quadriF{\C}$.
@@ -1661,48 +1670,40 @@ The pinch padding resolves pinch vertices and thus repairs cohomological artifac
 
 Every rule only ever refines and adds a few faces that locally repair its violation, and no face is refined beyond level $\L$.
 
-\guidance{\begin{remark}[Padding order matters]
+\begin{remark}[Padding order matters]
 \label{rem:padding_order}
-The three padding substeps do not commute: resolving a pinch vertex can lead to an admissible face becoming inadmissible (Figure~\ref{fig:pipeline_padding}), which is why $\textsc{Pad}$ always runs pinch resolution before inadmissible-face padding, before grading.
-\end{remark}}
+The three padding substeps do not commute: resolving a pinch vertex can lead to an admissible face becoming inadmissible (e.g. Figure~\ref{fig:two_padding_iterations}), which is why $\textsc{Pad}$ always runs pinch resolution before inadmissible-face padding, before grading.
+\end{remark}
 
 We do not \robert{(yet?)} have a proof that $\textsc{Pad}$ terminates. For our implementation, we wrapped the pinch resolution, face admissibility padding and the grading in a loop that terminates once a pass no longer refines any face, i.e., none of the predicates fires. A counter records the productive passes, which is $1$ for the large majority of test cases we ran, but is not always $1$: Figure~\ref{fig:two_padding_iterations} shows a small hand-constructed covering that needs two passes to stabilise.
-
-\todo{\guidance{State $\textsc{Pad}$ using the new notation, with two caveats to hedge carefully:
-\begin{itemize}
-    \item \emph{Idempotence, only up to grading.} Pinch resolution and inadmissible-face padding act trivially on any $\C \in \allpartitions$, since their trigger sets $\mathrm{V}_\C^{\mathrm{pinch}}$ and $\F_{\mathrm{inadmissible}}$ are empty by definition of $\allpartitions$. But grading can still fire on $\C \in \allpartitions$ if some vertex class has level gap $\mu_\coarseIdxtwo > 2$ --- so $\textsc{Pad}|_{\allpartitions} \neq \mathrm{id}$ in general, only up to grading.
-    \item \emph{Termination is not proven.} Since we do not have a general termination proof, avoid stating $\textsc{Pad} : \allcoverings \to \allpartitions$ as an unconditional total map or theorem. At most: whenever $\textsc{Pad}$ terminates on input $\C \in \allcoverings$, its output lies in $\allpartitions$.
-\end{itemize}}}
-
-\robert{Figure~\ref{fig:two_padding_iterations} shows a hand-constructed valence-$6$ covering where a single $\textsc{Pad}$ pass is not enough. The covering marks every level-$0$ face whose barycentre lies outside the band $y \in [0,1]$ for refinement, leaving that band -- which straddles two of the mesh's irregular vertex stars -- coarse. As Remark~\ref{rem:padding_order} anticipates, resolving the pinches created by the first pass' refinement reintroduces inadmissible faces (and vice versa), so the loop only stabilises after a second productive pass; a third, confirmatory pass makes no further change.}
 
 \begin{figure}
     \centering
     \begin{subfigure}[t]{0.23\textwidth}
         \centering
         \includegraphics[width=\textwidth]{images/exactness/v6_two_padding_iterations_stage_pass1_after_pinch.pdf}
-        \caption{Pass 1, after \textsc{ResolveVertexPinches}}
+        \caption{Input covering and result of first pinch resolution}
         \label{fig:two_padding_iterations_pass1_pinch}
     \end{subfigure}\hfill
     \begin{subfigure}[t]{0.23\textwidth}
         \centering
         \includegraphics[width=\textwidth]{images/exactness/v6_two_padding_iterations_stage_pass1_after_pad.pdf}
-        \caption{Pass 1, after admissibility padding}
+        \caption{Covering after first face admissibility padding}
         \label{fig:two_padding_iterations_pass1_pad}
     \end{subfigure}\hfill
     \begin{subfigure}[t]{0.23\textwidth}
         \centering
         \includegraphics[width=\textwidth]{images/exactness/v6_two_padding_iterations_stage_pass2_after_pinch.pdf}
-        \caption{Pass 2, after \textsc{ResolveVertexPinches}}
+        \caption{Covering after second pinch resolution}
         \label{fig:two_padding_iterations_pass2_pinch}
     \end{subfigure}\hfill
     \begin{subfigure}[t]{0.23\textwidth}
         \centering
         \includegraphics[width=\textwidth]{images/exactness/v6_two_padding_iterations_stage_pass2_after_pad.pdf}
-        \caption{Pass 2, after admissibility padding (stable, cf. Remark~\ref{rem:padding_order})}
+        \caption{Stabilised covering after second face admissibility padding}
         \label{fig:two_padding_iterations_pass2_pad}
     \end{subfigure}
-    \caption{\robert{The four intermediate coverings of the two productive $\textsc{Pad}$ passes needed to stabilise the hand-constructed example described above. Pass 1 (a,b) does not yet reach a fixed point: its admissibility padding (b) reintroduces work for pinch resolution, so a second pass (c,d) is required before (d) is stable.}}
+    \caption{The four stages of a covering that needs two productive $\textsc{Pad}$ passes to stabilise.}
     \label{fig:two_padding_iterations}
 \end{figure}
 
@@ -1711,17 +1712,7 @@ We do not \robert{(yet?)} have a proof that $\textsc{Pad}$ terminates. For our i
 \section{Numerical Experiment}
 \label{sec:numerical_experiments}
 
-\robert{Having assembled the adaptive spaces and the \textsc{Pad} step that keeps
-every covering a subdivision partition, we now put the construction to the test. We
-proceed from the inside out. Section~\ref{subsec:exactness_atomic} isolates the two
-ways an inadmissible covering can break the de~Rham complex and verifies, on a
-battery of atomic single-vertex partitions, that padding removes each of them.
-Section~\ref{subsec:maxwell} then confirms on the Maxwell eigenvalue problem that
-the padded spaces carry no spurious modes, and Section~\ref{subsec:vector_laplace}
-exercises the full adaptive loop on a vector Laplace problem with a singular
-solution. The emphasis throughout is on \emph{exactness} --- that the discrete
-spaces reproduce the cohomology of the domain --- rather than on approximation
-rates.}
+This section verifies the properties of the adaptive subdivision $k$-form spaces $\hierSDFspace{k}{\C}{\L}$ and $\hierSDFspaceZero{k}{\C}{\L}$ predicted in Section~\ref{sec:construction_of_hierarchical_subdiv_spaces} and tests the adaptive loop presented in Section~\ref{subsec:adaptive_loop}. Section~\ref{subsec:exactness_atomic} illustrates how coverings with pinch vertices or inadmissible faces can break the de~Rham complex and linear independence, and how padding repairs the coverings. Section~\ref{subsec:maxwell} then confirms on the Maxwell eigenvalue problem that the spurious modes are confined to the eigenvalue $0$, implying that $\extd \circ \extd = 0$ pointwise for every covering. Section~\ref{subsec:vector_laplace} exercises the full adaptive loop on a vector Laplace problem with a singular solution. The emphasis throughout is on the admissibility of the adaptive subdivision $k$-form spaces, i.e. whether the active DoFs are linearly independent and preserve the cohomology of the de Rham complex, rather than on approximation rates.
 
 \subsection{Exactness and padding on atomic partitions}
 \label{subsec:exactness_atomic}
@@ -1845,7 +1836,7 @@ Finally, Figure~\ref{fig:nested_center} shows the prototypical configuration aro
 
 \smallskip
 
-A third observation concerns whether padding preserves genuine, non-spurious cohomology rather than merely repairing spurious harmonics: every covering considered so far is a topological disk, so the only harmonic $1$-forms observed have been the defect-driven ones that padding removes. Figure~\ref{fig:genuine_cohomology} punches two literal holes into a valence-$6$ ring mesh -- deleting entire vertex stars rather than merely refining around them -- giving a domain with true first Betti number $b_1 \!=\! 2$, and additionally scatters level-$1$ refinement around both holes to introduce the usual pinch and inadmissible-face defects on top. The input covering has $11$ linearly dependent $1$-form DoFs and $\mathrm{dim}(\mathcal{H}^1) \!=\! 5$: the $2$ genuine harmonics from the two holes plus $3$ spurious ones from the introduced defects. After padding, all DoFs are independent again and $\mathrm{dim}(\mathcal{H}^1) \!=\! 2$ exactly: padding removes precisely the spurious contribution while leaving both genuine harmonics untouched.
+Every covering considered so far is a topological disk, so the only harmonic $1$-forms observed have been the defect-driven ones that padding removes. Figure~\ref{fig:genuine_cohomology} shows a covering with a non-trivial topology (two holes). The input covering has $11$ linearly dependent $1$-form DoFs and $\mathrm{dim}(\mathcal{H}^1) \!=\! 5$. After padding, all DoFs are independent again and $\mathrm{dim}(\mathcal{H}^1) \!=\! 2$ exactly. The padding removed the $3$ spurious harmonics while leaving both genuine harmonics untouched.
 
 \smallskip
 
@@ -1901,53 +1892,25 @@ This section confirms that the \textsc{Pad} step correctly restores the geometri
         \caption{Two genuine holes (vertex-star deletion) plus scattered defects.}
         \label{fig:genuine_holes}
     \end{subfigure}
-    \caption{A covering with two literal holes (true $b_1 \!=\! 2$, punched by deleting vertex stars) and additional scattered pinch/inadmissible-face defects, before (left) and after (right) padding; images rotated $90^\circ$ to fit the page. Unlike Figures~\ref{fig:pinch_resolution} and~\ref{fig:admissibility_padding}, whose domains are topological disks, this covering's genuine cohomology is nonzero: padding must remove only the spurious contribution ($3$ of the $5$ harmonic $1$-forms) while leaving the $2$ genuine ones from the holes intact, rather than driving $\dim(\mathcal{H}^1)$ to zero.}
+    \caption{A covering with two holes and additional scattered pinch and inadmissible face defects, before (left) and after (right) padding. The padding step removes only the three-dimensional space of spurious harmonic $1$-form to restore the correct cohomology.}
     \label{fig:genuine_cohomology}
 \end{figure}
 
 \subsection{Maxwell Eigenvalue problem}
 \label{subsec:maxwell}
 
-This section studies the Maxwell eigenvalue problem, a classical test case to verify the properties of discrete differential complexes.\needcite{} Section~\ref{subsec:exactness_atomic} has already established that the \textsc{Pad} step restores the correct cohomology for the spaces $\hierSDFspace{k}{\C}{\L}$ by repairing the geometric defects of the covering $\C$ so that it becomes a subdivision partition. In constrast, this section studies how the spurious harmonic $1$-forms of a covering concretely affect the solution of the eigenproblem.
+This section studies the Maxwell eigenvalue problem, a classical test case to verify the properties of discrete differential complexes. Section~\ref{subsec:exactness_atomic} has already established that the \textsc{Pad} step restores the correct cohomology for the spaces $\hierSDFspace{k}{\C}{\L}$ by repairing the geometric defects of the covering $\C$ so that it becomes a subdivision partition. In constrast, this section studies how the spurious harmonic $1$-forms of a covering concretely affect the solution of the eigenproblem.
 
 The weak form of the Maxwell cavity (curl--curl) eigenvalue problem on the domain $\M = [0,\pi]^2$ with mesh $\T_\L$ is given by: Find $\lambda_{h,\coarseIdxone} \in \mathbb{R}$ and $u_\coarseIdxone \in \hierSDFspaceZero{1}{\C}{\L}$ such that
 \begin{equation}
   (\extd u_i, \extd v)_\M = \lambda_{h,\coarseIdxone} (u_i, v)_\M \qquad \forall v \in \hierSDFspaceZero{1}{\C}{\L}
 \end{equation}
-with analytic spectrum $\lambda_\coarseIdxone = m^2 + n^2$, where $m$ and $n$ are integers. We will approximate the discrete spectra on the covering $\C^{\mathrm{pinch}}$ with a pinch on level $\robert{\l=1}$ as displayed in Figure~\ref{fig:Maxwell_inexact_DoFmesh} and its padded version, the subdivision partition $\C^{\mathrm{padded}}$ from Figure~\ref{fig:Maxwell_exact_DoFmesh}. Since the domain is contractible, its relative first Betti number is zero. Thus, $\hierSDFspaceZero{1}{\C^{\mathrm{padded}}}{\L}$ has no $1$-form harmonics because $\C^{\mathrm{padded}}$ is a subdivision partition. The pinch of $\C^{\mathrm{pinch}}$ introduces \robert{a one-dimensional} spurious harmonic $1$-form space into $\hierSDFspaceZero{1}{\C^{\mathrm{pinch}}}{\L}$.
+with analytic spectrum $\lambda_\coarseIdxone = m^2 + n^2$, where $m$ and $n$ are integers. We will approximate the discrete spectra on the covering $\C^{\mathrm{pinch}}$ with a pinch on level $\l=1$ as displayed in Figure~\ref{fig:Maxwell_inexact_DoFmesh} and its padded version, the subdivision partition $\C^{\mathrm{padded}}$ from Figure~\ref{fig:Maxwell_exact_DoFmesh}. Since the domain is contractible, its relative first Betti number is zero. Thus, $\hierSDFspaceZero{1}{\C^{\mathrm{padded}}}{\L}$ has no $1$-form harmonics because $\C^{\mathrm{padded}}$ is a subdivision partition. The pinch of $\C^{\mathrm{pinch}}$ introduces a one-dimensional spurious harmonic $1$-form space into $\hierSDFspaceZero{1}{\C^{\mathrm{pinch}}}{\L}$.
 
 Applying Loop subdivision alters the domain slightly, so we do not compare the discrete spectrum directly with the analytic spectrum  $\lambda_\coarseIdxone$. Instead, we compare the discrete spectra $\lambda_\coarseIdxone$ with the spectrum of $\FEECspaceZero{k}{\L}$ with $\C^{\mathrm{FEEC}} = \T_\L$, a superspace of both $\hierSDFspaceZero{1}{\C^{\mathrm{pinch}}}{\L}$ and $\hierSDFspaceZero{1}{\C^{\mathrm{padded}}}{\L}$ that verifiably converges to the correct spectrum, see~\cite{Arnold.FEEC}.
 
 Figure~\ref{fig:Maxwell_eigenvalues} reports the discrete spectra with $\lambda_{h,\coarseIdxone} > 0$ for all three coverings. Outside of small approximation errors, the spectra agree across all the three
 partitions. That means that the defects caused by the spurious $1$-form harmonics of $\hierSDFspaceZero{1}{\C^{\mathrm{pinch}}}{\L}$ are confined to the eigenspace of $\lambda_{h,\coarseIdxone} = 0$. The reason for that behaviour is Theorem~\ref{theorem:differential_complex}, stating that $\extd \circ \extd \equiv 0$ holds pointwise on $\hierSDFspaceZero{0}{\C}{\L}$ for all coverings $\C \in \allcoverings$, regardless of whether they satisfy the subdivision partition conditions. This implies that $\extd u$ does not carry a spurious curl of any gradient, and thus the non-zero spectrum does not get polluted, cf.~\cite{Boffi.2010}.
-
-%\robert{ \guidance{As Remark~\ref{rem:complex_vs_exactness} shows,} the reason for that is that . Consequently, %the discrete Hodge--Helmholtz decomposition
-%\begin{equation}
-%  \hierSDFspaceZero{1}{\C}{\L} = \extd\big[\hierSDFspaceZero{0}{\C}{\L}\big] \oplus \mathcal{H}^1 \oplus \extd^*\big[\hierSDFspaceZero{2}{\C}{\L}\big]
-%\end{equation}
-%splits $L^2$-orthogonally for every covering $\C$, admissible or not, where $\extd^*$ denotes the $L^2$-adjoint of $\extd$ on the finite-dimensional spaces (not the continuous Hodge codifferential). Writing $u = u_0 + u_H + u_*$ for the components of $u \in \hierSDFspaceZero{1}{\C}{\L}$ in the three summands, $\extd u_0 = \extd \extd \varphi = 0$ for the potential $\varphi \in \hierSDFspaceZero{0}{\C}{\L}$ generating $u_0$, and $\extd u_H = 0$ since $\mathcal{H}^1 \subset \ker(\extd)$ by definition. Hence $\extd u = \extd u_*$ for every $u$: no admissibility defect of $\C$ can leak $\extd$-content into the potential component $u_0$, because that would require $\extd \extd \varphi \neq 0$ for some $\varphi$, contradicting the identity above. A pinch can therefore only ever enlarge $\mathcal{H}^1$ beyond its topologically expected dimension, inflating the multiplicity of the $\lambda_{h,\coarseIdxone} = 0$ eigenspace, and never the magnitude of $\extd u_*$ that produces the physical, $\lambda_{h,\coarseIdxone} > 0$ band. It is this pointwise validity of $\extd \circ \extd = 0$ -- not merely the closedness of $\mathcal{H}^1$ -- that rules out the interleaved spurious eigenvalues typical of non-compatible discretisations (e.g.\ nodal vector Lagrange elements for $\mathbf{H}(\mathrm{curl})$), where $\extd \circ \extd \neq 0$ discretely and gradient-like modes leak nonzero curl content directly into the physical band.\needcite{}}
-
-%\begin{table}[htbp]
-%    \centering
-%    \small
-%    \begin{tabular}{@{}l ccc c c@{}}
-%        \toprule
-%        partition & \multicolumn{3}{c}{physical band $\lambda_1, \ldots, \lambda_6$ recovered} & raw zero-modes ($\lambda \leq \tfrac12$) & $\dim\mathcal{H}^1$ \\
-%        \midrule
-%        inexact         & \multicolumn{3}{c}{$1.003,\ 1.008,\ 2.017,\ 4.006,\ 4.028,\ 5.031$} & $125$ & $\mathbf{2}$ \\
-%        exact (padded)  & \multicolumn{3}{c}{$1.003,\ 1.008,\ 2.017,\ 4.006,\ 4.028,\ 5.031$} & $90$  & $\mathbf{0}$ \\
-%        FEEC (uniform)  & \multicolumn{3}{c}{$1.002,\ 1.002,\ 2.010,\ 4.000,\ 4.019,\ 5.024$} & $43$  & --- \\
-%        \bottomrule
-%    \end{tabular}
-%    \caption{\robert{Maxwell cavity spectrum on the inexact, exact (padded), and FEEC
-%    (uniform) partitions. The physical band coincides across all three and tracks
-%    the analytic $i^2+j^2$; the inexact partition's sole defect is
-%    $\dim\mathcal{H}^1 = 2$ spurious harmonics, removed by padding. The raw
-%    zero-mode count is dominated by legitimate gradient modes and is not comparable
-%    across partitions, so the rank-based $\dim\mathcal{H}^1$ is the clean
-%    diagnostic.}}
-%    \label{tab:maxwell_spectrum}
-%\end{table}
 
 \begin{figure}%[htbp]
     \centering
@@ -2168,7 +2131,7 @@ The adaptive method thus only wins in DoFs and memory, not wall-clock, with the 
     $\FEECspace{k}{4}$ & $10.6\,\mathrm{s}$   & $56\,833$ & 25  & 4.11  & 11.4  \\
     \bottomrule
   \end{tabular}
-  \caption{Solve metrics for all steps of the adaptive simulation with $\L=4$. The fine superspace $\FEECspace{k}{4}$ is included as a reference. $\kappa(P^{-1}K_\C)$ is the estimated condition number of the preconditioned operator after unrefinement, see Equation~\ref{eq:FE_matrix_assembly} and \robert{the preconditioner information in the solve step}. The term \emph{nnz} refers to the number of non-zero elements of a matrix, and to obtain $\mathrm{nnz}(K_\C)/(\vert \activeDoFSet{0}{} \vert + \vert \activeDoFSet{1}{} \vert)$ we normalised by the number of active DoFs.}
+  \caption{Solve metrics for all steps of the adaptive simulation with $\L=4$. The fine superspace $\FEECspace{k}{4}$ is included as a reference. $\kappa(P^{-1}K_\C)$ is the estimated condition number of the preconditioned operator after unrefinement, see Equation~\ref{eq:FE_matrix_assembly} and the preconditioner $\mathbf{P}$ defined in Equation~\ref{eq:preconditioner} (\S~\ref{subsec:solve}). The term \emph{nnz} refers to the number of non-zero elements of a matrix, and to obtain $\mathrm{nnz}(K_\C)/(\vert \activeDoFSet{0}{} \vert + \vert \activeDoFSet{1}{} \vert)$ we normalised by the number of active DoFs.}
   \label{tab:solve_stats_L4}
 \end{table}
 
@@ -2180,7 +2143,7 @@ The adaptive loop adds a subdivision-specific \textsc{Pad} step to the standard 
 
 The numerical experiments confirm the two key structural properties of the framework. For the Maxwell eigenvalue problem, exact subdivision partitions reproduce the reference FEEC spectrum without spurious modes; inexact ones introduce them. This serves as a direct diagnostic for the correctness of the active-DoF construction and the de Rham complex structure. For the mixed vector Laplace equation, the adaptive loop concentrates refinement at the location of steep gradients and achieves convergence behaviour consistent with the hierarchical approximation theory.
 
-Several directions remain open. The precise correspondence between the subdivision PAD step and the $L$-chain completion used in hierarchical B-spline AFEM~\cite{Cabanas.2026} has not been established; clarifying this connection would relate the two frameworks and potentially enable convergence proofs to be transferred. On the solver side, the block-diagonal LDLT preconditioner used here is effective for the problem sizes considered, but a multigrid preconditioner that respects the globally supported subdivision basis would reduce the per-step cost for larger problems; this requires a prolongation operator compatible with $\Amat{k}{\activeDoFs}{\L}$ and is left for future work. Finally, a promising direction is to adopt the overlapping patch framework of Bressan~\cite{Bressan.2024} in place of the non-overlapping subdivision partition used here. Overlapping patches can provide a richer set of admissible active-DoF configurations and may admit a more flexible PAD step, at the cost of requiring a partition-of-unity treatment to maintain linear independence; adapting the matrix-level assembly and the de Rham complex to that setting is an open problem.}
+Several directions remain open. The precise correspondence between the subdivision PAD step and the $L$-chain completion used in hierarchical B-spline AFEM~\cite{Cabanas.2026} has not been established; clarifying this connection would relate the two frameworks and potentially enable convergence proofs to be transferred. On the solver side, the block-diagonal LDLT preconditioner used here is effective for the problem sizes considered, but a multigrid preconditioner that respects the larger-than-Whitney supports of the subdivision basis would reduce the per-step cost for larger problems; this requires a prolongation operator compatible with $\Amat{k}{\activeDoFs}{\L}$ and is left for future work. Finally, a promising direction is to adopt the overlapping patch framework of Bressan~\cite{Bressan.2024} in place of the non-overlapping subdivision partition used here. Overlapping patches can provide a richer set of admissible active-DoF configurations and may admit a more flexible PAD step, at the cost of requiring a partition-of-unity treatment to maintain linear independence; adapting the matrix-level assembly and the de Rham complex to that setting is an open problem.}
 
 \bibliography{references}
 
