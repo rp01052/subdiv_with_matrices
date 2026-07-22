@@ -329,7 +329,7 @@ Such uniform subdivision spaces assign the same resolution everywhere: every bas
 The analogous construction for B-spline de Rham complexes has been studied in~\cite{Buffa2011,Evans.2020,Shepherd.2024,Dijkstra.2025}, where admissibility conditions on the hierarchical mesh ensure exactness of the complex.
 A central mechanism in these works is a \emph{completion step} that, after marking basis functions for refinement, enforces a compatibility condition on the active set: in~\cite{Cabanas.2026} this takes the form of \emph{$L$-chain completion}, which forces all basis functions in a connecting $L$-chain to be refined simultaneously whenever a conflicting pair is detected.
 
-This paper provides the matrix-level description and algorithms for hierarchical subdivision $k$-form spaces that preserve the de Rham complex, serving as the practical and computational complement to~\cite{companion_paper}. The key computational objects are the subdivision matrices $\Amat{k}{\l}{\L}$, which represent level-$\l$ basis functions in the Whintney basis of the fine assembly mesh $\T_\L$. A hierarchical space is formed by selecting one column of these matrices per active basis function, according to a \emph{subdivision partition} of $\T_\L$, a combinatorial condition on the patch decomposition of the domain. This condition, characterised in~\cite{companion_paper}, simultaneously guarantees linear independence and exactness of the complex. Once the hierarchical subdivision matrix $\Amat{k}{\activeDoFs}{\L}$ is assembled, all downstream operations (exterior derivative, mass and stiffness matrices, residual evaluation) reduce to standard sparse linear algebra on $\T_\L$ without recomputing any integrals.
+This paper provides the matrix-level description and algorithms for hierarchical subdivision $k$-form spaces that preserve the de Rham complex, serving as the practical and computational complement to~\cite{companion_paper}. The key computational objects are the subdivision matrices $\Amat{k}{\l}{\L}$, which represent level-$\l$ basis functions in the Whitney basis of the fine assembly mesh $\T_\L$. A hierarchical space is formed by selecting one column of these matrices per active basis function, according to a \emph{subdivision partition} of $\T_\L$, a combinatorial condition on the patch decomposition of the domain. This condition, characterised in~\cite{companion_paper}, simultaneously guarantees linear independence and exactness of the complex. Once the hierarchical subdivision matrix $\Amat{k}{\activeDoFs}{\L}$ is assembled, all downstream operations (exterior derivative, mass and stiffness matrices, residual evaluation) reduce to standard sparse linear algebra on $\T_\L$ without recomputing any integrals.
 
 \paragraph*{Contributions.} This paper makes the following contributions:
 \begin{itemize}
@@ -503,7 +503,7 @@ so that the block $(\freeVec{\bar{c}}{k}{\l})^\top$ multiplies precisely the $|\
 
 \smallskip
 
-From here the matrix picture is fixed. The object $\Amat{k}{\activeDoFs}{\L}$ is always a selection of columns from the accummulated subdivision matrices $\Amat{k}{\l}{\L}$ for all $\l \in \{\lzero, \, \dots, \, \L\}$. The remaining task is thus to select the active DoFs $\activeDoFSet{k}{}$ to enable the concrete construction of $\Amat{k}{\activeDoFs}{\L}$. The following section shows that designing a selection algorithm that guarantees desirable properties for the spanned spaces turns out to be a subtle matter.
+From here the matrix picture is fixed. The object $\Amat{k}{\activeDoFs}{\L}$ is always a selection of columns from the accumulated subdivision matrices $\Amat{k}{\l}{\L}$ for all $\l \in \{\lzero, \, \dots, \, \L\}$. The remaining task is thus to select the active DoFs $\activeDoFSet{k}{}$ to enable the concrete construction of $\Amat{k}{\activeDoFs}{\L}$. The following section shows that designing a selection algorithm that guarantees desirable properties for the spanned spaces turns out to be a subtle matter.
 
 \subsection{Unrefinement, the solve, and the case for admissibility}
 \label{subsec:unrefinement_and_solve}
@@ -525,7 +525,7 @@ for the adaptive coefficient vector $\freeVec{\bar{c}}{k}{\activeDoFs}$ as in Eq
 
 There are two cases that cause inadmissibility because $\Amat{k}{\activeDoFs}{\L}$ picks up a kernel. First, multiple active DoFs in $\activeDoFSet{k}{}$ can be linearly dependent, and thus introduce a kernel into $\Amat{k}{\activeDoFs}{\L}$. Second, even if all active DoFs are linearly independent, $\Amat{k}{\activeDoFs}{\L}$ can carry a spurious kernel by inflating the space of harmonic forms in the differential complex beyond the true harmonics.
 
-Controlling both linear independence and the cohomology of the discrete complex spanned by the active DoFs $\activeDoFSet{k}{}$ implies well-posedness of the linear system in Equation~\eqref{eq:abstract_solve}. Section~\ref{sec:construction_of_hierarchical_subdiv_spaces} introduces the necessary tools and operators to enable a systematic construction of admissible active DoFs, and Section~\ref{subsec:adaptive_loop} extends that to a series of nested spaces to enable adaptive, local refinement. The resulting algorithms are verified numericall in Section~\ref{sec:numerical_experiments}. Table~\ref{tab:properties_map} maps the desirable properties of the spaces and algorithms to where they are studied in the remainder of this paper. The table provides the structure of the presentation, clarifies the claims and serves as and an ongoing reference as this paper is read.
+Controlling both linear independence and the cohomology of the discrete complex spanned by the active DoFs $\activeDoFSet{k}{}$ implies well-posedness of the linear system in Equation~\eqref{eq:abstract_solve}. Section~\ref{sec:construction_of_hierarchical_subdiv_spaces} introduces the necessary tools and operators to enable a systematic construction of admissible active DoFs, and Section~\ref{subsec:adaptive_loop} extends that to a series of nested spaces to enable adaptive, local refinement. The resulting algorithms are verified numerically in Section~\ref{sec:numerical_experiments}. Table~\ref{tab:properties_map} maps the desirable properties of the spaces and algorithms to where they are studied in the remainder of this paper. The table provides the structure of the presentation, clarifies the claims and serves as an ongoing reference as this paper is read.
 
 \begin{table}[!tb]
 \centering
@@ -942,13 +942,13 @@ A geometrically natural unit for organising the selection of active DoFs is a \e
 \end{definition}
 
 We refer to the set $\K^k(\C) \coloneq \bigcup_{\l=\lzero}^{\L} \K^k(\C_\l)$ as the \emph{patch DoFs}.
-Thus, spanning an adaptive space using the patch DoFs of covering $\C$ ensures that the entire domain is covered with active basis functions. It does not yet guarantee either linear independece or a differential complex. The following examples develops an intuition for the selection of additional active degrees of freedom and constraints regarding the covering.
+Thus, spanning an adaptive space using the patch DoFs of covering $\C$ ensures that the entire domain is covered with active basis functions. It does not yet guarantee either linear independence or a differential complex. The following examples develops an intuition for the selection of additional active degrees of freedom and constraints regarding the covering.
 
 \smallskip
 
 \begin{example}
     \label{ex:selection}
-    Consider the covering $\C(\T_\L) = \calP^1_0 \cup \calP^1_1 \cup \calP^1_2$ with $\L \geq 2$ shown at the top of Figure~\ref{fig:active_dofs}. The patch DoFs are going to be active for any form degree $k$ and level $\l$. Note that the derivative stencils of interface vertices on level $2$ take us outside of the patch edges, meaning that their derivatives cannot be represented in the current space that contains only patch DoFs. Since we already are on the finest level of the covering, we cannot represent the missing edge DoFs through their refinement stencils. Thus, the only option is to activate these edge DoFs incident to the interface vertices on level $2$. The derivative stencil of these additional active edge DoFs now takes us outside of the patch faces on level $2$. Again, the only option is to add the interface faces on level $2$. Row $\l=2$ of Figure~\ref{fig:active_dofs} shows exactly the active DoFs resulting from this extention around the interfaces of the patch $\calP^1_2$.
+    Consider the covering $\C(\T_\L) = \calP^1_0 \cup \calP^1_1 \cup \calP^1_2$ with $\L \geq 2$ shown at the top of Figure~\ref{fig:active_dofs}. The patch DoFs are going to be active for any form degree $k$ and level $\l$. Note that the derivative stencils of interface vertices on level $2$ take us outside of the patch edges, meaning that their derivatives cannot be represented in the current space that contains only patch DoFs. Since we already are on the finest level of the covering, we cannot represent the missing edge DoFs through their refinement stencils. Thus, the only option is to activate these edge DoFs incident to the interface vertices on level $2$. The derivative stencil of these additional active edge DoFs now takes us outside of the patch faces on level $2$. Again, the only option is to add the interface faces on level $2$. Row $\l=2$ of Figure~\ref{fig:active_dofs} shows exactly the active DoFs resulting from this extension around the interfaces of the patch $\calP^1_2$.
 
     The same logic becomes a little more nuanced for the patch $\calP^1_1$ on level $\l=1$. We need to extend the patch DoFs again to be able to represent all derivates. However, if the additional active edge and face DoFs overlap the fine patch $\calP^1_2$, the interface edges and faces of level $\l=2$ make the ones of level $\l=1$ interface linearly dependent. The interface DoFs that overlap the coarser patch $\calP^1_0$ are not linearly dependent. Row $\l=1$ in Figure~\ref{fig:active_dofs} shows that we only add interface DoFs on level $\l=1$ if they overlap the coarser patch. Row $\l=0$ in Figure~\ref{fig:active_dofs} also reveals that we do not need to add any interface DoFs for the coarsest patch $\calP^1_0$ because they are all linearly dependent after adding the interface DoFs of all finer patches. The extra DoFs on level $\l=1$ that are at the interface between the patches at level $\l=0$ and $\l=2$ are also a result of the need to express derivatives of $k$-forms in the $k\!+\!1$-form spaces.
 \end{example}
@@ -1030,7 +1030,7 @@ Finally, we define the \emph{source level} $\sourcelevel_\coarseIdxtwo$ and \emp
 \end{align}
 The reason we call those levels source and target level is due to the effect of the quadrisection operator introduced later in Definition~\ref{def:vertex_quadrisection_operator}.
 
-For example, consider the covering in Figure~\ref{fig:active_dofs} again. The vertex equivalence class $\vertclass{c} = \{ \vertex{0}{c}, \, \vertex{1}{c}, \, \vertex{2}{c}\}$ with $\sourcelevel_c = 0$ and $\targetlevel_c = 2$ corresponds to the center vertex of the covering at the intersection of all interfaces. The other interface vertices are in vertex classes with two elements, while the remaining vertiex equivalence classes are singletons.
+For example, consider the covering in Figure~\ref{fig:active_dofs} again. The vertex equivalence class $\vertclass{c} = \{ \vertex{0}{c}, \, \vertex{1}{c}, \, \vertex{2}{c}\}$ with $\sourcelevel_c = 0$ and $\targetlevel_c = 2$ corresponds to the center vertex of the covering at the intersection of all interfaces. The other interface vertices are in vertex classes with two elements, while the remaining vertex equivalence classes are singletons.
 
 \smallskip
 
@@ -1540,31 +1540,6 @@ Because the expected target levels $\tilde{\targetlevel}_{\coarseIdxtwo}$ are co
 \subsubsection{Padding}
 \label{subsec:padding}
 
-%\begin{figure}%[htbp]
-%    \centering
-%    \begin{subfigure}[b]{0.3\textwidth}
-%        \centering
-%        \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig2a.pdf}
-%        \caption{Covering after \textsc{Refine} step, cf. Figure~\ref{fig:pipeline_marking_c}}
-%    \end{subfigure}\hfill
-%    \begin{subfigure}[b]{0.3\textwidth}
-%        \centering
-%        \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig2b.pdf}
-%        \caption{Vertex pinch resolution, introduces inadmissible face}
-%    \end{subfigure}\hfill
-%    \begin{subfigure}[b]{0.3\textwidth}
-%        \centering
-%        \includegraphics[width=\textwidth]{images/pipeline/pipeline_fig2c.pdf}
-%        \caption{Face padding restores admissibility of all faces}
-%    \end{subfigure}
-%    \caption{\robert{Visualisation of the individual stages of the \textsc{Pad} step. (a) repeats
-%    Fig.~\ref{fig:pipeline_marking}(c), the partition before padding; (b) after
-%    $\textsc{ResolveVertexPinches}$, the centre pinch is gone; (c) after the
-%    inadmissible-faces pad, the one remaining inadmissible face is refined, giving the
-%    final admissible partition (grading does not fire here).}}
-%    \label{fig:pipeline_padding}
-%\end{figure}
-
 The \textsc{Refine} step in the previous section produces the covering $\C^{\mathrm{refine}}$. Crucially, $\C^{\mathrm{refine}}$ is not a subdivision partition because $\C^{\mathrm{refine}}$ might now contain pinch vertices or inadmissible faces. The \textsc{Pad} step repairs these defects and turns $\C^{\mathrm{refine}}$ in the subdivision partition $\C^{\mathrm{pad}}$. The goal is to keep the padded faces added during this process to a minimum to avoid inflating the number of DoFs in non-marked regions. The only exception is some grading that we apply around vertices whose covering star covers too many levels. This grading does not change the restored admissibility properties but improves the conditioning of the resulting matrix-vector system. This section covers all three kinds of padding one by one.
 
 The \textsc{Pad} needs no machinery beyond the covering star $\coveringStar$ and the two quadrisection operators $\quadriF{\C}$ and $\quadriV{\C}{\targetlevel}$ of Section~\ref{subsec:subdiv_partition} since every padding substep is a quadrisection of either a covering star of a vertex class or of inadmissible faces.
@@ -1582,7 +1557,7 @@ according to Definition~\ref{def:pinch_vertex}. The subdivision partition $\C^{\
 \end{equation}
 and $\C^0 = \C^\mathrm{refine}$ the subdivision partition after the \textsc{Refine} step and $\targetlevel_{\coarseIdxtwo_p}$ the target level of $\vertclass{\coarseIdxtwo_p}$ in $\C^p$. In words, for each pinched vertex $\vertclass{\coarseIdxtwo} \in \mathrm{V}_\C$, we homogenise its covering star to its target level, lifting the coarse arcs to $\targetlevel_{\coarseIdxtwo_p}$ and merging them into a single disc. 
 
-Every pinch vertex carries a cohomology defect. The severeness of the defect depends on the concrete configuration of the pinch, see Definition~\ref{def:pinch_vertex} and Figure~\ref{fig:pinches}. Section~\ref{subsec:exactness_atomic} later confirms that resolving the coarse region around a pinch vertex successfully repairs these defects.
+Every pinch vertex carries a cohomology defect. The severity of the defect depends on the concrete configuration of the pinch, see Definition~\ref{def:pinch_vertex} and Figure~\ref{fig:pinches}. Section~\ref{subsec:exactness_atomic} later confirms that resolving the coarse region around a pinch vertex successfully repairs these defects.
 
 \paragraph{Resolving inadmissible faces.}
 
@@ -1596,51 +1571,6 @@ according to Definition~\ref{def:admissible_face}. The subdivision partition $\C
     \C^{\mathrm{admissible}} = \quadriF{\F_{\mathrm{inadmissible}}} (\C^{\mathrm{pinch}}).
 \end{equation}
 In words, we refine every inadmissible face by one level because the refined faces are guaranteed to have an admissible vertex on level $\l+1$.
-
-% --- Figure knobs --------------------------------------------------------
-% \geScale : overall size -- width of EACH of the three subfigures as a
-%            fraction of \textwidth. Lower it if the row runs too wide.
-% \geVsep  : vertical gap between the two stacked images in each subfigure.
-% \geGap   : horizontal space on each side of the vertical divider line.
-%\newcommand{\geScale}{0.25}
-%\newcommand{\geVsep}{4pt}
-%\newcommand{\geGap}{8pt}
-% Helper: one subfigure = inexact image (top) stacked over exact image
-% (bottom), with its own caption. Swap the two image paths freely.
-%\newcommand{\gradingsubfig}[3]{% #1 inexact(top) #2 exact(bottom) #3 caption
-%    \begin{subfigure}[t]{\geScale\textwidth}
-%        \centering
-%        \includegraphics[width=\textwidth]{#1}\\[\geVsep]
-%        \includegraphics[width=\textwidth]{#2}
-%        \caption{#3}
-%    \end{subfigure}%
-%}
-% -------------------------------------------------------------------------
-%\begin{figure}[htbp]
-%    \centering
-%    \begin{tabular}{@{}c@{\hspace{\geGap}}|@{\hspace{\geGap}}c@{\hspace{\geGap}}|@{\hspace{\geGap}}c@{}}
-%        \gradingsubfig
-%            {images/exactness/v6_boundary_lvl1_input.pdf}   % inexact (top)
-%            {images/exactness/v6_boundary_lvl1_padded.pdf}  % exact (bottom)
-%            {Subfigure A caption.}
-%        &
-%        \gradingsubfig
-%            {images/exactness/v6_boundary_lvl2_input.pdf}   % inexact (top)
-%            {images/exactness/v6_boundary_lvl2_padded.pdf}  % exact (bottom)
-%            {Subfigure B caption.}
-%        &
-%        \gradingsubfig
-%            {images/exactness/v6_3rings_horseshoe_lvl2_input.pdf}   % inexact (top)
-%            {images/exactness/v6_3rings_horseshoe_lvl2_padded.pdf}  % exact (bottom)
-%            {Subfigure C caption.}
-%    \end{tabular}
-%    \caption{\robert{Grading versus inadmissible-faces padding. An already-exact horseshoe
-%    (open arc, no spurious harmonic) with a two-level jump: grading only raises the
-%    coarse arc by one level to satisfy $\mathrm{maxSpan}$, it does not refine it to
-%    the finest level, cleanly separating the conditioning role of grading from the
-%    admissibility role of inadmissible-faces padding.}}
-%    \label{fig:grading_example}
-%\end{figure}
 
 \paragraph{Grading covering stars.}
 
@@ -1666,7 +1596,7 @@ and $\C^0 = \C^{\mathrm{admissible}}$. Note the additional $-2$ in the quadrisec
 
 Every stage of the \textsc{Pad} step uses either the vertex-class based quadrisection operator $\quadriV{\C}{\targetlevel}$ or the face-based $\quadriF{\C}$.
 
-The pinch padding resolves pinch vertices and thus repairs cohomological artifacts and spurious harmonics, while the admissibility padding mostly restores linear independece of the active basis funtions $\activeDoFSet{k}{\C}$. The grading only refines around vertex classes with large level jumps to improve the conditioning of the resulting linear system.
+The pinch padding resolves pinch vertices and thus repairs cohomological artifacts and spurious harmonics, while the admissibility padding mostly restores linear independence of the active basis functions $\activeDoFSet{k}{\C}$. The grading only refines around vertex classes with large level jumps to improve the conditioning of the resulting linear system.
 
 Every rule only ever refines and adds a few faces that locally repair its violation, and no face is refined beyond level $\L$.
 
@@ -1709,7 +1639,7 @@ We do not \robert{(yet?)} have a proof that $\textsc{Pad}$ terminates. For our i
 
 \FloatBarrier
 
-\section{Numerical Experiment}
+\section{Numerical Experiments}
 \label{sec:numerical_experiments}
 
 This section verifies the properties of the adaptive subdivision $k$-form spaces $\hierSDFspace{k}{\C}{\L}$ and $\hierSDFspaceZero{k}{\C}{\L}$ predicted in Section~\ref{sec:construction_of_hierarchical_subdiv_spaces} and tests the adaptive loop presented in Section~\ref{subsec:adaptive_loop}. Section~\ref{subsec:exactness_atomic} illustrates how coverings with pinch vertices or inadmissible faces can break the de~Rham complex and linear independence, and how padding repairs the coverings. Section~\ref{subsec:maxwell} then confirms on the Maxwell eigenvalue problem that the spurious modes are confined to the eigenvalue $0$, implying that $\extd \circ \extd = 0$ pointwise for every covering. Section~\ref{subsec:vector_laplace} exercises the full adaptive loop on a vector Laplace problem with a singular solution. The emphasis throughout is on the admissibility of the adaptive subdivision $k$-form spaces, i.e. whether the active DoFs are linearly independent and preserve the cohomology of the de Rham complex, rather than on approximation rates.
@@ -1885,11 +1815,11 @@ This section confirms that the \textsc{Pad} step correctly restores the geometri
     \begin{subfigure}{\textwidth}
         \raggedright
         \begin{tabular}{@{}cc@{\hspace{2em}}cc@{}}
-            \atomicimg{images/exactness/v6_annulus_two_holes_input.pdf}  & \minitab{246}{698}{449}{245}{687}{438}{1}{5}{0} &
-            \atomicimg{images/exactness/v6_annulus_two_holes_padded.pdf} & \minitab{248}{687}{438}{248}{687}{438}{1}{2}{0} \\
+            \atomicimg{images/exactness/v6_annulus_two_holes_input.pdf}  & \minitab{250}{706}{453}{249}{695}{442}{1}{5}{0} &
+            \atomicimg{images/exactness/v6_annulus_two_holes_padded.pdf} & \minitab{252}{695}{442}{252}{695}{442}{1}{2}{0} \\
         \end{tabular}
         \centering
-        \caption{Two genuine holes (vertex-star deletion) plus scattered defects.}
+        %\caption{Covering with two holes and scattered defects.}
         \label{fig:genuine_holes}
     \end{subfigure}
     \caption{A covering with two holes and additional scattered pinch and inadmissible face defects, before (left) and after (right) padding. The padding step removes only the three-dimensional space of spurious harmonic $1$-form to restore the correct cohomology.}
@@ -2023,21 +1953,26 @@ The left panel~\ref{fig:cl_saturation_fig} compares the total estimator $\eta$ a
 
 Figure~\ref{fig:cl_l2_vs_dofs} reports the errors $\Ltwoerror^n$ depending on the number of active $1$-form DoFs $\vvert{\activeDoFSet{1}{}(\C^n)}$. Note that the figure also include the FEEC references $\FEECspace{1}{\L}$ (hollow squares). The errors of the adaptive method converge quickly in the first steps but as the estimators diverge from each other, the $L^2$ errors $\Ltwoerror^n$ start to plateau. We consider that plateau to be the converged state of the adaptive solver. Figure~\ref{fig:cl_l2_vs_dofs} and Table~\ref{tab:cl_headline} confirm that the converged adaptive solution with $\xi \leq 0.05$ has $3.3$, $4.6$ and $5.9$ times less $1$-form DoFs than the reference solutions of $\FEECspace{1}{\L}$ for $\L=3$, $4$ and $5$, respectively. Loosening the stopping criterion to $\xi\leq 0.3$ increases the DoF saving to $3.7$, $5.4$ and $9.3$, cf. Table~\ref{tab:cl_headline}.
 
+% Independently adjustable panel widths: panel (a) lost its y-axis label, which
+% shrinks its tight-cropped bounding box relative to panel (b), so the two may
+% need slightly different \textwidth fractions to come out the same height.
+\newcommand{\clSatWidth}{0.49\textwidth}
+\newcommand{\clLtwoWidth}{0.49\textwidth}
 \begin{figure}[tb]
     \centering
-    \begin{subfigure}[b]{0.49\textwidth}
+    \begin{subfigure}[t]{\clSatWidth}
         \centering
         \includegraphics[width=\textwidth]{images/laplace_case/fig_estimator_saturation.pdf}
-        \caption{Total and refinable estimators}
+        \caption{Total and refinable estimators over the number $\vvert{\activeDoFSet{1}{}(\C^n)}$ of active $1$-form DoFs}
         \label{fig:cl_saturation_fig}
     \end{subfigure}\hfill
-    \begin{subfigure}[b]{0.49\textwidth}
+    \begin{subfigure}[t]{\clLtwoWidth}
         \centering
         \includegraphics[width=\textwidth]{images/laplace_case/fig_l2_vs_dofs.pdf}
-        \caption{$L^2$ error versus active DoF count}
+        \caption{$L^2$ error over the number $\vvert{\activeDoFSet{1}{}(\C^n)}$ of active $1$-form DoFs}
         \label{fig:cl_l2_vs_dofs}
     \end{subfigure}
-    \caption{Panel (a) displays the total estimator $\eta$ and the refineable estimator $\rho$ against the number $\vert \activeDoFSet{1}{} \vert$ of active $1$-form DoFs for $\L \in \{3, 4, 5\}$. Every dot marks a step. Together, these estimators drive and eventually terminate the adaptive loop. Panel (b) shows the true $L^2$ error against $\vert \activeDoFSet{1}{} \vert$ for the adaptive methods (solid lines with dots to mark steps) and FEEC references $\FEECspace{1}{\L}$ (hollow squares) for $\L \in \{3, 4, 5\}$.}
+    \caption{Panel (a) displays the total estimator $\eta$ and the refineable estimator $\rho$ against the number $\vert \activeDoFSet{1}{} \vert$ of active $1$-form DoFs for $\L \in \{3, 4, 5\}$. Every hollow diamond marks a step. Together, these estimators drive and eventually terminate the adaptive loop. Panel (b) shows the true $L^2$ error against $\vert \activeDoFSet{1}{} \vert$ for the adaptive methods (solid lines with hollow diamonds to mark steps) and FEEC references $\FEECspace{1}{\L}$ (hollow squares) for $\L \in \{3, 4, 5\}$.}
     \label{fig:cl_convergence}
 \end{figure}
 
@@ -2128,7 +2063,7 @@ The adaptive method thus only wins in DoFs and memory, not wall-clock, with the 
     5 & $974.0\,\mathrm{s}$   & 10\,364  & 672 & 111.6 & 116.0 \\
     6 & $1380.9\,\mathrm{s}$  & 12\,178  & 692 & 103.2 & 106.2 \\
     \midrule
-    $\FEECspace{k}{4}$ & $10.6\,\mathrm{s}$   & $56\,833$ & 25  & 4.11  & 11.4  \\
+    FEEC reference $\FEECspace{k}{\L}$ & $10.6\,\mathrm{s}$   & $56\,833$ & 25  & 4.11  & 11.4  \\
     \bottomrule
   \end{tabular}
   \caption{Solve metrics for all steps of the adaptive simulation with $\L=4$. The fine superspace $\FEECspace{k}{4}$ is included as a reference. $\kappa(P^{-1}K_\C)$ is the estimated condition number of the preconditioned operator after unrefinement, see Equation~\ref{eq:FE_matrix_assembly} and the preconditioner $\mathbf{P}$ defined in Equation~\ref{eq:preconditioner} (\S~\ref{subsec:solve}). The term \emph{nnz} refers to the number of non-zero elements of a matrix, and to obtain $\mathrm{nnz}(K_\C)/(\vert \activeDoFSet{0}{} \vert + \vert \activeDoFSet{1}{} \vert)$ we normalised by the number of active DoFs.}
