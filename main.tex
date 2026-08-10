@@ -842,51 +842,53 @@ The requirements of linear indepence and expressing exterior differentials have 
 %  COLUMN X POSITIONS
 % ============================================================
 \def\xA{0cm}
-\def\xB{3.9cm}
-\def\xC{7.8cm}
+\def\xB{3.7cm}
+\def\xC{7.4cm}
 
 % ============================================================
 %  ROW Y POSITIONS
 % ============================================================
+% Panels are 0.20\textwidth = 3.20cm wide and, at the generator's 90.71:79.24
+% aspect, 2.80cm tall -- so rows must clear 2.80cm or they overlap.
 \def\yOne{0cm}
-\def\yTwo{-2.4cm}
-\def\yThree{-4.8cm}
+\def\yTwo{-3.05cm}
+\def\yThree{-6.1cm}
 
 % ============================================================
 %  ROW 1
 % ============================================================
 \node (A1) at (\xA, \yOne)
-    {\includegraphics[width=0.22\textwidth]{images/dofmeshes/correct/dofs_k_0_lvl_l0.pdf}};
+    {\includegraphics[width=0.20\textwidth]{images/dofmeshes/two_level_interface/dofs_k_0_lvl_l0.pdf}};
 
 \node (B1) at (\xB, \yOne)
-    {\includegraphics[width=0.22\textwidth, trim=10pt 0pt 10pt 0pt, clip]{images/dofmeshes/correct/dofs_k_1_lvl_l0.pdf}};
+    {\includegraphics[width=0.20\textwidth]{images/dofmeshes/two_level_interface/dofs_k_1_lvl_l0.pdf}};
 
 \node (C1) at (\xC, \yOne)
-    {\includegraphics[width=0.22\textwidth]{images/dofmeshes/correct/dofs_k_2_lvl_l0.pdf}};
+    {\includegraphics[width=0.20\textwidth]{images/dofmeshes/two_level_interface/dofs_k_2_lvl_l0.pdf}};
 
 % ============================================================
 %  ROW 2
 % ============================================================
 \node (A2) at (\xA, \yTwo)
-    {\includegraphics[width=0.22\textwidth]{images/dofmeshes/correct/dofs_k_0_lvl_l1.pdf}};
+    {\includegraphics[width=0.20\textwidth]{images/dofmeshes/two_level_interface/dofs_k_0_lvl_l1.pdf}};
 
 \node (B2) at (\xB, \yTwo)
-    {\includegraphics[width=0.22\textwidth, trim=10pt 0pt 10pt 0pt, clip]{images/dofmeshes/correct/dofs_k_1_lvl_l1.pdf}};
+    {\includegraphics[width=0.20\textwidth]{images/dofmeshes/two_level_interface/dofs_k_1_lvl_l1.pdf}};
 
 \node (C2) at (\xC, \yTwo)
-    {\includegraphics[width=0.22\textwidth]{images/dofmeshes/correct/dofs_k_2_lvl_l1.pdf}};
+    {\includegraphics[width=0.20\textwidth]{images/dofmeshes/two_level_interface/dofs_k_2_lvl_l1.pdf}};
 
 % ============================================================
 %  ROW 3
 % ============================================================
 \node (A3) at (\xA, \yThree)
-    {\includegraphics[width=0.22\textwidth]{images/dofmeshes/correct/dofs_k_0_lvl_l2.pdf}};
+    {\includegraphics[width=0.20\textwidth]{images/dofmeshes/two_level_interface/dofs_k_0_lvl_l2.pdf}};
 
 \node (B3) at (\xB, \yThree)
-    {\includegraphics[width=0.22\textwidth, trim=10pt 0pt 10pt 0pt, clip]{images/dofmeshes/correct/dofs_k_1_lvl_l2.pdf}};
+    {\includegraphics[width=0.20\textwidth]{images/dofmeshes/two_level_interface/dofs_k_1_lvl_l2.pdf}};
 
 \node (C3) at (\xC, \yThree)
-    {\includegraphics[width=0.22\textwidth]{images/dofmeshes/correct/dofs_k_2_lvl_l2.pdf}};
+    {\includegraphics[width=0.20\textwidth]{images/dofmeshes/two_level_interface/dofs_k_2_lvl_l2.pdf}};
 
 % ============================================================
 %  COLUMN LABELS (above row 1)
@@ -915,14 +917,19 @@ The requirements of linear indepence and expressing exterior differentials have 
 % ============================================================
 %  GRAPHIC ABOVE THE OVERBRACE
 % ============================================================
-\node (topfig) at (3.9cm, 4.0cm)
-    {\includegraphics[width=0.3\textwidth]{images/dofmeshes/correct/subdiv_partition.pdf}};
+% 0.3\textwidth = 4.80cm wide, 4.19cm tall; sits clear of the brace above row 1.
+\node (topfig) at (3.7cm, 4.5cm)
+    {\includegraphics[width=0.2\textwidth]{images/dofmeshes/two_level_interface/subdiv_partition.pdf}};
 
-\node[above=6pt of topfig, font=\bfseries] {covering};
+\node[above=2pt of topfig] {2D representation of domain sequence};
 
 \end{tikzpicture}
 \end{center}
-\caption{Active $k$-form DoFs for a covering with patches at level $0$, $1$ and $2$ shown at the top. Columns correspond to the form degree $k = 0$ (vertices, dark circles), $k = 1$ (edges, orange), and $k = 2$ (faces, green) of the active DoFs chosen according to Definition~\ref{def:active_k_form_dofs}. Rows correspond to active DoFs on levels $\l \in \{0, 1, 2\}$ respectively. At each level, the patch DoFs are activated alongside the interface DoFs that overlap the coarser patch of the interface.}
+\caption{\guidance{Active $k$-form DoFs for the covering shown at the top, in which the upper half of the mesh is refined once and the two left-most spoke regions of that half are refined again, so that the covering carries a level $0$ to level $2$ interface across the horizontal axis. The covering is drawn as a subdivision partition: every face whose finer children are present has been dropped, so each point of the domain is covered exactly once and the grey shade of a face gives the level it is taken from, light to dark for $\l = 0, 1, 2$.
+%
+Columns correspond to the form degree $k = 0$ (vertices), $k = 1$ (edges) and $k = 2$ (faces); rows to the level $\l \in \{0, 1, 2\}$. Each panel shows the \emph{entire} uniform mesh $\T_\l$ of its level, shaded in that level's grey, together with the DoFs of that level alone: blue for the DoFs the selection of Definition~\ref{def:active_k_form_dofs} retains at level $\l$, red for those it removes again because the region carrying them is refined further. Consequently the upper half is red at $\l = 0$, the two left-most spoke regions are red at $\l = 1$, and nothing is removed at the finest level $\l = 2$.
+%
+The coloured outlines track the regions through the refinement, each keeping its colour from the level where it is still coarse to the level where it appears refined: orange bounds the region refined at $\l = 0$ and, one row below, the refinement of that same region; green does likewise for the region refined at $\l = 1$. At $\l = 1$ the green region is therefore nested inside the orange one.}}
 \label{fig:active_dofs}
 \end{figure}
 
@@ -1750,7 +1757,7 @@ Figures~\ref{fig:pinch_resolution} and~\ref{fig:admissibility_padding} show the 
 
 We can identify two trends in the data that are consistent with the theoretical predictions. First, Figure~\ref{fig:pinch_resolution} shows that vertex pinches lead to spurious $1$-form harmonics but do not introduce any linear dependencies since $\vert \activeDoFSet{k}{} \vert = \mathrm{dim}(\hierSDFspace{k}{\C}{\L})$ in any case, before and after padding. We can observe that padding indeed removes these spurious $1$-form harmonics.
 
-The individual panels show that the dimensions $\mathrm{dim}(\mathcal{H}^1)$ of the spurious harmonic $1$-form spaces increase with the level difference of target level and the second finest level of the faces in the covering star of the pinch vertex. For instance, the covering in Figure~\ref{fig:pinch_level_1} has a pinch on level $1$ with the next finest level being $0$. This leads to $\mathrm{dim}(\mathcal{H}^1) \! = \! 1$. In contrast, Figure~\ref{fig:pinch_level_2} has its pinch on level $2$ and $\mathrm{dim}(\mathcal{H}^1) \! = \! 2$. Figure~\ref{fig:pinch_mixed_level} also has a pinch on level $2$ but the second finest level is $1$, and hence $\mathrm{dim}(\mathcal{H}^1) \! = \! 1$ again.
+The individual panels show that the dimensions $\mathrm{dim}(\mathcal{H}^1)$ of the spurious harmonic $1$-form spaces increase with the level difference of the target level and the \guidance{coarsest} level of the faces in the covering star of the pinch vertex. For instance, the covering in Figure~\ref{fig:pinch_level_1} has a pinch on level $1$ with the \guidance{coarsest} level being $0$. This leads to $\mathrm{dim}(\mathcal{H}^1) \! = \! 1$. In contrast, Figure~\ref{fig:pinch_level_2} has its pinch on level $2$ and $\mathrm{dim}(\mathcal{H}^1) \! = \! 2$. \guidance{Figure~\ref{fig:pinch_mixed_level} also has a pinch on level $2$, but its two coarse arcs mix the levels $0$ and $1$. It is the coarsest level $0$ in the star that sets the dimension, not the second finest level $1$: we again observe $\mathrm{dim}(\mathcal{H}^1) \! = \! 2$, and not $1$.}
 
 The dimensions $\mathrm{dim}(\mathcal{H}^1)$ of the spurious harmonic $1$-form spaces also increase with the number $\gamma$ of fine arcs around the pinch, see Definition~\ref{def:pinch_vertex}. Figure~\ref{fig:pinch_level_1} has $\gamma = 2$ and $\mathrm{dim}(\mathcal{H}^1) = 1$, while Figure~\ref{fig:double_pinch} has $\gamma = 3$ and $\mathrm{dim}(\mathcal{H}^1) \!=\! 2$.
 
@@ -1758,15 +1765,15 @@ Figure~\ref{fig:pinch_resolution_boundary_pinches} presents data of the spaces $
 
 \smallskip
 
-The second observation is concerned with inadmissible faces and the defects they cause. The covering in Figure~\ref{fig:coarse_ring} exhibits both linear dependence and spurious cohomology. The active $0$-form DoFs have $1$ linear dependence, while the $1$-form and $2$-form DoFs have $18$ linear dependencies each. Further, we find $\mathrm{dim}(\mathcal{H}^1) \!=\! 1$. The padding step refines the entire coarse loop from level $0$ to level $1$.
+The second observation is concerned with inadmissible faces and the defects they cause. \guidance{The covering in Figure~\ref{fig:coarse_ring} exhibits linear dependence in every form degree: the active $0$-form DoFs have $18$ linear dependencies, the $1$-form DoFs have $36$, and the $2$-form DoFs have $18$. The cohomology, on the other hand, is already correct on the input covering, $\mathrm{dim}(\mathcal{H}^1) \!=\! 0$, so a closed coarse loop of inadmissible faces costs us linear independence without creating a spurious harmonic.} The padding step refines the entire coarse loop from level $0$ to level $1$.
 
-The covering in Figure~\ref{fig:horsehoe} opens the loop and decouples the two modes of failure: We observe linear dependencies but no spurious harmonics. The linear dependencies split into $3$ $0$-form DoFs, $18$ $1$-form DoFs, and $15$ $2$-form DoFs. The padding space removes these linearly dependent DoFs while maintaining the correct cohomology.
+\guidance{The covering in Figure~\ref{fig:horsehoe} opens the loop, and the picture is the same: linear dependencies but no spurious harmonics. They split into $17$ $0$-form DoFs, $31$ $1$-form DoFs, and $15$ $2$-form DoFs.} The padding space removes these linearly dependent DoFs while maintaining the correct cohomology.
 
 Finally, Figure~\ref{fig:nested_center} shows the prototypical configuration around a vertex that has been refined gradedly by the vertex quadrisection operator from Definition~\ref{def:vertex_quadrisection_operator}. We see that the covering has no inadmissible faces since all vertices become interior at just the right level, see Figure~\ref{fig:covering_interior_vertices}. This means that we can run the \textsc{Pad} step unconditionally in the adaptive loop without any risks of over-refining regions that are already admissible.
 
 \smallskip
 
-Every covering considered so far is a topological disk, so the only harmonic $1$-forms observed have been the defect-driven ones that padding removes. Figure~\ref{fig:genuine_cohomology} shows a covering with a non-trivial topology (two holes). The input covering has $11$ linearly dependent $1$-form DoFs and $\mathrm{dim}(\mathcal{H}^1) \!=\! 5$. After padding, all DoFs are independent again and $\mathrm{dim}(\mathcal{H}^1) \!=\! 2$ exactly. The padding removed the $3$ spurious harmonics while leaving both genuine harmonics untouched.
+Every covering considered so far is a topological disk, so the only harmonic $1$-forms observed have been the defect-driven ones that padding removes. Figure~\ref{fig:genuine_cohomology} shows a covering with a non-trivial topology (two holes). \guidance{The input covering has $15$ linearly dependent $1$-form DoFs and $\mathrm{dim}(\mathcal{H}^1) \!=\! 4$. After padding, all DoFs are independent again and $\mathrm{dim}(\mathcal{H}^1) \!=\! 2$ exactly. The padding removed the $2$ spurious harmonics while leaving both genuine harmonics untouched.}
 
 \smallskip
 
@@ -1777,7 +1784,7 @@ This section confirms that the \textsc{Pad} step correctly restores the geometri
     \begin{subfigure}{\textwidth}
         \raggedright
         \begin{tabular}{@{}cc@{\hspace{2em}}cc@{}}
-            \atomicimg{images/exactness/v6_3rings_inner_outer_refined_input.pdf}  & \minitab{127}{360}{234}{126}{342}{216}{1}{1}{0} &
+            \atomicimg{images/exactness/v6_3rings_inner_outer_refined_input.pdf}  & \guidance{\minitab{145}{378}{234}{127}{342}{216}{1}{0}{0}} &
             \atomicimg{images/exactness/v6_3rings_inner_outer_refined_padded.pdf} & \minitab{127}{342}{216}{127}{342}{216}{1}{0}{0} \\
         \end{tabular}
         \centering
@@ -1788,7 +1795,7 @@ This section confirms that the \textsc{Pad} step correctly restores the geometri
     \begin{subfigure}{\textwidth}
         \raggedright
         \begin{tabular}{@{}cc@{\hspace{2em}}cc@{}}
-            \atomicimg{images/exactness/v6_3rings_horseshoe_lvl2_input.pdf}  & \minitab{433}{1259}{827}{430}{1241}{812}{1}{0}{0} &
+            \atomicimg{images/exactness/v6_3rings_horseshoe_lvl2_input.pdf}  & \guidance{\minitab{447}{1272}{827}{430}{1241}{812}{1}{0}{0}} &
             \atomicimg{images/exactness/v6_3rings_horseshoe_lvl2_padded.pdf} & \minitab{430}{1241}{812}{430}{1241}{812}{1}{0}{0} \\
         \end{tabular}
         \centering
@@ -1815,14 +1822,14 @@ This section confirms that the \textsc{Pad} step correctly restores the geometri
     \begin{subfigure}{\textwidth}
         \raggedright
         \begin{tabular}{@{}cc@{\hspace{2em}}cc@{}}
-            \atomicimg{images/exactness/v6_annulus_two_holes_input.pdf}  & \minitab{250}{706}{453}{249}{695}{442}{1}{5}{0} &
-            \atomicimg{images/exactness/v6_annulus_two_holes_padded.pdf} & \minitab{252}{695}{442}{252}{695}{442}{1}{2}{0} \\
+            \atomicimg{images/exactness/v6_annulus_two_holes_input.pdf}  & \guidance{\minitab{241}{673}{428}{235}{658}{420}{1}{4}{0}} &
+            \atomicimg{images/exactness/v6_annulus_two_holes_padded.pdf} & \guidance{\minitab{241}{668}{426}{241}{668}{426}{1}{2}{0}} \\
         \end{tabular}
         \centering
         %\caption{Covering with two holes and scattered defects.}
         \label{fig:genuine_holes}
     \end{subfigure}
-    \caption{A covering with two holes and additional scattered pinch and inadmissible face defects, before (left) and after (right) padding. The padding step removes only the three-dimensional space of spurious harmonic $1$-form to restore the correct cohomology.}
+    \caption{A covering with two holes and additional scattered pinch and inadmissible face defects, before (left) and after (right) padding. \guidance{The padding step removes only the two-dimensional space of spurious harmonic $1$-forms to restore the correct cohomology.}}
     \label{fig:genuine_cohomology}
 \end{figure}
 
