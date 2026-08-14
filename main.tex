@@ -314,6 +314,8 @@ Werner Bauer\footnote{University of Surrey, School of Mathematics and Physics, U
 \newtheorem{remark}[theorem]{Remark}
 \newtheorem{assumption}[theorem]{Assumption}
 \newtheorem{numberedproof}[theorem]{Proof}
+\newtheorem{problem}[theorem]{Problem}
+\newtheorem{conjecture}[theorem]{Conjecture}
 
 
 %% adjust equation numbering to IMA style
@@ -363,6 +365,7 @@ Werner Bauer\footnote{University of Surrey, School of Mathematics and Physics, U
 % --- admissibility predicates (adaptive_theory:1819, :1810) ---
 \newcommand{\refFan}[1]{\Theta_{#1}}                        % refinement fan of a vertex
 \newcommand{\birthLevel}{b}
+\newcommand{\leafF}[1]{\F^{\mathrm{leaf}}_{#1}}             % leaf (uncovered) faces on a level
 
 % --- the admissible class, re-based on domain sequences (adaptive_theory:270--272).
 % \allcoverings and \allpartitions previously read \mathscr{C} and \mathscr{C}^{sp};
@@ -623,7 +626,7 @@ $\circ$ & Linear independence & Theorem~\ref{theorem:linear_independence} (Secti
 \addlinespace
 $\bullet$ & Nestedness under refinement & Equation~\eqref{eq:quadrisection_monotone} & --- \\
 \addlinespace
-$\times$ & Bounded, local padding & Section~\ref{subsec:padding} (no termination proof) & Table~\ref{tab:padding_interface_L4} \\
+$\times$ & Bounded, local padding & \guidance{Proposition~\ref{prop:padding_terminates}} & Table~\ref{tab:padding_interface_L4} \\
 \addlinespace
 $\times$ & DoF efficiency versus uniform & --- & Table~\ref{tab:cl_headline} \\
 \addlinespace
@@ -1224,155 +1227,6 @@ The other essential properties of the adaptive $k$-form subdivision spaces, name
 
 \FloatBarrier
 
-\subsection{Operations on domain sequences}
-\label{subsec:operations_on_coverings}
-
-This section develops the necessary concepts to describe the two particular configurations that compromise linear independence and the cohomology of the complex. These foundations enable us to introduce the geometric predicates of pinch vertices and inadmissible faces in Section~\ref{subsec:subdiv_partition} which allow us to constrain the geometry of domain sequences and indicate the need for padding in the adaptive loop in Section~\ref{subsec:adaptive_loop}.
-
-\smallskip
-
-\robert{Note that the set of covering-interior vertices of $\C$ does not only contain the interior vertices of the patches of $\C$ but can also contain interface vertices and vertices on the boundary $\partial \C$. For example, Figure~\ref{fig:covering_interior_vertices} displays a domain sequence with nested refinement up to level $3$ towards its center. The vertices are colored by the level at which they become covering-interior. The outermost layer is covering-interior from level $0$ because its covering star contains only faces on level $0$. The next layer is covering-interior from level $1$ because the covering stars of its vertex classes contains only faces on level $0$ and $1$. This logic applies to all layers in the figure until we reach the finest level $3$, at which all the remaining vertex classes become covering-interior.}
-
-\smallskip
-
-The remainder of this section introduces operators that enable the kinds of refinement that we will later need for the adaptive loop in Section~\ref{subsec:adaptive_loop}. The \emph{face quadrisection operator} $\quadriF(\C, \simplexsubset{2}{\l})$ refines a \emph{single-level} set of faces $\simplexsubset{2}{\l} \subseteq \F(\C_\l)$ to level $\l+1$ by replacing each face with its four children, that is, it removes the faces $\simplexsubset{2}{\l}$ from level $\l$ and adds their children on level $\l+1$, leaving all other levels untouched.
-
-\guidance{
-\begin{definition}[Face quadrisection operator]
-    \label{def:face_quadrisection_operator}
-    Let $\domseq{\L} \in \alldomseqs$ be a domain sequence with regions $\M_\l$,
-    $\l \in \{ \lzero, \, \dots \,, \L\}$, and let $\simplexsubset{2}{\l} \subseteq \F_\l(\M_\l)$
-    be a set of faces marked for refinement. The \emph{face quadrisection operator}
-    \begin{equation}
-        \quadriF \; \colon \; \alldomseqs \times \powerset\big( \F_\l \big) \; \longrightarrow \; \alldomseqs
-    \end{equation}
-    is defined by
-    \begin{equation}
-        \label{eq:def_face_quadrisection_operator}
-        \quadriF \big( \domseq{\L}, \, \simplexsubset{2}{\l} \big) \coloneq \M_{\leq\l} \; \cup \; \big( \M_{\l+1} \cup \Aop{}{\l}{\l+1}(\simplexsubset{2}{\l}) \big) \; \cup \; \M_{\geq \l+2}.
-    \end{equation}
-\end{definition}
-
-Note that if $\simplexsubset{2}{\l} \subseteq \ancestorPatch{\M_{\l+1}}$, then
-$\quadriF ( \domseq{\L}, \simplexsubset{2}{\l} ) = \domseq{\L}$ is the identity because all
-marked faces on level $\l$ already are in the domain sequence's region on level $\l+1$.
-
-Restricting the second argument to the inadmissible faces sharpens the image, which is what
-the \textsc{Pad} step of Section~\ref{subsec:padding} relies on.
-
-\begin{lemma}[Admissibility padding preserves refinement exteriority]
-    \label{lemma:quadriF_preserves_admissibility}
-    Let $\domseq{\L} \in \alldomseqs$ and let
-    $\F^{\mathrm{inad}}_\l \subseteq \F_\l(\M_\l)$ be the set of \emph{all} inadmissible faces on
-    level $\l$. Then a vertex $\vertex{\l}{\coarseIdxone} \in \V_\l(\T_\l)$ is refinement-exterior
-    in $\quadriF ( \domseq{\L}, \F^{\mathrm{inad}}_\l )$ if and only if it is refinement-exterior in
-    $\domseq{\L}$. Consequently every face admissible in $\domseq{\L}$ remains admissible, and
-    \begin{equation}
-        \quadriF \big( \cdot, \, \F^{\mathrm{inad}}_\l \big) \; \colon \; \alldomseqs \; \longrightarrow \;
-        \big\{ \domseq{\L} \in \alldomseqs \; : \; \text{clause (i) of Definition~\ref{def:subdiv_partition} holds on level } \l \big\}.
-    \end{equation}
-\end{lemma}
-\begin{proof}
-    Refinement fans only grow under $\quadriF$, so a vertex that is not refinement-exterior in
-    $\domseq{\L}$ is not refinement-exterior afterwards; only the converse direction has content.
-    Let $\vertex{\l}{\coarseIdxone}$ be refinement-exterior in $\domseq{\L}$ and suppose some
-    $\face{\l}{\coarseIdxtwo} \in \F^{\mathrm{inad}}_\l$ were incident to it. By
-    Definition~\ref{def:admissible_face} an inadmissible face has \emph{no} refinement-exterior
-    vertex, contradicting the assumption on $\vertex{\l}{\coarseIdxone}$. Hence no face of
-    $\F^{\mathrm{inad}}_\l$ touches a refinement-exterior vertex, so
-    $\refFan{\l}(\vertex{\l}{\coarseIdxone})$ is unchanged and stays empty.
-
-    Every admissible face therefore keeps its refinement-exterior witness. The refined faces
-    themselves leave level $\l$; their children are admissible on level $\l+1$, since the middle
-    child's three vertices are the parent's edge midpoints, which are created at level $\l+1$ and
-    are refinement-exterior there whenever $\M_{\l+2}$ is unchanged by this step.
-\end{proof}
-
-The lemma does \emph{not} extend to the full admissibility of
-Definition~\ref{def:subdiv_partition}. Enlarging a refinement fan can raise the number of its
-maximal runs --- an empty fan $[\,u\,u\,u\,u\,u\,u\,]$ refined in positions $1$ and $4$ becomes
-$[\,r\,u\,u\,r\,u\,u\,]$, two refinement arcs --- so admissibility padding can create pinch
-vertices, and clause~(ii) may fail on the image. Together with
-Remark~\ref{rem:padding_order}, which records the opposite failure, the two repairs violate one
-another's invariants in both directions. This is exactly why \textsc{Pad} iterates rather than
-terminating after one sweep, and why $\allpartitions$ is characterised as the set of fixed points
-of that iteration.}
-
-\robert{In contrast to the that, the \emph{vertex quadrisection operator} $\quadriV{\targetlevel}(\C, \coveringStar(\vertclass{\coarseIdxtwo}))$ refines a whole covering star by nested face quadrisections from the source level $\sourcelevel_\coarseIdxtwo$ to the target level $\targetlevel_\coarseIdxtwo$.}
-
-\begin{definition}[Vertex quadrisection operator]
-    \label{def:vertex_quadrisection_operator_birth_level}
-    Let $\domseq{\L} \in \alldomseqs$ and let $\vertex{\l}{\coarseIdxtwo}$ be a vertex with birth level $\birthLevel_\coarseIdxtwo$. Choose a target level $\targetlevel$ with
-    $\birthLevel_\coarseIdxtwo \leq \targetlevel \leq \L$. The \emph{vertex quadrisection operator}
-    \begin{equation}
-        \quadriV{\targetlevel} \; \colon \; \alldomseqs \times \V \; \longrightarrow \; \alldomseqs
-    \end{equation}
-    is constructed by iteratively vertex stars:
-    \begin{enumerate}[topsep=3pt, itemsep=-2pt]%[nolistsep]
-        \item initialise $\C^{\birthLevel_\coarseIdxtwo} = \domseq{\L}$,
-        \item for $\l = \birthLevel_\coarseIdxtwo, \, \dots, \, \targetlevel - 1$, apply the face quadrisection operator to the level-$\l$ part of the star of $\vertex{\l}{\coarseIdxtwo}$ \emph{in the current sequence} $\C^\l$, i.e.
-        \begin{equation}
-            \label{eq:vertex_quadrisection}
-            \C^{\l+1} = \quadriF \big( \C^\l, \; \FVl{\l}(\vertex{\l}{\coarseIdxtwo}) \cap \M_\l \big),
-        \end{equation}
-        \vspace{-7mm}
-        \item set $\quadriV{\targetlevel} \big( \domseq{\L}, \vertex{\l}{\coarseIdxtwo} \big) \coloneq \C^{\targetlevel}$.
-    \end{enumerate}
-    The target level rides on the operator rather than in an argument slot, since it selects
-    \emph{which} map is applied rather than what it is applied to.
-\end{definition}
-
-% --- Figure knobs: covering star, quadrisection, and interior-vertex examples (single row, no dividers) ---
-\newcommand{\cvScale}{0.22}
-% #1 (optional) panel width as a fraction of \textwidth, default \cvScale --
-% override per panel when its image has a different aspect ratio (e.g. a
-% colorbar widens the PDF at the same height) and would otherwise come out
-% shorter/taller than the rest once every panel is fit to the same width.
-\newcommand{\cvsubfig}[4][\cvScale]{% #1 width fraction  #2 image path  #3 caption  #4 label
-    \begin{subfigure}[t]{#1\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{#2}
-        \caption{#3}
-        \label{#4}
-    \end{subfigure}%
-}
-% -------------------------------------------------------------------------
-\begin{figure}
-    \centering
-    \cvsubfig
-        {images/visualisations/neighbour-neighbour_input_with_covering_star.pdf}
-        {The covering star $\coveringStar(\vertclass{\coarseIdxtwo})$ of a mixed-level vertex class $\vertclass{\coarseIdxtwo}$}
-        {fig:covering_star}
-    \hfill
-    \cvsubfig
-        {images/visualisations/neighbour-neighbour_refined_with_covering_star.pdf}
-        {The covering star from (a) after applying $\quadriV{\targetlevel_\coarseIdxtwo + 1}(\C, \vertclass{\coarseIdxtwo})$}
-        {fig:covering_star_refined}
-    \hfill
-    \cvsubfig[0.2613] % = \cvScale * (163.462/119.43) / (111.283/96.5664) -- panel-3-to-common PDF aspect-ratio (width/height, via pdfinfo) times \cvScale
-        {images/visualisations/v6_nested_center_lvl3_input_with_interior_verts.pdf}
-        {Vertices coloured by the level at which they are covering-interior}
-        {fig:covering_interior_vertices}
-    \hfill
-    \cvsubfig
-        {images/visualisations/v6_3rings_horseshoe_input_with_inadmissible_faces.pdf}
-        {Domain sequence with inadmissible faces on level $\lzero$ (Definition~\ref{def:admissible_face})}
-        {fig:inadmissible_faces}
-    \caption{Visualisations and examples for covering stars and their quadrisection, covering-interior vertices and inadmissible faces.}
-    \label{fig:visualisations}
-\end{figure}
-
-Recomputing the covering star of $\vertclass{\coarseIdxtwo}$ of $\C^\l$ at each step is what drags the coarse faces up through \emph{every} intermediate level up to $\targetlevel$. The two operators are distinguished by their superscript: $\quadriF$ refines a set of faces flatly from level $\l$ to $\l\!+\!1$, while $\quadriV{\targetlevel}$ refines a star gradedly toward its vertex class, and thus only the graded vertex quadrisection operator carries a target level. Figure~\ref{fig:covering_star_refined} displays the result of applying $\quadriV{\targetlevel\coarseIdxtwo + 1}(\C, \vertclass{\coarseIdxtwo})$ to the covering star from Figure~\ref{fig:covering_star}. It first homogenises the neighbourhood of $\vertclass{\coarseIdxtwo}$ to its target level $\targetlevel_\coarseIdxtwo$ and then applies one more level of refinement to the now homogeneous active faces on level $\targetlevel_\coarseIdxtwo$ adjacent to $\vertclass{\coarseIdxtwo}$.
-
-The quadrisection operators enable consistent refinement of the adaptive subdivision $k$-form spaces $\hierSDFspace{k}{\C}{\L}$ in the sense that
-\begin{equation}
-    \label{eq:quadrisection_monotone}
-    \hierSDFspace{k}{\C}{\L} \subseteq \hierSDFspace{k}{\quadriF(\C, \simplexsubset{2}{\l})}{\L} \qquad \text{and} \qquad \hierSDFspace{k}{\C}{\L} \subseteq \hierSDFspace{k}{\quadriV{\targetlevel}(\C, \vertclass{\coarseIdxtwo})}{\L}.
-\end{equation}
-The quadrisection operators defined in this section are the basis upon which we will later built the algorithms in the adaptive loop in Section~\ref{subsec:adaptive_loop}.
-
-\FloatBarrier
-
 \subsection{Admissible domain sequences and properties of the adaptive spaces}
 \label{subsec:subdiv_partition}
 
@@ -1399,9 +1253,23 @@ The refinement fan allows us to state the two important geometric predicates for
     Let $\domseq{\L}$ be a domain sequence. A vertex $\vertex{\l}{\coarseIdxone} \in \V_\l(\T_\l)$ is \emph{refinement-exterior} at level $\l$ if its refinement fan in $\domseq{\L}$ is empty on that level, i.e. $\refFan{\l} \big( \vertex{\l}{\coarseIdxone} \big) = \varnothing$.
 \end{definition}
 
+\guidance{The predicate below is evaluated on the \emph{leaf faces} of a level, that is, on the
+faces of the region $\M_\l$ that are not themselves refined further,
+\begin{equation}
+    \label{eq:leaf_faces}
+    \leafF{\l}(\domseq{\L}) \coloneq \F_\l(\M_\l) \setminus \ancestorPatch{\M_{\l+1}}.
+\end{equation}
+The restriction is not cosmetic. A face $\face{\l}{\coarseIdxone} \in \ancestorPatch{\M_{\l+1}}$ lies
+in the refinement fan of each of its three vertices, so none of them is refinement-exterior at
+level $\l$ and the face would be inadmissible by the letter of the predicate --- for every
+domain sequence that refines anywhere, and irreparably, since quadrisecting a face that is
+already refined is the identity by the remark after
+Definition~\ref{def:face_quadrisection_operator}. Covered faces carry no active DoFs of their
+own, which is why they cannot host a linear dependency and are exempt.}
+
 \begin{definition}[Admissible face]
     \label{def:admissible_face}
-    A face $\face{\l}{\coarseIdxone} \in \F(\domseq{\L})$ is \emph{admissible} if at least one of its vertices is
+    A leaf face $\face{\l}{\coarseIdxone} \in \leafF{\l}(\domseq{\L})$ is \emph{admissible} if at least one of its vertices is
     refinement-exterior at level $\l$. Otherwise, it is \emph{inadmissible}.
 \end{definition}}
 
@@ -1505,7 +1373,7 @@ The two predicates allow us to define \emph{admissible domain sequences} as a su
     \label{def:subdiv_partition}
     A domain sequence $\domseq{\L}(\T_\L)$ is an \emph{admissible domain sequence} iff
     \begin{itemize}
-        \item[(i)] every face of $\domseq{\L}$ is admissible,
+        \item[(i)] every leaf face of $\domseq{\L}$ is admissible,
         \item[(ii)] no vertex of $\domseq{\L}$ is a pinch vertex,
         \item[(iii)] no domain boundary vertex of $\domseq{\L}$ is a boundary pinch vertex.
     \end{itemize}
@@ -1534,6 +1402,208 @@ Finally, we are going to re-state the two main theorems of \cite{companion_paper
 \end{proof}
 
 Admissible domain sequences respect the geometric constraints necessary for linear independence and reproducing the correct cohomology. Unfortunately, in contrast to general domain sequences $\allcoverings$, admissible domain sequences are not closed under the quadrisection operator $\quadriF(\C, \cdot)$ and $\quadriV{\targetlevel}(\C, \cdot)$, meaning that they are maps $\allpartitions \to \allcoverings$. Thus, naive refinement of admissible domain sequences can reintroduce inadmissible geometry, for example a pinch vertex. This is exactly why Section~\ref{subsec:adaptive_loop} sets up a padding step that repairs these geometric defects and turns the domain sequence into a admissible domain sequence again.
+
+\FloatBarrier
+
+\subsection{Refinement operations on domain sequences}
+\label{subsec:operations_on_coverings}
+
+This section develops the necessary concepts to describe the two particular configurations that compromise linear independence and the cohomology of the complex. These foundations enable us to introduce the geometric predicates of pinch vertices and inadmissible faces in Section~\ref{subsec:subdiv_partition} which allow us to constrain the geometry of domain sequences and indicate the need for padding in the adaptive loop in Section~\ref{subsec:adaptive_loop}.
+
+\smallskip
+
+\robert{Note that the set of covering-interior vertices of $\C$ does not only contain the interior vertices of the patches of $\C$ but can also contain interface vertices and vertices on the boundary $\partial \C$. For example, Figure~\ref{fig:covering_interior_vertices} displays a domain sequence with nested refinement up to level $3$ towards its center. The vertices are colored by the level at which they become covering-interior. The outermost layer is covering-interior from level $0$ because its covering star contains only faces on level $0$. The next layer is covering-interior from level $1$ because the covering stars of its vertex classes contains only faces on level $0$ and $1$. This logic applies to all layers in the figure until we reach the finest level $3$, at which all the remaining vertex classes become covering-interior.}
+
+\smallskip
+
+The remainder of this section introduces operators that enable the kinds of refinement that we will later need for the adaptive loop in Section~\ref{subsec:adaptive_loop}. The \emph{face quadrisection operator} $\quadriF(\C, \simplexsubset{2}{\l})$ refines a \emph{single-level} set of faces $\simplexsubset{2}{\l} \subseteq \F(\C_\l)$ to level $\l+1$ by replacing each face with its four children, that is, it removes the faces $\simplexsubset{2}{\l}$ from level $\l$ and adds their children on level $\l+1$, leaving all other levels untouched.
+
+\begin{definition}[Face quadrisection operator]
+    \label{def:face_quadrisection_operator}
+    Let $\domseq{\L} \in \alldomseqs$ be a domain sequence with regions $\M_\l$,
+    $\l \in \{ \lzero, \, \dots \,, \L\}$, and let $\simplexsubset{2}{\l} \subseteq \F_\l(\M_\l)$
+    be a set of faces marked for refinement. The \emph{face quadrisection operator}
+    \begin{equation}
+        \quadriF \; \colon \; \alldomseqs \times \powerset\big( \F_\l \big) \; \longrightarrow \; \alldomseqs
+    \end{equation}
+    is defined by
+    \begin{equation}
+        \label{eq:def_face_quadrisection_operator}
+        \quadriF \big( \domseq{\L}, \, \simplexsubset{2}{\l} \big) \coloneq \M_{\leq\l} \; \cup \; \big( \M_{\l+1} \cup \Aop{}{\l}{\l+1}(\simplexsubset{2}{\l}) \big) \; \cup \; \M_{\geq \l+2}.
+    \end{equation}
+\end{definition}
+
+Note that if $\simplexsubset{2}{\l} \subseteq \ancestorPatch{\M_{\l+1}}$, then
+$\quadriF ( \domseq{\L}, \simplexsubset{2}{\l} ) = \domseq{\L}$ is the identity because all
+marked faces on level $\l$ already are in the domain sequence's region on level $\l+1$.
+
+\robert{In contrast to the that, the \emph{vertex quadrisection operator} $\quadriV{\targetlevel}(\C, \coveringStar(\vertclass{\coarseIdxtwo}))$ refines a whole covering star by nested face quadrisections from the source level $\sourcelevel_\coarseIdxtwo$ to the target level $\targetlevel_\coarseIdxtwo$.}
+
+\begin{definition}[Vertex quadrisection operator]
+    \label{def:vertex_quadrisection_operator_birth_level}
+    Let $\domseq{\L} \in \alldomseqs$ and let $\vertex{\l}{\coarseIdxtwo}$ be a vertex with birth level $\birthLevel_\coarseIdxtwo$. Choose a target level $\targetlevel$ with
+    $\birthLevel_\coarseIdxtwo \leq \targetlevel \leq \L$. The \emph{vertex quadrisection operator}
+    \begin{equation}
+        \quadriV{\targetlevel} \; \colon \; \alldomseqs \times \V \; \longrightarrow \; \alldomseqs
+    \end{equation}
+    is constructed by iteratively vertex stars:
+    \begin{enumerate}[topsep=3pt, itemsep=-2pt]%[nolistsep]
+        \item initialise $\C^{\birthLevel_\coarseIdxtwo} = \domseq{\L}$,
+        \item for $\l = \birthLevel_\coarseIdxtwo, \, \dots, \, \targetlevel - 1$, apply the face quadrisection operator to the level-$\l$ part of the star of $\vertex{\l}{\coarseIdxtwo}$ \emph{in the current sequence} $\C^\l$, i.e.
+        \begin{equation}
+            \label{eq:vertex_quadrisection}
+            \C^{\l+1} = \quadriF \big( \C^\l, \; \FVl{\l}(\vertex{\l}{\coarseIdxtwo}) \cap \M_\l \big),
+        \end{equation}
+        \vspace{-7mm}
+        \item set $\quadriV{\targetlevel} \big( \domseq{\L}, \vertex{\l}{\coarseIdxtwo} \big) \coloneq \C^{\targetlevel}$.
+    \end{enumerate}
+    The target level rides on the operator rather than in an argument slot, since it selects
+    \emph{which} map is applied rather than what it is applied to.
+\end{definition}
+
+\subsubsection{Restoring admissibility through padding}
+
+The quadrisection operators enable consistent refinement of the adaptive subdivision $k$-form spaces $\hierSDFspace{k}{\C}{\L}$ in the sense that
+\begin{equation}
+    \label{eq:quadrisection_monotone}
+    \hierSDFspace{k}{\C}{\L} \subseteq \hierSDFspace{k}{\quadriF(\C, \simplexsubset{2}{\l})}{\L} \qquad \text{and} \qquad \hierSDFspace{k}{\C}{\L} \subseteq \hierSDFspace{k}{\quadriV{\targetlevel}(\C, \vertclass{\coarseIdxtwo})}{\L}.
+\end{equation}
+The quadrisection operators defined in this section are the basis upon which we will later built the algorithms in the adaptive loop in Section~\ref{subsec:adaptive_loop}.
+
+The make sure that these superspaces preserve linear independence and the discrete de Rham complex, we need to make sure that any refined domain sequence can be turned into an admissible one through passing. The following lemmas establish partial results in that realm.
+
+\guidance{Restricting the second argument to the inadmissible faces sharpens the image, which is what
+the \textsc{Pad} step of Section~\ref{subsec:padding} relies on.
+
+\begin{lemma}[Admissibility padding preserves refinement exteriority]
+    \label{lemma:quadriF_preserves_admissibility}
+    Let $\domseq{\L} \in \alldomseqs$ and let
+    $\F^{\mathrm{inad}}_\l \subseteq \leafF{\l}(\domseq{\L})$ be the set of \emph{all} inadmissible leaf faces on
+    level $\l$. Then a vertex $\vertex{\l}{\coarseIdxone} \in \V_\l(\T_\l)$ is refinement-exterior
+    in $\quadriF ( \domseq{\L}, \F^{\mathrm{inad}}_\l )$ if and only if it is refinement-exterior in
+    $\domseq{\L}$. Consequently every face admissible in $\domseq{\L}$ remains admissible, and
+    \begin{equation}
+        \quadriF \big( \cdot, \, \F^{\mathrm{inad}}_\l \big) \; \colon \; \alldomseqs \; \longrightarrow \;
+        \big\{ \domseq{\L} \in \alldomseqs \; : \; \text{clause (i) of Definition~\ref{def:subdiv_partition} holds on level } \l \big\}.
+    \end{equation}
+\end{lemma}
+\begin{proof}
+    Refinement fans only grow under $\quadriF$, so a vertex that is not refinement-exterior in
+    $\domseq{\L}$ is not refinement-exterior afterwards; only the converse direction has content.
+    Let $\vertex{\l}{\coarseIdxone}$ be refinement-exterior in $\domseq{\L}$ and suppose some
+    $\face{\l}{\coarseIdxtwo} \in \F^{\mathrm{inad}}_\l$ were incident to it. By
+    Definition~\ref{def:admissible_face} an inadmissible face has \emph{no} refinement-exterior
+    vertex, contradicting the assumption on $\vertex{\l}{\coarseIdxone}$. Hence no face of
+    $\F^{\mathrm{inad}}_\l$ touches a refinement-exterior vertex, so
+    $\refFan{\l}(\vertex{\l}{\coarseIdxone})$ is unchanged and stays empty.
+
+    Every admissible face therefore keeps its refinement-exterior witness. The refined faces
+    themselves leave level $\l$; their children are admissible on level $\l+1$, since the middle
+    child's three vertices are the parent's edge midpoints, which are created at level $\l+1$ and
+    are refinement-exterior there whenever $\M_{\l+2}$ is unchanged by this step.
+\end{proof}
+
+The lemma does \emph{not} extend to the full admissibility of
+Definition~\ref{def:subdiv_partition}. Enlarging a refinement fan can raise the number of its
+maximal runs --- an empty fan $[\,u\,u\,u\,u\,u\,u\,]$ refined in positions $1$ and $4$ becomes
+$[\,r\,u\,u\,r\,u\,u\,]$, two refinement arcs --- so admissibility padding can create pinch
+vertices, and clause~(ii) may fail on the image. Together with
+Remark~\ref{rem:padding_order}, which records the opposite failure, the two repairs violate one
+another's invariants in both directions. This is exactly why \textsc{Pad} iterates rather than
+terminating after one sweep, and why $\allpartitions$ is characterised as the set of fixed points
+of that iteration.}
+
+\newcommand{\quadri}{\mathcal{Q}}
+We can build the overall quadrisection operator $\quadri : \C \times \powerset(\F_\l) \times \powerset(\V (\C)) \to \C$ as the composition of face and vertex quadrisection
+\begin{equation}
+    \quadri\big( \domseq{\L}, \simplexsubset{2}{\l}, \simplexsubset{0}{} \big) \coloneq \quadriV{\targetlevel} \big( \quadriF(\domseq{\L}, \simplexsubset{2}{\l}), \simplexsubset{0}{} \big).
+\end{equation}
+
+\guidance{The composite operator still takes its marked sets as free arguments. What the adaptive
+loop needs instead is a map that \emph{derives} its marked sets from the violated clauses of
+Definition~\ref{def:subdiv_partition} and can therefore be iterated until nothing fires any more.
+Stating that as the goal of the construction gives Section~\ref{subsec:padding} something to be
+measured against.
+
+\begin{problem}[Uniformly bounded restoration of admissibility]
+    \label{prob:padding_terminates}
+    Construct a map $\textsc{Pad} \colon \alldomseqs \to \alldomseqs$ from the quadrisection
+    operators $\quadriF$ and $\quadriV{\targetlevel}$ whose marked sets are determined by the
+    predicates of Definition~\ref{def:subdiv_partition}, together with a constant $q$
+    \emph{independent of $\domseq{\L}$ and of $\L$}, such that
+    \begin{equation}
+        \label{eq:padding_goal}
+        \textsc{Pad}^q \; \colon \; \alldomseqs \; \longrightarrow \; \allpartitions,
+    \end{equation}
+    and such that the faces refined by $\textsc{Pad}$ stay confined to a neighbourhood of the
+    defects of $\domseq{\L}$ of bounded size.
+\end{problem}
+
+Three features of Problem~\ref{prob:padding_terminates} are worth spelling out before
+Section~\ref{subsec:padding} constructs a candidate for $\textsc{Pad}$.
+
+First, because the marked sets are recomputed from the predicates rather than supplied,
+Equation~\eqref{eq:padding_goal} is a statement about a fixed-point iteration: a domain sequence
+on which no predicate fires is a fixed point of $\textsc{Pad}$, and the fixed points are
+admissible domain sequences, up to the grading heuristic that Section~\ref{subsec:padding} adds
+on top of the two repairs for conditioning reasons.
+
+Second, the substance of the problem lies in the uniformity of $q$, not in its finiteness.
+Finiteness is a counting statement --- every productive pass refines, no face is refined beyond
+level $\L$, and there are finitely many faces below level $\L$, so the iteration cannot run
+forever; Proposition~\ref{prop:padding_terminates} makes this precise. But the bound obtained
+that way grows with $\lvert \F_\L(\T_\L) \rvert$, and a padding step permitted to consume that
+budget could drive the entire domain sequence to the finest level, defeating the purpose of
+adaptivity. Only a $q$ bounded independently of the mesh keeps the padded region a perturbation
+of the marked region.
+
+Third, the locality requirement is what rules out the degenerate solution
+$\textsc{Pad}(\domseq{\L}) = \T_\L$, which satisfies Equation~\eqref{eq:padding_goal} with
+$q = 1$ and is useless.}
+
+% --- Figure knobs: covering star, quadrisection, and interior-vertex examples (single row, no dividers) ---
+\newcommand{\cvScale}{0.22}
+% #1 (optional) panel width as a fraction of \textwidth, default \cvScale --
+% override per panel when its image has a different aspect ratio (e.g. a
+% colorbar widens the PDF at the same height) and would otherwise come out
+% shorter/taller than the rest once every panel is fit to the same width.
+\newcommand{\cvsubfig}[4][\cvScale]{% #1 width fraction  #2 image path  #3 caption  #4 label
+    \begin{subfigure}[t]{#1\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{#2}
+        \caption{#3}
+        \label{#4}
+    \end{subfigure}%
+}
+% -------------------------------------------------------------------------
+\begin{figure}
+    \centering
+    \cvsubfig
+        {images/visualisations/neighbour-neighbour_input_with_covering_star.pdf}
+        {The covering star $\coveringStar(\vertclass{\coarseIdxtwo})$ of a mixed-level vertex class $\vertclass{\coarseIdxtwo}$}
+        {fig:covering_star}
+    \hfill
+    \cvsubfig
+        {images/visualisations/neighbour-neighbour_refined_with_covering_star.pdf}
+        {The covering star from (a) after applying $\quadriV{\targetlevel_\coarseIdxtwo + 1}(\C, \vertclass{\coarseIdxtwo})$}
+        {fig:covering_star_refined}
+    \hfill
+    \cvsubfig[0.2613] % = \cvScale * (163.462/119.43) / (111.283/96.5664) -- panel-3-to-common PDF aspect-ratio (width/height, via pdfinfo) times \cvScale
+        {images/visualisations/v6_nested_center_lvl3_input_with_interior_verts.pdf}
+        {Vertices coloured by the level at which they are covering-interior}
+        {fig:covering_interior_vertices}
+    \hfill
+    \cvsubfig
+        {images/visualisations/v6_3rings_horseshoe_input_with_inadmissible_faces.pdf}
+        {Domain sequence with inadmissible faces on level $\lzero$ (Definition~\ref{def:admissible_face})}
+        {fig:inadmissible_faces}
+    \caption{Visualisations and examples for covering stars and their quadrisection, covering-interior vertices and inadmissible faces.}
+    \label{fig:visualisations}
+\end{figure}
+
+Recomputing the covering star of $\vertclass{\coarseIdxtwo}$ of $\C^\l$ at each step is what drags the coarse faces up through \emph{every} intermediate level up to $\targetlevel$. The two operators are distinguished by their superscript: $\quadriF$ refines a set of faces flatly from level $\l$ to $\l\!+\!1$, while $\quadriV{\targetlevel}$ refines a star gradedly toward its vertex class, and thus only the graded vertex quadrisection operator carries a target level. Figure~\ref{fig:covering_star_refined} displays the result of applying $\quadriV{\targetlevel\coarseIdxtwo + 1}(\C, \vertclass{\coarseIdxtwo})$ to the covering star from Figure~\ref{fig:covering_star}. It first homogenises the neighbourhood of $\vertclass{\coarseIdxtwo}$ to its target level $\targetlevel_\coarseIdxtwo$ and then applies one more level of refinement to the now homogeneous active faces on level $\targetlevel_\coarseIdxtwo$ adjacent to $\vertclass{\coarseIdxtwo}$.
+
+
 
 \FloatBarrier
 
@@ -1808,7 +1878,7 @@ Because the expected target levels $\tilde{\targetlevel}_{\coarseIdxtwo}$ are co
 \subsubsection{Padding}
 \label{subsec:padding}
 
-The \textsc{Refine} step in the previous section produces the domain sequence $\C^{\mathrm{refine}}$. Crucially, $\C^{\mathrm{refine}}$ is not a admissible domain sequence because $\C^{\mathrm{refine}}$ might now contain \tobecut{pinch vertices or inadmissible faces} \guidance{inadmissible faces, pinch vertices, or boundary pinch vertices --- one for each clause of Definition~\ref{def:subdiv_partition}}. The \textsc{Pad} step repairs these defects and turns $\C^{\mathrm{refine}}$ in the admissible domain sequence $\C^{\mathrm{pad}}$. The goal is to keep the padded faces added during this process to a minimum to avoid inflating the number of DoFs in non-marked regions. The only exception is some grading that we apply around vertices whose covering star covers too many levels. This grading does not change the restored admissibility properties but improves the conditioning of the resulting matrix-vector system. This section covers all three kinds of padding one by one.
+The \textsc{Refine} step in the previous section produces the domain sequence $\C^{\mathrm{refine}}$. Crucially, $\C^{\mathrm{refine}}$ is not a admissible domain sequence because $\C^{\mathrm{refine}}$ might now contain inadmissible faces, pinch vertices, or boundary pinch vertices --- one for each clause of Definition~\ref{def:subdiv_partition}. The \textsc{Pad} step repairs these defects and turns $\C^{\mathrm{refine}}$ in the admissible domain sequence $\C^{\mathrm{pad}}$. The goal is to keep the padded faces added during this process to a minimum to avoid inflating the number of DoFs in non-marked regions. The only exception is some grading that we apply around vertices whose covering star covers too many levels. This grading does not change the restored admissibility properties but improves the conditioning of the resulting matrix-vector system. This section covers all three kinds of padding one by one.
 
 The \textsc{Pad} needs no machinery beyond the covering star $\coveringStar$ and the two quadrisection operators $\quadriF$ and $\quadriV{\targetlevel}$ of Section~\ref{subsec:subdiv_partition} since every padding substep is a quadrisection of either a covering star of a vertex class or of inadmissible faces.
 
@@ -1838,9 +1908,9 @@ Every pinch vertex carries a cohomology defect. The severity of the defect depen
 
 \paragraph{Resolving inadmissible faces.}
 
-Similarly to resolving pinches, we iterate over all face $\face{\l}{\coarseIdxone}$ of the admissible domain sequence $\C^{\mathrm{pinch}}$ to build the set of inadmissible faces
+Similarly to resolving pinches, we iterate over all leaf faces $\face{\l}{\coarseIdxone}$ of the admissible domain sequence $\C^{\mathrm{pinch}}$ to build the set of inadmissible faces
 \begin{equation}
-    \F_{\mathrm{inadmissible}} = \big\{ \face{\l}{\coarseIdxone} \in \F(\C^{\mathrm{pinch}}) \; \colon \; \face{\l}{\coarseIdxone} \text{\; is not admissible} \big\}
+    \F_{\mathrm{inadmissible}} = \big\{ \face{\l}{\coarseIdxone} \in \leafF{\l}(\C^{\mathrm{pinch}}) \; \colon \; \face{\l}{\coarseIdxone} \text{\; is not admissible} \big\}
 \end{equation}
 according to Definition~\ref{def:admissible_face}. The admissible domain sequence $\C^{\mathrm{admissible}}$ where all faces are admissible is given by
 \begin{equation}
@@ -1890,7 +1960,74 @@ Every rule only ever refines and adds a few faces that locally repair its violat
 The three padding substeps do not commute: resolving a pinch vertex can lead to an admissible face becoming inadmissible (e.g. Figure~\ref{fig:two_padding_iterations}), which is why $\textsc{Pad}$ always runs pinch resolution before inadmissible-face padding, before grading.
 \end{remark}
 
-We do not \robert{(yet?)} have a proof that $\textsc{Pad}$ terminates. For our implementation, we wrapped the pinch resolution, face admissibility padding and the grading in a loop that terminates once a pass no longer refines any face, i.e., none of the predicates fires. A counter records the productive passes, which is $1$ for the large majority of test cases we ran, but is not always $1$: Figure~\ref{fig:two_padding_iterations} shows a small hand-constructed domain sequence that needs two passes to stabilise.
+\guidance{The three substeps of this section compose into the map
+\begin{equation}
+    \label{eq:pad_operator}
+    \textsc{Pad} \coloneq \textsc{Grade} \circ \textsc{PadFaces} \circ \textsc{ResolvePinches}
+    \; \colon \; \alldomseqs \; \longrightarrow \; \alldomseqs,
+\end{equation}
+which is the candidate that Problem~\ref{prob:padding_terminates} asked for. Our implementation
+wraps it in a loop that stops once a pass no longer refines any face, and a counter records the
+number $q$ of \emph{productive} passes. That the loop stops at all, and stops at an admissible
+domain sequence, is the finiteness half of the problem and can be settled.
+
+\begin{proposition}[$\textsc{Pad}$ terminates]
+    \label{prop:padding_terminates}
+    Let $\C^{\mathrm{refine}} \in \alldomseqs$ and let $\C^{(0)} = \C^{\mathrm{refine}}$,
+    $\C^{(j+1)} = \textsc{Pad} \big( \C^{(j)} \big)$. Then the iteration reaches a fixed point
+    $\C^{\mathrm{pad}} = \C^{(q)}$ after
+    \begin{equation}
+        \label{eq:padding_crude_bound}
+        q \; \leq \; \sum_{\l=\lzero}^{\L} \big\lvert \F_\l(\T_\l) \big\rvert \; - \; \sum_{\l=\lzero}^{\L} \big\lvert \F_\l(\M_\l^{\mathrm{refine}}) \big\rvert
+    \end{equation}
+    passes, and $\C^{\mathrm{pad}} \in \allpartitions$ is an admissible domain sequence.
+\end{proposition}
+\begin{proof}
+    Consider the integer-valued face budget
+    \begin{equation}
+        \Phi \big( \domseq{\L} \big) \coloneq \sum_{\l=\lzero}^{\L} \big\lvert \F_\l(\M_\l) \big\rvert .
+    \end{equation}
+    Both quadrisection operators only ever add the children of a marked face on the next finer
+    level and leave all coarser levels untouched, by
+    Equation~\eqref{eq:def_face_quadrisection_operator} and by the iterated application of
+    $\quadriF$ in Definition~\ref{def:vertex_quadrisection_operator_birth_level}. A productive
+    pass therefore increases $\Phi$ strictly. Since $\M_\l \subseteq \T_\l$ on every level and no
+    face is refined beyond level $\L$, $\Phi$ is bounded above by
+    $\sum_\l \lvert \F_\l(\T_\l) \rvert < \infty$, which gives
+    Equation~\eqref{eq:padding_crude_bound} and the existence of a fixed point.
+
+    For the second claim, note first that a firing predicate always refines at least one face, so
+    that an unproductive pass certifies that no predicate fires. For a pinch vertex
+    $\vertclass{\coarseIdxtwo}$ this holds because a covering star that is homogeneous at
+    $\targetlevel_\coarseIdxtwo$ has a single refinement arc and hence is not a pinch by
+    Definition~\ref{def:pinch_vertex}; a pinch vertex therefore has
+    $\sourcelevel_\coarseIdxtwo < \targetlevel_\coarseIdxtwo$, and
+    $\quadriV{\targetlevel_\coarseIdxtwo}$ refines at least the level-$\sourcelevel_\coarseIdxtwo$
+    part of its star. For an inadmissible face it holds because the predicate is evaluated on leaf
+    faces only, Equation~\eqref{eq:leaf_faces}, so that
+    $\F_{\mathrm{inadmissible}} \cap \ancestorPatch{\M_{\l+1}} = \varnothing$ and $\quadriF$ is not
+    the identity on it. At the fixed point, then, none of the three predicates fires, which is
+    precisely clauses~(i) to~(iii) of Definition~\ref{def:subdiv_partition}.
+\end{proof}
+
+Proposition~\ref{prop:padding_terminates} disposes of the qualitative question and of nothing
+else. The bound~\eqref{eq:padding_crude_bound} is $\mathcal{O}(4^\L \lvert \F_\lzero(\T_\lzero) \rvert)$ and
+therefore permits exactly the behaviour that adaptivity is meant to avoid; it is the analogue of
+observing that a mesh refinement loop terminates because the mesh cannot be refined past machine
+precision. The quantitative half of Problem~\ref{prob:padding_terminates} --- whether
+\eqref{eq:padding_crude_bound} can be replaced by a bound depending only on the control mesh
+$\T_\lzero$ --- is not settled here. What can be said immediately is a lower bound.
+
+The lower bound is $q \geq 2$, witnessed by Figure~\ref{fig:two_padding_iterations}. The domain
+sequence shown there is hand-constructed: its first pinch resolution renders a previously
+admissible face inadmissible, the ensuing face padding creates a second pinch, and only the
+second pass stabilises. Remark~\ref{rem:padding_order} explains the mechanism --- the two repairs
+violate one another's invariants in both directions, so no ordering of the substeps within a
+single pass can absorb the interaction. In particular $q = 1$ is not attainable on all of
+$\alldomseqs$, and any sharp uniform bound is at least $2$. The domain sequence of
+Figure~\ref{fig:two_padding_iterations} is moreover the seed of a family whose $k$-th member
+requires $q = k$ productive passes, obtained by adding one further primer each time, so no uniform
+bound exists on $\alldomseqs$ at all.}
 
 \begin{figure}
     \centering
@@ -1923,6 +2060,7 @@ We do not \robert{(yet?)} have a proof that $\textsc{Pad}$ terminates. For our i
 \end{figure}
 
 \FloatBarrier
+
 
 \section{Numerical Experiments}
 \label{sec:numerical_experiments}
