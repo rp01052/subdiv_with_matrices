@@ -60,14 +60,14 @@ Werner Bauer\footnote{University of Surrey, School of Mathematics and Physics, U
 \newcommand{\werner}[1]{{\color{magenta}WB says: #1}}
 \newcommand{\robert}[1]{{\color{orange} #1}}
 \usepackage[normalem]{ulem}  % \sout for struck-through deletions (normalem keeps \emph italic)
-\newcommand{\ancestor}[1]{\big\lceil #1 \big\rceil_{\C}}     % coarsen a fine face to its covering active cell of \C
+\newcommand{\ancestor}[1]{\big\lceil #1 \big\rceil_{\domseq}}     % coarsen a fine face to its covering active cell of \domseq
 % Quadrisection operators. The superscript names the object being refined:
 % a triangle for a face set, a star for a covering star. Same stem, same slot,
 % one glyph apart, so the two read as one family while staying distinguishable.
 % The graded operator additionally carries its target level as "-> tau".
 % Was: \mathcal{Q}^{f} and \mathcal{Q}^{\widehat{v} \to #2}. The latter put a
 % \widehat{v} in the superscript, so the canonical call
-% \quadriV{\targetlevel}(\C, \vertex{}{\coarseIdxtwo}) printed \widehat{v} twice
+% \quadriV{\targetlevel}(\domseq, \vertex{}{\coarseIdxtwo}) printed \widehat{v} twice
 % in one expression; and "f" against "\widehat{v} \to \tau" was an unbalanced
 % pairing of an object type against an equivalence class.
 % Both operators now carry ONLY the operator symbol; their arguments are written
@@ -249,7 +249,6 @@ Werner Bauer\footnote{University of Surrey, School of Mathematics and Physics, U
 \newcommand{\BCBEop}[4]{\mathring{\mathcal{B}} {}^{#1}_{#2 \vert #3 \to #4}}
 
 % hierarchical spaces
-\newcommand{\C}{\heth}
 \newcommand{\I}{\mathcal{I}}
 \newcommand{\II}{\mathbb{I}}
 \newcommand{\heth}{\textphnc{H}}
@@ -260,10 +259,20 @@ Werner Bauer\footnote{University of Surrey, School of Mathematics and Physics, U
 \newcommand{\inactiveDoFs}{\mathbb{I}}
 \newcommand{\D}{\activeDoFs}
 \newcommand{\activeDoFSet}[2]{\activeDoFs^{#1}_{#2}}
+\newcommand{\activeDoFSetZero}[2]{\mathring{\activeDoFs}{}^{#1}_{#2}}
 \newcommand{\activeSDFspaces}[2]{\mathcal{S}\activeDoFSet{#1}{#2}}
 
-\newcommand{\hierSDFspace}[3]{\mathcal{S}\activeDoFs^{#1}_{#2 \vert #3}}
-\newcommand{\hierSDFspaceZero}[3]{\mathring{\mathcal{S}}\activeDoFs^{#1}_{#2 \vert #3}}
+% The embedding level is absorbed into the domain sequence: #3 is set as a SUBSCRIPT on
+% #2 rather than after a \vert, so \hierSDFspace{k}{\domseq}{\L} gives \mathcal{S}\mathbb{A}^k_{\mathcal{D}_\L}.
+% Legitimate for the reason recorded in Definition~\ref{def:domseq}: trailing empty regions
+% let the single index \L carry both the selection depth and the representation mesh.
+% Pass an EMPTY #3 when the level already sits inside #2, as at eq:quadrisection_monotone,
+% where #2 is an operator application and the level belongs on its argument.
+% Robust because both macros appear inside \caption.
+\makeatletter
+\DeclareRobustCommand{\hierSDFspace}[3]{\mathcal{S}\activeDoFs^{#1}_{#2\ifx\@empty#3\@empty\else_{#3}\fi}}
+\DeclareRobustCommand{\hierSDFspaceZero}[3]{\mathring{\mathcal{S}}\activeDoFs^{#1}_{#2\ifx\@empty#3\@empty\else_{#3}\fi}}
+\makeatother
 \newcommand{\inactiveSDFspace}[3]{\mathcal{S}\inactiveDoFs^{#1}_{#2 \vert #3}}
 \newcommand{\coarseInactiveSDFspace}[3]{\mathcal{S}\inactiveDoFs^{#1, \mathrm{c}}_{#2 \vert #3}}
 \newcommand{\fineInactiveSDFspace}[3]{\mathcal{S}\inactiveDoFs^{#1, \mathrm{f}}_{#2 \vert #3}}
@@ -286,7 +295,18 @@ Werner Bauer\footnote{University of Surrey, School of Mathematics and Physics, U
 \DeclareFontShape{U}{mathx}{m}{n}{<-> mathx10}{}
 \DeclareSymbolFont{mathx}{U}{mathx}{m}{n}
 \DeclareMathAccent{\widehat}{0}{mathx}{"70}
-\DeclareMathAccent{\widecheck}{0}{mathx}{"71}
+
+% A *fixed-size* \widecheck, so the accent no longer grows with the width of the
+% letter it sits on. The mathx glyph "71 carries a nextlarger chain, which is what
+% made \widecheck{\M} much wider than \widecheck{\R}. Instead we take the ordinary
+% \check glyph (OT1 slot 20 of cmr) from a copy of cmr loaded at a magnified size,
+% and declare a real math accent on it, so that height and skew handling and
+% shrinking in script styles all keep working at one constant width. Adjust the
+% 1.4 below to taste (1.0 gives exactly \check).
+\DeclareFontFamily{OT1}{wcheck}{}
+\DeclareFontShape{OT1}{wcheck}{m}{n}{<->s*[1.4] cmr10}{}
+\DeclareSymbolFont{wcheck}{OT1}{wcheck}{m}{n}
+\DeclareMathAccent{\widecheck}{0}{wcheck}{20}
 
 % macros for specific spaces
 \newcommand{\CG}{\mathrm{CG}}
@@ -332,7 +352,11 @@ Werner Bauer\footnote{University of Surrey, School of Mathematics and Physics, U
 \newcommand{\extendedPatch}[1]{\widecheck{#1}}
 \newcommand{\ancestorPatch}[1]{\left\lceil #1 \right\rceil}
 \newcommand{\reducedPatch}[1]{\widehat{#1}}
-\newcommand{\domseq}[1]{\mathcal{D}_{#1}}
+% \domseq takes the level as an OPTIONAL argument: \domseq is \mathcal{D}, \domseq[\L]
+% is \mathcal{D}_\L. Robust (\DeclareRobustCommand) because it appears inside \caption.
+\makeatletter
+\DeclareRobustCommand{\domseq}[1][]{\mathcal{D}\ifx\@empty#1\@empty\else_{#1}\fi}
+\makeatother
 \newcommand{\alldomseqs}{\mathscr{D}}
 % NOT ported: \domseql / \coveringl. notation/glossary.md records an unresolved
 % subscript-order collision (those two are target-first, \SDFspace / \recSpace /
@@ -364,13 +388,12 @@ Werner Bauer\footnote{University of Surrey, School of Mathematics and Physics, U
 \renewcommand{\allpartitions}{\mathscr{D}^{\mathrm{ad}}}
 \newcommand{\allpartitionsStar}{\mathscr{D}^{\mathrm{ad}\ast}}
 
-% \C was \heth (a covering). It is retained as the symbol for the adaptive object but
-% re-pointed at the companion's letter, so that all 325 existing uses -- \C(\T_\L),
-% \C_\l, \C^{refine} -- read as the domain sequence and its level-\l region without a
-% 154-line token sweep. \domseq{\L}
-% and \C then render identically as \mathcal{D}_\L. Note \C is NOT used for curves
-% here, unlike adaptive_theory:804 -- that definition was deliberately not imported.
-\renewcommand{\C}{\mathcal{D}}
+% The symbol formerly written \string\C (originally \heth, a covering) has been retired
+% in favour of \domseq, defined above. The note that stood here claimed \string\C and
+% \domseq[\L] "render identically as \mathcal{D}_\L". That was never true, since the old
+% \string\C carried no subscript at all. All 227 of its occurrences were swept to \domseq.
+% \string\C is now deliberately left UNDEFINED, so that any missed occurrence fails loudly
+% at compile time rather than silently rendering the right glyph.
 
 \begin{document}
 
@@ -614,14 +637,14 @@ $\circ$ & Linear independence & Theorem~\ref{theorem:linear_independence} (Secti
 \addlinespace
 $\bullet$ & Nestedness under refinement & Equation~\eqref{eq:quadrisection_monotone} & --- \\
 \addlinespace
-$\times$ & Bounded, local padding & --- (open) & Table~\ref{tab:padding_interface_L4} \\
+$\times$ & Bounded, local padding & --- & Table~\ref{tab:padding_interface_L4} \\
 \addlinespace
 $\times$ & DoF efficiency & --- & Table~\ref{tab:cl_headline} \\
 \addlinespace
-$\times$ & Well-conditioned solve & --- (open) & Table~\ref{tab:solve_stats_L4} \\
+$\times$ & Well-conditioned solve & --- & Table~\ref{tab:solve_stats_L4} \\
 \bottomrule
 \end{tabular}}
-\caption{Desirable properties of the adaptive subdivision $k$-form spaces spanned by the active DoFs $\activeDoFSet{k}{}$, and where each is established theoretically and/or verified numerically. The symbol $\bullet$ indicates that the property holds for every domain sequence $\domseq{\L}$ (Definition~\ref{def:domseq}), while $\circ$ holds only if $\domseq{\L}$ is admissible (Definition~\ref{def:subdiv_partition}). The symbol $\times$ marks a computational-cost or performance property.}
+\caption{Desirable properties of the adaptive subdivision $k$-form spaces spanned by the active DoFs $\activeDoFSet{k}{}$, and where each is established theoretically and/or verified numerically. The symbol $\bullet$ indicates that the property holds for every domain sequence $\domseq[\L]$ (Definition~\ref{def:domseq}), while $\circ$ holds only if $\domseq[\L]$ is admissible (Definition~\ref{def:subdiv_partition}). The symbol $\times$ marks a computational-cost or performance property.}
 \label{tab:properties_map}
 \end{table}
 
@@ -660,7 +683,7 @@ We now provide a generic definition of the adaptive subdivision $k$-form spaces 
     \label{def:generic_adaptive_function_spaces}
     Fix an initial mesh $\T_{\lzero}$ with finest level $\L$ and select the active DoFs $\activeDoFSet{k}{}$. The \emph{active basis functions} of the \emph{adaptive subdivision $k$-form spaces} $\activeSDFspaces{k}{}$ are given by
     \begin{equation}
-        \constrVec{\SDFbases}{k}{\activeDoFs}{\L} \coloneqq \bigcup_{\simplex{k}{\l}{\coarseIdxone} \in \activeDoFSet{k}{}} \big\{ \constrQ{\SDFbasis}{k}{\l}{\L}{\coarseIdxone} \big\} \qquad \text{and thus} \qquad \activeSDFspaces{k}{} \coloneqq \mathrm{span}\big( \constrVec{\SDFbases}{k}{\activeDoFs}{\L} \big).
+        \constrVec{\SDFbases}{k}{\activeDoFs}{\L} \coloneqq \bigcup_{\simplex{k}{\l}{\coarseIdxone} \in \activeDoFSet{k}{}} \big\{ \constrQ{\SDFbasis}{k}{\l}{\L}{\coarseIdxone} \big\} \qquad \text{and thus} \qquad \activeSDFspaces{k}{} \coloneqq \mathrm{span}\big( \constrVec{\SDFbases}{k}{\activeDoFSet{k}{}}{\L} \big).
     \end{equation}
 \end{definition}
 
@@ -669,13 +692,136 @@ Not every choice of active DoFs $\activeDoFSet{k}{}$ yields a well-behaved hiera
 Both requirements are local conditions on the active DoFs. A selection is linearly independent when no active DoF can be re-expressed through the active DoFs on finer levels, and the spaces constitute a differential complex when the $(k\!+\!1)$-simplices adjacent to any active $k$-simplex are themselves represented in the active $(k\!+\!1)$-form DoFs, either directly or through their finer levels. Both are characterised combinatorially in~\cite{companion_paper}; the domain sequences introduced below are the object that enforces them.
 
 
+
+
+\smallskip
+
+The organising unit is a \emph{region} of a single level, and the object that
+carries a whole adaptive space is a nested sequence of them, one per level. The following
+definitions are taken from~\cite{companion_paper}, whose results are stated on them.
+
+\begin{definition}[Region]
+    \label{def:region}
+    A \emph{region} $\R_\l \subseteq \F_\l(\T_\l)$ is a collection of faces of $\T_\l$. We write $\R_{\l \to \lone} \coloneq \Aop{}{\l}{\lone} \R_\l$ for the region obtained by repeatedly splitting $\R_\l$ from level $\l$ to $\lone$. \robert{The set complement $\R^\complement_\l \coloneq \F_\l(\T_\l) \setminus \R_\l$ of $\R_\l$ is also a region.}
+\end{definition}
+
+\begin{figure}[tb]
+    \centering
+    \begin{subfigure}[t]{0.38\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/region_anatomy/coarse.pdf}
+        \caption{A region $\R_\lzero$ with two patches (orange and green) and its open DoFs (blue markers, Def.~\ref{def:open_patch_dofs}).}
+        \label{fig:region_anatomy_a}
+    \end{subfigure}\hspace{10mm}
+    \begin{subfigure}[t]{0.38\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/region_anatomy/fine.pdf}
+        \caption{Refined region $\R_1 = \R_{\lzero \to 1}$ (dotted) and its extension $\extendedPatch{\R}_1$ (solid). The refinement implies $\R_\lzero = \ancestorPatch{\R_1}$.}
+        \label{fig:region_anatomy_b}
+    \end{subfigure}
+    \caption{The geometry of regions: patches, refinement and ancestors, and extentions. While panel (a) contains the open patch DoFs, we excluded them from panel (b) to avoid visual clutter. They fill the region $\R_1$ in exactly the same way as they fill region $\R_\lzero$.}
+    \label{fig:region_anatomy}
+\end{figure}
+
+Two operations on regions are used throughout and visualised in Figure~\ref{fig:region_anatomy}. \robert{We write $\FVl{\l}(\vertex{\l}{\coarseIdxone})$ for the faces of the entire mesh $\T_\l$ incident to a vertex $\vertex{\l}{\coarseIdxone}$, and $\V_\l(\R_\l)$ for the vertices of the faces ofthe region $\R_\l$.}
+
+The first operation grows a region by one strip of faces. The \emph{extension}
+$\extendedPatch{\R}_\l$ of a region $\R_\l$ is
+\begin{equation}
+    \label{eq:patch_extension}
+    \R_\l \quad \mapsto \quad \extendedPatch{\R}_\l
+    \coloneq \bigcup\limits_{\vertex{\l}{\coarseIdxone} \in \V_\l(\R_\l)}
+    \FVl{\l} \big(\vertex{\l}{\coarseIdxone} \big) .
+\end{equation}
+We refer to the faces $\extendedPatch{\R}_\l \setminus \R_\l$ added by the extension as \emph{collar}. Since the union runs over \emph{all} vertices of the region, the collar is added along the entire boundary of $\R_\l$. Figure~\ref{fig:region_anatomy_b} shows a dotted region and its extension with a solid outline. Where the region already reaches the boundary $\boundary \T_\l$ of the mesh there is nothing to add, so the collar grows only along the \emph{interface}, the part of the region boundary shared with the interior of the mesh.
+
+The second operation passes between a region and its refinement, and it is the one that carries a
+constraint.
+
+\begin{definition}[Ancestor region]
+    \label{def:ancestor_patch}
+    A region $\R_{\l+1} \subseteq \F_{\l+1}(\T_{\l+1})$ is \emph{quadrisection-closed} if $\R_{\l+1} = \R_{\l \to \l+1}$ for some region $\R_\l \subseteq \F_\l(\T_\l)$. On these regions, the \emph{ancestor} operator $\ancestorPatch{\cdot}$ is defined by
+    \begin{equation}
+        \R_{\l+1} = \R_{\l \to \l+1} \quad \Longleftrightarrow \quad \ancestorPatch{\R_{\l+1}} = \R_{\l}.
+    \end{equation}
+    Writing $\ancestorPatch{\R_{\l+1}}$ therefore always carries the assumption that $\R_{\l+1}$ is quadrisection-closed.
+\end{definition}
+
+\begin{definition}[Domain sequence]
+    \label{def:domseq}
+    A domain sequence $\domseq[\L] \coloneq \bigcup_{\l=\lzero}^{\L} \M_\l$ is a set of regions $\M_\l$ that satisfy
+    \begin{equation}
+        \M_\lzero = \T_\lzero \qquad \text{and} \qquad \ancestorPatch{\M_{\l+1}} \subseteq \M_\l.
+    \end{equation}
+    for $\l \in \{ \lzero, \, \dots, \, \L \}$. By convention, $\M_{\L+1} = \varnothing$. Typically each $\M_\l$ consists of several disjoint patches. The set of all domain sequences is denoted by $\alldomseqs_\L$.
+\end{definition}
+
+Regions are allowed to be empty. If $\M_{\lone} = \varnothing$ for every $\lone > \l$, the nesting condition reduces to $\varnothing \subseteq \M_{\l}$ and holds for free, so $\domseq[\L]$ is a domain sequence of $\T_\L$ whose finest faces sit on level $\l$. Thus, the single index $\L$ carries two roles at once: a maximum for $\l$ or a minimum number of smoothing steps $\L-\l$ for all basis functions (cf.~\cite{Piel.2026}). The first case simply allows basis functions to be selected across the entire hierarchy from $\T_\lzero$ to $\T_\L$. In the second case, the non-empty regions up to level $\l$ hold the selected DoFe, while $\L$ itself fixes the mesh $\T_\L$ on which every basis function is represented and thus controls the smoothing. Both can be represented using the same notation, with $\M_{\lone} = \varnothing$ for the second case.
+
+\smallskip
+
+\begin{definition}[Leaf faces]
+    \label{def:leaf_faces}
+    Let $\domseq[\L]$ be a domain sequence of $\T_\L$. Its \emph{leaf faces} $\leafF{\l}$ are all faces on level $\l$ that are not refined any further, i.e.
+    \begin{equation}
+        \label{eq:leaf_faces}
+        \leafF{\l}(\domseq[\L]) \coloneq \M_\l \setminus \ancestorPatch{\M_{\l+1}}.
+    \end{equation}
+\end{definition}
+
+The leaf faces provide a way to represent the domain sequence in a plot, see for example Figure~\ref{fig:active_dofs}. Only the leaf faces are plotted, with the understanding that their coarse parents are also in the domain sequence.
+
+\smallskip
+
+Now that regions and their geometry are settled, we are moving to defining active DoFs on them. \cite{companion_paper} distinguishes between two notions: the DoFs a region naturally carries, and the ones that are \emph{interior} to it in the sense that nothing outside the region touches them.
+
+\begin{definition}[Region DoFs]
+    \label{def:region_dofs}
+    The DoFs $\patchDoFs{\R}{k}_\l$ of the region $\R_\l \subseteq \F_\l(\T_\l)$ are given by $\patchDoFs{\R}{k}_\l \coloneq \K^k_\l(\R_\l)$, i.e. all $k$-simplices that contained in at least of face of the region.
+\end{definition}
+
+\begin{definition}[Open region DoFs]
+    \label{def:open_patch_dofs}
+    Let $\R_\l \subseteq \T_\l$ be a region. A region DoF $\patchDoFs{\R}{k}_\l$ is \emph{open} when every face containing it belongs to $\R_\l$. Thus, the open region DoFs $\openPatchDoFs{\R}{k}_\l$ of $\R_\l$ are given by
+    \begin{equation}
+        \label{eq:open_dofs_membership}
+        \openPatchDoFs{\R}{k}_\l \coloneq \big\{ \simplex{k}{\l}{\coarseIdxone} \in \patchDoFs{\R}{k}_\l
+        \; : \; \F\K^k_\l\big(\simplex{k}{\l}{\coarseIdxone}\big) \subseteq \R_\l \big\}.
+    \end{equation}
+\end{definition}
+
+Equation~\eqref{eq:open_dofs_membership} is the form of the definition we work with because it is
+a purely local test on the faces containing a simplex, with no reference to interfaces or to
+neighbouring regions; it is shown in~\cite{companion_paper} to agree with the region DoFs less
+those carried by the interface of $\R_\l$. The test is the right one at the mesh boundary as well:
+a simplex on $\boundary\T_\l$ is open in $\R_\l$ as soon as the faces on its single side belong to
+$\R_\l$, so a region reaching the mesh boundary is not stripped there.
+Figure~\ref{fig:region_anatomy}~\subref{fig:region_anatomy_a} carries out the test on a region:
+the marked simplices are the open ones, and the vertices where two patches meet or where the
+region ends are the ones it rejects.
+
+\begin{definition}[Active $k$-form degrees of freedom]
+    \label{def:active_k_form_dofs}
+    Let $\domseq[\L] = \bigcup_{\l = \lzero}^{\L} \M_\l$ be a domain sequence of $\T_\L$. The
+    active $k$-form degrees of freedom $\activeDoFSet{k}{}(\domseq[\L])$ are defined level by
+    level as
+    \begin{equation}
+        \label{eq:active_k_form_dofs}
+        \activeDoFSet{k}{} (\domseq[\L]) \coloneq \bigsqcup\limits_{\l = \lzero}^{\L} \; \activeDoFSet{k}{\l}, \qquad \text{where} \qquad \activeDoFSet{k}{\l} = \big( \openPatchDoFs{\extendedPatch{\M}}{k}_\l \setminus \openPatchDoFs{\ancestorPatch{\M_{\l+1}}}{k}_\l \big),
+    \end{equation}
+    where $\openPatchDoFs{\extendedPatch{\M}}{k}_\l$ are the open DoFs of the extended region $\M_\l$ that are added on level $\l$, and $\openPatchDoFs{\ancestorPatch{\M_{\l+1}}}{k}_\l$ are the open patch DoFs of the ancestor patch of $\M_{\l+1}$ that are removed on level $\l$ because $\M_{\l+1}$ will add finer DoFs there in the next step. Further, we define the active $k$-form degrees of freedom $\activeDoFSetZero{k}{}$ without boundary degrees of freedom by
+    \begin{equation}
+        \activeDoFSetZero{k}{} (\domseq[\L]) \coloneq \bigsqcup\limits_{\l = \lzero}^{\L} \; \activeDoFSetZero{k}{\l}, \qquad \text{where} \qquad \activeDoFSetZero{k}{\l} = \activeDoFSet{k}{\l} \setminus \K^k_\l(\partial \T_\l).
+    \end{equation}
+\end{definition}
+
 % ============================================================
 %  Grid of active DoFs: columns are levels, rows are form degrees, with the
 %  domain sequence beside the grid rather than stacked above it. Everything left
 %  of the grid is placed by explicit coordinate so the domain sequence sits on
 %  the brace's midline, and stays there if the panel size changes.
 % ============================================================
-\begin{figure}[p]
+\begin{figure}[tb]
 \begin{center}
 \begin{tikzpicture}[
     every node/.style={inner sep=0pt, outer sep=0pt}
@@ -729,237 +875,48 @@ Both requirements are local conditions on the active DoFs. A selection is linear
 
 \end{tikzpicture}
 \end{center}
-\caption{\guidance{Active $k$-form DoFs for the domain sequence shown on the left, in which the upper half of the mesh is refined once and the two left-most spoke regions of that half are refined again, so that the domain sequence carries a level $0$ to level $2$ interface across the horizontal axis. The domain sequence is drawn as a admissible domain sequence: every face whose finer children are present has been dropped, so each point of the domain is covered exactly once and the grey shade of a face gives the level it is taken from, light to dark for $\l = 0, 1, 2$.
-%
-Columns correspond to the level $\l \in \{0, 1, 2\}$; rows to the form degree $k = 0$ (vertices), $k = 1$ (edges) and $k = 2$ (faces). Each panel shows the \emph{entire} uniform mesh $\T_\l$ of its level, shaded in that level's grey, together with the DoFs of that level alone: blue for the DoFs the selection of Definition~\ref{def:active_k_form_dofs} retains at level $\l$, red for those it removes again because the region carrying them is refined further. Consequently the upper half is red at $\l = 0$, the two left-most spoke regions are red at $\l = 1$, and nothing is removed at the finest level $\l = 2$.
-%
-The coloured outlines track the regions through the refinement, each keeping its colour from the level where it is still coarse to the level where it appears refined: orange bounds the region refined at $\l = 0$ and, one column to the right, the refinement of that same region; green does likewise for the region refined at $\l = 1$. At $\l = 1$ the green region is therefore nested inside the orange one.}}
+\caption{Active $k$-form DoFs for the domain sequence on the left, represented through its leaf faces. The grey shading indicates the level of the leaf faces. The orange and green outlines show the regions $\M_1$ and $\M_2$, respectively, and their ancestors on the previous level. Columns correspond to the level $\l \in \{0, 1, 2\}$, rows to the form degree $k$. Each panel shows the entire uniform mesh $\T_\l$ of its level together with the DoFs of that level. Definition~\ref{def:active_k_form_dofs} selects the DoFs level by level. The blue DoFs indicate the active DoFs at the end of the selection, while the red ones were removed because the region carrying them was refined further.}
 \label{fig:active_dofs}
 \end{figure}
 
-\smallskip
+The following example explains the selection of the active DoFs for a given domain sequence in more detail.
 
-The organising unit is a \emph{region} of a single level, and the object that
-carries a whole adaptive space is a nested sequence of them, one per level. The following
-definitions are taken from~\cite{companion_paper}, whose results are stated on them.
-
-\begin{definition}[Region]
-    \label{def:region}
-    A \emph{region} $\R_\l \subseteq \F_\l(\T_\l)$ is a collection of faces of $\T_\l$. We write $\R_{\l \to \lone}$ for the faces obtained by repeatedly splitting $\R_\l$ from level $\l$ to $\lone$. The set complement $\R^\complement_\l \coloneq \F_\l(\T_\l) \setminus \R_\l$ of $\R_\l$ is also a region.
-\end{definition}
-
-\begin{figure}[!htb]
-    \centering
-    \begin{subfigure}[t]{0.47\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{images/region_anatomy/coarse.pdf}
-        \caption{The region $\R_\l$ and its open DoFs}
-        \label{fig:region_anatomy_a}
-    \end{subfigure}\hfill
-    \begin{subfigure}[t]{0.47\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{images/region_anatomy/fine.pdf}
-        \caption{Its refinement $\R_{\l \to \l+1}$ and the collar}
-        \label{fig:region_anatomy_b}
-    \end{subfigure}
-    \caption{A region of the valence-$6$ mesh in two patches, each keeping its colour across
-    the panels: a strip two faces wide crossing the mesh from its left edge to the top-right
-    corner (orange), and a patch along the bottom edge (green). Both are unions of vertex stars,
-    which is how regions arise from the marking of Section~\ref{subsec:adaptive_loop}.
-    %
-    \subref{fig:region_anatomy_a}~The region at level $\l$ (grey) and the DoFs open in it in the
-    sense of Definition~\ref{def:open_patch_dofs}, drawn as a dot, a bar or a small triangle
-    inside the vertex, edge or face carrying them. Every vertex along the spine of the strip is
-    open, because the strip contains its whole star. Five of the open vertices lie on the mesh
-    boundary, where the test is met by default: the region has no face
-    outside it there that could exclude them. DoFs that are
-    \emph{not} open are left undrawn --- they take no part in the exchange between levels.
-    %
-    \subref{fig:region_anatomy_b}~The same region refined by one level, drawn over the whole of
-    $\T_{\l+1}$ and enclosed by the dotted frames. It holds all four children of every face it
-    meets, so it is quadrisection-closed and the region of~\subref{fig:region_anatomy_a} is its
-    ancestor $\ancestorPatch{\R_{\l \to \l+1}}$. The solid frames enclose its
-    extension~\eqref{eq:patch_extension}, one collar of faces further out, shaded in the same grey
-    because the collar is not a further region but the reach of the operation; along the mesh
-    boundary there is nothing to add. A solid frame therefore encloses the same thing on both
-    panels --- the set whose open DoFs the selection of
-    Definition~\ref{def:active_k_form_dofs} draws on at that level.}
-    \label{fig:region_anatomy}
-\end{figure}
-
-Two operations on regions are used throughout, both read off Figure~\ref{fig:region_anatomy}.
-We write $\FVl{\l}(\vertex{\l}{\coarseIdxone})$ for the level-$\l$ faces incident to a vertex
-$\vertex{\l}{\coarseIdxone}$, and $\V_\l(\R_\l)$ for the vertices of the faces of $\R_\l$.
-
-The first operation grows a region by one collar of faces. The \emph{extension}
-$\extendedPatch{\R}_\l$ of a region $\R_\l$ is
-\begin{equation}
-    \label{eq:patch_extension}
-    \R_\l \quad \mapsto \quad \extendedPatch{\R}_\l
-    \coloneq \bigcup\limits_{\vertex{\l}{\coarseIdxone} \in \V_\l(\R_\l)}
-    \FVl{\l} \big(\vertex{\l}{\coarseIdxone} \big) .
-\end{equation}
-Since the union runs over \emph{all} vertices of the region, the collar is added along the entire
-boundary of $\R_\l$ and wraps around its convex corners, reaching faces that meet the region in a
-single vertex, as in Figure~\ref{fig:region_anatomy}~\subref{fig:region_anatomy_b}. Where the region already
-reaches the boundary $\boundary \T_\l$ of the mesh there is nothing to add, so the collar grows only along
-the \emph{interface}, the part of the region boundary shared with the rest of the mesh.
-
-The second operation passes between a region and its refinement, and it is the one that carries a
-constraint.
-
-\begin{definition}[Ancestor region]
-    \label{def:ancestor_patch}
-    A region $\Sreg_{\l+1} \subseteq \F_{\l+1}(\T_{\l+1})$ is \emph{quadrisection-closed} if it
-    contains all four children of every level-$\l$ face it meets, equivalently if
-    $\Sreg_{\l+1} = \R_{\l \to \l+1}$ for some region $\R_\l \subseteq \F_\l(\T_\l)$. Precisely on
-    these regions, and on no others, the \emph{ancestor} $\ancestorPatch{\cdot}$ is defined by
-    \begin{equation}
-        \Sreg_{\l+1} = \R_{\l \to \l+1} \quad \Longleftrightarrow \quad \ancestorPatch{\Sreg_{\l+1}} = \R_{\l}.
-    \end{equation}
-    Writing $\ancestorPatch{\R}$ therefore carries the standing requirement that $\R$ be
-    quadrisection-closed.
-\end{definition}
-
-\begin{definition}[Domain sequence]
-    \label{def:domseq}
-    A domain sequence $\domseq{\L} \coloneq \bigcup_{\l=\lzero}^{\L} \M_\l$ is a set of regions $\M_\l$ that satisfy
-    \begin{equation}
-        \M_\lzero = \T_\lzero \qquad \text{and} \qquad \ancestorPatch{\M_{\l+1}} \subseteq \M_\l.
-    \end{equation}
-    for $\l \in \{ \lzero, \, \dots, \, \L \}$. By convention, $\M_{\L+1} = \varnothing$. Typically each $\M_\l$ consists of several disjoint patches. The set of all domain sequences is denoted by $\alldomseqs_\L$.
-\end{definition}
-
-The nesting condition carries more than it appears to. By Definition~\ref{def:ancestor_patch}
-the left-hand side is defined only when $\M_{\l+1}$ is quadrisection-closed, so requiring it
-to lie in $\M_\l$ asks two things at once: that each domain be a union of \emph{complete}
-quadrisections, and that the coarse faces it refines belong to the previous domain. No region
-of the sequence can therefore hold three of a face's four children.
-
-\guidance{The level subsets used throughout carry over unchanged, now read off the regions: we write
-$\M_{>\lone} = \bigcup_{\l = \lone+1}^{\L} \M_\l$, and likewise $\M_{\geq\lone}$,
-$\M_{<\lone}$ and $\M_{\leq\lone}$. The faces a domain sequence resolves at exactly level
-$\l$ --- the analogue of the old $\C_\l$ --- are $\M_\l \setminus \ancestorPatch{\M_{\l+1}}$,
-the level-$\l$ region minus what it refines further.}
-
-We refer to the set \robert{$\K^k(\C) \coloneq \bigcup_{\l=\lzero}^{\L} \K^k(\C_\l)$} as the \emph{patch DoFs}.
-Thus, spanning an adaptive space using the patch DoFs of domain sequence $\C$ ensures that the entire domain is covered with active basis functions. It does not yet guarantee either linear independence or a differential complex. The following examples develops an intuition for the selection of additional active degrees of freedom and constraints regarding the domain sequence.
-
-\smallskip
-
-\guidance{\begin{example}
+\begin{example}
     \label{ex:selection}
-    Consider the domain sequence shown on the left of Figure~\ref{fig:active_dofs}, in which
-    $\M_0 = \T_0$ is the whole coarse mesh, $\M_1$ is its upper half, and $\M_2$ consists of
-    the two left-most spoke regions of that half. Since $\M_2$ lies strictly inside $\M_1$,
-    the sequence carries a level-$0$ to level-$2$ interface across the horizontal axis, and
-    $\L \geq 2$.
+    Consider the domain sequence shown on the left of Figure~\ref{fig:active_dofs}, in which $\M_0 = \T_0$ is the whole coarse mesh, $\M_1$ is its upper half, and $\M_2$ consists of the two left-most spoke regions of that half. The figure represents the domain sequence by plotting only its leaf faces, see Definition~\ref{def:leaf_faces}. That means that we read the level $2$ region $\M_2$ on the top left as also carrying a level $0$ and level $1$ component because $\ancestorPatch{\M_{\l+1}} \subseteq \M_{\l}$.
 
-    Read the selection one level at a time. At the finest level $\l = 2$ nothing is refined
-    further, so $\ancestorPatch{\M_3} = \varnothing$ and nothing is removed: the active DoFs
-    are exactly those interior to $\extendedPatch{\M}_2$. That extended region is $\M_2$
-    together with one collar of level-$2$ faces along its interface, which is why column
-    $\l = 2$ of Figure~\ref{fig:active_dofs} shows active DoFs reaching one face beyond the
-    two refined spokes. The vertices, edges and faces sitting on the outer boundary of the
-    collar are not interior to it and are stripped by
-    Definition~\ref{def:open_patch_dofs} --- a simplex is kept only when \emph{every}
-    level-$2$ face containing it lies in the extended region.
+    Read the selection one level at a time, in the order of the union in Definition~\ref{def:active_k_form_dofs}. At the coarsest level $\l = 0$ the region is the whole mesh, so $\extendedPatch{\M}_0 = \T_0$. Thus, all patch DoFs of $\extendedPatch{\M}_0$ are interior and all DoFs of $\K^k_0$ are added (blue). Since $\ancestorPatch{\M_1}$ covers the top half of the domain, all DoFs interior to it are removed (red).
 
-    At $\l = 1$ both terms are non-empty. The insertion is again everything interior to
-    $\extendedPatch{\M}_1$, one collar out from the upper half. The removal is everything
-    interior to $\ancestorPatch{\M_2}$, the level-$1$ faces that $\M_2$ refines. This is what
-    row $\l = 1$ shows: level-$1$ DoFs appear along the interface with the coarse lower half
-    and around the two spokes, but the DoFs strictly inside the refined spokes are gone,
-    because they are carried at level $2$ instead. Note that the removal strips only the
-    \emph{interior} of $\ancestorPatch{\M_2}$; the DoFs on its interface survive, and they
-    are exactly the extra level-$1$ DoFs visible between the level-$0$ and level-$2$ regions.
+    At $\l = 1$, the inserted DoFs are those interior to $\extendedPatch{\M}_1$, and the removed DoFs are those interior to $\ancestorPatch{\M_2}$, the level-$1$ faces that $\M_2$ refines. Column $\l = 1$ shows exactly this. This leads to the appearance of DoFs on level $1$ along the interface between $\M_1$ and $\M_0$. These \emph{interface DoFs} survive the removal because they are not interior to $\ancestorPatch{\M_2}$. The interface DoFs are vital to ensure the differential complex, and omitting them would violate the structure-preservation, see~\cite{companion_paper}.
 
-    At $\l = 0$ the region is the whole mesh, so $\extendedPatch{\M}_0 = \T_0$ has no
-    interface to strip and the insertion is all of $\K^k_0$. The removal is the interior of
-    $\ancestorPatch{\M_1}$, the upper half. Row $\l = 0$ therefore keeps the lower half and
-    the DoFs along the horizontal axis, and drops everything strictly above it.
+    At the finest level $\l = 2$ nothing is refined further, so $\ancestorPatch{\M_3} =
+    \varnothing$ and nothing is removed. The active DoFs are exactly those interior to the
+    extended patch $\extendedPatch{\M}_2$.
+\end{example}
 
-    The pattern is the general one: each level contributes the DoFs of the faces it resolves,
-    plus the collar DoFs that the removal at that level does not reach.
-\end{example}}
-
-The selection described in Example~\ref{ex:selection} is stated below on the
-regions of a domain sequence rather than patch by patch. Two auxiliary notions are needed,
-both taken from~\cite{companion_paper}: the DoFs a region carries, and the ones that are
-\emph{interior} to it in the sense that nothing outside the region touches them.
-
-\begin{definition}[Region DoFs]
-    \label{def:region_dofs}
-    The DoFs $\patchDoFs{\R}{k}_\l$ of the region $\R_\l \subseteq \F_\l(\T_\l)$ are given by $\patchDoFs{\R}{k}_\l \coloneq \K^k_\l(\R_\l)$.
-\end{definition}
-
-\begin{definition}[Open region DoFs]
-    \label{def:open_patch_dofs}
-    Let $\R_\l \subseteq \T_\l$ be a region. A simplex of $\R_\l$ is \emph{open} in $\R_\l$ when
-    every level-$\l$ face containing it belongs to $\R_\l$, so that the open region DoFs are
-    \begin{equation}
-        \label{eq:open_dofs_membership}
-        \openPatchDoFs{\R}{k}_\l \coloneq \Big\{ \simplex{k}{\l}{\coarseIdxone} \in \patchDoFs{\R}{k}_\l
-        \; : \; \F\K^k_\l\big(\simplex{k}{\l}{\coarseIdxone}\big) \subseteq \R_\l \Big\},
-    \end{equation}
-    where $\F\K^k_\l(\simplex{k}{\l}{\coarseIdxone})$ denotes the level-$\l$ faces containing
-    $\simplex{k}{\l}{\coarseIdxone}$.
-\end{definition}
-
-Equation~\eqref{eq:open_dofs_membership} is the form of the definition we work with because it is
-a purely local test on the faces containing a simplex, with no reference to interfaces or to
-neighbouring regions; it is shown in~\cite{companion_paper} to agree with the region DoFs less
-those carried by the interface of $\R_\l$. The test is the right one at the mesh boundary as well:
-a simplex on $\boundary\T_\l$ is open in $\R_\l$ as soon as the faces on its single side belong to
-$\R_\l$, so a region reaching the mesh boundary is not stripped there.
-Figure~\ref{fig:region_anatomy}~\subref{fig:region_anatomy_a} carries out the test on a region:
-the marked simplices are the open ones, and the vertices where two patches meet or where the
-region ends are the ones it rejects.
-
-\begin{definition}[Active $k$-form degrees of freedom]
-    \label{def:active_k_form_dofs}
-    Let $\domseq{\L} = \bigcup_{\l = \lzero}^{\L} \M_\l$ be a domain sequence of $\T_\L$. The
-    active $k$-form degrees of freedom $\activeDoFSet{k}{}(\domseq{\L})$ are defined level by
-    level as
-    \begin{equation}
-        \label{eq:active_k_form_dofs}
-        \activeDoFSet{k}{} \big(\domseq{\L}\big) \coloneqq \bigsqcup\limits_{\l = \lzero}^{\L}
-            \Big( \underbrace{\openPatchDoFs{\extendedPatch{\M}}{k}_\l}_{\text{inserted}}
-            \;\setminus\;
-            \underbrace{\openPatchDoFs{\ancestorPatch{\M_{\l+1}}}{k}_\l}_{\text{removed}} \Big).
-    \end{equation}
-\end{definition}
-
-\guidance{At each level the definition \emph{inserts} the DoFs interior to the extended region
-$\extendedPatch{\M}_\l$ --- the level-$\l$ region together with one collar layer of faces
-along its interface, Equation~\eqref{eq:patch_extension} --- and \emph{removes} those
-interior to $\ancestorPatch{\M_{\l+1}}$, the part of the region that is refined further and
-whose DoFs are therefore represented on finer levels instead. What survives is the DoFs of
-the faces the sequence resolves at exactly level $\l$, together with the collar DoFs that
-the removal does not strip. The union is disjoint because every DoF carries the level it is
-taken from.}
+We now have an algorithm to select active DoFs through a domain sequence and can specify Definition~\ref{def:generic_adaptive_function_spaces} to use those DoFs.
 
 \begin{definition}[Adaptive subdivision $k$-form spaces induced by a domain sequence]
     \label{def:adaptive_function_spaces}
-    The adaptive subdivision $k$-form spaces $\hierSDFspace{k}{\C}{\L}$ and $\hierSDFspaceZero{k}{\C}{\L}$ (with vanishing trace) induced by the domain sequence $\C(\T_\L)$ are given by
+    Let $\domseq[\L]$ be a domain sequence of $\T_\L$. The adaptive subdivision $k$-form spaces $\hierSDFspace{k}{\domseq}{\L}$ and $\hierSDFspaceZero{k}{\domseq}{\L}$ (with vanishing trace) induced by it are given by
     \begin{equation}
-        \hierSDFspace{k}{\C}{\L} \coloneqq \mathrm{span}\big( \constrVec{\SDFbases}{k}{\activeDoFs(\C)}{\L} \big) \qquad \text{and} \qquad \hierSDFspaceZero{k}{\C}{\L} \coloneqq \mathrm{span}\big( \constrVec{\mathring{\SDFbases}}{k}{\activeDoFs(\C)}{\L} \big),
+        \hierSDFspace{k}{\domseq}{\L} \coloneqq \mathrm{span}\big( \constrVec{\SDFbases}{k}{\activeDoFSet{k}{}(\domseq[\L])}{\L} \big) \qquad \text{and} \qquad \hierSDFspaceZero{k}{\domseq}{\L} \coloneqq \mathrm{span}\big( \constrVec{\mathring{\SDFbases}}{k}{\activeDoFSet{k}{}(\domseq[\L])}{\L} \big),
     \end{equation}
-    where the active basis functions $\constrVec{\SDFbases}{k}{\activeDoFs(\C)}{\L}$ and $\constrVec{\mathring{\SDFbases}}{k}{\activeDoFs(\C)}{\L} \coloneq \constrVec{\SDFbases}{k}{(\activeDoFs(\C) \setminus \robert{\K^k(\partial \C)})}{\L}$ are constructed as in Definition~\ref{def:generic_adaptive_function_spaces}.
+    where the sets $\constrVec{\SDFbases}{k}{\activeDoFSet{k}{}(\domseq[\L])}{\L}$ and $\constrVec{\mathring{\SDFbases}}{k}{\activeDoFSet{k}{}(\domseq[\L])}{\L} \coloneq \constrVec{\SDFbases}{k}{\activeDoFSetZero{k}{}(\domseq[\L])}{\L}$ of active basis functions are constructed as in Definition~\ref{def:generic_adaptive_function_spaces}.
 \end{definition}
 
-\begin{theorem}
+\begin{theorem}[Differential complex, from~\cite{companion_paper}]
     \label{theorem:differential_complex}
-    Let $\C$ be a domain sequence of the mesh $\T_\L$. The adaptive subdivision $k$-form spaces $\hierSDFspace{k}{\C}{\L}$ constitute the differential complex
+    Let $\domseq[\L]$ be a domain sequence of the mesh $\T_\L$. The adaptive subdivision $k$-form spaces $\hierSDFspace{k}{\domseq}{\L}$ constitute the differential complex
     \begin{equation}
     \begin{tikzcd}
-        \mathfrak{R}_\C: \qquad 0 \arrow[r] & \mathbb{R} \arrow[r, "\subset"] & \hierSDFspace{0}{\C}{\L} \arrow[r, "\extd"] & \hierSDFspace{1}{\C}{\L} \arrow[r, "\extd"] & \hierSDFspace{2}{\C}{\L} \arrow[r] & 0.
+        \mathfrak{R}_{\domseq}: \qquad 0 \arrow[r] & \hierSDFspace{0}{\domseq}{\L} \arrow[r, "\extd"] & \hierSDFspace{1}{\domseq}{\L} \arrow[r, "\extd"] & \hierSDFspace{2}{\domseq}{\L} \arrow[r] & 0.
     \end{tikzcd}
     \end{equation}
-    The adaptive subdivision $k$-form spaces with vanishing traces form the differential complex
+    The spaces $\hierSDFspaceZero{k}{\domseq}{\L}$ with vanishing traces form the differential complex
     \begin{equation}
     \begin{tikzcd}
-        \mathring{\mathfrak{R}}_\C: \qquad 0 \arrow[r] & \hierSDFspaceZero{0}{\C}{\L} \arrow[r, "\extd"] & \hierSDFspaceZero{1}{\C}{\L} \arrow[r, "\extd"] & \hierSDFspaceZero{2}{\C}{\L} \arrow[r, "\int"] & \mathbb{R} \arrow[r] & 0.
+        \mathring{\mathfrak{R}}_{\domseq}: \qquad 0 \arrow[r] & \hierSDFspaceZero{0}{\domseq}{\L} \arrow[r, "\extd"] & \hierSDFspaceZero{1}{\domseq}{\L} \arrow[r, "\extd"] & \hierSDFspaceZero{2}{\domseq}{\L} \arrow[r] & 0.
     \end{tikzcd}
     \end{equation}
 \end{theorem}
@@ -971,17 +928,66 @@ The other essential properties of the adaptive $k$-form subdivision spaces, name
 \subsection{Admissible domain sequences and properties of the adaptive spaces}
 \label{subsec:subdiv_partition}
 
+% --- Figure knobs: covering star, quadrisection, and interior-vertex examples (single row, no dividers) ---
+\newcommand{\cvScale}{0.22}
+% #1 (optional) panel width as a fraction of \textwidth, default \cvScale --
+% override per panel when its image has a different aspect ratio (e.g. a
+% colorbar widens the PDF at the same height) and would otherwise come out
+% shorter/taller than the rest once every panel is fit to the same width.
+\newcommand{\cvsubfig}[4][\cvScale]{% #1 width fraction  #2 image path  #3 caption  #4 label
+    \begin{subfigure}[t]{#1\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{#2}
+        \caption{#3}
+        \label{#4}
+    \end{subfigure}%
+}
+% -------------------------------------------------------------------------
+% The covering-star panels that used to stand here have moved down to
+% Section~\ref{subsec:operations_on_coverings}, next to their only citation and
+% below Equation~\eqref{eq:vertex_star_in_C}, which is where the covering star
+% is defined. The other two panels (covering-interior vertices, inadmissible faces) were cut.
+
+% =====================================================================
+% The admissibility figure for this section, replacing the old fig:visualisations.
+% Panels (a), (b) and (d) are one domain sequence, v6_boundary_threenotches_lvl1,
+% read at level 0; panel (c) keeps the nested-centre sequence and is also cited
+% from Sections~\ref{subsec:operations_on_coverings} and~\ref{subsec:exactness_atomic}.
+% Generated by plot_admissibility.py in the subdiv_FE repo from
+% input_partition.vtk + pinch_arcs.txt.
+% =====================================================================
+\begin{figure}[tb]
+    \centering
+    \cvsubfig
+        {images/visualisations/v6_boundary_threenotches_lvl1_lvl0_partition.pdf}
+        {The level-$\lzero$ faces split into leaf faces and the ancestor patch $\ancestorPatch{\M_1}$ (purple)}
+        {fig:adm_partition}
+    \hfill
+    \cvsubfig
+        {images/visualisations/v6_boundary_threenotches_lvl1_lvl0_refinement_fan.pdf}
+        {The refinement fan (purple) inside the incident faces (outlined) of one vertex}
+        {fig:adm_fan}
+    \hfill
+    \cvsubfig[0.2613]
+        {images/visualisations/v6_nested_center_lvl3_exterior_levels.pdf}
+        {Vertices coloured by the level from which they are refinement-exterior}
+        {fig:adm_exterior}
+    \hfill
+    \cvsubfig
+        {images/visualisations/v6_boundary_threenotches_lvl1_lvl0_admissible_faces.pdf}
+        {Leaf faces admissible (green) and inadmissible (orange), with exterior vertices hollow}
+        {fig:adm_faces}
+    \caption{\guidance{The definition chain of this section read off a single domain sequence. Panel~\subref{fig:adm_partition} shows the only input the predicates use, the splitting of the level-$\lzero$ faces of $\domseq$ into the leaf faces $\leafF{\lzero}(\domseq)$ and the ancestor patch $\ancestorPatch{\M_1}$ of the faces refined further. Panel~\subref{fig:adm_fan} reads that splitting at one vertex: its incident faces $\FVl{\lzero}$ are outlined, and the one of them lying in $\ancestorPatch{\M_1}$ is its refinement fan $\refFan{\lzero}$ (Definition~\ref{def:refinement_fan}), which is why the predicates are level-local. Panel~\subref{fig:adm_exterior} marks every vertex by the level from which its fan is empty, i.e.\ from which it is refinement-exterior (Definition~\ref{def:refinement_exterior_vertex}). Panel~\subref{fig:adm_faces} then runs Definition~\ref{def:admissible_face}: a leaf face is admissible exactly when at least one of its vertices is refinement-exterior, drawn hollow, and the three faces that have no such vertex are inadmissible. Purple keeps the meaning it has in Figure~\ref{fig:pinches} throughout, namely refined beyond the level being read, so the verdict colours are deliberately a different hue.}}
+    \label{fig:admissibility_chain}
+\end{figure}
+
 We are now ready to define the first geometric predicate of face admissibility.
 
-\guidance{Both predicates are stated on the \emph{refinement fan}, following~\cite{companion_paper}:
-the faces at a vertex that the sequence refines beyond the current level. Phrasing them on the
-refined side rather than the coarse one is what makes them level-local --- the removed region
-\emph{is} the refined region seen at level $\l$, so the fan's components are the local components
-of the removed region, and the coarse-side disconnection is a consequence rather than the cause.
+Both predicates are stated on the \emph{refinement fan} that will be introduced next, following~\cite{companion_paper}. This refinement fan contains all faces of the mesh at a vertex that the sequence refines beyond the current level.
 
 \begin{definition}[Refinement fan]
     \label{def:refinement_fan}
-    Let $\domseq{\L}$ be a domain sequence with regions $\M_\l$. The \emph{refinement fan} $\refFan{\l} \big( \vertex{\l}{\coarseIdxone} \big)$ of a vertex $\vertex{\l}{\coarseIdxone} \in \V_\l(\T_\l)$ contains all incident faces of $\vertex{\l}{\coarseIdxone}$ that are refined beyond level $\l$ in the domain sequence. The refinement fan is defined as
+    Let $\domseq[\L]$ be a domain sequence with regions $\M_\l$. The \emph{refinement fan} $\refFan{\l} \big( \vertex{\l}{\coarseIdxone} \big)$ of a vertex $\vertex{\l}{\coarseIdxone} \in \V_\l(\T_\l)$ contains all incident faces of $\vertex{\l}{\coarseIdxone}$ that are refined beyond level $\l$ in the domain sequence, i.e.
     \begin{equation}
         \refFan{\l} \big( \vertex{\l}{\coarseIdxone} \big) \coloneq \FVl{\l} \big( \vertex{\l}{\coarseIdxone} \big) \cap \ancestorPatch{\M_{\l+1}}.
     \end{equation}
@@ -991,30 +997,15 @@ The refinement fan allows us to state the two important geometric predicates for
 
 \begin{definition}[Refinement-exterior vertex]
     \label{def:refinement_exterior_vertex}
-    Let $\domseq{\L}$ be a domain sequence. A vertex $\vertex{\l}{\coarseIdxone} \in \V_\l(\T_\l)$ is \emph{refinement-exterior} at level $\l$ if its refinement fan in $\domseq{\L}$ is empty on that level, i.e. $\refFan{\l} \big( \vertex{\l}{\coarseIdxone} \big) = \varnothing$.
+    Let $\domseq[\L]$ be a domain sequence. A vertex $\vertex{\l}{\coarseIdxone} \in \V_\l(\T_\l)$ is \emph{refinement-exterior} at level $\l$ if its refinement fan in $\domseq[\L]$ is empty on that level, i.e. $\refFan{\l} \big( \vertex{\l}{\coarseIdxone} \big) = \varnothing$.
 \end{definition}
-
-\guidance{The predicate below is evaluated on the \emph{leaf faces} of a level, that is, on the
-faces of the region $\M_\l$ that are not themselves refined further,
-\begin{equation}
-    \label{eq:leaf_faces}
-    \leafF{\l}(\domseq{\L}) \coloneq \F_\l(\M_\l) \setminus \ancestorPatch{\M_{\l+1}}.
-\end{equation}
-The restriction is not cosmetic. A face $\face{\l}{\coarseIdxone} \in \ancestorPatch{\M_{\l+1}}$ lies
-in the refinement fan of each of its three vertices, so none of them is refinement-exterior at
-level $\l$ and the face would be inadmissible by the letter of the predicate --- for every
-domain sequence that refines anywhere, and irreparably, since quadrisecting a face that is
-already refined is the identity by the remark after
-Definition~\ref{def:face_quadrisection_operator}. Covered faces carry no active DoFs of their
-own, which is why they cannot host a linear dependency and are exempt.}
 
 \begin{definition}[Admissible face]
     \label{def:admissible_face}
-    A leaf face $\face{\l}{\coarseIdxone} \in \leafF{\l}(\domseq{\L})$ is \emph{admissible} if at least one of its vertices is
-    refinement-exterior at level $\l$. Otherwise, it is \emph{inadmissible}.
-\end{definition}}
+    A face $\face{\l}{\coarseIdxone} \in \F_\l(\domseq[\L])$ is \emph{admissible} if at least one of its vertices is refinement-exterior at level $\l$. Otherwise, it is \emph{inadmissible}.
+\end{definition}
 
-Figure~\ref{fig:inadmissible_faces} shows a domain sequence whose faces on level $1$ are all admissible while the faces on level $0$ (purple) are inadmissible. As we will see in Section~\ref{subsec:exactness_atomic}, the adaptive subdivision $k$-form spaces on this domain sequence have some interesting properties: There are $3$ linearly dependent active vertex DoFs, $18$ linearly dependent active edge DoFs and $15$ linearly dependent active face DoFs. At the same time, the spaces on this domain sequence have the correct cohomology of $\mathrm{dim}(\mathcal{H}^0) = 1$ and $\mathrm{dim}(\mathcal{H}^1) = \mathrm{dim}(\mathcal{H}^2) = 0$.
+\guidance{An extreme case is a domain sequence in which a whole band of coarse faces is enclosed by refinement on both sides, so that every one of its level-$\lzero$ faces is inadmissible while the level-$1$ faces are all admissible.} As we will see in Section~\ref{subsec:exactness_atomic}, the adaptive subdivision $k$-form spaces on \guidance{such a} domain sequence have some interesting properties: There are $3$ linearly dependent active vertex DoFs, $18$ linearly dependent active edge DoFs and $15$ linearly dependent active face DoFs. At the same time, the spaces on this domain sequence have the correct cohomology of $\mathrm{dim}(\mathcal{H}^0) = 1$ and $\mathrm{dim}(\mathcal{H}^1) = \mathrm{dim}(\mathcal{H}^2) = 0$.
 
 \smallskip
 
@@ -1022,17 +1013,17 @@ The second predicate is that of a pinch vertex.
 
 \begin{definition}[Refinement arcs of a vertex]
     \label{def:refinement_arcs}
-    Let $\vertex{\l}{\coarseIdxone} \in \V(\domseq{\L})$. The \emph{refinement arcs of $\vertex{\l}{\coarseIdxone}$} are the maximal runs of consecutive faces in its cyclic (or, at a boundary vertex, linear) refinement fan $\refFan{\l}(\vertex{\l}{\coarseIdxone})$. Two faces of the same arc are connected through shared level-$\l$ edges at $\vertex{\l}{\coarseIdxone}$ while faces of distinct arcs are not.
+    Let $\vertex{\l}{\coarseIdxone} \in \V(\domseq[\L])$. The \emph{refinement arcs of $\vertex{\l}{\coarseIdxone}$} are the maximal runs of consecutive faces in its cyclic (or, at a boundary vertex, linear) refinement fan $\refFan{\l}(\vertex{\l}{\coarseIdxone})$. Two faces of the same arc are connected through shared level-$\l$ edges at $\vertex{\l}{\coarseIdxone}$ while faces of distinct arcs are not.
 \end{definition}
 
 \begin{definition}[Pinch vertex]
     \label{def:pinch_vertex}
-    A vertex $\vertex{\l}{\coarseIdxone} \in \V(\domseq{\L})$ is a \emph{pinch vertex} if it has two or more refinement arcs.
+    A vertex $\vertex{\l}{\coarseIdxone} \in \V(\domseq[\L])$ is a \emph{pinch vertex} if it has two or more refinement arcs.
 \end{definition}
 
 \begin{definition}[Boundary pinch vertex]
     \label{def:boundary_pinch}
-    Let $\vertex{\l}{\coarseIdxone} \in \V{\domseq{\L}} \cap \partial\T_\l$ lie on the boundary of $\T_\l$. Its refinement fan $\refFan{\l}(\vertex{\l}{\coarseIdxone})$ then contains two faces that contain domain boundary edges. We call a refinement arc \emph{anchored} if it contains such a face. The vertex $\vertex{\l}{\coarseIdxone}$ is a \emph{boundary pinch} if it has at least one refinement arc that is not anchored.
+    Let $\vertex{\l}{\coarseIdxone} \in \V{\domseq[\L]} \cap \partial\T_\l$ lie on the boundary of $\T_\l$. Its refinement fan $\refFan{\l}(\vertex{\l}{\coarseIdxone})$ then contains two faces that contain domain boundary edges. We call a refinement arc \emph{anchored} if it contains such a face. The vertex $\vertex{\l}{\coarseIdxone}$ is a \emph{boundary pinch} if it has at least one refinement arc that is not anchored.
 \end{definition}
 
 % --- Figure knobs: admissibility predicates on concrete domain sequences (single row, no dividers) ---
@@ -1046,92 +1037,57 @@ The second predicate is that of a pinch vertex.
     \end{subfigure}%
 }
 % -------------------------------------------------------------------------
-\begin{figure}
+\begin{figure}[tb]
     \centering
     \admsubfig
         {images/visualisations/v8_quarters_lvl1_pinch_marked.pdf}
-        {Interior pinch: two arcs}{fig:pinch_interior}
+        {Interior pinch with two refinement arcs}{fig:pinch_interior}
     \hfill
     \admsubfig
         {images/visualisations/v8_graded_top_bottom_sides_pinch_marked.pdf}
-        {Not a pinch: a single arc}{fig:pinch_single_arc}
+        {Non-pinch with a single refinement arc}{fig:pinch_single_arc}
     \hfill
     \admsubfig
         {images/visualisations/v6_boundary_topbottom_lvl1_pinch_marked.pdf}
-        {Boundary pinches by two arcs}{fig:pinch_boundary_two_arcs}
+        {Pinches at the domain boundary}{fig:pinch_boundary_two_arcs}
     \hfill
     \admsubfig
         {images/visualisations/v6_boundary_triangle_lvl1_pinch_marked.pdf}
-        {Boundary pinches by an unanchored arc}{fig:pinch_boundary_unanchored}
-    \caption{Four domain sequences, with the vertex under discussion marked in yellow and the
-    faces of its refinement arcs shaded. The arcs are the ones the implementation itself
-    computes, from the same predicate it applies at each level in turn.
-    %
-    \subref{fig:pinch_interior}~The prototypical pinch of Definition~\ref{def:pinch_vertex}: at
-    the valence-$8$ centre the faces refined beyond the level fall into two arcs of two, separated
-    by a coarse face at either end. It carries one spurious $1$-form harmonic.
-    %
-    \subref{fig:pinch_single_arc}~Not a pinch. Six of the eight faces are refined, but they form
-    a single run, so the fan has one arc.
-    %
-    \subref{fig:pinch_boundary_two_arcs}~Refining the stars of the four corner vertices of the
-    top and bottom edges leaves the centre of each of those edges with its two extreme faces
-    refined and the middle one coarse. That is two arcs on a linear fan, so these two vertices
-    are pinches by Definition~\ref{def:pinch_vertex} even though both arcs reach
-    $\boundary\T_\l$. Every other side centre has only one of its corners refined and so keeps
-    a single arc.
-    %
-    \subref{fig:pinch_boundary_unanchored}~The other boundary failure, and the one
-    Definition~\ref{def:boundary_pinch} is for. The refined region is the triangle spanned by
-    three alternating side centres, so at each of them the single refined face is the
-    \emph{middle} of a three-face fan and the arc reaches $\boundary\T_\l$ nowhere. Each
-    unanchored arc contributes one spurious $1$-form harmonic, and only under natural boundary
-    conditions. This last domain sequence is a legal one, but not one the \textsc{Refine} step of
-    Section~\ref{subsec:adaptive_loop} produces on its own: marking a vertex star can only lift
-    faces in pairs across an interior edge, or a single face across a boundary edge, and that
-    single face is an extreme of the fan and therefore anchored.}
+        {Boundary pinches with unanchored arcs}{fig:pinch_boundary_unanchored}
+    \caption{Four domain sequences (represented by their leaf faces) with the potential pinch vertex marked in yellow and the faces of its refinement arcs shaded in purple, cf. Definitions~\ref{def:pinch_vertex} and~\ref{def:boundary_pinch}. Panels~\subref{fig:pinch_boundary_two_arcs} and~\subref{fig:pinch_boundary_unanchored} visualise one additional subtlety: boundary vertices can create pinches in two distinct ways, either by two refinement arcs as in~\subref{fig:pinch_boundary_two_arcs} or by one unanchored refinement arc as in~\subref{fig:pinch_boundary_unanchored}. The former case is considered an interior pinch that happens at the boundary, while the letter is considered a bondary pinch.}
     \label{fig:pinches}
 \end{figure}
 
-Figure~\ref{fig:pinches} shows different kinds of pinches and describes the spurious $1$-form harmonics they cause.
-
 \smallskip
 
-The two predicates allow us to define \emph{admissible domain sequences} as a subset of domain sequences.
+The predicates of face admissibility and vertex pinches allow us to define \emph{admissible domain sequences} as a subset of domain sequences.
 
 \begin{definition}[Admissible domain sequence]
     \label{def:subdiv_partition}
-    A domain sequence $\domseq{\L}(\T_\L)$ is an \emph{admissible domain sequence} iff
+    A domain sequence $\domseq[\L](\T_\L)$ is an \emph{admissible domain sequence} iff
     \begin{itemize}
-        \item[(i)] every leaf face of $\domseq{\L}$ is admissible,
-        \item[(ii)] no vertex of $\domseq{\L}$ is a pinch vertex,
-        \item[(iii)] no domain boundary vertex of $\domseq{\L}$ is a boundary pinch vertex.
+        \item[(i)] every leaf face of $\domseq[\L]$ is admissible,
+        \item[(ii)] no vertex of $\domseq[\L]$ is a pinch vertex,
+        \item[(iii)] no domain boundary vertex of $\domseq[\L]$ is a boundary pinch vertex.
     \end{itemize}
     We denote the set of admissible domain sequences by $\allpartitions(\T_\L)$.
 \end{definition}
 
-\guidance{Clause (ii) is deliberately \emph{not} restricted to interior vertices.}
+Condition (ii) is deliberately not restricted to interior vertices to cover cases like the one in Figure~\ref{fig:pinch_boundary_two_arcs}. The three conditions ensure a minimum distance between the patches of the coarse region $\ancestorPatch{\M_{\l+1}}$ and its fine counterpart $\extendedPatch{\M}_{\l+1}$. The following two theorems are from ~\cite{companion_paper} and show that both linear independence and the correct cohomology of the adaptive subdivision $k$-form spaces follow from the admissibility of the domain sequence they are defined on.
 
-Finally, we are going to re-state the two main theorems of \cite{companion_paper} regarding linear independence and the exactness of the complex.
-
-\begin{theorem}
+\begin{theorem}[Linear independence, from~\cite{companion_paper}]
     \label{theorem:linear_independence}
-    Let $\C \in \allpartitions$ be a admissible domain sequence of the mesh $\T_\L$. The active basis functions selected by Def.~\ref{def:active_k_form_dofs} of the adaptive spaces $\hierSDFspace{k}{\C}{\L}$ are linearly independent.
+    Let $\domseq \in \allpartitions$ be a admissible domain sequence of the mesh $\T_\L$. The active basis functions selected by Def.~\ref{def:active_k_form_dofs} of the adaptive spaces $\hierSDFspace{k}{\domseq}{\L}$ are linearly independent.
 \end{theorem}
-\begin{proof}
-    Linear dependencies only occur at inadmissible faces but a admissible domain sequence does not contain any inadmissible faces. See \cite{companion_paper} for the entire proof.
-\end{proof}
 
-\begin{theorem}
+The minimum gap between two patches enforced by the admissibility of the domain sequence also guarantees that the regions preserve their respective cohomology classes under refinement and extension, see~\cite{companion_paper} for a detailed derivation.
+
+\begin{theorem}[Discrete de Rham complexes, from~\cite{companion_paper}]
     \label{theorem:exactness}
-    Let $\C \in \allpartitions$ be a admissible domain sequence. Then, the cohomology groups of the complexes $\mathfrak{R}_\C$ and $\mathring{\mathfrak{R}}_\C$ of adaptive $k$-form subdivision spaces from Theorem~\ref{theorem:differential_complex} are isomorphic to the ones of absolute and relative de Rham complexes, respectively.
+    Let $\domseq \in \allpartitions$ be a admissible domain sequence. Then, the cohomology groups of the complexes $\mathfrak{R}_{\domseq}$ and $\mathring{\mathfrak{R}}_{\domseq}$ of adaptive $k$-form subdivision spaces from Theorem~\ref{theorem:differential_complex} are isomorphic to the ones of absolute and relative de Rham complexes, respectively.
 \end{theorem}
 
-\begin{proof}
-    The proof is built upon the arguments in~\cite{Evans.2020} around removing coarse spaces and inserting fine spaces instead, while keeping track of their cohomologies. See \cite{companion_paper} for the detailed proof in the subdivision context.
-\end{proof}
-
-Admissible domain sequences respect the geometric constraints necessary for linear independence and reproducing the correct cohomology. Unfortunately, in contrast to general domain sequences $\allcoverings$, admissible domain sequences are not closed under the quadrisection operator $\quadriF(\C, \cdot)$ and $\quadriV{\targetlevel}(\C, \cdot)$, meaning that they are maps $\allpartitions \to \allcoverings$. Thus, naive refinement of admissible domain sequences can reintroduce inadmissible geometry, for example a pinch vertex. This is exactly why Section~\ref{subsec:adaptive_loop} sets up a padding step that repairs these geometric defects and turns the domain sequence into a admissible domain sequence again.
+Admissible domain sequences respect the geometric constraints necessary for linear independence and reproducing the correct cohomology. Unfortunately, in contrast to general domain sequences $\allcoverings$, admissible domain sequences are not closed under the quadrisection operator $\quadriF(\domseq, \cdot)$ and $\quadriV{\targetlevel}(\domseq, \cdot)$, meaning that they are maps $\allpartitions \to \allcoverings$. Thus, naive refinement of admissible domain sequences can reintroduce inadmissible geometry, for example a pinch vertex. This is exactly why Section~\ref{subsec:adaptive_loop} sets up a padding step that repairs these geometric defects and turns the domain sequence into a admissible domain sequence again.
 
 \FloatBarrier
 
@@ -1142,15 +1098,15 @@ This section develops the necessary concepts to describe the two particular conf
 
 \smallskip
 
-\robert{Note that the set of covering-interior vertices of $\C$ does not only contain the interior vertices of the patches of $\C$ but can also contain interface vertices and vertices on the boundary $\partial \C$. For example, Figure~\ref{fig:covering_interior_vertices} displays a domain sequence with nested refinement up to level $3$ towards its center. The vertices are colored by the level at which they become covering-interior. The outermost layer is covering-interior from level $0$ because its covering star contains only faces on level $0$. The next layer is covering-interior from level $1$ because the covering stars of its vertex classes contains only faces on level $0$ and $1$. This logic applies to all layers in the figure until we reach the finest level $3$, at which all the remaining vertex classes become covering-interior.}
+\guidance{Note that the set of refinement-exterior vertices of $\domseq$ at a given level does not only contain the interior vertices of the patches of $\domseq$ but can also contain interface vertices and vertices on the boundary $\partial \domseq$. For example, Figure~\ref{fig:adm_exterior} displays a domain sequence with nested refinement up to level $3$ towards its centre, with every vertex coloured by the level from which it is refinement-exterior. The outermost layer is refinement-exterior already at level $0$, because none of its incident faces is refined beyond that level, so its fan (Definition~\ref{def:refinement_fan}) is empty there. The next layer becomes refinement-exterior only at level $1$, since at level $0$ it still has incident faces that are refined further. This logic applies to all layers in the figure until we reach the finest level $3$, at which the remaining vertices become refinement-exterior.}
 
 \smallskip
 
-The remainder of this section introduces operators that enable the kinds of refinement that we will later need for the adaptive loop in Section~\ref{subsec:adaptive_loop}. The \emph{face quadrisection operator} $\quadriF(\C, \simplexsubset{2}{\l})$ refines a \emph{single-level} set of faces $\simplexsubset{2}{\l} \subseteq \F(\C_\l)$ to level $\l+1$ by replacing each face with its four children, that is, it removes the faces $\simplexsubset{2}{\l}$ from level $\l$ and adds their children on level $\l+1$, leaving all other levels untouched.
+The remainder of this section introduces operators that enable the kinds of refinement that we will later need for the adaptive loop in Section~\ref{subsec:adaptive_loop}. The \emph{face quadrisection operator} $\quadriF(\domseq, \simplexsubset{2}{\l})$ refines a \emph{single-level} set of faces $\simplexsubset{2}{\l} \subseteq \F(\domseq_\l)$ to level $\l+1$ by replacing each face with its four children, that is, it removes the faces $\simplexsubset{2}{\l}$ from level $\l$ and adds their children on level $\l+1$, leaving all other levels untouched.
 
 \begin{definition}[Face quadrisection operator]
     \label{def:face_quadrisection_operator}
-    Let $\domseq{\L} \in \alldomseqs$ be a domain sequence with regions $\M_\l$,
+    Let $\domseq[\L] \in \alldomseqs$ be a domain sequence with regions $\M_\l$,
     $\l \in \{ \lzero, \, \dots \,, \L\}$, and let $\simplexsubset{2}{\l} \subseteq \F_\l(\M_\l)$
     be a set of faces marked for refinement. The \emph{face quadrisection operator}
     \begin{equation}
@@ -1159,12 +1115,12 @@ The remainder of this section introduces operators that enable the kinds of refi
     is defined by
     \begin{equation}
         \label{eq:def_face_quadrisection_operator}
-        \quadriF \big( \domseq{\L}, \, \simplexsubset{2}{\l} \big) \coloneq \M_{\leq\l} \; \cup \; \big( \M_{\l+1} \cup \Aop{}{\l}{\l+1}(\simplexsubset{2}{\l}) \big) \; \cup \; \M_{\geq \l+2}.
+        \quadriF \big( \domseq[\L], \, \simplexsubset{2}{\l} \big) \coloneq \M_{\leq\l} \; \cup \; \big( \M_{\l+1} \cup \Aop{}{\l}{\l+1}(\simplexsubset{2}{\l}) \big) \; \cup \; \M_{\geq \l+2}.
     \end{equation}
 \end{definition}
 
 Note that if $\simplexsubset{2}{\l} \subseteq \ancestorPatch{\M_{\l+1}}$, then
-$\quadriF ( \domseq{\L}, \simplexsubset{2}{\l} ) = \domseq{\L}$ is the identity because all
+$\quadriF ( \domseq[\L], \simplexsubset{2}{\l} ) = \domseq[\L]$ is the identity because all
 marked faces on level $\l$ already are in the domain sequence's region on level $\l+1$.
 
 The face quadrisection operator refines a flat set of faces on a single level. The refinement and repair steps of Section~\ref{subsec:adaptive_loop} instead act around a single vertex, and have to reach it from whatever level the domain sequence currently covers it at. Because the meshes $\T_\l$ are nested, so are their vertex sets,
@@ -1176,12 +1132,12 @@ so a vertex, once created, is a vertex of every finer mesh and we may read the s
 
 \begin{definition}[Covering face]
     \label{def:covering_face}
-    Let $\domseq{\L} \in \alldomseqs$ and let $\face{\l}{\coarseIdxone} \in \F_\l(\T_\l)$ be a face that is not refined beyond level $\l$. Exactly one leaf face of $\domseq{\L}$, at some level $\l' \leq \l$, then has $\face{\l}{\coarseIdxone}$ among its descendants. We call it the \emph{covering face} $\coveringFace(\face{\l}{\coarseIdxone})$ of $\face{\l}{\coarseIdxone}$; if $\face{\l}{\coarseIdxone}$ is itself a leaf face, then $\coveringFace(\face{\l}{\coarseIdxone}) = \face{\l}{\coarseIdxone}$.
+    Let $\domseq[\L] \in \alldomseqs$ and let $\face{\l}{\coarseIdxone} \in \F_\l(\T_\l)$ be a face that is not refined beyond level $\l$. Exactly one leaf face of $\domseq[\L]$, at some level $\l' \leq \l$, then has $\face{\l}{\coarseIdxone}$ among its descendants. We call it the \emph{covering face} $\coveringFace(\face{\l}{\coarseIdxone})$ of $\face{\l}{\coarseIdxone}$; if $\face{\l}{\coarseIdxone}$ is itself a leaf face, then $\coveringFace(\face{\l}{\coarseIdxone}) = \face{\l}{\coarseIdxone}$.
 \end{definition}
 
 \begin{definition}[Graded vertex quadrisection operator]
     \label{def:graded_vertex_quadrisection}
-    Let $\domseq{\L} \in \alldomseqs$, let $\vertex{}{\coarseIdxtwo}$ be a vertex and let
+    Let $\domseq[\L] \in \alldomseqs$, let $\vertex{}{\coarseIdxtwo}$ be a vertex and let
     $\targetlevel$ be a target level with $\vertex{}{\coarseIdxtwo} \in \V_\targetlevel(\T_\targetlevel)$. The \emph{graded vertex quadrisection operator}
     \begin{equation}
         \quadriV{\targetlevel} \; \colon \; \alldomseqs \times \V \; \longrightarrow \; \alldomseqs
@@ -1191,7 +1147,7 @@ so a vertex, once created, is a vertex of every finer mesh and we may read the s
     level-$\targetlevel$ mesh star that is not already refined beyond $\targetlevel$, apply
     \begin{equation}
         \label{eq:vertex_quadrisection}
-        \domseq{\L} \; \longmapsto \; \quadriF \big( \domseq{\L}, \, \{ \coveringFace(\face{\targetlevel}{\coarseIdxone}) \} \big)
+        \domseq[\L] \; \longmapsto \; \quadriF \big( \domseq[\L], \, \{ \coveringFace(\face{\targetlevel}{\coarseIdxone}) \} \big)
     \end{equation}
     repeatedly until $\coveringFace(\face{\targetlevel}{\coarseIdxone}) = \face{\targetlevel}{\coarseIdxone}$, that is, until the position is itself a leaf face.
     Faces of the star already refined beyond $\targetlevel$ are left untouched, so the operator is
@@ -1210,7 +1166,7 @@ Both of them read that target level off the levels at which the vertex is curren
 
 \begin{definition}[Level span of a vertex]
     \label{def:level_span}
-    Let $\domseq{\L} \in \alldomseqs$ with regions $\M_\l$ and let $\vertex{}{\coarseIdxtwo}$ be a
+    Let $\domseq[\L] \in \alldomseqs$ with regions $\M_\l$ and let $\vertex{}{\coarseIdxtwo}$ be a
     vertex. We write
     \begin{equation}
         \label{eq:level_span}
@@ -1219,63 +1175,45 @@ Both of them read that target level off the levels at which the vertex is curren
         \targetlevel_\coarseIdxtwo \coloneq \max \big\{ \l \; \colon \; \FVl{\l}(\vertex{}{\coarseIdxtwo}) \cap \M_\l \neq \varnothing \big\}
     \end{equation}
     for the coarsest and the finest level at which $\vertex{}{\coarseIdxtwo}$ has an active
-    incident face, and call $\mu_\coarseIdxtwo \coloneq \targetlevel_\coarseIdxtwo - \sourcelevel_\coarseIdxtwo$ the \emph{level gap} of $\vertex{}{\coarseIdxtwo}$. We write $\mathrm{V}_\C$ for the set of vertices with at least one active incident face, that is, those for which~\eqref{eq:level_span} is defined, and
+    incident face, and call $\mu_\coarseIdxtwo \coloneq \targetlevel_\coarseIdxtwo - \sourcelevel_\coarseIdxtwo$ the \emph{level gap} of $\vertex{}{\coarseIdxtwo}$. We write $\mathrm{V}_{\domseq}$ for the set of vertices with at least one active incident face, that is, those for which~\eqref{eq:level_span} is defined, and
     \begin{equation}
         \label{eq:vertex_star_in_C}
         \bigcup_{\l = \lzero}^{\L} \Big( \FVl{\l}\big(\vertex{}{\coarseIdxtwo}\big) \cap \M_\l \Big)
     \end{equation}
-    for the active faces of $\domseq{\L}$ incident to $\vertex{}{\coarseIdxtwo}$, at whatever levels they are carried.
+    for the active faces of $\domseq[\L]$ incident to $\vertex{}{\coarseIdxtwo}$, at whatever levels they are carried.
 \end{definition}
 
 \robert{
-The quadrisection operators enable consistent refinement of the adaptive subdivision $k$-form spaces $\hierSDFspace{k}{\C}{\L}$ in the sense that
+The quadrisection operators enable consistent refinement of the adaptive subdivision $k$-form spaces $\hierSDFspace{k}{\domseq}{\L}$ in the sense that
 \begin{equation}
     \label{eq:quadrisection_monotone}
-    \hierSDFspace{k}{\C}{\L} \subseteq \hierSDFspace{k}{\quadriF(\C, \simplexsubset{2}{\l})}{\L} \qquad \text{and} \qquad \hierSDFspace{k}{\C}{\L} \subseteq \hierSDFspace{k}{\quadriV{\targetlevel}(\C, \vertex{}{\coarseIdxtwo})}{\L}.
+    \hierSDFspace{k}{\domseq}{\L} \subseteq \guidance{\hierSDFspace{k}{\quadriF(\domseq[\L], \simplexsubset{2}{\l})}{}} \qquad \text{and} \qquad \hierSDFspace{k}{\domseq}{\L} \subseteq \guidance{\hierSDFspace{k}{\quadriV{\targetlevel}(\domseq[\L], \vertex{}{\coarseIdxtwo})}{}}.
 \end{equation}
 The quadrisection operators defined in this section are the basis upon which we will later built the algorithms in the adaptive loop in Section~\ref{subsec:adaptive_loop}.
 }
-% --- Figure knobs: covering star, quadrisection, and interior-vertex examples (single row, no dividers) ---
-\newcommand{\cvScale}{0.22}
-% #1 (optional) panel width as a fraction of \textwidth, default \cvScale --
-% override per panel when its image has a different aspect ratio (e.g. a
-% colorbar widens the PDF at the same height) and would otherwise come out
-% shorter/taller than the rest once every panel is fit to the same width.
-\newcommand{\cvsubfig}[4][\cvScale]{% #1 width fraction  #2 image path  #3 caption  #4 label
-    \begin{subfigure}[t]{#1\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{#2}
-        \caption{#3}
-        \label{#4}
-    \end{subfigure}%
-}
-% -------------------------------------------------------------------------
-\begin{figure}
+
+
+% --- Figure knobs: covering star and its quadrisection. Moved here from
+% Section~\ref{subsec:subdiv_partition}: this is the only place these panels are
+% cited, and unlike there, the covering star has by now been defined, by
+% Equation~\eqref{eq:vertex_star_in_C} above. Reuses \cvsubfig, still defined in
+% the earlier section. -------------------------------------------------------
+\begin{figure}[tb]
     \centering
-    \cvsubfig
+    \cvsubfig[0.32]
         {images/visualisations/neighbour-neighbour_input_with_covering_star.pdf}
-        {The active faces of $\C$ incident to a vertex $\vertex{}{\coarseIdxtwo}$ carried at mixed levels}
+        {The active faces of $\domseq$ incident to a vertex $\vertex{}{\coarseIdxtwo}$, carried at mixed levels}
         {fig:covering_star}
     \hfill
-    \cvsubfig
+    \cvsubfig[0.32]
         {images/visualisations/neighbour-neighbour_refined_with_covering_star.pdf}
-        {The star from (a) after applying $\quadriV{\targetlevel_\coarseIdxtwo + 1}(\C, \vertex{}{\coarseIdxtwo})$}
+        {The star from~\subref{fig:covering_star} after applying $\quadriV{\targetlevel_\coarseIdxtwo + 1}(\domseq, \vertex{}{\coarseIdxtwo})$}
         {fig:covering_star_refined}
-    \hfill
-    \cvsubfig[0.2613] % = \cvScale * (163.462/119.43) / (111.283/96.5664) -- panel-3-to-common PDF aspect-ratio (width/height, via pdfinfo) times \cvScale
-        {images/visualisations/v6_nested_center_lvl3_input_with_interior_verts.pdf}
-        {Vertices coloured by the level at which they are covering-interior}
-        {fig:covering_interior_vertices}
-    \hfill
-    \cvsubfig
-        {images/visualisations/v6_3rings_horseshoe_input_with_inadmissible_faces.pdf}
-        {Domain sequence with inadmissible faces on level $\lzero$ (Definition~\ref{def:admissible_face})}
-        {fig:inadmissible_faces}
-    \caption{Visualisations and examples for vertex stars and their quadrisection, covering-interior vertices and inadmissible faces.}
-    \label{fig:visualisations}
+    \caption{\guidance{The covering star~\eqref{eq:vertex_star_in_C} of a vertex $\vertex{}{\coarseIdxtwo}$ sitting on a level interface, and the effect of the graded vertex quadrisection operator on it. Unlike the refinement fan of Definition~\ref{def:refinement_fan}, which is read at a single level, the covering star collects the active incident faces at whatever levels they are carried, which is why it spans the interface in~\subref{fig:covering_star}.}}
+    \label{fig:covering_star_fig}
 \end{figure}
 
-Walking each star position to its covering face at every step is what drags the coarse faces up through \emph{every} intermediate level. The two operators are distinguished by their superscript: $\quadriF$ refines a set of faces flatly from level $\l$ to $\l\!+\!1$, while $\quadriV{\targetlevel}$ homogenises a vertex star towards a target level, and thus only the graded vertex quadrisection operator carries such a level. Figure~\ref{fig:covering_star_refined} displays the result of applying $\quadriV{\targetlevel_\coarseIdxtwo + 1}(\C, \vertex{}{\coarseIdxtwo})$ to the star of Figure~\ref{fig:covering_star}: the neighbourhood is first brought up to the finest level $\targetlevel_\coarseIdxtwo$ that $\vertex{}{\coarseIdxtwo}$ already carries, and then one level further.
+Walking each star position to its covering face at every step is what drags the coarse faces up through \emph{every} intermediate level. The two operators are distinguished by their superscript: $\quadriF$ refines a set of faces flatly from level $\l$ to $\l\!+\!1$, while $\quadriV{\targetlevel}$ homogenises a vertex star towards a target level, and thus only the graded vertex quadrisection operator carries such a level. Figure~\ref{fig:covering_star_refined} displays the result of applying $\quadriV{\targetlevel_\coarseIdxtwo + 1}(\domseq, \vertex{}{\coarseIdxtwo})$ to the star of Figure~\ref{fig:covering_star}: the neighbourhood is first brought up to the finest level $\targetlevel_\coarseIdxtwo$ that $\vertex{}{\coarseIdxtwo}$ already carries, and then one level further.
 
 
 
@@ -1284,7 +1222,7 @@ Walking each star position to its covering face at every step is what drags the 
 \section{Implementation and adaptive loop}
 \label{subsec:adaptive_loop}
 
-This section turns the constructions of Section~\ref{sec:construction_of_hierarchical_subdiv_spaces} into a working adaptive algorithm. Given an admissible domain sequence $\C$, the active DoFs $\activeDoFSet{k}{}(\C)$ follow from Definition~\ref{def:active_k_form_dofs} level by level --- Algorithm~\ref{alg:buildactivedofs} in Appendix~\ref{app:active_dof_pseudocode} evaluates it directly --- and the adaptive subdivision matrix $\Amat{k}{\activeDoFs}{\L}$ collects the corresponding columns of $\Amat{k}{\l}{\L}$ block by block as in Equation~\eqref{eq:hierarchical_matrix_blocks}. What remains is to embed this machinery in a standard \textsc{Solve}--\textsc{Estimate}--\textsc{Mark}--\textsc{Refine}--\textsc{Pad} adaptive loop, where the additional \textsc{Pad} restores the domain sequence output by \textsc{Refine} to an admissible one (Definition~\ref{def:subdiv_partition}) after each refinement via pinch resolution, admissibility padding, and grading.
+This section turns the constructions of Section~\ref{sec:construction_of_hierarchical_subdiv_spaces} into a working adaptive algorithm. Given an admissible domain sequence $\domseq$, the active DoFs $\activeDoFSet{k}{}(\domseq)$ follow from Definition~\ref{def:active_k_form_dofs} level by level --- Algorithm~\ref{alg:buildactivedofs} in Appendix~\ref{app:active_dof_pseudocode} evaluates it directly --- and the adaptive subdivision matrix $\Amat{k}{\activeDoFs}{\L}$ collects the corresponding columns of $\Amat{k}{\l}{\L}$ block by block as in Equation~\eqref{eq:hierarchical_matrix_blocks}. What remains is to embed this machinery in a standard \textsc{Solve}--\textsc{Estimate}--\textsc{Mark}--\textsc{Refine}--\textsc{Pad} adaptive loop, where the additional \textsc{Pad} restores the domain sequence output by \textsc{Refine} to an admissible one (Definition~\ref{def:subdiv_partition}) after each refinement via pinch resolution, admissibility padding, and grading.
 
 The loop used in the numerical experiments consists of the steps
 \begin{equation}
@@ -1293,60 +1231,60 @@ The loop used in the numerical experiments consists of the steps
 \end{tikzcd}
 \end{equation}
 
-and is initialized with a admissible domain sequence $\C^0$. Throughout the adaptive loop, the general picture of the computational objects in Section~\ref{subsec:computational_representations} stays the same, the loop only refines $\C$ iteratively, and with that the active DoFs $\activeDoFSet{k}{}(\C)$ and the adaptive subdivision $k$-form spaces $\hierSDFspace{k}{\C}{\L}$. The \textsc{Pad} step is necessary because the \textsc{Refine} step only guarantees $\C^{\mathrm{refine}} \in \allcoverings$, not $\C^{\mathrm{refine}} \in \allpartitions$, see Definition~\ref{def:subdiv_partition}. This means that the \textsc{Pad} step effectively restores linear independence and exactness of the complex.
+and is initialized with a admissible domain sequence $\domseq^0$. Throughout the adaptive loop, the general picture of the computational objects in Section~\ref{subsec:computational_representations} stays the same, the loop only refines $\domseq$ iteratively, and with that the active DoFs $\activeDoFSet{k}{}(\domseq)$ and the adaptive subdivision $k$-form spaces $\hierSDFspace{k}{\domseq}{\L}$. The \textsc{Pad} step is necessary because the \textsc{Refine} step only guarantees $\domseq^{\mathrm{refine}} \in \allcoverings$, not $\domseq^{\mathrm{refine}} \in \allpartitions$, see Definition~\ref{def:subdiv_partition}. This means that the \textsc{Pad} step effectively restores linear independence and exactness of the complex.
 
 \subsection{Solve}
 \label{subsec:solve}
 
-The details of the \textsc{Solve} step are typically problem-specific. The common thread for methods using subdivision differential forms is that the bilinear forms that constitute the weak formulation are first assembled using the spaces $\FEECspace{k}{\L}$ on $\T_\L$ and then unrefined to the spaces $\hierSDFspace{k}{\C}{\L}$ using the adaptive subdivision matrices $\Amat{k}{\C}{\L}$, see~\cite{Piel.2026}. The resulting linear system then needs to be solved by an appropriate solver. The following example spells out the single steps for the vector Laplace test case from Section~\ref{subsec:vector_laplace}.
+The details of the \textsc{Solve} step are typically problem-specific. The common thread for methods using subdivision differential forms is that the bilinear forms that constitute the weak formulation are first assembled using the spaces $\FEECspace{k}{\L}$ on $\T_\L$ and then unrefined to the spaces $\hierSDFspace{k}{\domseq}{\L}$ using the adaptive subdivision matrices $\Amat{k}{\domseq}{\L}$, see~\cite{Piel.2026}. The resulting linear system then needs to be solved by an appropriate solver. The following example spells out the single steps for the vector Laplace test case from Section~\ref{subsec:vector_laplace}.
 
 \begin{example}
     \label{ex:matrix_assembly}
     This example describes the $\textsc{Solve}$ step for the vector Laplace equation from Section~\ref{subsec:vector_laplace}. We use a standard finite elements library like FEniCS \citep{Logg.2012} to assemble the $0$-form mass matrix $\mathbf{M}_\L$ and the gradient-coupling matrix $\mathbf{B}_\L$ in Equation~\eqref{eq:mixed_laplacian1} and the curl--curl matrix $\mathbf{C}_\L$ in Equation~\eqref{eq:mixed_laplacian2} over the FEEC spaces $\FEECspace{k}{\L}$.
 
-    Unrefining these matrices using the adaptive subdivision $k$-form matrices $\Amat{k}{\C}{\L}$ yields the matrices
+    Unrefining these matrices using the adaptive subdivision $k$-form matrices $\Amat{k}{\domseq}{\L}$ yields the matrices
     \begin{equation}
         \label{eq:FE_matrix_assembly}
-        \mathbf{M}_\C = (\Amat{0}{\activeDoFs}{\L})^\top \; \cdot \; \mathbf{M}_\L \; \cdot \; \Amat{0}{\activeDoFs}{\L},
+        \mathbf{M}_{\domseq} = (\Amat{0}{\activeDoFs}{\L})^\top \; \cdot \; \mathbf{M}_\L \; \cdot \; \Amat{0}{\activeDoFs}{\L},
         \quad
-        \mathbf{C}_\C = (\Amat{1}{\activeDoFs}{\L})^\top \; \cdot \; \mathbf{C}_\L \; \cdot \; \Amat{1}{\activeDoFs}{\L},
+        \mathbf{C}_{\domseq} = (\Amat{1}{\activeDoFs}{\L})^\top \; \cdot \; \mathbf{C}_\L \; \cdot \; \Amat{1}{\activeDoFs}{\L},
         \quad
-        \mathbf{B}_\C = (\Amat{0}{\activeDoFs}{\L})^\top \; \cdot \; \mathbf{B}_\L \; \cdot \; \Amat{1}{\activeDoFs}{\L}
+        \mathbf{B}_{\domseq} = (\Amat{0}{\activeDoFs}{\L})^\top \; \cdot \; \mathbf{B}_\L \; \cdot \; \Amat{1}{\activeDoFs}{\L}
     \end{equation}
-    over the spaces $\hierSDFspace{k}{\C}{\L}$ or $\hierSDFspaceZero{k}{\C}{\L}$. The right-hand side of Equation~\eqref{eq:mixed_laplacian2} is $f_\C = (\Amat{1}{\C}{\L})^\top \cdot f_\L$.
+    over the spaces $\hierSDFspace{k}{\domseq}{\L}$ or $\hierSDFspaceZero{k}{\domseq}{\L}$. The right-hand side of Equation~\eqref{eq:mixed_laplacian2} is $f_{\domseq} = (\Amat{1}{\domseq}{\L})^\top \cdot f_\L$.
 
 The mixed vector Laplace problem can then be assembled into the block matrix system
 \begin{equation}
     \label{eq:mixed_block_system}
     \begin{bmatrix}
-        -\mathbf{M}_\C & \mathbf{B}_\C \\
-        \mathbf{B}_\C^\top & \mathbf{C}_\C
+        -\mathbf{M}_{\domseq} & \mathbf{B}_{\domseq} \\
+        \mathbf{B}_{\domseq}^\top & \mathbf{C}_{\domseq}
     \end{bmatrix} \; \cdot \; \begin{bmatrix}
-        \sigma_\C \\
-        u_\C
+        \sigma_{\domseq} \\
+        u_{\domseq}
     \end{bmatrix} = \begin{bmatrix}
         0 \\
-        f_\C
+        f_{\domseq}
     \end{bmatrix}
 \end{equation}
-We denote this block system matrix by $K_\C$. $K_\C$ is symmetric indefinite, so we use \emph{MINRES} with a block-diagonal SPD preconditioner
+We denote this block system matrix by $K_{\domseq}$. $K_{\domseq}$ is symmetric indefinite, so we use \emph{MINRES} with a block-diagonal SPD preconditioner
 \begin{equation}
     \label{eq:preconditioner}
     \mathbf{P} =
     \begin{pmatrix}
-        \mathbf{M}_\C & 0 \\
-        0 & \mathbf{S_\C}
+        \mathbf{M}_{\domseq} & 0 \\
+        0 & \mathbf{S_{\domseq}}
     \end{pmatrix},
     \qquad
-    \mathbf{S}_\C= \mathbf{C}_\C + \mathbf{B}_\C^\top\, \mathrm{diag}(\mathbf{M}_\C \mathbf{1})^{-1}\, \mathbf{B}_\C,
+    \mathbf{S}_{\domseq}= \mathbf{C}_{\domseq} + \mathbf{B}_{\domseq}^\top\, \mathrm{diag}(\mathbf{M}_{\domseq} \mathbf{1})^{-1}\, \mathbf{B}_{\domseq},
 \end{equation}
-where $\mathbf{S}_\C$ approximates the Schur complement of the $(1,1)$ block by replacing $\mathbf{M}_\C^{-1}$ with a row-sum lumped inverse ($\mathbf{1}$ the all-ones vector of length $\vert \activeDoFSet{0}{} \vert$). A multilevel preconditioner (e.g. BPX or a subdivision-aware multigrid V-cycle) would be the natural choice to exploit the hierarchical structure of $\hierSDFspace{k}{\C}{\L}$, but constructing one for the subdivision basis is nontrivial. We instead use the simpler, level-agnostic block-diagonal preconditioner above. Section~\ref{subsec:vector_laplace} investigates the impact of that choice on the solver performance.
+where $\mathbf{S}_{\domseq}$ approximates the Schur complement of the $(1,1)$ block by replacing $\mathbf{M}_{\domseq}^{-1}$ with a row-sum lumped inverse ($\mathbf{1}$ the all-ones vector of length $\vert \activeDoFSet{0}{} \vert$). A multilevel preconditioner (e.g. BPX or a subdivision-aware multigrid V-cycle) would be the natural choice to exploit the hierarchical structure of $\hierSDFspace{k}{\domseq}{\L}$, but constructing one for the subdivision basis is nontrivial. We instead use the simpler, level-agnostic block-diagonal preconditioner above. Section~\ref{subsec:vector_laplace} investigates the impact of that choice on the solver performance.
 \end{example}
 
 \subsection{Estimation}
 \label{subsec:estimate}
 
-We compute error indicators $\eta_{\l,\coarseIdxone}$ per face $\face{\l}{\coarseIdxone} \in \C$ of the domain sequence $\C$. The residual is evaluated on the finest level $\L$ and then aggregated to the coarse parent faces:
+We compute error indicators $\eta_{\l,\coarseIdxone}$ per face $\face{\l}{\coarseIdxone} \in \domseq$ of the domain sequence $\domseq$. The residual is evaluated on the finest level $\L$ and then aggregated to the coarse parent faces:
 \begin{equation}
     \label{eq:project_estimator_on_L_to_partition}
     \eta^2_{\l,\coarseIdxone} = \sum\limits_{\face{\L}{\fineIdxone} \; \in \; \Aop{}{\l}{\L}(\face{\l}{\coarseIdxone})} \eta^2_{\L,\fineIdxone},
@@ -1354,9 +1292,9 @@ We compute error indicators $\eta_{\l,\coarseIdxone}$ per face $\face{\l}{\coars
 where $\eta^2_{\L,\fineIdxone}$ is evaluated in $\FEECspace{k}{\L}$. Figure~\ref{fig:pipeline_marking_a} shows an example domain sequence with residual $\eta^2_{\l,\coarseIdxone}$. Note the residuals are only computed for faces in the domain sequence and the interface faces are excluded to avoid overlap and double-counting. In the following, we will refer to $\eta^2$ and $\rho^2$ as the \emph{total} and \emph{refinable} residuals, respectively, defined as
 \begin{equation}
     \label{def:total_and_refinable_residuals}
-    \eta^2 = \sum\limits_{\l=\lzero}^{\L} \; \eta^2_\l \qquad \text{and} \qquad \rho^2 = \sum\limits_{\l=\lzero}^{\L-1} \; \eta^2_\l = \eta^2 - \eta^2_{\L} \qquad \text{with} \qquad \eta^2_{\l} = \sum\limits_{\face{\l}{\coarseIdxone} \; \in \; \F(\C_\l)} \eta^2_{\l,\coarseIdxone}.
+    \eta^2 = \sum\limits_{\l=\lzero}^{\L} \; \eta^2_\l \qquad \text{and} \qquad \rho^2 = \sum\limits_{\l=\lzero}^{\L-1} \; \eta^2_\l = \eta^2 - \eta^2_{\L} \qquad \text{with} \qquad \eta^2_{\l} = \sum\limits_{\face{\l}{\coarseIdxone} \; \in \; \F(\domseq_\l)} \eta^2_{\l,\coarseIdxone}.
 \end{equation}
-The refinable residual discards the contributions of faces $\face{\L}{\coarseIdxone}$ on level $\L$ of the admissible domain sequence $\C$. We measure this refinable residual because faces cannot be refined beyond level $\L$ without global mesh refinement to extend the mesh hierarchy. For this reason, the residual accumulated on level $\L$ can no longer be decreased. In fact, we find that
+The refinable residual discards the contributions of faces $\face{\L}{\coarseIdxone}$ on level $\L$ of the admissible domain sequence $\domseq$. We measure this refinable residual because faces cannot be refined beyond level $\L$ without global mesh refinement to extend the mesh hierarchy. For this reason, the residual accumulated on level $\L$ can no longer be decreased. In fact, we find that
 \begin{equation}
     \label{eq:saturation_rate}
     \rho^2 / \eta^2 = 1 - \eta^2_\L / \eta^2 \eqqcolon \xi
@@ -1364,17 +1302,17 @@ The refinable residual discards the contributions of faces $\face{\L}{\coarseIdx
 This \emph{saturation rate} $\xi \in [0,1]$ provides a good analytic tool and a concrete stopping criterion for the adaptive loop.
 
 \begin{example}[Vector Laplace estimator]
-For the mixed vector Laplace problem with $(\sigma_h, u_h) \in \hierSDFspace{0}{\C}{\L} \times \hierSDFspace{1}{\C}{\L}$ from Section~\ref{subsec:vector_laplace}, the basis functions are piecewise linear approximations of the subdivision limit functions. Writing $\iota \colon \hierSDFspace{k}{\C}{\L} \hookrightarrow \FEECspace{k}{\L}$ for the inclusion of the hierarchical space into the fine FEEC space, $\extd (\iota u_h)$ is piecewise constant in $\FEECspace{2}{\L}$ and $\boldsymbol{\delta}\extd (\iota u_h)$ vanishes elementwise, while its contribution appears in the curl jumps across edges. In $\FEECspace{2}{\L}$, the indicator takes the form
+For the mixed vector Laplace problem with $(\sigma_h, u_h) \in \hierSDFspace{0}{\domseq}{\L} \times \hierSDFspace{1}{\domseq}{\L}$ from Section~\ref{subsec:vector_laplace}, the basis functions are piecewise linear approximations of the subdivision limit functions. Writing $\iota \colon \hierSDFspace{k}{\domseq}{\L} \hookrightarrow \FEECspace{k}{\L}$ for the inclusion of the hierarchical space into the fine FEEC space, $\extd (\iota u_h)$ is piecewise constant in $\FEECspace{2}{\L}$ and $\boldsymbol{\delta}\extd (\iota u_h)$ vanishes elementwise, while its contribution appears in the curl jumps across edges. In $\FEECspace{2}{\L}$, the indicator takes the form
 \begin{equation}
 \begin{aligned}
     \eta_{\L,\fineIdxone}^2 = \quad &\sum\limits_{\face{\L}{\coarseIdxone} \,\in\, \F_\L} \!\! \robert{h_{\face{\L}{\fineIdxone}}^2} \big( \|f - \extd \sigma_h\|_{L^2(\face{\L}{\fineIdxone})}^2 + \|\sigma_h + \boldsymbol{\delta} u_h\|_{L^2(\face{\L}{\fineIdxone})}^2 \big) \\
     + &\sum\limits_{\edge{\L}{\fineIdxtwo} \, \in \, \E_\L} \robert{h_e} \big\|[\![\mathrm{curl}(u_h)]\!]\big\|_{L^2(\edge{\L}{\fineIdxtwo})}^2.
 \end{aligned}
 \end{equation}
-The first sum contains the elementwise residuals of both equations, and the second sum contains the curl jump across interior edges $e$ of the fine mesh $\T_\L$. The per-face indicator $\eta_{\L,\fineIdxone}^2$ on level $\L$ can be translated back to the admissible domain sequence $\C$ using Equation~\eqref{eq:project_estimator_on_L_to_partition}.
+The first sum contains the elementwise residuals of both equations, and the second sum contains the curl jump across interior edges $e$ of the fine mesh $\T_\L$. The per-face indicator $\eta_{\L,\fineIdxone}^2$ on level $\L$ can be translated back to the admissible domain sequence $\domseq$ using Equation~\eqref{eq:project_estimator_on_L_to_partition}.
 \end{example}
 
-\noindent We now have estimators $\eta_{\l,\coarseIdxone}$ per face of the admissible domain sequence $\C$. However, the atomic units of refinement in our scheme are vertex stars because they give rise to clean analysis. To enable vertex-based refinement for the adaptive algorithm, we need to sum up the face estimators $\eta_{\l,\coarseIdxone}$ to vertex estimators as shown in Figure~\ref{fig:pipeline_marking_b}. Recall from Definition~\ref{def:level_span} the vertices $\vertex{}{\coarseIdxtwo} \in \mathrm{V}_\C$ and the active faces~\eqref{eq:vertex_star_in_C} of $\C$ incident to them. The vertex-based residual $\nu_\coarseIdxtwo$ our code uses is defined by
+\noindent We now have estimators $\eta_{\l,\coarseIdxone}$ per face of the admissible domain sequence $\domseq$. However, the atomic units of refinement in our scheme are vertex stars because they give rise to clean analysis. To enable vertex-based refinement for the adaptive algorithm, we need to sum up the face estimators $\eta_{\l,\coarseIdxone}$ to vertex estimators as shown in Figure~\ref{fig:pipeline_marking_b}. Recall from Definition~\ref{def:level_span} the vertices $\vertex{}{\coarseIdxtwo} \in \mathrm{V}_{\domseq}$ and the active faces~\eqref{eq:vertex_star_in_C} of $\domseq$ incident to them. The vertex-based residual $\nu_\coarseIdxtwo$ our code uses is defined by
 \begin{equation}
     \label{eq:vertex_residual}
     \nu^2_\coarseIdxtwo = \tfrac{1}{a_\coarseIdxtwo} \; \sum\limits_{\face{\l}{\coarseIdxone} \; \in \; \St_\coarseIdxtwo} \eta^2_{\l,\coarseIdxone}, \qquad \mathrm{where} \qquad a_\coarseIdxtwo = \sum\limits_{\face{\l}{\coarseIdxone} \; \in \; \St_\coarseIdxtwo} \mathrm{area}(\face{\l}{\coarseIdxone})
@@ -1410,9 +1348,9 @@ Dividing by the cumulative area of the faces rescales the integral face estimato
 \subsection{Marking}
 \label{subsec:mark}
 
-Our code marks vertices rather than faces. This enables us to use the quadrisection operator $\quadriV{\targetlevel}$ to refine single vertex stars, the central combinatorial object of the admissibility arguments in~\cite{companion_paper}. We rank the vertices by the vertex estimator $\nu_\coarseIdxtwo$, see Equation~\eqref{eq:vertex_residual} from Section~\ref{subsec:estimate}. For this purpose, we enumerate the $\vert \mathrm{V}_\C \vert$ vertices $\vertex{}{\coarseIdxtwo} \in \mathrm{V}_\C$ in order of decreasing residual, so that $\nu_{\coarseIdxtwo_1} \geq \nu_{\coarseIdxtwo_2} \geq \ldots \geq \nu_{\coarseIdxtwo_{\mathrm{V}-1}} \geq \nu_{\coarseIdxtwo_{\vert \mathrm{V}_\C \vert}}$.
+Our code marks vertices rather than faces. This enables us to use the quadrisection operator $\quadriV{\targetlevel}$ to refine single vertex stars, the central combinatorial object of the admissibility arguments in~\cite{companion_paper}. We rank the vertices by the vertex estimator $\nu_\coarseIdxtwo$, see Equation~\eqref{eq:vertex_residual} from Section~\ref{subsec:estimate}. For this purpose, we enumerate the $\vert \mathrm{V}_{\domseq} \vert$ vertices $\vertex{}{\coarseIdxtwo} \in \mathrm{V}_{\domseq}$ in order of decreasing residual, so that $\nu_{\coarseIdxtwo_1} \geq \nu_{\coarseIdxtwo_2} \geq \ldots \geq \nu_{\coarseIdxtwo_{\mathrm{V}-1}} \geq \nu_{\coarseIdxtwo_{\vert \mathrm{V}_{\domseq} \vert}}$.
 
-The Dörfler marking algorithm\needcite{} builds the set $\mathrm{V}_\C^\mathrm{mark} \coloneq \{ \vertex{}{\coarseIdxtwo_1}, \, \dots, \, \vertex{}{\coarseIdxtwo_q} \}$ by greedily selecting the first $q$ vertices with the largest estimators such that the \emph{marked refinable residual}
+The Dörfler marking algorithm\needcite{} builds the set $\mathrm{V}_{\domseq}^\mathrm{mark} \coloneq \{ \vertex{}{\coarseIdxtwo_1}, \, \dots, \, \vertex{}{\coarseIdxtwo_q} \}$ by greedily selecting the first $q$ vertices with the largest estimators such that the \emph{marked refinable residual}
 \begin{equation}
     \label{eq:marked_refinable_residual}
     \rho^2_{\R_\theta} \; \coloneqq \sum\limits_{\face{\l}{\coarseIdxone} \; \in \; \R_\theta} \eta^2_{\l, \coarseIdxone}, \qquad \text{where} \qquad \R_\theta = \bigcup\limits_{p=1}^q \St_{\coarseIdxtwo_p},
@@ -1422,26 +1360,26 @@ captures at least a fraction $\theta$ of the refinable residual $\rho$ of Equati
     \label{eq:doerfler_selection}
     \rho_{\R_\theta} \; \geq \; \theta \, \rho
 \end{equation}
-where $\theta \in (0, 1]$ is the Dörfler parameter. The set $\R_\theta \subset \F(\C_{<\L})$ collects all the faces that are refined during the \textsc{Refine} step, see Section~\ref{subsec:refine}; faces on level $\L$ are excluded, so $\rho_{\R_\theta}$ is a restriction of the refinable residual $\rho$ rather than of the total residual $\eta$.
+where $\theta \in (0, 1]$ is the Dörfler parameter. The set $\R_\theta \subset \F(\domseq_{<\L})$ collects all the faces that are refined during the \textsc{Refine} step, see Section~\ref{subsec:refine}; faces on level $\L$ are excluded, so $\rho_{\R_\theta}$ is a restriction of the refinable residual $\rho$ rather than of the total residual $\eta$.
 
 \subsection{Refinement}
 \label{subsec:refine}
 
-The \textsc{Refine} step refines the marked faces $\face{\l}{\coarseIdxone} \in \R_\theta$ around the vertices $\vertex{}{\coarseIdxtwo} \in \mathrm{V}_\C^{\mathrm{mark}}$ from Equation~\eqref{eq:marked_refinable_residual} as shown in Figure~\ref{fig:pipeline_marking_c}. Recall from Definition~\ref{def:level_span} that $\sourcelevel_\coarseIdxtwo$ and $\targetlevel_\coarseIdxtwo$ are the coarsest and the finest level at which $\vertex{}{\coarseIdxtwo}$ has an active incident face in $\C$. Since we want to refine the faces around the vertex by one level (unless $\targetlevel_\coarseIdxtwo = \L$), we compute the target level $\tilde{\targetlevel}_\coarseIdxtwo = \min(\targetlevel_{\coarseIdxtwo_p} \! + \! 1, \L)$ that is expected after refining around $\vertex{}{\coarseIdxtwo}$. The expected target levels $\tilde{\targetlevel}_\coarseIdxtwo$ must be computed on the fixed input admissible domain sequence $\C$ before any refinement takes place to avoid a cascade of ever increasing target levels. 
+The \textsc{Refine} step refines the marked faces $\face{\l}{\coarseIdxone} \in \R_\theta$ around the vertices $\vertex{}{\coarseIdxtwo} \in \mathrm{V}_{\domseq}^{\mathrm{mark}}$ from Equation~\eqref{eq:marked_refinable_residual} as shown in Figure~\ref{fig:pipeline_marking_c}. Recall from Definition~\ref{def:level_span} that $\sourcelevel_\coarseIdxtwo$ and $\targetlevel_\coarseIdxtwo$ are the coarsest and the finest level at which $\vertex{}{\coarseIdxtwo}$ has an active incident face in $\domseq$. Since we want to refine the faces around the vertex by one level (unless $\targetlevel_\coarseIdxtwo = \L$), we compute the target level $\tilde{\targetlevel}_\coarseIdxtwo = \min(\targetlevel_{\coarseIdxtwo_p} \! + \! 1, \L)$ that is expected after refining around $\vertex{}{\coarseIdxtwo}$. The expected target levels $\tilde{\targetlevel}_\coarseIdxtwo$ must be computed on the fixed input admissible domain sequence $\domseq$ before any refinement takes place to avoid a cascade of ever increasing target levels. 
 
-The \textsc{Refine} step homogenises the star of each marked vertex $\vertex{}{\coarseIdxtwo} \in \mathrm{V}_\C^{\mathrm{mark}}$ at one level beyond the finest level it currently carries. Figure~\ref{fig:refine_interface} displays two examples of this refinement for vertices at an interface. Formally, we express the refinement through the graded vertex quadrisection $\quadriV{\tilde{\targetlevel}_\coarseIdxtwo}(\C, \vertex{}{\coarseIdxtwo})$ of Definition~\ref{def:graded_vertex_quadrisection}.
+The \textsc{Refine} step homogenises the star of each marked vertex $\vertex{}{\coarseIdxtwo} \in \mathrm{V}_{\domseq}^{\mathrm{mark}}$ at one level beyond the finest level it currently carries. Figure~\ref{fig:refine_interface} displays two examples of this refinement for vertices at an interface. Formally, we express the refinement through the graded vertex quadrisection $\quadriV{\tilde{\targetlevel}_\coarseIdxtwo}(\domseq, \vertex{}{\coarseIdxtwo})$ of Definition~\ref{def:graded_vertex_quadrisection}.
 
-The result of the \textsc{Refine} step is the admissible domain sequence $\C^{\mathrm{refine}}$ given by
+The result of the \textsc{Refine} step is the admissible domain sequence $\domseq^{\mathrm{refine}}$ given by
 \begin{enumerate}[topsep=3pt, itemsep=-2pt]
-    \item initialise the admissible domain sequence $\C^0 = \C$,
-    \item refine vertex stars iteratively for all $\vertex{}{\coarseIdxtwo_p} \in \mathrm{V}_\C^{\mathrm{mark}}$ with $p = 1, \, \dots, \, \vert \mathrm{V}_\C^{\textrm{mark}} \vert$ to obtain
+    \item initialise the admissible domain sequence $\domseq^0 = \domseq$,
+    \item refine vertex stars iteratively for all $\vertex{}{\coarseIdxtwo_p} \in \mathrm{V}_{\domseq}^{\mathrm{mark}}$ with $p = 1, \, \dots, \, \vert \mathrm{V}_{\domseq}^{\textrm{mark}} \vert$ to obtain
     \begin{equation}
-        \C^{p} = \quadriV{\tilde{\targetlevel}_{\coarseIdxtwo_p}} \big( \C^{p-1}, \, \vertex{}{\coarseIdxtwo_p} \big),
+        \domseq^{p} = \quadriV{\tilde{\targetlevel}_{\coarseIdxtwo_p}} \big( \domseq^{p-1}, \, \vertex{}{\coarseIdxtwo_p} \big),
     \end{equation}
     \vspace{-7mm}
-    \item set $\C^{\mathrm{refine}} \coloneq \C^{\vert \mathrm{V}_\C^{\textrm{mark}} \vert}$.
+    \item set $\domseq^{\mathrm{refine}} \coloneq \domseq^{\vert \mathrm{V}_{\domseq}^{\textrm{mark}} \vert}$.
 \end{enumerate}
-Because the expected target levels $\tilde{\targetlevel}_{\coarseIdxtwo}$ are computed on the fixed input domain sequence $\C$ and each quadrisection only ever homogenises a star upward to $\tilde{\targetlevel}_{\coarseIdxtwo}$, the order in which the $\vertex{}{\coarseIdxtwo} \in \mathrm{V}_\C^{\mathrm{mark}}$ are processed does not affect the resulting partition $\C^p$. We may therefore apply them in any order; our code processes the coarsest vertices first.
+Because the expected target levels $\tilde{\targetlevel}_{\coarseIdxtwo}$ are computed on the fixed input domain sequence $\domseq$ and each quadrisection only ever homogenises a star upward to $\tilde{\targetlevel}_{\coarseIdxtwo}$, the order in which the $\vertex{}{\coarseIdxtwo} \in \mathrm{V}_{\domseq}^{\mathrm{mark}}$ are processed does not affect the resulting partition $\domseq^p$. We may therefore apply them in any order; our code processes the coarsest vertices first.
 
 \begin{figure}
 \begin{center}
@@ -1500,7 +1438,7 @@ Because the expected target levels $\tilde{\targetlevel}_{\coarseIdxtwo}$ are co
 \subsection{Padding}
 \label{subsec:padding}
 
-The \textsc{Refine} step in the previous section produces the domain sequence $\C^{\mathrm{refine}}$. Crucially, $\C^{\mathrm{refine}}$ is not a admissible domain sequence because $\C^{\mathrm{refine}}$ might now contain inadmissible faces, pinch vertices, or boundary pinch vertices --- one for each clause of Definition~\ref{def:subdiv_partition}. The \textsc{Pad} step repairs these defects and turns $\C^{\mathrm{refine}}$ in the admissible domain sequence $\C^{\mathrm{pad}}$. The goal is to keep the padded faces added during this process to a minimum to avoid inflating the number of DoFs in non-marked regions. The only exception is some grading that we apply around vertices whose covering star covers too many levels. This grading does not change the restored admissibility properties but improves the conditioning of the resulting matrix-vector system. This section covers all three kinds of padding one by one.
+The \textsc{Refine} step in the previous section produces the domain sequence $\domseq^{\mathrm{refine}}$. Crucially, $\domseq^{\mathrm{refine}}$ is not a admissible domain sequence because $\domseq^{\mathrm{refine}}$ might now contain inadmissible faces, pinch vertices, or boundary pinch vertices --- one for each clause of Definition~\ref{def:subdiv_partition}. The \textsc{Pad} step repairs these defects and turns $\domseq^{\mathrm{refine}}$ in the admissible domain sequence $\domseq^{\mathrm{pad}}$. The goal is to keep the padded faces added during this process to a minimum to avoid inflating the number of DoFs in non-marked regions. The only exception is some grading that we apply around vertices whose covering star covers too many levels. This grading does not change the restored admissibility properties but improves the conditioning of the resulting matrix-vector system. This section covers all three kinds of padding one by one.
 
 The \textsc{Pad} step needs no machinery beyond the two quadrisection operators $\quadriF$ and $\quadriV{\targetlevel}$ of Section~\ref{subsec:subdiv_partition}, since every padding substep is a quadrisection of either a vertex star or a set of inadmissible faces.
 
@@ -1508,7 +1446,7 @@ The \textsc{Pad} step needs no machinery beyond the two quadrisection operators 
 
 We scan every level of the refined domain sequence and every vertex of that level to build the set of pinches
 \begin{equation}
-    \mathrm{V}_{\C^{\mathrm{refine}}}^{\mathrm{pinch}} = \big\{ \big(\l, \vertex{\l}{\coarseIdxtwo}\big) \; \colon \; \vertex{\l}{\coarseIdxtwo} \in \V_\l(\T_\l) \text{\; is a pinch vertex of } \C^{\mathrm{refine}} \text{ at level } \l \big\}
+    \mathrm{V}_{\domseq^{\mathrm{refine}}}^{\mathrm{pinch}} = \big\{ \big(\l, \vertex{\l}{\coarseIdxtwo}\big) \; \colon \; \vertex{\l}{\coarseIdxtwo} \in \V_\l(\T_\l) \text{\; is a pinch vertex of } \domseq^{\mathrm{refine}} \text{ at level } \l \big\}
 \end{equation}
 according to Definition~\ref{def:pinch_vertex}. \guidance{The test is applied at
 \emph{every} level at which the vertex exists, not only at its finest one, and a vertex on
@@ -1517,44 +1455,44 @@ Definition~\ref{def:boundary_pinch} --- that is, when one of its refinement arcs
 the domain boundary. Clause~(iii) of Definition~\ref{def:subdiv_partition} needs no repair
 machinery of its own: an unanchored arc is lifted by the very same graded quadrisection used
 below, because homogenising the whole ring anchors the arc at both of its extremes.} The
-admissible domain sequence $\C^{\mathrm{pinch}} \coloneq \C^{\vert \mathrm{V}_{\mathrm{pinch}} \vert}$ with all pinches resolved is obtained from the iteration
+admissible domain sequence $\domseq^{\mathrm{pinch}} \coloneq \domseq^{\vert \mathrm{V}_{\mathrm{pinch}} \vert}$ with all pinches resolved is obtained from the iteration
 \begin{equation}
     \label{eq:pinch_resolved_subdiv_partition}
-    \guidance{\C^p = \quadriV{\l_p + 1} \big( \C^{p-1}, \, \vertex{\l_p}{\coarseIdxtwo_p} \big)} \quad \text{for} \quad \big(\l_p, \vertex{\l_p}{\coarseIdxtwo_p}\big) \in \mathrm{V}_{\C^{\mathrm{refine}}}^{\mathrm{pinch}} \quad \text{with} \quad \; p \in \{1, \, \dots, \, \vert \mathrm{V}_{\C^{\mathrm{refine}}}^{\mathrm{pinch}} \vert \},
+    \guidance{\domseq^p = \quadriV{\l_p + 1} \big( \domseq^{p-1}, \, \vertex{\l_p}{\coarseIdxtwo_p} \big)} \quad \text{for} \quad \big(\l_p, \vertex{\l_p}{\coarseIdxtwo_p}\big) \in \mathrm{V}_{\domseq^{\mathrm{refine}}}^{\mathrm{pinch}} \quad \text{with} \quad \; p \in \{1, \, \dots, \, \vert \mathrm{V}_{\domseq^{\mathrm{refine}}}^{\mathrm{pinch}} \vert \},
 \end{equation}
-and $\C^0 = \C^\mathrm{refine}$ the domain sequence after the \textsc{Refine} step. In words, for each detected pinch we homogenise the star of $\vertex{\l_p}{\coarseIdxtwo_p}$ at level $\l_p \! + \! 1$. One level suffices: the refinement arcs at level $\l_p$ are separated precisely by the star positions that are active at levels $\leq \l_p$, so lifting those to level $\l_p \! + \! 1$ merges the arcs into a single disc.
+and $\domseq^0 = \domseq^\mathrm{refine}$ the domain sequence after the \textsc{Refine} step. In words, for each detected pinch we homogenise the star of $\vertex{\l_p}{\coarseIdxtwo_p}$ at level $\l_p \! + \! 1$. One level suffices: the refinement arcs at level $\l_p$ are separated precisely by the star positions that are active at levels $\leq \l_p$, so lifting those to level $\l_p \! + \! 1$ merges the arcs into a single disc.
 
-\guidance{Detection and repair are separate phases. The whole set $\mathrm{V}_{\C^{\mathrm{refine}}}^{\mathrm{pinch}}$ is collected before any of its elements is repaired, so resolving one vertex cannot hide a pinch at another, and the iteration above is well defined. Re-detection happens only in the next pass of the loop around $\textsc{Pad}$, which is what makes the number $q$ of productive passes in Proposition~\ref{prop:padding_terminates} a meaningful count.}
+\guidance{Detection and repair are separate phases. The whole set $\mathrm{V}_{\domseq^{\mathrm{refine}}}^{\mathrm{pinch}}$ is collected before any of its elements is repaired, so resolving one vertex cannot hide a pinch at another, and the iteration above is well defined. Re-detection happens only in the next pass of the loop around $\textsc{Pad}$, which is what makes the number $q$ of productive passes in Proposition~\ref{prop:padding_terminates} a meaningful count.}
 
 Every pinch vertex carries a cohomology defect. The severity of the defect depends on the concrete configuration of the pinch, see Definition~\ref{def:pinch_vertex} and Figure~\ref{fig:pinches}. Section~\ref{subsec:exactness_atomic} later confirms that resolving the coarse region around a pinch vertex successfully repairs these defects.
 
 \paragraph{Resolving inadmissible faces.}
 
-Similarly to resolving pinches, we iterate over all leaf faces $\face{\l}{\coarseIdxone}$ of the admissible domain sequence $\C^{\mathrm{pinch}}$ to build the set of inadmissible faces
+Similarly to resolving pinches, we iterate over all leaf faces $\face{\l}{\coarseIdxone}$ of the admissible domain sequence $\domseq^{\mathrm{pinch}}$ to build the set of inadmissible faces
 \begin{equation}
-    \F_{\mathrm{inadmissible}} = \big\{ \face{\l}{\coarseIdxone} \in \leafF{\l}(\C^{\mathrm{pinch}}) \; \colon \; \face{\l}{\coarseIdxone} \text{\; is not admissible} \big\}
+    \F_{\mathrm{inadmissible}} = \big\{ \face{\l}{\coarseIdxone} \in \leafF{\l}(\domseq^{\mathrm{pinch}}) \; \colon \; \face{\l}{\coarseIdxone} \text{\; is not admissible} \big\}
 \end{equation}
-according to Definition~\ref{def:admissible_face}. The admissible domain sequence $\C^{\mathrm{admissible}}$ where all faces are admissible is given by
+according to Definition~\ref{def:admissible_face}. The admissible domain sequence $\domseq^{\mathrm{admissible}}$ where all faces are admissible is given by
 \begin{equation}
     \label{eq:inadmissible_faces_resolved_subdiv_partition}
-    \C^{\mathrm{admissible}} = \quadriF \big( \C^{\mathrm{pinch}}, \, \F_{\mathrm{inadmissible}} \big).
+    \domseq^{\mathrm{admissible}} = \quadriF \big( \domseq^{\mathrm{pinch}}, \, \F_{\mathrm{inadmissible}} \big).
 \end{equation}
 In words, we refine every inadmissible face by one level because the refined faces are guaranteed to have an admissible vertex on level $\l+1$.
 
 \paragraph{Grading covering stars.}
 
-The grading is supposed to smooth out transitions across vertices $\vertex{}{\coarseIdxtwo}$ of $\C^{\mathrm{admissible}}$ with large level differences. Unlike the first two rules, the grading step does not restore exactness or linear independence but is intended to improve the conditioning of the matrix-vector system and to avoid numerical artifacts in these regions. The predicate to identify the vertices to grade is the level gap $\mu_\coarseIdxtwo$ of Definition~\ref{def:level_span}. The grading iterates over the vertices of $\C^{\mathrm{admissible}}$ and assembles the set
+The grading is supposed to smooth out transitions across vertices $\vertex{}{\coarseIdxtwo}$ of $\domseq^{\mathrm{admissible}}$ with large level differences. Unlike the first two rules, the grading step does not restore exactness or linear independence but is intended to improve the conditioning of the matrix-vector system and to avoid numerical artifacts in these regions. The predicate to identify the vertices to grade is the level gap $\mu_\coarseIdxtwo$ of Definition~\ref{def:level_span}. The grading iterates over the vertices of $\domseq^{\mathrm{admissible}}$ and assembles the set
 \begin{equation}
-    \mathrm{V}_{\C^{\mathrm{admissible}}}^{\mathrm{grading}} \coloneq \big\{ \vertex{}{\coarseIdxtwo} \; \colon \; \mu_\coarseIdxtwo > 2 \big\}
+    \mathrm{V}_{\domseq^{\mathrm{admissible}}}^{\mathrm{grading}} \coloneq \big\{ \vertex{}{\coarseIdxtwo} \; \colon \; \mu_\coarseIdxtwo > 2 \big\}
 \end{equation}
 The cut-off value of $2$ works well in our simulations of the vector Laplace equation in Section~\ref{subsec:vector_laplace} but can generally be chosen arbitrarily.
 
-The vertices marked for grading are refined using the quadrisection operator to obtain the graded admissible domain sequence $\C^{\mathrm{grading}} \coloneq \C^{\vert \mathrm{V}_{\mathrm{admissible}} \vert}$ as the result of the iterative construction
+The vertices marked for grading are refined using the quadrisection operator to obtain the graded admissible domain sequence $\domseq^{\mathrm{grading}} \coloneq \domseq^{\vert \mathrm{V}_{\mathrm{admissible}} \vert}$ as the result of the iterative construction
 \begin{equation}
     \label{eq:grading_subdiv_partition}
-    \guidance{\C^p = \quadriV{\targetlevel_{\coarseIdxtwo_p} - 2} \big( \C^{p-1}, \, \vertex{}{\coarseIdxtwo_p} \big)} \quad \text{for} \quad \vertex{}{\coarseIdxtwo_p} \in \mathrm{V}_{\C^{\mathrm{admissible}}}^{\mathrm{grading}} \quad \text{with} \quad \; p \in \{1, \, \dots, \, \vert \mathrm{V}_{\C^{\mathrm{admissible}}}^{\mathrm{grading}} \vert \}
+    \guidance{\domseq^p = \quadriV{\targetlevel_{\coarseIdxtwo_p} - 2} \big( \domseq^{p-1}, \, \vertex{}{\coarseIdxtwo_p} \big)} \quad \text{for} \quad \vertex{}{\coarseIdxtwo_p} \in \mathrm{V}_{\domseq^{\mathrm{admissible}}}^{\mathrm{grading}} \quad \text{with} \quad \; p \in \{1, \, \dots, \, \vert \mathrm{V}_{\domseq^{\mathrm{admissible}}}^{\mathrm{grading}} \vert \}
 \end{equation}
-and $\C^0 = \C^{\mathrm{admissible}}$. Note the additional $-2$ in the quadrisection operator $\quadriV{\targetlevel_{\coarseIdxtwo_p} - 2}$. It ensures that $\vertex{}{\coarseIdxtwo_p}$ has a level gap of $2$ or less in $\C^p$.
+and $\domseq^0 = \domseq^{\mathrm{admissible}}$. Note the additional $-2$ in the quadrisection operator $\quadriV{\targetlevel_{\coarseIdxtwo_p} - 2}$. It ensures that $\vertex{}{\coarseIdxtwo_p}$ has a level gap of $2$ or less in $\domseq^p$.
 
 \todo{\guidance{The grading is stated here as a single application of $\quadriV{\targetlevel_\coarseIdxtwo - 2}$, i.e.\ by its outcome. The implementation instead lifts a vertex's \emph{coarsest} active faces by one level and re-tests, iterating until the gap is at most $2$, and re-runs the admissibility pad after each round. The two agree at the fixed point --- the iteration only ever raises $\sourcelevel_\coarseIdxtwo$ towards $\targetlevel_\coarseIdxtwo - 2$ --- so this is a question of whether to describe the loop or its result, not a discrepancy. Decide before submission.}}
 
@@ -1563,7 +1501,7 @@ and $\C^0 = \C^{\mathrm{admissible}}$. Note the additional $-2$ in the quadrisec
 Every stage of the \textsc{Pad} step uses either the graded vertex quadrisection operator $\quadriV{\targetlevel}$ or the face quadrisection operator $\quadriF$.
 
 The pinch padding resolves pinch vertices \guidance{and boundary pinch vertices, that is
-clauses~(ii) and~(iii) of Definition~\ref{def:subdiv_partition},} and thus repairs cohomological artifacts and spurious harmonics, while the admissibility padding \guidance{enforces clause~(i) and} mostly restores linear independence of the active basis functions $\activeDoFSet{k}{\C}$. The grading only refines around vertices with large level jumps to improve the conditioning of the resulting linear system.
+clauses~(ii) and~(iii) of Definition~\ref{def:subdiv_partition},} and thus repairs cohomological artifacts and spurious harmonics, while the admissibility padding \guidance{enforces clause~(i) and} mostly restores linear independence of the active basis functions $\activeDoFSet{k}{\domseq}$. The grading only refines around vertices with large level jumps to improve the conditioning of the resulting linear system.
 
 \guidance{The boundary clause is worth separating out because it is invisible under Dirichlet
 boundary conditions: an unanchored refinement arc costs one spurious harmonic $1$-form under
@@ -1578,13 +1516,13 @@ Every rule only ever refines and adds a few faces that locally repair its violat
     Construct a map $\textsc{Pad} \colon \alldomseqs \to \alldomseqs$ from the quadrisection
     operators $\quadriF$ and $\quadriV{\targetlevel}$ whose marked sets are determined by the
     predicates of Definition~\ref{def:subdiv_partition}, together with a constant $q$
-    \emph{independent of $\domseq{\L}$ and of $\L$}, such that
+    \emph{independent of $\domseq[\L]$ and of $\L$}, such that
     \begin{equation}
         \label{eq:padding_goal}
         \textsc{Pad}^q \; \colon \; \alldomseqs \; \longrightarrow \; \allpartitions,
     \end{equation}
     and such that the faces refined by $\textsc{Pad}$ stay confined to a neighbourhood of the
-    defects of $\domseq{\L}$ of bounded size.
+    defects of $\domseq[\L]$ of bounded size.
 \end{problem}
 
 Three features of Problem~\ref{prob:padding_terminates} are worth spelling out before
@@ -1606,7 +1544,7 @@ adaptivity. Only a $q$ bounded independently of the mesh keeps the padded region
 of the marked region.
 
 Third, the locality requirement is what rules out the degenerate solution
-$\textsc{Pad}(\domseq{\L}) = \T_\L$, which satisfies Equation~\eqref{eq:padding_goal} with
+$\textsc{Pad}(\domseq[\L]) = \T_\L$, which satisfies Equation~\eqref{eq:padding_goal} with
 $q = 1$ and is useless.}
 
 
@@ -1628,19 +1566,19 @@ domain sequence, is the finiteness half of the problem and can be settled.
 
 \begin{proposition}[$\textsc{Pad}$ terminates]
     \label{prop:padding_terminates}
-    Let $\C^{\mathrm{refine}} \in \alldomseqs$ and let $\C^{(0)} = \C^{\mathrm{refine}}$,
-    $\C^{(j+1)} = \textsc{Pad} \big( \C^{(j)} \big)$. Then the iteration reaches a fixed point
-    $\C^{\mathrm{pad}} = \C^{(q)}$ after
+    Let $\domseq^{\mathrm{refine}} \in \alldomseqs$ and let $\domseq^{(0)} = \domseq^{\mathrm{refine}}$,
+    $\domseq^{(j+1)} = \textsc{Pad} \big( \domseq^{(j)} \big)$. Then the iteration reaches a fixed point
+    $\domseq^{\mathrm{pad}} = \domseq^{(q)}$ after
     \begin{equation}
         \label{eq:padding_crude_bound}
         q \; \leq \; \sum_{\l=\lzero}^{\L} \big\lvert \F_\l(\T_\l) \big\rvert \; - \; \sum_{\l=\lzero}^{\L} \big\lvert \F_\l(\M_\l^{\mathrm{refine}}) \big\rvert
     \end{equation}
-    passes, and $\C^{\mathrm{pad}} \in \allpartitions$ is an admissible domain sequence.
+    passes, and $\domseq^{\mathrm{pad}} \in \allpartitions$ is an admissible domain sequence.
 \end{proposition}
 \begin{proof}
     Consider the integer-valued face budget
     \begin{equation}
-        \Phi \big( \domseq{\L} \big) \coloneq \sum_{\l=\lzero}^{\L} \big\lvert \F_\l(\M_\l) \big\rvert .
+        \Phi \big( \domseq[\L] \big) \coloneq \sum_{\l=\lzero}^{\L} \big\lvert \F_\l(\M_\l) \big\rvert .
     \end{equation}
     Both quadrisection operators only ever add the children of a marked face on the next finer
     level and leave all coarser levels untouched, by
@@ -1766,7 +1704,7 @@ step.}
 \begin{figure}[tb]
     \centering
     \chainpanel{images/padding_chain/chain_input.pdf}
-        {$\C^{\mathrm{refine}}$: four marked vertex stars, pinching $\vertex{}{0}$}
+        {$\domseq^{\mathrm{refine}}$: four marked vertex stars, pinching $\vertex{}{0}$}
         {fig:padding_chain_input}%
     \hfill%
     \chainpanel{images/padding_chain/chain_pass0.pdf}
@@ -1800,7 +1738,7 @@ step.}
 \section{Numerical Experiments}
 \label{sec:numerical_experiments}
 
-This section verifies the properties of the adaptive subdivision $k$-form spaces $\hierSDFspace{k}{\C}{\L}$ and $\hierSDFspaceZero{k}{\C}{\L}$ predicted in Section~\ref{sec:construction_of_hierarchical_subdiv_spaces} and tests the adaptive loop presented in Section~\ref{subsec:adaptive_loop}. Section~\ref{subsec:exactness_atomic} illustrates how domain sequences with pinch vertices or inadmissible faces can break the de~Rham complex and linear independence, and how padding repairs the domain sequences. Section~\ref{subsec:maxwell} then confirms on the Maxwell eigenvalue problem that the spurious modes are confined to the eigenvalue $0$, implying that $\extd \circ \extd = 0$ pointwise for every domain sequence. Section~\ref{subsec:vector_laplace} exercises the full adaptive loop on a vector Laplace problem with a singular solution. The emphasis throughout is on the admissibility of the adaptive subdivision $k$-form spaces, i.e. whether the active DoFs are linearly independent and preserve the cohomology of the de Rham complex, rather than on approximation rates.
+This section verifies the properties of the adaptive subdivision $k$-form spaces $\hierSDFspace{k}{\domseq}{\L}$ and $\hierSDFspaceZero{k}{\domseq}{\L}$ predicted in Section~\ref{sec:construction_of_hierarchical_subdiv_spaces} and tests the adaptive loop presented in Section~\ref{subsec:adaptive_loop}. Section~\ref{subsec:exactness_atomic} illustrates how domain sequences with pinch vertices or inadmissible faces can break the de~Rham complex and linear independence, and how padding repairs the domain sequences. Section~\ref{subsec:maxwell} then confirms on the Maxwell eigenvalue problem that the spurious modes are confined to the eigenvalue $0$, implying that $\extd \circ \extd = 0$ pointwise for every domain sequence. Section~\ref{subsec:vector_laplace} exercises the full adaptive loop on a vector Laplace problem with a singular solution. The emphasis throughout is on the admissibility of the adaptive subdivision $k$-form spaces, i.e. whether the active DoFs are linearly independent and preserve the cohomology of the de Rham complex, rather than on approximation rates.
 
 \subsection{Exactness and padding on atomic partitions}
 \label{subsec:exactness_atomic}
@@ -1900,24 +1838,24 @@ This section verifies the properties of the adaptive subdivision $k$-form spaces
         \caption{Three unanchored refinement arcs.}
         \label{fig:pinch_resolution_unanchored}
     \end{subfigure}
-    \caption{Domain sequences with pinches before (left) and after padding (right). Each domain sequence $\C$ is annotated with the number $\lvert\activeDoFSet{k}{}\rvert$ of active $k$-form DoFs, the dimension $\dim(V^k)$ of the adaptive subdivision $k$-form spaces $V^k = \hierSDFspace{k}{\C}{\L}$, and the dimension $\dim(\mathcal{H}^k)$ of the spaces of harmonic $k$-forms of $\hierSDFspace{k}{\C}{\L}$. Note that panel (e) shows $\dim(\mathring{V}^k)$ and $\dim(\mathring{\mathcal{H}}^k)$ for the spaces $\hierSDFspaceZero{k}{\C}{\L}$ with vanishing trace boundary conditions.}
+    \caption{Domain sequences with pinches before (left) and after padding (right). Each domain sequence $\domseq$ is annotated with the number $\lvert\activeDoFSet{k}{}\rvert$ of active $k$-form DoFs, the dimension $\dim(V^k)$ of the adaptive subdivision $k$-form spaces $V^k = \hierSDFspace{k}{\domseq}{\L}$, and the dimension $\dim(\mathcal{H}^k)$ of the spaces of harmonic $k$-forms of $\hierSDFspace{k}{\domseq}{\L}$. Note that panel (e) shows $\dim(\mathring{V}^k)$ and $\dim(\mathring{\mathcal{H}}^k)$ for the spaces $\hierSDFspaceZero{k}{\domseq}{\L}$ with vanishing trace boundary conditions.}
     \label{fig:pinch_resolution}
 \end{figure}
 
 Before applying the adaptive loop to a PDE, we validate the admissibility
 construction directly on a suite of domain sequences that represent minimal test cases. This allows us to study the different modes of failure of adaptive subdivision $k$-form spaces and to confirm that padding repairs them correctly so that the assumptions of the Theorems~\ref{theorem:linear_independence} and~\ref{theorem:exactness} are satisfied again. Each domain sequence is a small concentric-ring mesh around a single, irregular vertex of chosen valence at the centre.
 
-We want to verify the linear independence of all active DoFs $\activeDoFSet{k}{}(\C)$ of the respective domain sequences $\C$. We will test that by computing $\vert \activeDoFSet{k}{}(\C) \vert$ by counting elements and $\mathrm{dim}(\hierSDFspace{k}{\C}{\L}) \!=\! \mathrm{rank} (\Amat{k}{\C}{\L})$. If these two coincide, all active DoFs are indeed linearly independent.
+We want to verify the linear independence of all active DoFs $\activeDoFSet{k}{}(\domseq)$ of the respective domain sequences $\domseq$. We will test that by computing $\vert \activeDoFSet{k}{}(\domseq) \vert$ by counting elements and $\mathrm{dim}(\hierSDFspace{k}{\domseq}{\L}) \!=\! \mathrm{rank} (\Amat{k}{\domseq}{\L})$. If these two coincide, all active DoFs are indeed linearly independent.
 
-Further, we want to test whether the adaptive $k$-form subdivision spaces $\hierSDFspace{k}{\C}{\L}$ possess the correct cohomology. Since the domains are topological disks, we expect the spaces of harmonic $k$-form to have the dimensions $\mathrm{dim}(\mathcal{H}^0) \!=\! 1$ and $\mathrm{dim}(\mathcal{H}^1) \!=\! \mathrm{dim}(\mathcal{H}^2) \!=\! 0$ for $\hierSDFspace{k}{\C}{\L}$ without boundary conditions. For each domain sequence and its respective adaptive subdivision $k$-form space, we compute $\mathrm{dim}(\mathcal{H}^k) \!=\! \mathrm{dim}(\mathrm{ker}(\extd^{k})) - \mathrm{rank}(\extd^{k-1})$ explicitly from the rank of the discrete $k$-form derivative $\extd^k$ before and after padding.
-
-\smallskip
-
-Figures~\ref{fig:pinch_resolution} and~\ref{fig:admissibility_padding} show the test domain sequences on the left and the padded domain sequences on the right, annotating every domain sequence with its active $k$-form DoF count $\lvert\activeDoFSet{k}{}\rvert$, the true space dimension $\dim V^k = \operatorname{rank}(\Aop{k}{\C}{\L})$, and the harmonic dimension $\dim(\mathcal{H}^k)$. Note that we denote $V^k = \hierSDFspace{k}{\C}{\L}$ here to save horizontal space. The reported data belongs to $\hierSDFspace{k}{\C}{\L}$ throughout because the geometric defects of the domain sequence are confined to the interior and thus, the vanishing-trace spaces $\hierSDFspaceZero{k}{\C}{\L}$ exhibit the same algebraic defects and are repaired identically by the padding. The sole exception is the domain sequence in Figure~\ref{fig:pinch_resolution_boundary_pinches}, whose two boundary pinches leave $\hierSDFspace{k}{\C}{\L}$ intact and cost a harmonic only under a vanishing trace, so we report $\hierSDFspaceZero{k}{\C}{\L}$ there. The unanchored arcs of Figure~\ref{fig:pinch_resolution_unanchored} behave the other way round --- one spurious harmonic $1$-form each in $\hierSDFspace{k}{\C}{\L}$, none under a vanishing trace --- so that panel is reported without boundary conditions like the rest.
+Further, we want to test whether the adaptive $k$-form subdivision spaces $\hierSDFspace{k}{\domseq}{\L}$ possess the correct cohomology. Since the domains are topological disks, we expect the spaces of harmonic $k$-form to have the dimensions $\mathrm{dim}(\mathcal{H}^0) \!=\! 1$ and $\mathrm{dim}(\mathcal{H}^1) \!=\! \mathrm{dim}(\mathcal{H}^2) \!=\! 0$ for $\hierSDFspace{k}{\domseq}{\L}$ without boundary conditions. For each domain sequence and its respective adaptive subdivision $k$-form space, we compute $\mathrm{dim}(\mathcal{H}^k) \!=\! \mathrm{dim}(\mathrm{ker}(\extd^{k})) - \mathrm{rank}(\extd^{k-1})$ explicitly from the rank of the discrete $k$-form derivative $\extd^k$ before and after padding.
 
 \smallskip
 
-We can identify two trends in the data that are consistent with the theoretical predictions. First, Figure~\ref{fig:pinch_resolution} shows that vertex pinches lead to spurious $1$-form harmonics but do not introduce any linear dependencies since $\vert \activeDoFSet{k}{} \vert = \mathrm{dim}(\hierSDFspace{k}{\C}{\L})$ in any case, before and after padding. We can observe that padding indeed removes these spurious $1$-form harmonics.
+Figures~\ref{fig:pinch_resolution} and~\ref{fig:admissibility_padding} show the test domain sequences on the left and the padded domain sequences on the right, annotating every domain sequence with its active $k$-form DoF count $\lvert\activeDoFSet{k}{}\rvert$, the true space dimension $\dim V^k = \operatorname{rank}(\Aop{k}{\domseq}{\L})$, and the harmonic dimension $\dim(\mathcal{H}^k)$. Note that we denote $V^k = \hierSDFspace{k}{\domseq}{\L}$ here to save horizontal space. The reported data belongs to $\hierSDFspace{k}{\domseq}{\L}$ throughout because the geometric defects of the domain sequence are confined to the interior and thus, the vanishing-trace spaces $\hierSDFspaceZero{k}{\domseq}{\L}$ exhibit the same algebraic defects and are repaired identically by the padding. The sole exception is the domain sequence in Figure~\ref{fig:pinch_resolution_boundary_pinches}, whose two boundary pinches leave $\hierSDFspace{k}{\domseq}{\L}$ intact and cost a harmonic only under a vanishing trace, so we report $\hierSDFspaceZero{k}{\domseq}{\L}$ there. The unanchored arcs of Figure~\ref{fig:pinch_resolution_unanchored} behave the other way round --- one spurious harmonic $1$-form each in $\hierSDFspace{k}{\domseq}{\L}$, none under a vanishing trace --- so that panel is reported without boundary conditions like the rest.
+
+\smallskip
+
+We can identify two trends in the data that are consistent with the theoretical predictions. First, Figure~\ref{fig:pinch_resolution} shows that vertex pinches lead to spurious $1$-form harmonics but do not introduce any linear dependencies since $\vert \activeDoFSet{k}{} \vert = \mathrm{dim}(\hierSDFspace{k}{\domseq}{\L})$ in any case, before and after padding. We can observe that padding indeed removes these spurious $1$-form harmonics.
 
 The individual panels show that the dimensions $\mathrm{dim}(\mathcal{H}^1)$ of the spurious harmonic $1$-form spaces increase with the level difference of the target level and the coarsest level of the faces incident to the pinch vertex. For instance, the domain sequence in Figure~\ref{fig:pinch_level_1} has a pinch on level $1$ with the coarsest level being $0$. This leads to $\mathrm{dim}(\mathcal{H}^1) \! = \! 1$. In contrast, Figure~\ref{fig:pinch_level_2} has its pinch on level $2$ and $\mathrm{dim}(\mathcal{H}^1) \! = \! 2$. Figure~\ref{fig:pinch_mixed_level} also has a pinch on level $2$, but the faces between its two refinement arcs mix the levels $0$ and $1$. It is the coarsest level $0$ around the vertex that sets the dimension, not the second finest level $1$: we again observe $\mathrm{dim}(\mathcal{H}^1) \! = \! 2$, and not $1$.
 
@@ -1929,7 +1867,7 @@ configurations are added.}
 
 The dimensions $\mathrm{dim}(\mathcal{H}^1)$ of the spurious harmonic $1$-form spaces also increase with the number $\gamma$ of fine arcs around the pinch, see Definition~\ref{def:pinch_vertex}. Figure~\ref{fig:pinch_level_1} has $\gamma = 2$ and $\mathrm{dim}(\mathcal{H}^1) = 1$, while Figure~\ref{fig:double_pinch} has $\gamma = 3$ and $\mathrm{dim}(\mathcal{H}^1) \!=\! 2$.
 
-Figure~\ref{fig:pinch_resolution_boundary_pinches} presents data of the spaces $\hierSDFspaceZero{k}{\C}{\L}$ with vanishing boundary conditions, and thus we expect $\mathrm{dim}(\mathring{\mathcal{H}}^0) \!=\! \mathrm{dim}(\mathring{\mathcal{H}}^1) \!=\! 0$ and $\mathrm{dim}(\mathring{\mathcal{H}}^2) \!=\! 1$. The domain sequence in the figure has six pinches at the boundary. The table reports $\mathrm{dim}(\mathring{\mathcal{H}}^1) = 6$ before padding, implying that the spurious harmonics act additively for multiple pinches.
+Figure~\ref{fig:pinch_resolution_boundary_pinches} presents data of the spaces $\hierSDFspaceZero{k}{\domseq}{\L}$ with vanishing boundary conditions, and thus we expect $\mathrm{dim}(\mathring{\mathcal{H}}^0) \!=\! \mathrm{dim}(\mathring{\mathcal{H}}^1) \!=\! 0$ and $\mathrm{dim}(\mathring{\mathcal{H}}^2) \!=\! 1$. The domain sequence in the figure has six pinches at the boundary. The table reports $\mathrm{dim}(\mathring{\mathcal{H}}^1) = 6$ before padding, implying that the spurious harmonics act additively for multiple pinches.
 
 \smallskip
 
@@ -1937,7 +1875,7 @@ The second observation is concerned with inadmissible faces and the defects they
 
 \guidance{The domain sequence in Figure~\ref{fig:horsehoe} opens the loop, and the picture is the same: linear dependencies but no spurious harmonics. They split into $17$ $0$-form DoFs, $31$ $1$-form DoFs, and $15$ $2$-form DoFs.} The padding space removes these linearly dependent DoFs while maintaining the correct cohomology.
 
-Finally, Figure~\ref{fig:nested_center} shows the prototypical configuration around a vertex that has been refined gradedly by the vertex quadrisection operator from Definition~\ref{def:graded_vertex_quadrisection}. We see that the domain sequence has no inadmissible faces since all vertices become interior at just the right level, see Figure~\ref{fig:covering_interior_vertices}. This means that we can run the \textsc{Pad} step unconditionally in the adaptive loop without any risks of over-refining regions that are already admissible.
+Finally, Figure~\ref{fig:nested_center} shows the prototypical configuration around a vertex that has been refined gradedly by the vertex quadrisection operator from Definition~\ref{def:graded_vertex_quadrisection}. We see that the domain sequence has no inadmissible faces since all vertices become \guidance{refinement-exterior} at just the right level, see Figure~\ref{fig:adm_exterior}. This means that we can run the \textsc{Pad} step unconditionally in the adaptive loop without any risks of over-refining regions that are already admissible.
 
 \smallskip
 
@@ -1981,7 +1919,7 @@ This section confirms that the \textsc{Pad} step correctly restores the geometri
         \caption{Nested centre, level $3$ (deep but admissible).}
         \label{fig:nested_center}
     \end{subfigure}
-    \caption{Domain sequences with inadmissible faces before (left) and after (right) padding. Each domain sequence $\C$ is annotated with the number $\lvert\activeDoFSet{k}{}\rvert$ of active $k$-form DoFs, the dimension $\dim V^k$ of the adaptive subdivision $k$-form spaces $V^k \coloneq \hierSDFspace{k}{\C}{\L}$, and the dimension $\dim\mathcal{H}^k$ of the spaces of harmonic $k$-forms of $\hierSDFspace{k}{\C}{\L}$.}
+    \caption{Domain sequences with inadmissible faces before (left) and after (right) padding. Each domain sequence $\domseq$ is annotated with the number $\lvert\activeDoFSet{k}{}\rvert$ of active $k$-form DoFs, the dimension $\dim V^k$ of the adaptive subdivision $k$-form spaces $V^k \coloneq \hierSDFspace{k}{\domseq}{\L}$, and the dimension $\dim\mathcal{H}^k$ of the spaces of harmonic $k$-forms of $\hierSDFspace{k}{\domseq}{\L}$.}
     \label{fig:admissibility_padding}
 \end{figure}
 
@@ -2004,32 +1942,32 @@ This section confirms that the \textsc{Pad} step correctly restores the geometri
 \subsection{Maxwell Eigenvalue problem}
 \label{subsec:maxwell}
 
-This section studies the Maxwell eigenvalue problem, a classical test case to verify the properties of discrete differential complexes. Section~\ref{subsec:exactness_atomic} has already established that the \textsc{Pad} step restores the correct cohomology for the spaces $\hierSDFspace{k}{\C}{\L}$ by repairing the geometric defects of the domain sequence $\C$ so that it becomes a admissible domain sequence. In constrast, this section studies how the spurious harmonic $1$-forms of a domain sequence concretely affect the solution of the eigenproblem.
+This section studies the Maxwell eigenvalue problem, a classical test case to verify the properties of discrete differential complexes. Section~\ref{subsec:exactness_atomic} has already established that the \textsc{Pad} step restores the correct cohomology for the spaces $\hierSDFspace{k}{\domseq}{\L}$ by repairing the geometric defects of the domain sequence $\domseq$ so that it becomes a admissible domain sequence. In constrast, this section studies how the spurious harmonic $1$-forms of a domain sequence concretely affect the solution of the eigenproblem.
 
-The weak form of the Maxwell cavity (curl--curl) eigenvalue problem on the domain $\M = [0,\pi]^2$ with mesh $\T_\L$ is given by: Find $\lambda_{h,\coarseIdxone} \in \mathbb{R}$ and $u_\coarseIdxone \in \hierSDFspaceZero{1}{\C}{\L}$ such that
+The weak form of the Maxwell cavity (curl--curl) eigenvalue problem on the domain $\M = [0,\pi]^2$ with mesh $\T_\L$ is given by: Find $\lambda_{h,\coarseIdxone} \in \mathbb{R}$ and $u_\coarseIdxone \in \hierSDFspaceZero{1}{\domseq}{\L}$ such that
 \begin{equation}
-  (\extd u_i, \extd v)_\M = \lambda_{h,\coarseIdxone} (u_i, v)_\M \qquad \forall v \in \hierSDFspaceZero{1}{\C}{\L}
+  (\extd u_i, \extd v)_\M = \lambda_{h,\coarseIdxone} (u_i, v)_\M \qquad \forall v \in \hierSDFspaceZero{1}{\domseq}{\L}
 \end{equation}
-with analytic spectrum $\lambda_\coarseIdxone = m^2 + n^2$, where $m$ and $n$ are integers. We will approximate the discrete spectra on the domain sequence $\C^{\mathrm{pinch}}$ with a pinch on level $\l=1$ as displayed in Figure~\ref{fig:Maxwell_inexact_DoFmesh} and its padded version, the admissible domain sequence $\C^{\mathrm{padded}}$ from Figure~\ref{fig:Maxwell_exact_DoFmesh}. Since the domain is contractible, its relative first Betti number is zero. Thus, $\hierSDFspaceZero{1}{\C^{\mathrm{padded}}}{\L}$ has no $1$-form harmonics because $\C^{\mathrm{padded}}$ is a admissible domain sequence. The pinch of $\C^{\mathrm{pinch}}$ introduces a one-dimensional spurious harmonic $1$-form space into $\hierSDFspaceZero{1}{\C^{\mathrm{pinch}}}{\L}$.
+with analytic spectrum $\lambda_\coarseIdxone = m^2 + n^2$, where $m$ and $n$ are integers. We will approximate the discrete spectra on the domain sequence $\domseq^{\mathrm{pinch}}$ with a pinch on level $\l=1$ as displayed in Figure~\ref{fig:Maxwell_inexact_DoFmesh} and its padded version, the admissible domain sequence $\domseq^{\mathrm{padded}}$ from Figure~\ref{fig:Maxwell_exact_DoFmesh}. Since the domain is contractible, its relative first Betti number is zero. Thus, $\hierSDFspaceZero{1}{\domseq^{\mathrm{padded}}}{\L}$ has no $1$-form harmonics because $\domseq^{\mathrm{padded}}$ is a admissible domain sequence. The pinch of $\domseq^{\mathrm{pinch}}$ introduces a one-dimensional spurious harmonic $1$-form space into $\hierSDFspaceZero{1}{\domseq^{\mathrm{pinch}}}{\L}$.
 
-Applying Loop subdivision alters the domain slightly, so we do not compare the discrete spectrum directly with the analytic spectrum  $\lambda_\coarseIdxone$. Instead, we compare the discrete spectra $\lambda_\coarseIdxone$ with the spectrum of $\FEECspaceZero{k}{\L}$ with $\C^{\mathrm{FEEC}} = \T_\L$, a superspace of both $\hierSDFspaceZero{1}{\C^{\mathrm{pinch}}}{\L}$ and $\hierSDFspaceZero{1}{\C^{\mathrm{padded}}}{\L}$ that verifiably converges to the correct spectrum, see~\cite{Arnold.FEEC}.
+Applying Loop subdivision alters the domain slightly, so we do not compare the discrete spectrum directly with the analytic spectrum  $\lambda_\coarseIdxone$. Instead, we compare the discrete spectra $\lambda_\coarseIdxone$ with the spectrum of $\FEECspaceZero{k}{\L}$ with $\domseq^{\mathrm{FEEC}} = \T_\L$, a superspace of both $\hierSDFspaceZero{1}{\domseq^{\mathrm{pinch}}}{\L}$ and $\hierSDFspaceZero{1}{\domseq^{\mathrm{padded}}}{\L}$ that verifiably converges to the correct spectrum, see~\cite{Arnold.FEEC}.
 
 Figure~\ref{fig:Maxwell_eigenvalues} reports the discrete spectra with $\lambda_{h,\coarseIdxone} > 0$ for all three domain sequences. Outside of small approximation errors, the spectra agree across all the three
-partitions. That means that the defects caused by the spurious $1$-form harmonics of $\hierSDFspaceZero{1}{\C^{\mathrm{pinch}}}{\L}$ are confined to the eigenspace of $\lambda_{h,\coarseIdxone} = 0$. The reason for that behaviour is Theorem~\ref{theorem:differential_complex}, stating that $\extd \circ \extd \equiv 0$ holds pointwise on $\hierSDFspaceZero{0}{\C}{\L}$ for all domain sequences $\C \in \allcoverings$, regardless of whether they satisfy the admissible domain sequence conditions. This implies that $\extd u$ does not carry a spurious curl of any gradient, and thus the non-zero spectrum does not get polluted, cf.~\cite{Boffi.2010}.
+partitions. That means that the defects caused by the spurious $1$-form harmonics of $\hierSDFspaceZero{1}{\domseq^{\mathrm{pinch}}}{\L}$ are confined to the eigenspace of $\lambda_{h,\coarseIdxone} = 0$. The reason for that behaviour is Theorem~\ref{theorem:differential_complex}, stating that $\extd \circ \extd \equiv 0$ holds pointwise on $\hierSDFspaceZero{0}{\domseq}{\L}$ for all domain sequences $\domseq \in \allcoverings$, regardless of whether they satisfy the admissible domain sequence conditions. This implies that $\extd u$ does not carry a spurious curl of any gradient, and thus the non-zero spectrum does not get polluted, cf.~\cite{Boffi.2010}.
 
 \begin{figure}%[htbp]
     \centering
     \begin{subfigure}[b]{0.24\textwidth}
         \centering
         \includegraphics[width=\textwidth]{images/maxwell/maxwell_partition_inexact.pdf}
-        \caption{Domain sequence $\C^{\mathrm{pinch}}$ with pinch}
+        \caption{Domain sequence $\domseq^{\mathrm{pinch}}$ with pinch}
         \label{fig:Maxwell_inexact_DoFmesh}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.24\textwidth}
         \centering
         \includegraphics[width=\textwidth]{images/maxwell/maxwell_partition_exact.pdf}
-        \caption{Admissible domain sequence  $\C^{\mathrm{padded}}$}
+        \caption{Admissible domain sequence  $\domseq^{\mathrm{padded}}$}
         \label{fig:Maxwell_exact_DoFmesh}
     \end{subfigure}
     \hfill
@@ -2039,7 +1977,7 @@ partitions. That means that the defects caused by the spurious $1$-form harmonic
         \caption{Computed EVs over EV index}
         \label{fig:Maxwell_eigenvalues}
     \end{subfigure}
-    \caption{Domain sequences and discrete spectra of the spaces $\hierSDFspaceZero{1}{\C^{\mathrm{pinch}}}{\L}$, $\hierSDFspaceZero{1}{\C^{\mathrm{padded}}}{\L}$ and $\FEECspaceZero{k}{\L}$.}
+    \caption{Domain sequences and discrete spectra of the spaces $\hierSDFspaceZero{1}{\domseq^{\mathrm{pinch}}}{\L}$, $\hierSDFspaceZero{1}{\domseq^{\mathrm{padded}}}{\L}$ and $\FEECspaceZero{k}{\L}$.}
     \label{fig:maxwell_overview}
 \end{figure}
 
@@ -2084,7 +2022,7 @@ partitions. That means that the defects caused by the spurious $1$-form harmonic
         \centering
         \includegraphics[trim = 0mm 0mm 5mm 0mm, clip, height=6.2cm]{images/laplace_case/u_colorbar_L4.pdf}
     \end{minipage}
-    \caption{Snapshot of the adaptive solution $\vvert{\Vec{u}^n}$ after $n$ steps, approximated using $\hierSDFspace{k}{\C}{4}$ with $\L = 4$, overlaid with the admissible domain sequence $\C^n$ as a grey wireframe. The colorbar represents the magnitude $\vvert{\Vec{u}^6}$ after step $6$ and is applied across all steps.}
+    \caption{Snapshot of the adaptive solution $\vvert{\Vec{u}^n}$ after $n$ steps, approximated using $\hierSDFspace{k}{\domseq}{4}$ with $\L = 4$, overlaid with the admissible domain sequence $\domseq^n$ as a grey wireframe. The colorbar represents the magnitude $\vvert{\Vec{u}^6}$ after step $6$ and is applied across all steps.}
     \label{fig:adaptive_solution}
 \end{figure}
 
@@ -2115,7 +2053,7 @@ where $\alpha = 100$, $R = 0.3$, and $\Vec{u}_{\mathrm{CL}}$ is the vector-proxy
 
 \newcommand{\laststep}{{\mathrm{N}_\L}}
 
-Figure~\ref{fig:adaptive_solution} displays the solution's vector proxy $\Vec{u}^n$ after $n$ steps of the adaptive loop with Do\"rfler parameter $\theta = 0.9$ and $\L=4$, meaning that the domain sequence cannot be refined beyond that level. The refinement stays concentrated around the circle to capture the sharp transition of the analytical solution. We denote the domain sequences across the steps by $\C^n$ and the final step of the adaptive loop by $\laststep$.
+Figure~\ref{fig:adaptive_solution} displays the solution's vector proxy $\Vec{u}^n$ after $n$ steps of the adaptive loop with Do\"rfler parameter $\theta = 0.9$ and $\L=4$, meaning that the domain sequence cannot be refined beyond that level. The refinement stays concentrated around the circle to capture the sharp transition of the analytical solution. We denote the domain sequences across the steps by $\domseq^n$ and the final step of the adaptive loop by $\laststep$.
 
 The marking is driven by the vertex-based estimator $\nu^2_\coarseIdxtwo$ from Equation~\eqref{eq:vertex_residual}. Figure~\ref{fig:cl_convergence} shows how this marking drives the $L^2$ error
 \begin{equation}
@@ -2124,9 +2062,9 @@ The marking is driven by the vertex-based estimator $\nu^2_\coarseIdxtwo$ from E
 \end{equation}
 computed against the analytical solution $\Vec{u}_{\mathrm{CL}}$ for $\L \in \{3, 4, 5\}$. We omit the superscript $n$ whenever it does not matter or we address the error of a reference solution using $\FEECspace{1}{\L}$.
 
-The left panel~\ref{fig:cl_saturation_fig} compares the total estimator $\eta$ and the refinable estimator $\rho$ from Equation~\eqref{def:total_and_refinable_residuals}. For the first few levels, the two coincide. The two estimators diverge as soon as the partition $\C^n$ contains faces on the finest level $\L$ because the residuals of these faces are not included in the refinable estimator. The total estimator stagnates at a non-zero value that depends on $\L$, whereas the refinable estimator converges towards $0$ as the partition $\C^n$ transitions towards $\T_\L$. The simulation in Figure~\ref{fig:adaptive_solution} used exactly that behaviour as stopping criterion, terminating the simulation as soon as the saturation rate $\xi = \rho^2 / \eta^2$ from Equation~\eqref{eq:saturation_rate} satisfies $\xi \leq 0.05$.
+The left panel~\ref{fig:cl_saturation_fig} compares the total estimator $\eta$ and the refinable estimator $\rho$ from Equation~\eqref{def:total_and_refinable_residuals}. For the first few levels, the two coincide. The two estimators diverge as soon as the partition $\domseq^n$ contains faces on the finest level $\L$ because the residuals of these faces are not included in the refinable estimator. The total estimator stagnates at a non-zero value that depends on $\L$, whereas the refinable estimator converges towards $0$ as the partition $\domseq^n$ transitions towards $\T_\L$. The simulation in Figure~\ref{fig:adaptive_solution} used exactly that behaviour as stopping criterion, terminating the simulation as soon as the saturation rate $\xi = \rho^2 / \eta^2$ from Equation~\eqref{eq:saturation_rate} satisfies $\xi \leq 0.05$.
 
-Figure~\ref{fig:cl_l2_vs_dofs} reports the errors $\Ltwoerror^n$ depending on the number of active $1$-form DoFs $\vvert{\activeDoFSet{1}{}(\C^n)}$. Note that the figure also include the FEEC references $\FEECspace{1}{\L}$ (hollow squares). The errors of the adaptive method converge quickly in the first steps but as the estimators diverge from each other, the $L^2$ errors $\Ltwoerror^n$ start to plateau. We consider that plateau to be the converged state of the adaptive solver. Figure~\ref{fig:cl_l2_vs_dofs} and Table~\ref{tab:cl_headline} confirm that the converged adaptive solution with $\xi \leq 0.05$ has $3.3$, $4.6$ and $5.9$ times less $1$-form DoFs than the reference solutions of $\FEECspace{1}{\L}$ for $\L=3$, $4$ and $5$, respectively. Loosening the stopping criterion to $\xi\leq 0.3$ increases the DoF saving to $3.7$, $5.4$ and $9.3$, cf. Table~\ref{tab:cl_headline}.
+Figure~\ref{fig:cl_l2_vs_dofs} reports the errors $\Ltwoerror^n$ depending on the number of active $1$-form DoFs $\vvert{\activeDoFSet{1}{}(\domseq^n)}$. Note that the figure also include the FEEC references $\FEECspace{1}{\L}$ (hollow squares). The errors of the adaptive method converge quickly in the first steps but as the estimators diverge from each other, the $L^2$ errors $\Ltwoerror^n$ start to plateau. We consider that plateau to be the converged state of the adaptive solver. Figure~\ref{fig:cl_l2_vs_dofs} and Table~\ref{tab:cl_headline} confirm that the converged adaptive solution with $\xi \leq 0.05$ has $3.3$, $4.6$ and $5.9$ times less $1$-form DoFs than the reference solutions of $\FEECspace{1}{\L}$ for $\L=3$, $4$ and $5$, respectively. Loosening the stopping criterion to $\xi\leq 0.3$ increases the DoF saving to $3.7$, $5.4$ and $9.3$, cf. Table~\ref{tab:cl_headline}.
 
 % Independently adjustable panel widths: panel (a) lost its y-axis label, which
 % shrinks its tight-cropped bounding box relative to panel (b), so the two may
@@ -2138,13 +2076,13 @@ Figure~\ref{fig:cl_l2_vs_dofs} reports the errors $\Ltwoerror^n$ depending on th
     \begin{subfigure}[t]{\clSatWidth}
         \centering
         \includegraphics[width=\textwidth]{images/laplace_case/fig_estimator_saturation.pdf}
-        \caption{Total and refinable estimators over the number $\vvert{\activeDoFSet{1}{}(\C^n)}$ of active $1$-form DoFs}
+        \caption{Total and refinable estimators over the number $\vvert{\activeDoFSet{1}{}(\domseq^n)}$ of active $1$-form DoFs}
         \label{fig:cl_saturation_fig}
     \end{subfigure}\hfill
     \begin{subfigure}[t]{\clLtwoWidth}
         \centering
         \includegraphics[width=\textwidth]{images/laplace_case/fig_l2_vs_dofs.pdf}
-        \caption{$L^2$ error over the number $\vvert{\activeDoFSet{1}{}(\C^n)}$ of active $1$-form DoFs}
+        \caption{$L^2$ error over the number $\vvert{\activeDoFSet{1}{}(\domseq^n)}$ of active $1$-form DoFs}
         \label{fig:cl_l2_vs_dofs}
     \end{subfigure}
     \caption{Panel (a) displays the total estimator $\eta$ and the refineable estimator $\rho$ against the number $\vert \activeDoFSet{1}{} \vert$ of active $1$-form DoFs for $\L \in \{3, 4, 5\}$. Every hollow diamond marks a step. Together, these estimators drive and eventually terminate the adaptive loop. Panel (b) shows the true $L^2$ error against $\vert \activeDoFSet{1}{} \vert$ for the adaptive methods (solid lines with hollow diamonds to mark steps) and FEEC references $\FEECspace{1}{\L}$ (hollow squares) for $\L \in \{3, 4, 5\}$.}
@@ -2171,16 +2109,16 @@ Figure~\ref{fig:cl_l2_vs_dofs} reports the errors $\Ltwoerror^n$ depending on th
 \end{table}
 
 \newcommand{\Ltwogap}{g}
-Notably, Figure~\ref{fig:cl_l2_vs_dofs} shows that the converged $L^2$ error $\Ltwoerror^\laststep(\hierSDFspace{1}{\C}{\L})$ of the adaptive method does not coincide with the reference $L^2$ error $\Ltwoerror(\FEECspace{1}{\L})$. Table~\ref{tab:cl_headline} compares the final states of the adaptive method terminated at $\xi \leq 0.05$ and $\xi \leq 0.3$ with the FEEC reference. The tabulated $L^2$ errors allow us to compute the \emph{$L^2$ gap} $\Ltwogap(\L)$ by
+Notably, Figure~\ref{fig:cl_l2_vs_dofs} shows that the converged $L^2$ error $\Ltwoerror^\laststep(\hierSDFspace{1}{\domseq}{\L})$ of the adaptive method does not coincide with the reference $L^2$ error $\Ltwoerror(\FEECspace{1}{\L})$. Table~\ref{tab:cl_headline} compares the final states of the adaptive method terminated at $\xi \leq 0.05$ and $\xi \leq 0.3$ with the FEEC reference. The tabulated $L^2$ errors allow us to compute the \emph{$L^2$ gap} $\Ltwogap(\L)$ by
 \begin{equation}
-    \Ltwogap(\L) \coloneq \Ltwoerror^\laststep(\hierSDFspace{1}{\C}{\L}) \; / \; \Ltwoerror(\FEECspace{1}{\L}).
+    \Ltwogap(\L) \coloneq \Ltwoerror^\laststep(\hierSDFspace{1}{\domseq}{\L}) \; / \; \Ltwoerror(\FEECspace{1}{\L}).
 \end{equation}
 Table~\ref{tab:cl_headline} reveals that, as $\L$ and thus the DoF saving factor increase, so does the $L^2$ gap of the approximation errors. This is not a solver defect, but the price of saving DoFs. Marking in the energy norm concentrates refinement on the sharp $\tanh$ ring, where the residual is large, and leaves the smooth bulk coarse.
 
 We verify this directly for $L=4$ by integrating $\vvert{u_h-u}^2$ against a sharp indicator function of width $w=0.05$ tracking the transition circle to obtain the ring error $r$. Integrating against the indicator's nodal complement in $\CG_1$ yields to the bulk error $b$. The two contributions add up exactly to the total $L^2$ error so that $\Ltwoerror^2 = r^2 + b^2$, for both the adaptive solution and the FEEC reference at the same $\L$. For $\L=4$, we measured
 \begin{equation}
 \begin{alignedat}{4}
-    &r(\hierSDFspace{1}{\C}{4}) &&= 3.30\cdot10^{-4} \, , \qquad &&b(\hierSDFspace{1}{\C}{4}) &&= 3.93\cdot10^{-4} \, ,\\
+    &r(\hierSDFspace{1}{\domseq}{4}) &&= 3.30\cdot10^{-4} \, , \qquad &&b(\hierSDFspace{1}{\domseq}{4}) &&= 3.93\cdot10^{-4} \, ,\\
     &r(\FEECspace{1}{4}) &&= 3.30\cdot10^{-4} \,, \qquad &&b(\FEECspace{1}{4}) &&= 1.69\cdot10^{-4}.
 \end{alignedat}
 \end{equation}
@@ -2196,7 +2134,7 @@ Table~\ref{tab:padding_interface_L4} tracks the number of active DoFs and how th
   \centering
   \begin{tabular}{r@{\hspace{40pt}}r@{\hspace{16pt}}rrr@{\hspace{40pt}}rrr}
     \toprule
-    \multirow{2}{*}{step} & \multirow{2}{*}{$\vert \activeDoFSet{1}{} \vert$} & \multicolumn{3}{c}{splits into} & \multirow{2}{*}{$\vert \F(\C) \vert$} & \multicolumn{2}{c}{of which refined} \\
+    \multirow{2}{*}{step} & \multirow{2}{*}{$\vert \activeDoFSet{1}{} \vert$} & \multicolumn{3}{c}{splits into} & \multirow{2}{*}{$\vert \F(\domseq) \vert$} & \multicolumn{2}{c}{of which refined} \\
     \cmidrule(r{40pt}){3-5}\cmidrule(lr){7-8}
     & & patch & interface & fraction & & marked & padded \\
     \midrule
@@ -2209,15 +2147,15 @@ Table~\ref{tab:padding_interface_L4} tracks the number of active DoFs and how th
     6 & 9235 & 7335 & 1900 & $21\%$ & 6293 & ---   & ---  \\
     \bottomrule
   \end{tabular}
-  \caption{Metrics for all steps of the adaptive loop with $\L=4$. The first half shows the $1$-form DoFs and how they split into patch and interface DoFs, alongside the fraction of overall DoFs that are interface DoFs. The second half reports the number of faces of the admissible domain sequence $\C$ at the end of the step, and how they split into marked faces based on the estimator and additional refinement due to padding.}
+  \caption{Metrics for all steps of the adaptive loop with $\L=4$. The first half shows the $1$-form DoFs and how they split into patch and interface DoFs, alongside the fraction of overall DoFs that are interface DoFs. The second half reports the number of faces of the admissible domain sequence $\domseq$ at the end of the step, and how they split into marked faces based on the estimator and additional refinement due to padding.}
   \label{tab:padding_interface_L4}
 \end{table}
 
 \smallskip
 
-The most relevant shortcoming of methods the adaptive subdivision $k$-form spaces is that saving DoFs does not translate to faster solves. Table~\ref{tab:solve_stats_L4} summarises the important metrics around the solve, including the wallclock time needed by the MINRES solver alongside the DoF count, the number of iterations, the condition number of the preconditioned system matrix $P^{-1}K_{\C^n}$, and the number of non-zero elements of $K_{\C^n}$ per DoF. Finally, we list the metrics for the fine FEEC reference $\FEECspace{k}{\L}$ with $\L=4$.
+The most relevant shortcoming of methods the adaptive subdivision $k$-form spaces is that saving DoFs does not translate to faster solves. Table~\ref{tab:solve_stats_L4} summarises the important metrics around the solve, including the wallclock time needed by the MINRES solver alongside the DoF count, the number of iterations, the condition number of the preconditioned system matrix $P^{-1}K_{\domseq^n}$, and the number of non-zero elements of $K_{\domseq^n}$ per DoF. Finally, we list the metrics for the fine FEEC reference $\FEECspace{k}{\L}$ with $\L=4$.
 
-The wallclock times reveal that the solver performance degrades rapidly as the adaptive iterations increase. In fact, the FEEC reference method is about $130$ times faster than the adaptive solve of step $6$ even though it has roughly $4.7$ times as many DoFs. The reasons for that are found in the last three columns of Table~\ref{tab:solve_stats_L4}. First, the number of iterations needed for the MINRES solver to converge skyrocket initially until they start to become flat around step $4$. This happens due to the successive activation of basis functions across finer and finer levels, until at step $4$ the finest possible basis functions are first included in the adaptive space. This means that the condition number $\kappa(P^{-1}K_{\C^n})$ increases until then, explaining the increased number of iterations. This is a conditioning effect distinct from the rank-deficiency discussed in Section~\ref{subsec:unrefinement_and_solve}. $\C^n$ remains a admissible domain sequence throughout the loop, so $\Amat{k}{\activeDoFs}{\L}$ has full column rank at every step, yet $\kappa(P^{-1}K_{\C^n})$ still grows. The second reason for the large wallclock times is that the increased number of nonzero entries $\text{nnz}(K_{\C^n})/(\vert \activeDoFSet{0}{} \vert + \vert \activeDoFSet{1}{} \vert)$ per active DoF increases the number of operations per MINRES iteration. The increase of non-zero entries is due to the smoothing nature of subdivision, meaning that coarse basis functions have larger supports and thus cover a lot of triangles of $\T_\L$. The unrefinement step in Equation~\ref{eq:FE_matrix_assembly} extends this large number of non-zeros to $K_\C$.
+The wallclock times reveal that the solver performance degrades rapidly as the adaptive iterations increase. In fact, the FEEC reference method is about $130$ times faster than the adaptive solve of step $6$ even though it has roughly $4.7$ times as many DoFs. The reasons for that are found in the last three columns of Table~\ref{tab:solve_stats_L4}. First, the number of iterations needed for the MINRES solver to converge skyrocket initially until they start to become flat around step $4$. This happens due to the successive activation of basis functions across finer and finer levels, until at step $4$ the finest possible basis functions are first included in the adaptive space. This means that the condition number $\kappa(P^{-1}K_{\domseq^n})$ increases until then, explaining the increased number of iterations. This is a conditioning effect distinct from the rank-deficiency discussed in Section~\ref{subsec:unrefinement_and_solve}. $\domseq^n$ remains a admissible domain sequence throughout the loop, so $\Amat{k}{\activeDoFs}{\L}$ has full column rank at every step, yet $\kappa(P^{-1}K_{\domseq^n})$ still grows. The second reason for the large wallclock times is that the increased number of nonzero entries $\text{nnz}(K_{\domseq^n})/(\vert \activeDoFSet{0}{} \vert + \vert \activeDoFSet{1}{} \vert)$ per active DoF increases the number of operations per MINRES iteration. The increase of non-zero entries is due to the smoothing nature of subdivision, meaning that coarse basis functions have larger supports and thus cover a lot of triangles of $\T_\L$. The unrefinement step in Equation~\ref{eq:FE_matrix_assembly} extends this large number of non-zeros to $K_{\domseq}$.
 
 \smallskip
 
@@ -2227,7 +2165,7 @@ The adaptive method thus only wins in DoFs and memory, not wall-clock, with the 
   \centering
   \begin{tabular}{r@{\hspace{16pt}}r@{\hspace{16pt}}r@{\hspace{16pt}}r@{\hspace{16pt}}r@{\hspace{16pt}}r}
     \toprule
-    \multirow{2}{*}{step} & wallclock & DoF count & \multirow{2}{*}{iterations} & \multirow{2}{*}{$\kappa(P^{-1}K_\C)$} & \multirow{2}{*}{$\dfrac{\mathrm{nnz}(K_\C)}{\vert \activeDoFSet{0}{} \vert + \vert \activeDoFSet{1}{} \vert}$} \\
+    \multirow{2}{*}{step} & wallclock & DoF count & \multirow{2}{*}{iterations} & \multirow{2}{*}{$\kappa(P^{-1}K_{\domseq})$} & \multirow{2}{*}{$\dfrac{\mathrm{nnz}(K_{\domseq})}{\vert \activeDoFSet{0}{} \vert + \vert \activeDoFSet{1}{} \vert}$} \\
      & time & $\vert \activeDoFSet{0}{} \vert + \vert \activeDoFSet{1}{} \vert$ & & & \\
     \midrule
     0 & $0.06\,\mathrm{s}$    & 253  & 63  & 9.98  & 77.7  \\
@@ -2241,13 +2179,13 @@ The adaptive method thus only wins in DoFs and memory, not wall-clock, with the 
     FEEC reference $\FEECspace{k}{\L}$ & $10.6\,\mathrm{s}$   & $56\,833$ & 25  & 4.11  & 11.4  \\
     \bottomrule
   \end{tabular}
-  \caption{Solve metrics for all steps of the adaptive simulation with $\L=4$. The fine superspace $\FEECspace{k}{4}$ is included as a reference. $\kappa(P^{-1}K_\C)$ is the estimated condition number of the preconditioned operator after unrefinement, see Equation~\ref{eq:FE_matrix_assembly} and the preconditioner $\mathbf{P}$ defined in Equation~\ref{eq:preconditioner} (\S~\ref{subsec:solve}). The term \emph{nnz} refers to the number of non-zero elements of a matrix, and to obtain $\mathrm{nnz}(K_\C)/(\vert \activeDoFSet{0}{} \vert + \vert \activeDoFSet{1}{} \vert)$ we normalised by the number of active DoFs.}
+  \caption{Solve metrics for all steps of the adaptive simulation with $\L=4$. The fine superspace $\FEECspace{k}{4}$ is included as a reference. $\kappa(P^{-1}K_{\domseq})$ is the estimated condition number of the preconditioned operator after unrefinement, see Equation~\ref{eq:FE_matrix_assembly} and the preconditioner $\mathbf{P}$ defined in Equation~\ref{eq:preconditioner} (\S~\ref{subsec:solve}). The term \emph{nnz} refers to the number of non-zero elements of a matrix, and to obtain $\mathrm{nnz}(K_{\domseq})/(\vert \activeDoFSet{0}{} \vert + \vert \activeDoFSet{1}{} \vert)$ we normalised by the number of active DoFs.}
   \label{tab:solve_stats_L4}
 \end{table}
 
 \section{Conclusion}
 
-\robert{We have presented a complete matrix-level framework for hierarchical subdivision $k$-form spaces and their use in an adaptive loop for structure-preserving PDE discretisations. The central observation is that any active subdivision basis function is a column of an accumulated subdivision matrix $\Smat{k}{\l}{\L}$; selecting columns according to a admissible domain sequence produces a hierarchical space $\hierSDFspace{k}{\C}{\L}$ whose linear independence and de Rham exactness are guaranteed by the partition condition proved in the companion paper~\cite{companion_paper}. Once the hierarchical subdivision matrix $\Amat{k}{\activeDoFs}{\L}$ is assembled, all bilinear forms are obtained by Galerkin restriction of the embedding-level operators without recomputing any integrals, and the active-space linear system reduces to standard sparse linear algebra on the finest mesh $\T_\L$.
+\robert{We have presented a complete matrix-level framework for hierarchical subdivision $k$-form spaces and their use in an adaptive loop for structure-preserving PDE discretisations. The central observation is that any active subdivision basis function is a column of an accumulated subdivision matrix $\Smat{k}{\l}{\L}$; selecting columns according to a admissible domain sequence produces a hierarchical space $\hierSDFspace{k}{\domseq}{\L}$ whose linear independence and de Rham exactness are guaranteed by the partition condition proved in the companion paper~\cite{companion_paper}. Once the hierarchical subdivision matrix $\Amat{k}{\activeDoFs}{\L}$ is assembled, all bilinear forms are obtained by Galerkin restriction of the embedding-level operators without recomputing any integrals, and the active-space linear system reduces to standard sparse linear algebra on the finest mesh $\T_\L$.
 
 The adaptive loop adds a subdivision-specific \textsc{Pad} step to the standard \textsc{Solve}--\textsc{Estimate}--\textsc{Mark}--\textsc{Refine} cycle. Padding alternates pinch resolution with inadmissible-faces padding and grading to a fixed point: pinch resolution repairs a pinched coarse region that would otherwise carry a spurious harmonic (a closed but non-exact discrete $1$-form, breaking de Rham exactness), while inadmissible-faces padding and grading enforce the interior-vertex (Good-vertex) requirement and bound the level jump at coarse/fine interfaces. Both rules only ever refine, are local, and are inexpensive relative to the linear solve.
 
@@ -2276,11 +2214,11 @@ quadrisection assigns each level-$(\l\!+\!1)$ face the parent it was split from.
 levels are independent, the loop below may be run in any order, or in parallel.
 
 \begin{algorithm}[H]
-\caption{$\textsc{BuildActiveDoFs}(\domseq{\L})$: active degrees of freedom from a domain sequence}
+\caption{$\textsc{BuildActiveDoFs}(\domseq[\L])$: active degrees of freedom from a domain sequence}
 \label{alg:buildactivedofs}
 \BlankLine
-\KwIn{domain sequence $\domseq{\L}$ given by its leaf partition, form degree $k$}
-\KwOut{active DoFs $\activeDoFSet{k}{}(\domseq{\L})$, tagged by level}
+\KwIn{domain sequence $\domseq[\L]$ given by its leaf partition, form degree $k$}
+\KwOut{active DoFs $\activeDoFSet{k}{}(\domseq[\L])$, tagged by level}
 \BlankLine
 \tcp{1.\ Recover the regions downward from the leaf partition}
 $\M_\L \leftarrow$ leaf faces at level $\L$\;
