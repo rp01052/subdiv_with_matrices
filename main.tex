@@ -675,7 +675,7 @@ $\circ$ & Linear independence & Theorem~\ref{theorem:linear_independence} (Secti
 \addlinespace
 $\bullet$ & Nestedness under refinement & Equation~\eqref{eq:quadrisection_monotone} & --- \\
 \addlinespace
-$\times$ & Bounded, local padding & --- & Table~\ref{tab:padding_interface_L4} \\
+$\times$ & Bounded, local padding & \guidance{Lemma~\ref{lemma:pad_productive}; bound open (Problem~\ref{prob:padding_passes})} & Table~\ref{tab:padding_interface_L4} \\
 \addlinespace
 $\times$ & DoF efficiency & --- & Table~\ref{tab:cl_headline} \\
 \addlinespace
@@ -1064,7 +1064,7 @@ The second problematic configuration is a vertex at which the refined part of it
 
 \begin{definition}[Refinement arcs of a vertex]
     \label{def:refinement_arcs}
-    Let $\vertex{\l}{\coarseIdxone} \in \V(\domseq[\L])$. The \emph{refinement arcs of $\vertex{\l}{\coarseIdxone}$} are the maximal runs of consecutive faces in its cyclic (or, at a boundary vertex, linear) refinement fan $\refFan{\l}(\vertex{\l}{\coarseIdxone})$. \guidance{Two faces of the same arc are connected by a chain of faces of the fan, consecutive ones sharing a level-$\l$ edge at $\vertex{\l}{\coarseIdxone}$, while faces of distinct arcs are not.}
+    Let $\vertex{\l}{\coarseIdxone} \in \V(\domseq[\L])$. The \emph{refinement arcs of $\vertex{\l}{\coarseIdxone}$} are the maximal runs of consecutive faces in its cyclic (or, at a boundary vertex, linear) refinement fan $\refFan{\l}(\vertex{\l}{\coarseIdxone})$. \guidance{Two faces of the same arc are connected by a chain of faces of the fan, consecutive ones sharing a level-$\l$ edge at $\vertex{\l}{\coarseIdxone}$, while faces of distinct arcs are not. The maximal runs of $\FVl{\l}(\vertex{\l}{\coarseIdxone})$ that are \emph{not} in $\refFan{\l}(\vertex{\l}{\coarseIdxone})$ are the \emph{gaps} of $\vertex{\l}{\coarseIdxone}$, cyclic at an interior vertex and linear at a boundary vertex.}
 \end{definition}
 
 \begin{definition}[Pinch vertex]
@@ -1247,6 +1247,8 @@ Figure~\ref{fig:leaf_star_levels} follows a single vertex through~\eqref{eq:star
     \end{equation}
     for the coarsest and the finest level occurring in $\simplexsubset{2}{}$.
 \end{definition}
+
+\todo{\guidance{$\lmin$ and $\lmax$ of the leaf star supersede the $\sourcelevel_\coarseIdxtwo$, $\targetlevel_\coarseIdxtwo$ and $\mu_\coarseIdxtwo$ notation still used in Sections~\ref{subsec:refine} and~\ref{subsec:padding}. Fold the latter into the former throughout before submission.}}
 
 \subsection{Refinement operators}
 \label{subsec:refinement_operators}
@@ -1515,7 +1517,7 @@ where $\theta \in (0, 1]$ is the Dörfler parameter. The set $\R_\theta \subset 
 \subsection{Refinement}
 \label{subsec:refine}
 
-The \textsc{Refine} step refines the marked faces $\face{\l}{\coarseIdxone} \in \R_\theta$ around the vertices $\vertex{\birthLevel_\coarseIdxtwo}{\coarseIdxtwo} \in \mathrm{V}_{\domseq}^{\mathrm{mark}}$ from Equation~\eqref{eq:marked_refinable_residual} as shown in Figure~\ref{fig:pipeline_marking_c}. Recall from Definition~\ref{def:level_span} that $\targetlevel_\coarseIdxtwo$ is the finest level occurring in the leaf star of $\vertex{\birthLevel_\coarseIdxtwo}{\coarseIdxtwo}$ in $\domseq$. Since we want to refine the faces around the vertex by one level (unless $\targetlevel_\coarseIdxtwo = \L$), we compute the target level $\tilde{\targetlevel}_\coarseIdxtwo = \min(\targetlevel_\coarseIdxtwo \! + \! 1, \L)$ that is expected after refining around $\vertex{\birthLevel_\coarseIdxtwo}{\coarseIdxtwo}$. Only this fine end is needed here; the coarse end $\sourcelevel_\coarseIdxtwo$ never enters a call site, since the graded quadrisection reads it off the leaf star itself. The expected target levels $\tilde{\targetlevel}_\coarseIdxtwo$ must be computed on the fixed input admissible domain sequence $\domseq$ before any refinement takes place to avoid a cascade of ever increasing target levels. 
+The \textsc{Refine} step refines the marked faces $\face{\l}{\coarseIdxone} \in \R_\theta$ around the vertices $\vertex{\birthLevel_\coarseIdxtwo}{\coarseIdxtwo} \in \mathrm{V}_{\domseq}^{\mathrm{mark}}$ from Equation~\eqref{eq:marked_refinable_residual} as shown in Figure~\ref{fig:pipeline_marking_c}. Recall from Definition~\ref{def:level_range} that \guidance{$\targetlevel_\coarseIdxtwo = \lmax \big( \FVleaf{}(\vertex{\birthLevel_\coarseIdxtwo}{\coarseIdxtwo}) \big)$ is} the finest level occurring in the leaf star of $\vertex{\birthLevel_\coarseIdxtwo}{\coarseIdxtwo}$ in $\domseq$. Since we want to refine the faces around the vertex by one level (unless $\targetlevel_\coarseIdxtwo = \L$), we compute the target level $\tilde{\targetlevel}_\coarseIdxtwo = \min(\targetlevel_\coarseIdxtwo \! + \! 1, \L)$ that is expected after refining around $\vertex{\birthLevel_\coarseIdxtwo}{\coarseIdxtwo}$. Only this fine end is needed here; the coarse end $\sourcelevel_\coarseIdxtwo$ never enters a call site, since the graded quadrisection reads it off the leaf star itself. The expected target levels $\tilde{\targetlevel}_\coarseIdxtwo$ must be computed on the fixed input admissible domain sequence $\domseq$ before any refinement takes place to avoid a cascade of ever increasing target levels. 
 
 The \textsc{Refine} step homogenises the star of each marked vertex $\vertex{\birthLevel_\coarseIdxtwo}{\coarseIdxtwo} \in \mathrm{V}_{\domseq}^{\mathrm{mark}}$ at one level beyond the finest level it currently carries. Figure~\ref{fig:refine_interface} displays two examples of this refinement for vertices at an interface. Formally, we express the refinement through the graded vertex quadrisection $\quadriVup{\tilde{\targetlevel}_\coarseIdxtwo}(\domseq, \vertex{\birthLevel_\coarseIdxtwo}{\coarseIdxtwo})$ of Definition~\ref{def:graded_vertex_quadrisection}, whose last factor $\quadriVat{\targetlevel_\coarseIdxtwo}$ is the one that refines beyond what the vertex already carries, the earlier ones bringing its leaf star up to $\targetlevel_\coarseIdxtwo$ first.
 
@@ -1560,7 +1562,7 @@ admissible domain sequence $\domseq^{\mathrm{pinch}} \coloneq \domseq^{\vert \ma
 \end{equation}
 and $\domseq^0 = \domseq^\mathrm{refine}$ the domain sequence after the \textsc{Refine} step. In words, for each detected pinch we homogenise the star of $\vertex{\l_p}{\coarseIdxtwo_p}$ at level $\l_p \! + \! 1$. One level suffices: the refinement arcs at level $\l_p$ are separated precisely by the star positions that are active at levels $\leq \l_p$, so lifting those to level $\l_p \! + \! 1$ merges the arcs into a single disc.
 
-\guidance{Detection and repair are separate phases. The whole set $\mathrm{V}_{\domseq^{\mathrm{refine}}}^{\mathrm{pinch}}$ is collected before any of its elements is repaired, so resolving one vertex cannot hide a pinch at another, and the iteration above is well defined. Re-detection happens only in the next pass of the loop around $\textsc{Pad}$, which is what makes the number $q$ of productive passes in Proposition~\ref{prop:padding_terminates} a meaningful count.}
+\guidance{Detection and repair are separate phases. The whole set $\mathrm{V}_{\domseq^{\mathrm{refine}}}^{\mathrm{pinch}}$ is collected before any of its elements is repaired, so resolving one vertex cannot hide a pinch at another, and the iteration above is well defined. Re-detection happens only in the next pass of the loop around $\textsc{Pad}$, which is what makes the number $q$ of productive passes in Section~\ref{subsec:termination} a meaningful count.}
 
 Every pinch vertex carries a cohomology defect. The severity of the defect depends on the concrete configuration of the pinch, see Definition~\ref{def:pinch_vertex} and Figure~\ref{fig:pinches}. Section~\ref{subsec:exactness_atomic} later confirms that resolving the coarse region around a pinch vertex successfully repairs these defects.
 
@@ -1579,7 +1581,7 @@ In words, we refine every inadmissible face by one level because the refined fac
 
 \paragraph{Grading leaf stars.}
 
-The grading is supposed to smooth out transitions across vertices $\vertex{\birthLevel_\coarseIdxtwo}{\coarseIdxtwo}$ of $\domseq^{\mathrm{admissible}}$ with large level differences. Unlike the first two rules, the grading step does not restore exactness or linear independence but is intended to improve the conditioning of the matrix-vector system and to avoid numerical artifacts in these regions. The predicate to identify the vertices to grade is the level gap $\mu_\coarseIdxtwo$ of Definition~\ref{def:level_span}. The grading iterates over the vertices of $\domseq^{\mathrm{admissible}}$ and assembles the set
+The grading is supposed to smooth out transitions across vertices $\vertex{\birthLevel_\coarseIdxtwo}{\coarseIdxtwo}$ of $\domseq^{\mathrm{admissible}}$ with large level differences. Unlike the first two rules, the grading step does not restore exactness or linear independence but is intended to improve the conditioning of the matrix-vector system and to avoid numerical artifacts in these regions. The predicate to identify the vertices to grade is the \guidance{\emph{level span} $\mu_\coarseIdxtwo \coloneq \lmax \big( \FVleaf{}(\vertex{\birthLevel_\coarseIdxtwo}{\coarseIdxtwo}) \big) - \lmin \big( \FVleaf{}(\vertex{\birthLevel_\coarseIdxtwo}{\coarseIdxtwo}) \big)$ of Definition~\ref{def:level_range}}. The grading iterates over the vertices of $\domseq^{\mathrm{admissible}}$ and assembles the set
 \begin{equation}
     \mathrm{V}_{\domseq^{\mathrm{admissible}}}^{\mathrm{grading}} \coloneq \big\{ \vertex{\birthLevel_\coarseIdxtwo}{\coarseIdxtwo} \; \colon \; \mu_\coarseIdxtwo > 2 \big\}
 \end{equation}
@@ -1590,9 +1592,9 @@ The vertices marked for grading are refined using the quadrisection operator to 
     \label{eq:grading_subdiv_partition}
     \domseq^p = \quadriVup{\targetlevel_{\coarseIdxtwo_p} - 2} \big( \domseq^{p-1}, \, \vertex{\birthLevel_{\coarseIdxtwo_p}}{\coarseIdxtwo_p} \big) \quad \text{for} \quad \vertex{\birthLevel_{\coarseIdxtwo_p}}{\coarseIdxtwo_p} \in \mathrm{V}_{\domseq^{\mathrm{admissible}}}^{\mathrm{grading}} \quad \text{with} \quad \; p \in \{1, \, \dots, \, \vert \mathrm{V}_{\domseq^{\mathrm{admissible}}}^{\mathrm{grading}} \vert \}
 \end{equation}
-and $\domseq^0 = \domseq^{\mathrm{admissible}}$. Note the additional $-2$ in the target level $\targetlevel_{\coarseIdxtwo_p} \! - \! 2$ handed to the quadrisection operator. It ensures that $\vertex{\birthLevel_{\coarseIdxtwo_p}}{\coarseIdxtwo_p}$ has a level gap of $2$ or less in $\domseq^p$.
+and $\domseq^0 = \domseq^{\mathrm{admissible}}$. Note the additional $-2$ in the target level $\targetlevel_{\coarseIdxtwo_p} \! - \! 2$ handed to the quadrisection operator. It ensures that $\vertex{\birthLevel_{\coarseIdxtwo_p}}{\coarseIdxtwo_p}$ has a \guidance{level span} of $2$ or less in $\domseq^p$.
 
-The implementation lifts a vertex's coarsest leaf-star faces by one level and re-tests the gap, iterating until it is at most $2$. That loop is precisely the composition~\eqref{eq:graded_vertex_quadrisection}: its round at level $\l$ is the factor $\quadriVat{\l}$, and it stops where the composition stops, at $\targetlevel_{\coarseIdxtwo_p} \! - \! 2$. \todo{\guidance{The one remaining difference is that the implementation re-runs the admissibility pad after each grading round, whereas~\eqref{eq:grading_subdiv_partition} grades all marked vertices and pads afterwards. Decide before submission whether to describe the interleaving.}}
+The implementation lifts a vertex's coarsest leaf-star faces by one level and re-tests the \guidance{level span}, iterating until it is at most $2$. That loop is precisely the \guidance{iteration of Definition~\ref{def:graded_vertex_quadrisection}}: its round at level $\l$ is the factor $\quadriVat{\l}$, and it stops where the composition stops, at $\targetlevel_{\coarseIdxtwo_p} \! - \! 2$. \guidance{The implementation re-runs the admissibility padding after each grading round, whereas~\eqref{eq:grading_subdiv_partition} grades every marked vertex first. Both are passes of the loop of Section~\ref{subsec:termination}. That loop is also why the grading is iterated rather than applied once. Being a vertex quadrisection, it can create pinches and inadmissible faces, and lifting the coarse end of one leaf star raises $\targetlevel$ at the neighbouring vertices and can open new grading sites. Neither effect is repaired within its own pass.}
 
 \paragraph{Summary.}
 
@@ -1608,184 +1610,115 @@ Dirichlet-only check unchanged.}
 
 Every rule only ever refines and adds a few faces that locally repair its violation, and no face is refined beyond level $\L$.
 
-\guidance{
-\begin{problem}[Uniformly bounded restoration of admissibility]
-    \label{prob:padding_terminates}
-    Construct a map $\textsc{Pad} \colon \alldomseqs \to \alldomseqs$ from the quadrisection
-    operators $\quadriF$ and $\quadriVup{\targetlevel}$ whose marked sets are determined by the
-    predicates of Definition~\ref{def:subdiv_partition}, together with a constant $q$
-    \emph{independent of $\domseq[\L]$ and of $\L$}, such that
-    \begin{equation}
-        \label{eq:padding_goal}
-        \textsc{Pad}^q \; \colon \; \alldomseqs \; \longrightarrow \; \allpartitions,
-    \end{equation}
-    and such that the faces refined by $\textsc{Pad}$ stay confined to a neighbourhood of the
-    defects of $\domseq[\L]$ of bounded size.
-\end{problem}
-
-Three features of Problem~\ref{prob:padding_terminates} are worth spelling out before
-Section~\ref{subsec:padding} constructs a candidate for $\textsc{Pad}$.
-
-First, because the marked sets are recomputed from the predicates rather than supplied,
-Equation~\eqref{eq:padding_goal} is a statement about a fixed-point iteration: a domain sequence
-on which no predicate fires is a fixed point of $\textsc{Pad}$, and the fixed points are
-admissible domain sequences, up to the grading heuristic that Section~\ref{subsec:padding} adds
-on top of the two repairs for conditioning reasons.
-
-Second, the substance of the problem lies in the uniformity of $q$, not in its finiteness.
-Finiteness is a counting statement --- every productive pass refines, no face is refined beyond
-level $\L$, and there are finitely many faces below level $\L$, so the iteration cannot run
-forever; Proposition~\ref{prop:padding_terminates} makes this precise. But the bound obtained
-that way grows with $\lvert \F_\L(\T_\L) \rvert$, and a padding step permitted to consume that
-budget could drive the entire domain sequence to the finest level, defeating the purpose of
-adaptivity. Only a $q$ bounded independently of the mesh keeps the padded region a perturbation
-of the marked region.
-
-Third, the locality requirement is what rules out the degenerate solution
-$\textsc{Pad}(\domseq[\L]) = \T_\L$, which satisfies Equation~\eqref{eq:padding_goal} with
-$q = 1$ and is useless.}
-
-
-\begin{remark}[Padding order matters]
-\label{rem:padding_order}
-The three padding substeps do not commute: resolving a pinch vertex can lead to an admissible face becoming inadmissible (e.g. Figure~\ref{fig:padding_chain}), which is why $\textsc{Pad}$ always runs pinch resolution before inadmissible-face padding, before grading.
-\end{remark}
-
-\guidance{The three substeps of this section compose into the map
+\guidance{The three substeps compose into the map
 \begin{equation}
     \label{eq:pad_operator}
     \textsc{Pad} \coloneq \textsc{Grade} \circ \textsc{PadFaces} \circ \textsc{ResolvePinches}
     \; \colon \; \alldomseqs \; \longrightarrow \; \alldomseqs,
 \end{equation}
-which is the candidate that Problem~\ref{prob:padding_terminates} asked for. Our implementation
-wraps it in a loop that stops once a pass no longer refines any face, and a counter records the
-number $q$ of \emph{productive} passes. That the loop stops at all, and stops at an admissible
-domain sequence, is the finiteness half of the problem and can be settled.
+which Section~\ref{subsec:termination} iterates to a fixed point.}
 
-\begin{proposition}[$\textsc{Pad}$ terminates]
-    \label{prop:padding_terminates}
-    Let $\domseq^{\mathrm{refine}} \in \alldomseqs$ and let $\domseq^{(0)} = \domseq^{\mathrm{refine}}$,
-    $\domseq^{(j+1)} = \textsc{Pad} \big( \domseq^{(j)} \big)$. Then the iteration reaches a fixed point
-    $\domseq^{\mathrm{pad}} = \domseq^{(q)}$ after
-    \begin{equation}
-        \label{eq:padding_crude_bound}
-        q \; \leq \; \sum_{\l=\lzero}^{\L} \big\lvert \F_\l(\T_\l) \big\rvert \; - \; \sum_{\l=\lzero}^{\L} \big\lvert \F_\l(\M_\l^{\mathrm{refine}}) \big\rvert
-    \end{equation}
-    passes, and $\domseq^{\mathrm{pad}} \in \allpartitions$ is an admissible domain sequence.
-\end{proposition}
+\begin{remark}[Padding order matters]
+\label{rem:padding_order}
+The three padding substeps do not commute: resolving a pinch vertex can lead to an admissible face becoming inadmissible (e.g. Figure~\ref{fig:padding_chain}), which is why $\textsc{Pad}$ always runs pinch resolution before inadmissible-face padding, before grading. \guidance{The interaction runs in every direction. The admissibility padding can in turn create a pinch, and the grading, being a vertex quadrisection, can create both. No ordering of the substeps within a single pass absorbs this, and a single pass never suffices in general.}
+\end{remark}
+
+\FloatBarrier
+
+\subsection{\guidance{Termination}}
+\label{subsec:termination}
+
+\guidance{Our implementation wraps $\textsc{Pad}$ in a loop that stops once a pass no longer
+refines any face, and a counter records the number $q$ of \emph{productive} passes,
+\begin{equation}
+    \label{eq:pad_iteration}
+    \domseq^{(0)} = \domseq^{\mathrm{refine}}, \qquad
+    \domseq^{(j+1)} = \textsc{Pad} \big( \domseq^{(j)} \big), \qquad
+    \domseq^{\mathrm{pad}} = \domseq^{(q)}.
+\end{equation}
+That the loop stops at all, and stops at an admissible domain sequence, rests on a single
+observation.
+
+\begin{lemma}[A firing predicate refines]
+    \label{lemma:pad_productive}
+    Let $\domseq[\L] \in \alldomseqs$. If any of the three predicates of
+    Section~\ref{subsec:padding} fires on $\domseq[\L]$, then $\textsc{Pad}(\domseq[\L])$
+    refines at least one face, and it refines no face beyond level $\L$.
+\end{lemma}
 \begin{proof}
-    Consider the integer-valued face budget
-    \begin{equation}
-        \Phi \big( \domseq[\L] \big) \coloneq \sum_{\l=\lzero}^{\L} \big\lvert \F_\l(\M_\l) \big\rvert .
-    \end{equation}
-    Both quadrisection operators only ever add the children of a marked face on the next finer
-    level and leave all coarser levels untouched, by
-    Equation~\eqref{eq:def_face_quadrisection_operator} and by the iterated application of
-    $\quadriF$ in Definition~\ref{def:graded_vertex_quadrisection}. A productive
-    pass therefore increases $\Phi$ strictly. Since $\M_\l \subseteq \T_\l$ on every level and no
-    face is refined beyond level $\L$, $\Phi$ is bounded above by
-    $\sum_\l \lvert \F_\l(\T_\l) \rvert < \infty$, which gives
-    Equation~\eqref{eq:padding_crude_bound} and the existence of a fixed point.
-
-    For the second claim, note first that a firing predicate always refines at least one face, so
-    that an unproductive pass certifies that no predicate fires. For a pinch vertex
-    $\vertex{\l}{\coarseIdxtwo}$ this holds because two distinct refinement arcs at level $\l$ must
-    be separated, in the fan of $\vertex{\l}{\coarseIdxtwo}$, by at least one face
-    $\face{\l}{\coarseIdxone} \in \FVl{\l}(\vertex{\l}{\coarseIdxtwo})$ outside
-    $\refFan{\l}(\vertex{\l}{\coarseIdxtwo})$ --- otherwise the fan would be the whole ring and
-    hence a single arc. Such a face is not refined beyond level $\l$, so its covering face lies at
-    a level $\leq \l$, and so does the covering face of each of its children incident to
-    $\vertex{\l}{\coarseIdxtwo}$. Those children lie in $\FVl{\l+1}(\vertex{\l+1}{\coarseIdxtwo})$
-    and are not leaf faces, so the last factor $\quadriVat{\l}$ of $\quadriVup{\l+1}$ performs at
-    least one face quadrisection. The same
-    argument covers a boundary pinch, whose unanchored arc is separated from both extremes of the
-    linear fan by at least one such face. Pinches are detected only at levels $\l < \L$, an arc at
-    level $\L$ having nothing finer to be refined beyond, so the repair never creates faces beyond
-    level $\L$. For an inadmissible face it holds because the predicate is evaluated on leaf
-    faces only, Equation~\eqref{eq:leaf_faces}, so that
-    $\F_{\mathrm{inadmissible}} \cap \ancestorPatch{\M_{\l+1}} = \varnothing$ and $\quadriF$ is not
-    the identity on it. At the fixed point, then, none of the three predicates fires, which is
-    precisely clauses~(i) to~(iii) of Definition~\ref{def:subdiv_partition}.
+    At a pinch vertex $\vertex{\l}{\coarseIdxtwo}$, two distinct refinement arcs at level $\l$
+    are separated in the fan by at least one face outside
+    $\refFan{\l}(\vertex{\l}{\coarseIdxtwo})$, since otherwise the fan would be the whole ring
+    and hence a single arc. That face is not refined beyond level $\l$, so its children
+    incident to $\vertex{\l}{\coarseIdxtwo}$ are not leaf faces, and the last factor
+    $\quadriVat{\l}$ of $\quadriVup{\l+1}$ quadrisects at least one of them. The same argument
+    covers a boundary pinch, whose unanchored arc is separated from both extremes of the linear
+    fan by such a face. An inadmissible face is detected on the leaf faces only,
+    Equation~\eqref{eq:leaf_faces}, so $\quadriF$ is not the identity on it. A vertex of level
+    span greater than $2$ carries leaf faces below $\targetlevel_\coarseIdxtwo \! - \! 2$, so
+    $\quadriVup{\targetlevel_\coarseIdxtwo - 2}$ quadrisects at least one of them. Pinches are
+    detected only at levels $\l < \L$ and the grading target never exceeds $\L \! - \! 2$, so
+    no repair refines beyond level $\L$.
 \end{proof}
 
-Proposition~\ref{prop:padding_terminates} disposes of the qualitative question and of nothing
-else. The bound~\eqref{eq:padding_crude_bound} is $\mathcal{O}(4^\L \lvert \F_\lzero(\T_\lzero) \rvert)$ and
-therefore permits exactly the behaviour that adaptivity is meant to avoid; it is the analogue of
-observing that a mesh refinement loop terminates because the mesh cannot be refined past machine
-precision. The quantitative half of Problem~\ref{prob:padding_terminates} --- whether
-\eqref{eq:padding_crude_bound} can be replaced by a bound depending only on the control mesh
-$\T_\lzero$ --- is not settled here. What can be said immediately is a lower bound.
+Termination follows by counting. Both quadrisection operators only add the children of a
+marked face on the next finer level, so the number of faces carried by $\domseq[\L]$ across
+all levels grows strictly on every productive pass. By the second half of
+Lemma~\ref{lemma:pad_productive} that number stays bounded by the number of faces of the
+uniform meshes $\T_\lzero, \, \dots, \, \T_\L$, and the iteration reaches a fixed point. The
+first half makes an unproductive pass certify that no predicate fires, so the fixed points of
+$\textsc{Pad}$ are exactly the admissible domain sequences of level span at most $2$, and
+$\domseq^{\mathrm{pad}} \in \allpartitions$.
 
-The lower bound is $q \geq 2$, witnessed by the first two passes of
-Figure~\ref{fig:padding_chain}: a pinch resolution renders a previously admissible face
-inadmissible, the ensuing admissibility padding creates a second pinch, and only the second pass
-stabilises. Remark~\ref{rem:padding_order} explains the mechanism --- the two repairs violate one
-another's invariants in both directions, so no ordering of the substeps within a single pass can
-absorb the interaction. In particular $q = 1$ is not attainable on all of $\alldomseqs$.
+This settles the qualitative question and nothing else. The bound it yields is exponential in
+$\L$ and permits the very behaviour that adaptivity is meant to avoid. What is wanted instead
+is a bound in terms of the control mesh $\T_\lzero$ alone, and the obstruction to one is a
+mechanism rather than an accident.
 
-That mechanism composes, and composing it is what rules out a constant. The control mesh of
-Figure~\ref{fig:padding_chain} carries three interior vertices of valence $8$ in a row,
-consecutive ones at mesh distance $1$, every other interior vertex regular. Marking four vertex
-stars of the uniform domain sequence --- an input the loop can produce, being $\textsc{Refine}$
-applied to an admissible domain sequence --- gives $q = 3$, one productive pass per vertex. The
-pass-by-pass replay is the content of the figure: each pass resolves exactly one of the three
-vertices, whose refinement fan carries two arcs at that moment and is homogeneous immediately
-afterwards, and the single face that the same pass pads opens the two-arc configuration at the
-next vertex along the row. The refinement therefore travels down the row one vertex per pass, and
-the row can be made as long as the control mesh allows: with $k$ such vertices we measure $q = k$,
-and $q = k+1$ whenever the first two-arc configuration is itself created by the padding rather
-than by the marking. A row of five gives $q = 6$ that way. No constant $q$ therefore serves for
-all control meshes, and Problem~\ref{prob:padding_terminates} has no solution in the form stated
-for this $\textsc{Pad}$.
+What drives $q$ up is a pinch that outlives the pass which resolves it, and whether one does
+is decided by the gaps separating its arcs. A gap of a single face has no refinement-exterior
+vertex left, so that face is inadmissible by Definition~\ref{def:admissible_face} and the
+admissibility padding of the same pass refines it, merging the two arcs into one. A gap of two
+faces survives, and with it the pinch. An interior pinch that outlives its own pass therefore
+needs two arcs separated by two gaps of at least two faces each. At valence six the fan has
+room for nothing else, $1 \! + \! 2 \! + \! 1 \! + \! 2 = 6$, so both arcs consist of a single
+face. Marking vertex stars on one level cannot produce a
+single-face arc, because marking a vertex fills its fan, while marking a vertex of its link
+refines both faces of the shared edge. On a single level the configuration is thus confined to
+the irregular vertices, and Figure~\ref{fig:padding_chain} builds on them.
 
-The alternation is essential, and reordering the substeps of $\textsc{Pad}$ does not shorten it.
-Running the admissibility padding before the pinch resolution rather than after it, on the input
-of Figure~\ref{fig:padding_chain}, gives $q = 4$ instead of $3$: the three resolutions still take
-one pass each, and the loop adds a trailing pass that only pads. Where the reordering does merge
-the first padding into the first resolution --- on an input whose first pinch is created by
-padding rather than by the marking --- it pays that saving straight back as the same trailing
-pass, and the count is unchanged. The pass count measures how many times the two repairs must
-alternate before neither fires, and the substep order only decides where that alternation is cut.
+The figure places valence-$8$ vertices in a row at mesh distance one and marks vertex stars of
+the uniform domain sequence, an input the loop can produce by applying $\textsc{Refine}$ to an
+admissible domain sequence. Each pass resolves one vertex of the row and pads a single face,
+and it is that padded face which opens the same two-arc configuration at the next vertex
+along. The repair travels down the row one vertex per pass, so $q$ grows with the length of
+the row. How long the row can be made is a property of the control mesh, and no constant
+therefore serves for all control meshes.
 
-Which vertices can carry the configuration is a counting question. A pinch that survives the
-admissibility padding of its own pass needs two refinement arcs separated by two gaps, and each
-gap must hold at least two faces: a gap of a single face has no refinement-exterior vertex left,
-so it is padded away and the two arcs close into one. At an interior vertex of valence six the fan
-has room for nothing else, $1 + 2 + 1 + 2 = 6$, so both arcs must consist of a single face --- and
-a single-face arc is exactly what marking vertex stars cannot produce, since marking the vertex
-fills its fan while marking a vertex of its link refines both faces of the shared edge, a run of
-two. From valence seven upwards the fan has slack and a marked neighbouring star suffices, which
-is why the chain of Figure~\ref{fig:padding_chain} is built on irregular vertices.
-
-That exclusion of the regular vertices is an artefact of marking whole stars on a single level,
-and it does not survive the loop. Once $\L \geq 2$ a marked vertex class may be born at a level
-finer than the one at which the fan is read, and its leaf star can then meet the coarse level
-in a single face: marking a level-$\lzero$ star and afterwards a level-$(\lzero + 1)$ class on the
-rim of the resulting patch lifts exactly one coarse face and opens a single-face arc at a regular
-vertex. Regular vertices then pinch as well, and the passes they cost add to those of the
-irregular ones. On a mesh whose interior vertices all have valence six we measure $q = 3$; on a
-mesh of the same family as Figure~\ref{fig:padding_chain} but carrying three vertices of valence
-seven, $q = 4$, of which two passes resolve irregular vertices and one a regular vertex.
+The restriction to irregular vertices does not survive the loop either. Once $\L \geq 2$ a
+marked vertex class may be born below the level at which the fan is read, and its leaf star
+can then meet the coarse level in a single face. Refining on the rim of an existing patch
+lifts that face and opens a single-face arc at a regular vertex, the mechanism visible in the
+right-hand pair of Figure~\ref{fig:refine_interface}. Regular vertices pinch as well, and the
+valence count above bounds nothing on its own.
 
 \begin{problem}[Bounding the number of padding passes]
     \label{prob:padding_passes}
-    Bound the number $q$ of productive $\textsc{Pad}$ passes by a quantity depending only on the
-    control mesh $\T_\lzero$ --- for instance on the number of its irregular vertices and their
-    mutual distances --- rather than on $\lvert \F_\L(\T_\L) \rvert$ as in
-    Equation~\eqref{eq:padding_crude_bound}.
+    Bound the number $q$ of productive $\textsc{Pad}$ passes by a quantity depending only on
+    the control mesh $\T_\lzero$, for instance on the number of its irregular vertices and
+    their mutual distances, rather than on $\lvert \F_\L(\T_\L) \rvert$. Confine the faces
+    refined by $\textsc{Pad}$ to a neighbourhood of the defects of $\domseq[\L]$ of bounded
+    size. The second requirement rules out the degenerate answer
+    $\textsc{Pad}(\domseq[\L]) = \T_\L$, which stabilises in one pass and is useless.
 \end{problem}
 
-We leave Problem~\ref{prob:padding_passes} open, and the measurements above say why it is more
-delicate than the chain on its own suggests. The chain makes $q$ grow with the number of irregular
-vertices of $\T_\lzero$, which is consistent with a bound of that shape. But the regular vertices
-that pinch once $\L \geq 2$ are not visible in $\T_\lzero$ at all, and the two effects add rather
-than one dominating the other.
-
-None of this is what the adaptive loop meets in practice. The configurations above are searched
-for deliberately, and the runs of Section~\ref{subsec:vector_laplace} stabilise after a single
-productive pass at every step. Table~\ref{tab:padding_interface_L4} reports what those passes
-cost: at most $22$ padded faces, against the $279$ faces refined by the marking in the same
-step.}
+We leave Problem~\ref{prob:padding_passes} open. The two mechanisms above say what a
+$\textsc{Pad}$ designed to solve it would have to break, namely the stability of a two-face
+gap under the admissibility padding and the single-face arc that rim refinement opens at a
+regular vertex. Neither is what the adaptive loop meets in practice. The configurations above
+are searched for deliberately, whereas the runs of Section~\ref{subsec:vector_laplace}
+stabilise after a single productive pass at every step and pad a small fraction of the faces
+refined by the marking, see Table~\ref{tab:padding_interface_L4}.}
 
 % The panels sit edge to edge to stay as large as one text width allows, so the
 % subcaption is set in a narrower box than the panel to keep a gutter between
@@ -1803,28 +1736,31 @@ step.}
 \begin{figure}[tb]
     \centering
     \chainpanel{images/padding_chain/chain_input.pdf}
-        {$\domseq^{\mathrm{refine}}$: four marked vertex stars, pinching $\vertex{}{0}$}
+        {$\domseq^{\mathrm{refine}}$ with four marked vertex stars, pinching $\vertex{}{0}$}
         {fig:padding_chain_input}%
     \hfill%
     \chainpanel{images/padding_chain/chain_pass0.pdf}
-        {Pass~1 resolves $\vertex{}{0}$; its padded face pinches $\vertex{}{1}$}
+        {Pass~1 resolves $\vertex{}{0}$ and its padded face pinches $\vertex{}{1}$}
         {fig:padding_chain_pass1}%
     \hfill%
     \chainpanel{images/padding_chain/chain_pass1.pdf}
-        {Pass~2 resolves $\vertex{}{1}$; its padded face pinches $\vertex{}{2}$}
+        {Pass~2 resolves $\vertex{}{1}$ and its padded face pinches $\vertex{}{2}$}
         {fig:padding_chain_pass2}%
     \hfill%
     \chainpanel{images/padding_chain/chain_pass2.pdf}
-        {Pass~3 resolves $\vertex{}{2}$; fixed point}
+        {Pass~3 resolves $\vertex{}{2}$ and reaches the fixed point}
         {fig:padding_chain_pass3}
     \caption{A control mesh with three interior vertices of valence $8$ in a row, at pairwise
     distance one, on which $\textsc{Pad}$ needs one productive pass per vertex. The input is
     $\textsc{Refine}$ applied to the uniform domain sequence with the four marked vertex stars of
-    panel~(a); the three valence-$8$ vertices, written $\vertex{}{0}, \vertex{}{1},
+    panel~(a). The three valence-$8$ vertices, written $\vertex{}{0}, \vertex{}{1},
     \vertex{}{2}$ from the top of the row downwards, are drawn in colour, and the one resolved in
-    a pass is ringed. Each pass resolves exactly one vertex, whose refinement fan
+    a pass is ringed. \guidance{The domain sequence is at $\L = 1$, where the grading predicate
+    cannot fire.} Each pass resolves exactly one vertex, whose refinement fan
     $\mathtt{ruuruuur}$ carries two arcs of two and one face separated by gaps of two and three
-    and is homogeneous immediately afterwards, and pads a single face. It is that padded face
+    and is homogeneous immediately afterwards, and pads a single face. \guidance{The single-face
+    arc is not produced by the marking, which contributes runs of two, but is the face padded by
+    the preceding pass.} It is that padded face
     which opens the same two-arc configuration at the next vertex along the row, so the refinement
     travels down the row one vertex per pass. A fourth, unproductive pass confirms the fixed
     point.}
@@ -2286,11 +2222,11 @@ The adaptive method thus only wins in DoFs and memory, not wall-clock, with the 
 
 \robert{We have presented a complete matrix-level framework for hierarchical subdivision $k$-form spaces and their use in an adaptive loop for structure-preserving PDE discretisations. The central observation is that any active subdivision basis function is a column of an accumulated subdivision matrix $\Smat{k}{\l}{\L}$; selecting columns according to a admissible domain sequence produces a hierarchical space $\hierSDFspace{k}{\domseq}{\L}$ whose linear independence and de Rham exactness are guaranteed by the partition condition proved in the companion paper~\cite{companion_paper}. Once the hierarchical subdivision matrix $\Amat{k}{\activeDoFs}{\L}$ is assembled, all bilinear forms are obtained by Galerkin restriction of the embedding-level operators without recomputing any integrals, and the active-space linear system reduces to standard sparse linear algebra on the finest mesh $\T_\L$.
 
-The adaptive loop adds a subdivision-specific \textsc{Pad} step to the standard \textsc{Solve}--\textsc{Estimate}--\textsc{Mark}--\textsc{Refine} cycle. Padding alternates pinch resolution with inadmissible-faces padding and grading to a fixed point: pinch resolution repairs a pinched coarse region that would otherwise carry a spurious harmonic (a closed but non-exact discrete $1$-form, breaking de Rham exactness), while inadmissible-faces padding and grading enforce the interior-vertex (Good-vertex) requirement and bound the level jump at coarse/fine interfaces. Both rules only ever refine, are local, and are inexpensive relative to the linear solve.
+The adaptive loop adds a subdivision-specific \textsc{Pad} step to the standard \textsc{Solve}--\textsc{Estimate}--\textsc{Mark}--\textsc{Refine} cycle. Padding alternates pinch resolution with inadmissible-faces padding and grading to a fixed point: pinch resolution repairs a pinched coarse region that would otherwise carry a spurious harmonic (a closed but non-exact discrete $1$-form, breaking de Rham exactness), while inadmissible-faces padding and grading enforce the interior-vertex (Good-vertex) requirement and bound the level jump at coarse/fine interfaces. \guidance{All three rules} only ever refine, are local, and are inexpensive relative to the linear solve\guidance{, and the iteration reaches a fixed point after finitely many passes (Section~\ref{subsec:termination})}.
 
 The numerical experiments confirm the two key structural properties of the framework. For the Maxwell eigenvalue problem, exact admissible domain sequences reproduce the reference FEEC spectrum without spurious modes; inexact ones introduce them. This serves as a direct diagnostic for the correctness of the active-DoF construction and the de Rham complex structure. For the mixed vector Laplace equation, the adaptive loop concentrates refinement at the location of steep gradients and achieves convergence behaviour consistent with the hierarchical approximation theory.
 
-Several directions remain open. The precise correspondence between the subdivision PAD step and the $L$-chain completion used in hierarchical B-spline AFEM~\cite{Cabanas.2026} has not been established; clarifying this connection would relate the two frameworks and potentially enable convergence proofs to be transferred. On the solver side, the block-diagonal LDLT preconditioner used here is effective for the problem sizes considered, but a multigrid preconditioner that respects the larger-than-Whitney supports of the subdivision basis would reduce the per-step cost for larger problems; this requires a prolongation operator compatible with $\Amat{k}{\activeDoFs}{\L}$ and is left for future work. Finally, a promising direction is to adopt the overlapping patch framework of Bressan~\cite{Bressan.2024} in place of the non-overlapping admissible domain sequence used here. Overlapping patches can provide a richer set of admissible active-DoF configurations and may admit a more flexible PAD step, at the cost of requiring a partition-of-unity treatment to maintain linear independence; adapting the matrix-level assembly and the de Rham complex to that setting is an open problem.}
+Several directions remain open. \guidance{The most immediate is internal to the framework: Problem~\ref{prob:padding_passes} asks for a bound on the number of productive \textsc{Pad} passes in terms of the control mesh alone. Section~\ref{subsec:termination} isolates the two mechanisms a padding operator would have to break to admit one, which makes them concrete targets for a redesigned \textsc{Pad}.} The precise correspondence between the subdivision PAD step and the $L$-chain completion used in hierarchical B-spline AFEM~\cite{Cabanas.2026} has not been established; clarifying this connection would relate the two frameworks and potentially enable convergence proofs to be transferred. On the solver side, the block-diagonal LDLT preconditioner used here is effective for the problem sizes considered, but a multigrid preconditioner that respects the larger-than-Whitney supports of the subdivision basis would reduce the per-step cost for larger problems; this requires a prolongation operator compatible with $\Amat{k}{\activeDoFs}{\L}$ and is left for future work. Finally, a promising direction is to adopt the overlapping patch framework of Bressan~\cite{Bressan.2024} in place of the non-overlapping admissible domain sequence used here. Overlapping patches can provide a richer set of admissible active-DoF configurations and may admit a more flexible PAD step, at the cost of requiring a partition-of-unity treatment to maintain linear independence; adapting the matrix-level assembly and the de Rham complex to that setting is an open problem.}
 
 \bibliography{references}
 
