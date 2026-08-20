@@ -391,9 +391,9 @@ Werner Bauer\footnote{University of Surrey, School of Mathematics and Physics, U
 \newcommand{\leafF}[1]{\F^{\mathrm{leaf}}_{#1}}             % leaf (uncovered) faces on a level
 \newcommand{\leafMesh}{\F^{\mathrm{leaf}}}                  % leaf mesh: the leaf faces of all levels together
 \newcommand{\coveringFace}{\mathrm{leaf}}                    % leaf face covering a given face
-% Leaf star of a vertex READ AT LEVEL #1: the leaf faces covering the part of
-% its level-#1 mesh star that is not refined beyond #1, hence carried at level
-% #1 or coarser. Same slot as \FVl and \leafF, and \FVleaf{\l} \cap \F_\l is
+% Leaf star of a vertex. The ARGUMENT is a LEVEL SLICE, not a read level:
+% \FVleaf{} is the whole leaf star (Def. leaf_star, read at level L) and
+% \FVleaf{#1} is its level-#1 slice, i.e. the leaf faces it carries at level #1. Same slot as \FVl and \leafF, and \FVleaf{\l} \cap \F_\l is
 % \FVl{\l} \cap \leafF{\l}. The marker rides at the END of the compound, so \FV
 % stays one atomic symbol; \F^{leaf}\V would wedge the superscript between the
 % two letters and read as a product.
@@ -423,7 +423,7 @@ Werner Bauer\footnote{University of Surrey, School of Mathematics and Physics, U
 \vspace{-2.0em}
 
 \begin{abstract}
-We provide the algorithmic and computational complement to the theoretical framework of~\cite{Piel.2026} for hierarchical subdivision $k$-form spaces on triangular meshes. The central observation is that every basis function is represented by a column of the accumulated subdivision matrix. Selecting active degrees of freedom results in collecting their corresponding columns into the hierarchical subdivision matrix. This sparse matrix reduces all downstream operations like matrix assembly or residual evaluation to standard sparse linear algebra on the finest mesh $\T_\L$ without recomputing any integrals. The substantive question is which selections of active degrees of freedom are admissible, in particular linearly independent and exactness of the complex. We answer this question via purely combinatorial admissibility conditions. We provide explicit algorithms for constructing the active degrees of freedom from a domain sequence, obtained level by level by adding fine degrees of freedom and removing linearly dependent coarse ones.
+We provide the algorithmic and computational complement to the theoretical framework of~\guidance{\cite{companion_paper}} for hierarchical subdivision $k$-form spaces on triangular meshes. The central observation is that every basis function is represented by a column of the accumulated subdivision matrix. Selecting active degrees of freedom results in collecting their corresponding columns into the hierarchical subdivision matrix. This sparse matrix reduces all downstream operations like matrix assembly or residual evaluation to standard sparse linear algebra on the finest mesh $\T_\L$ without recomputing any integrals. The substantive question is which selections of active degrees of freedom are admissible, in particular linearly independent and exactness of the complex. We answer this question via purely combinatorial admissibility conditions. We provide explicit algorithms for constructing the active degrees of freedom from a domain sequence, obtained level by level by adding fine degrees of freedom and removing linearly dependent coarse ones.
 
 For the adaptive solution of PDEs, we describe a \textsc{Solve}--\textsc{Estimate}--\textsc{Mark}--\textsc{Refine}--\textsc{Pad} loop in which the non-standard \textsc{Pad} step enforces the admissible domain sequence conditions after Dörfler marking by applying pinch resolution, inadmissible-faces padding, and grading, refining the coarse regions that would otherwise break admissibility. Numerical experiments on the Maxwell eigenvalue problem confirm that exact admissible domain sequences reproduce the reference spectrum without spurious modes and adaptive experiments on the mixed vector Laplace equation demonstrate the adaptive loop.
 \end{abstract}
@@ -436,7 +436,7 @@ The finite element exterior calculus (FEEC)~\cite{Arnold.FEEC} provides a system
 
 Subdivision algorithms, originally developed for geometric modelling, produce limit functions that are globally smooth on arbitrary triangular meshes.\needcite{} For example, Loop's scheme~\citep{Loop.1987} generates globally $\mathcal{C}^1$ scalar limit functions. Wang~\citep{Wang.2006,Wang.2008} introduce subdivision schemes for $1$- and $2$-forms that commute with the discrete exterior derivative from Discrete Exterior Calculus (DEC, \cite{Hirani.2003,Desbrun.2006}). These subdivision schemes give rise to subdivision $k$-form spaces in the DEC sense \citep{Goes.2015}. \cite{Piel.2026} translate their work to finite elements and introduce a framework for subdivision-based finite elements that form discrete de Rham complexes on meshes with uniform refinement.
 
-Such uniform subdivision spaces assign the same resolution everywhere: every basis function has a support whose size is determined by the coarse mesh $\T_\lzero$. This is adequate for globally smooth solutions but wasteful when the PDE solution is rough only in a small part of the domain. In isogeometric analysis, the analogous limitation of globally refined B-spline spaces has been addressed through hierarchical B-spline spaces~\citep{Evans.2020}, which mix basis functions from different refinement levels to obtain spatially varying resolution while retaining linear independence. Extending this idea to spaces of differential forms is non-trivial: activating basis functions at different levels can break the exactness of the de Rham complex unless the selection is governed by a compatible combinatorial rule.
+Such uniform subdivision spaces assign the same resolution everywhere: every basis function has a support whose size is determined by the coarse mesh $\T_\lzero$. This is adequate for globally smooth solutions but wasteful when the PDE solution is rough only in a small part of the domain. In isogeometric analysis, the analogous limitation of globally refined B-spline spaces has been addressed through hierarchical B-spline spaces~\guidance{\citep{Vuong.2011,Evans.2020}}, which mix basis functions from different refinement levels to obtain spatially varying resolution while retaining linear independence. Extending this idea to spaces of differential forms is non-trivial: activating basis functions at different levels can break the exactness of the de Rham complex unless the selection is governed by a compatible combinatorial rule.
 The analogous construction for B-spline de Rham complexes has been studied in~\cite{Buffa2011,Evans.2020,Shepherd.2024,Dijkstra.2025}, where admissibility conditions on the hierarchical mesh ensure exactness of the complex.
 A central mechanism in these works is a \emph{completion step} that, after marking basis functions for refinement, enforces a compatibility condition on the active set: in~\cite{Cabanas.2026} this takes the form of \emph{$L$-chain completion}, which forces all basis functions in a connecting $L$-chain to be refined simultaneously whenever a conflicting pair is detected.
 
@@ -460,7 +460,7 @@ Starting from an initial coarse triangular mesh $\T_\l$ at level $\l = \lzero$, 
 
 On each mesh $\T_\l$ along the mesh hierarchy, the lowest-order Whitney $k$-form spaces are the standard FEEC spaces~\citep{Arnold.2006}
 \begin{equation}
-    \FEECspace{0}{\l} = \mathrm{CG}_1(\T_\l), \qquad \FEECspace{1}{\l} = \mathrm{RT}_0(\T_\l), \qquad \FEECspace{2}{\l} = \mathrm{DG}_0(\T_\l),
+    \FEECspace{0}{\l} = \mathrm{CG}_1(\T_\l), \qquad \FEECspace{1}{\l} = \mathrm{NED}_1(\T_\l), \qquad \FEECspace{2}{\l} = \mathrm{DG}_0(\T_\l),
 \end{equation}
 with basis functions $\freeQ{\FEECbasis}{k}{\l}{\coarseIdxone}$ indexed by the $k$-simplices $\simplex{k}{\l}{\coarseIdxone} \in \K^k_\l$.
 
@@ -473,9 +473,9 @@ whose coordinate representation with respect to the Whitney bases of $\FEECspace
 The \emph{subdivision $k$-form space} on level $\l$ is defined as the image of $\FEECspace{k}{\l}$ under $\Aop{k}{\l}{\L}$,
 \begin{equation}
     \label{def:uniform_spaces_as_image_of_subdiv_operator}
-    \SDFspace{k}{\l}{\L}\big(\T_\l\big) \coloneqq \Aop{k}{\l}{\L}\!\big(\FEECspace{k}{\l}\big),
+    \guidance{\SDFspace{k}{\l}{\L}} \coloneqq \Aop{k}{\l}{\L}\!\big(\FEECspace{k}{\l}\big),
 \end{equation}
-spanned by the \emph{subdivision basis functions} $\constrQ{\SDFbasis}{k}{\l}{\L}{\coarseIdxone} \coloneqq \Aop{k}{\l}{\L}\, \freeQ{\FEECbasis}{k}{\l}{\coarseIdxone}$, i.e.\ the columns of $\Amat{k}{\l}{\L}$ expressed in the fine Whitney basis. At the finest level, $\SDFspace{k}{\L}{\L} = \FEECspace{k}{\L}$ by definition. The key properties of the spaces $\SDFspace{k}{\l}{\L}$ were established in~\cite{Piel.2026} and will be recalled in Section~\ref{sec:construction_of_hierarchical_subdiv_spaces}.
+spanned by the \emph{subdivision basis functions} $\constrQ{\SDFbasis}{k}{\l}{\L}{\coarseIdxone} \coloneqq \Aop{k}{\l}{\L}\, \freeQ{\FEECbasis}{k}{\l}{\coarseIdxone}$, i.e.\ the columns of $\Amat{k}{\l}{\L}$ expressed in the fine Whitney basis. \guidance{These columns are linearly independent~\citep{Piel.2026}, so $\Amat{k}{\l}{\L}$ has full column rank and $\dim \SDFspace{k}{\l}{\L} = \sumdimlk{\l}{k}$.} At the finest level, $\SDFspace{k}{\L}{\L} = \FEECspace{k}{\L}$ by definition. The key properties of the spaces $\SDFspace{k}{\l}{\L}$ were established in~\cite{Piel.2026} and will be recalled in Section~\ref{sec:construction_of_hierarchical_subdiv_spaces}.
 
 \subsection{Computational representations}
 \label{subsec:computational_representations}
@@ -527,7 +527,7 @@ and thus shows that the columns of the subdivision matrix $\Amat{k}{\l}{\L}$ con
 
 Uniform subdivision spaces $\SDFspace{k}{\l}{\L}$ resolve the domain at a single global scale, which is wasteful when the PDE solution contains localised features. We now construct spaces that break this uniformity by mixing basis functions from different levels $\l$. For example, a level-$0$ basis function $\constrQ{\SDFbasis}{k}{\lzero}{\L}{\coarseIdxone}$ corresponding to $\simplex{k}{\lzero}{\coarseIdxone}$ has broad support capturing large-scale variation, while a level-$2$ basis function $\constrQ{\SDFbasis}{k}{2}{\L}{\coarseIdxone}$ corresponding to $\simplex{k}{2}{\coarseIdxone}$ has a much smaller support and can resolve local detail. We refer to the selection of simplices as the \emph{active DoFs} and denote them by $\activeDoFSet{k}{}$, while $\activeDoFSet{k}{\l}$ denotes all active DoFs on level $\l$. The \emph{active basis functions} are denoted by
 \begin{equation}
-    \constrVec{\SDFbases}{k}{\activeDoFSet{}{}}{\L} \coloneq \bigcup\limits_{\l = \lzero}^\L \; \bigcup\limits_{\simplex{k}{\l}{\coarseIdxone} \in \activeDoFSet{k}{\l}} \; \constrQ{\SDFbasis}{k}{\l}{\L}{\coarseIdxone}.
+    \constrVec{\SDFbases}{k}{\activeDoFSet{}{}}{\L} \coloneq \bigcup\limits_{\l = \lzero}^\L \; \bigcup\limits_{\simplex{k}{\l}{\coarseIdxone} \in \activeDoFSet{k}{\l}} \; \guidance{\big\{ \constrQ{\SDFbasis}{k}{\l}{\L}{\coarseIdxone} \big\}}.
 \end{equation}
 
 The representation of Section~\ref{subsubsec:uniform_representation} extends to the active DoFs $\activeDoFSet{k}{}$. A mixed-level form $\constrVec{\omega}{k}{\activeDoFs}{\L} \in \mathrm{span}(\constrVec{\SDFbases}{k}{\activeDoFSet{}{}}{\L})$ is a linear combination of the active basis functions drawn from all levels, i.e.
@@ -537,7 +537,7 @@ The representation of Section~\ref{subsubsec:uniform_representation} extends to 
     = \sum\limits_{\l=\lzero}^{\L} \; \sum\limits_{\simplex{k}{\l}{\coarseIdxone} \in \activeDoFSet{k}{\l}}
         \freeQ{c}{k}{\l}{\coarseIdxone} \, \constrQ{\SDFbasis}{k}{\l}{\L}{\coarseIdxone}.
 \end{equation}
-The active DoFs use the same simplex indices $\coarseIdxone$ as in the uniform space $\SDFspace{k}{\l}{\L}$, but restricted to $\activeDoFSet{k}{\l} \subset \K^k_\l$. To form explicit vectors we enumerate the active simplices on level $\l$ in increasing index order as $\simplex{k}{\l}{\coarseIdxone_1}, \ldots, \simplex{k}{\l}{\coarseIdxone_{|\activeDoFSet{k}{\l}|}}$ with $\coarseIdxone_1 < \cdots < \coarseIdxone_{|\activeDoFSet{k}{\l}|}$. The concatenated basis-function and coefficient vectors, grouped by level with blocks separated by vertical bars, are
+The active DoFs use the same simplex indices $\coarseIdxone$ as in the uniform space $\SDFspace{k}{\l}{\L}$, but restricted to $\activeDoFSet{k}{\l} \subset \K^k_\l$. To form explicit vectors we enumerate the active simplices on level $\l$ in increasing index order as $\simplex{k}{\l}{\coarseIdxone_1}, \ldots, \simplex{k}{\l}{\coarseIdxone_{|\activeDoFSet{k}{\l}|}}$ with $\coarseIdxone_1 < \cdots < \coarseIdxone_{|\activeDoFSet{k}{\l}|}$. \guidance{From here on $\constrVec{\SDFbases}{k}{\activeDoFs}{\L}$ denotes the column vector listing that set in this order, which is also the column order of $\Amat{k}{\activeDoFs}{\L}$.} The concatenated basis-function and coefficient vectors, grouped by level with blocks separated by vertical bars, are
 \begin{equation}
     \label{eq:hierarchical_dof_vector}
     \big(\freeVec{\bar{c}}{k}{\activeDoFs}\big)^\top
@@ -565,7 +565,7 @@ The active DoFs use the same simplex indices $\coarseIdxone$ as in the uniform s
 \end{equation}
 \begin{equation}
     \label{eq:hierarchical_basis_vector}
-    \constrVec{\SDFbases}{k}{\activeDoFs}{\L}
+    \guidance{\big(\constrVec{\SDFbases}{k}{\activeDoFs}{\L}\big)^{\!\top}}
     = \Bigl[\;
         \underbrace{
             \constrQ{\SDFbasis}{k}{0}{\L}{\coarseIdxone_1}
@@ -619,24 +619,41 @@ From here the matrix picture is fixed. The object $\Amat{k}{\activeDoFs}{\L}$ is
 \subsection{Unrefinement, the solve, and the case for admissibility}
 \label{subsec:unrefinement_and_solve}
 
-This section provides a high-level overview of the assembly of a linear form into a linear system using the active DoFs $\activeDoFSet{k}{}$, and how to solve this system. Every active basis function $\constrQ{\SDFbasis}{k}{\l}{\L}{\coarseIdxone} \in \activeDoFSet{k}{}$ is an element of the finest FEEC space $\FEECspace{k}{\L}$, and we use this inclusion to assemble matrices for the active DoFs. Given we assembled a linear form into the matrix $M_\L$ with respect to the FEEC spaces $\FEECspace{k}{\L}$, the corresponding matrix $M_{\activeDoFSet{k}{}}$ is given by
+This section provides a high-level overview of the assembly of a bilinear form into a linear system using the active DoFs $\activeDoFSet{k}{}$, and how to solve this system. Every active basis function $\constrQ{\SDFbasis}{k}{\l}{\L}{\coarseIdxone}$ associated to the active DoF $\simplex{k}{\l}{\coarseIdxone} \in \activeDoFSet{k}{}$ is an element of the finest FEEC space $\FEECspace{k}{\L}$, and we use this inclusion to assemble matrices for the active DoFs. Given we assembled a bilinear form on $\FEECspace{k}{\L} \times \FEECspace{q}{\L}$ into the matrix $\guidance{M^{k,q}_\L}$, the corresponding matrix $\guidance{M^{k,q}_{\activeDoFs}}$ for the active DoFs is given by
 \begin{equation}
     \label{eq:unrefinement}
-    M_{\activeDoFs^k} \; \coloneq \; \big( \Amat{k}{\activeDoFs}{\L} \big)^{\!\top} \, \cdot \, M_\L \, \cdot \, \Amat{k}{\activeDoFs}{\L}.
+    \guidance{M^{k,q}_{\activeDoFs}} \; \coloneq \; \big( \Amat{k}{\activeDoFs}{\L} \big)^{\!\top}
+    \, \cdot \, \guidance{M^{k,q}_\L} \, \cdot \, \Amat{q}{\activeDoFs}{\L}.
 \end{equation}
+In most cases $k = q$ and the same selection appears on both sides. A mixed formulation such as Equation~\eqref{eq:mixed_block_system} for the vector Laplacian additionally produces blocks with $k \neq q$, in which the selection of one form degree meets the selection of another. The assembled block system is square again, since its rows and its columns are indexed by the same active DoFs. \guidance{We write $M_{\activeDoFs}$ for that assembled matrix.}
 
-We call this restriction onto the active DoFs $\activeDoFSet{k}{}$ the \emph{unrefinement}. The right-hand side $b_{\activeDoFSet{k}{}}$ of the linear form is obtained in a similar way. Example~\ref{ex:matrix_assembly} spells out the unrefinement for the mixed Laplace system~\eqref{eq:mixed_block_system} used to test our algorithms later. The resulting linear system is given by
+We call this restriction onto the active DoFs $\activeDoFSet{k}{}$ and $\activeDoFSet{q}{}$ in Equation~\eqref{eq:unrefinement} the \emph{unrefinement}. The right-hand side $\guidance{b_{\activeDoFs}}$ of the linear form is obtained in a similar way. Example~\ref{ex:matrix_assembly} spells out the unrefinement for the mixed Laplace system~\eqref{eq:mixed_block_system} used to test our algorithms later. The resulting linear system is given by
 \begin{equation}
     \label{eq:abstract_solve}
-    M_{\activeDoFSet{k}{}} \, \freeVec{\bar{c}}{k}{\activeDoFs} = b_{\activeDoFSet{k}{}}
+    \guidance{M_{\activeDoFs} \, \freeVec{\bar{c}}{}{\activeDoFs} = b_{\activeDoFs}}
 \end{equation}
-for the adaptive coefficient vector $\freeVec{\bar{c}}{k}{\activeDoFs}$ as in Equation~\eqref{eq:hierarchical_form_compact}. This system is well posed iff the matrix $M_{\activeDoFSet{k}{}}$ has full rank, and thus no kernel. Assuming that the problem is well posed in $\FEECspace{k}{\L}$, the matrix $M_\L$ has full rank. This means that a kernel of $M_{\activeDoFSet{k}{}}$ has to enter through a kernel in $\Amat{k}{\activeDoFs}{\L}$. If $\Amat{k}{\activeDoFs}{\L}$ has no non-trivial kernel, we call the selection of active DoFs \emph{admissible}.
+for the adaptive coefficient vector $\guidance{\freeVec{\bar{c}}{}{\activeDoFs}}$, \guidance{built from the blocks $\freeVec{\bar{c}}{k}{\activeDoFs}$ of} Equation~\eqref{eq:hierarchical_form_compact}. The linear system~\eqref{eq:abstract_solve} has a unique solution exactly when $\guidance{M_{\activeDoFs}}$ has no kernel. We can follow a coefficient vector through the matrix products in Equation~\eqref{eq:unrefinement} and ask at which stage it can get lost. This gives a nested chain of kernels
+\begin{equation}
+    \label{eq:kernel_chain}
+    \ker \guidance{\Amat{q}{\activeDoFs}{\L}} \; \subseteq \; \ker ( \guidance{M^{k,q}_\L} \, \cdot \guidance{\Amat{q}{\activeDoFs}{\L}} ) \; \subseteq \; \ker \guidance{M^{k,q}_{\activeDoFs}},
+\end{equation}
+in which each inclusion can be strict. \guidance{For a problem in a single form degree this block is the whole system matrix $M_{\activeDoFs}$.} The three stages fail for very different reasons, and only the first and the last are caused by the selection of the active DoFs.
 
 \smallskip
 
-There are two cases that cause inadmissibility because $\Amat{k}{\activeDoFs}{\L}$ picks up a kernel. First, multiple active DoFs in $\activeDoFSet{k}{}$ can be linearly dependent, and thus introduce a kernel into $\Amat{k}{\activeDoFs}{\L}$. Second, even if all active DoFs are linearly independent, $\Amat{k}{\activeDoFs}{\L}$ can carry a spurious kernel by inflating the space of harmonic forms in the differential complex beyond the true harmonics.
+A vector in $\ker \guidance{\Amat{q}{\activeDoFs}{\L}}$ is one for which the active basis functions are linearly dependent. The columns of $\guidance{\Amat{q}{\activeDoFs}{\L}}$ are the active basis functions written in the fine Whitney basis according to Equation~\eqref{eq:hierarchical_matrix_blocks}, so a kernel vector is a non-trivial linear combination that sums to the zero function. This is a real concern because the coarse subdivision basis functions satisfy a refinement relation, meaning that they can be expressed exactly in a finer basis as in Equation~\eqref{eq:nested_spaces}.
 
-Controlling both linear independence and the cohomology of the discrete complex spanned by the active DoFs $\activeDoFSet{k}{}$ implies well-posedness of the linear system in Equation~\eqref{eq:abstract_solve}. Section~\ref{sec:construction_of_hierarchical_subdiv_spaces} introduces the necessary tools and operators to enable a systematic construction of admissible active DoFs, and Section~\ref{subsec:adaptive_loop} extends that to a series of nested spaces to enable adaptive, local refinement. The resulting algorithms are verified numerically in Section~\ref{sec:numerical_experiments}. Table~\ref{tab:properties_map} maps the desirable properties of the spaces and algorithms to where they are studied in the remainder of this paper. The table provides the structure of the presentation, clarifies the claims and serves as an ongoing reference as this paper is read.
+A vector that survives $\guidance{\Amat{q}{\activeDoFs}{\L}}$ but is in $\ker ( \guidance{M^{k,q}_\L} \, \cdot \guidance{\Amat{q}{\activeDoFs}{\L}} )$ is one for which the active function is non-zero and $\guidance{M^{k,q}_\L}$ still maps it to zero. This happens when $\guidance{M^{k,q}_\L}$ \guidance{has a kernel of its own}, for instance whenever the form it was assembled from takes derivatives. For example, the curl--curl matrix on $\FEECspace{1}{\L}$ annihilates the space of curl-free fine $1$-forms, and this kernel is the eigenspace at eigenvalue $0$ of the Maxwell problem studied in Section~\ref{subsec:maxwell}. Such a kernel is not a defect of the selection. The FEEC formulation using $\FEECspace{k}{\L}$ on $\T_\L$ already has it and the spaces spanned by the active DoFs only inherit it. This is not the subject of this paper and we treat it as given.
+
+The last stage implies another constraint for the selection of active DoFs. Here $\guidance{M^{k,q}_\L \Amat{q}{\activeDoFs}{\L} \freeVec{\bar{c}}{q}{\activeDoFs}}$ is a non-zero vector on the fine mesh, and it is nevertheless orthogonal to every column of $\Amat{k}{\activeDoFs}{\L}$. Multiplying by the transpose from the left tests the fine residual only against the active basis functions \guidance{of degree $k$}, so a residual that only pairs with fine basis functions we did not keep is invisible to the system. \guidance{A trivial kernel of $M^{k,q}_\L$} does not help, since it only guarantees that some fine test function sees the residual, not that we kept that test function.
+
+\guidance{The three stages were read off a single block, and the same chain holds for the matrix $M_{\activeDoFs}$ assembled from all of them, with the selections of every form degree involved taking the place of the single one above. Only the first stage carries over blockwise, since a kernel vector of any $\Amat{q}{\activeDoFs}{\L}$ extends by zeros to a kernel vector of $M_{\activeDoFs}$, while a vector lost in the second or third stage of one block can still be seen by the remaining blocks.}
+
+For the mixed vector Laplace problem of Section~\ref{subsec:vector_laplace}, the last stage is non-empty exactly when the active $1$-forms contain a curl-free field that is not the gradient of any active $0$-form. Such a field is called a spurious harmonic form, because the uniform spaces $\SDFspace{k}{\l}{\L}$ have the correct cohomology and therefore carry no such form, while the spaces spanned by an arbitrarily chosen set of active DoFs can. Avoiding this additional kernel is a condition that ties the selections of different form degrees to each other, and it cannot be checked one form degree at a time.
+
+\smallskip
+
+The active DoFs must therefore be selected so that two things hold at once. The active basis functions have to be linearly independent, and the spaces they span have to form a discrete de Rham complex, including the correct cohomology. Neither of the two implies the other. Ensuring these properties through the selection of active DoFs $\activeDoFSet{k}{}$ implies well-posedness of the linear systems considered in Section~\ref{sec:numerical_experiments}. Section~\ref{sec:construction_of_hierarchical_subdiv_spaces} introduces the necessary tools and operators to enable a systematic construction of admissible active DoFs, and Section~\ref{subsec:adaptive_loop} extends that to a series of nested spaces to enable adaptive, local refinement. The resulting algorithms are verified numerically in Section~\ref{sec:numerical_experiments}. Table~\ref{tab:properties_map} maps the desirable properties of the spaces and algorithms to where they are studied in the remainder of this paper. The table provides the structure of the presentation, clarifies the claims and serves as an ongoing reference as this paper is read.
 
 \begin{table}[!tb]
 \centering
@@ -650,7 +667,7 @@ $\bullet$ & Domain coverage & Definitions~\ref{def:domseq},~\ref{def:active_k_fo
 \addlinespace
 $\circ$ & Linear independence & Theorem~\ref{theorem:linear_independence} (Section~\ref{subsec:subdiv_partition}) & Figures~\ref{fig:pinch_resolution} and~\ref{fig:admissibility_padding} (Sec.~\ref{subsec:exactness_atomic}) \\
 \addlinespace
-\multirow[t]{2}{*}{$\bullet$} & \multirow[t]{2}{0.24\textwidth}{Differential complex ($\extd\circ\extd \equiv 0$ pointwise)} & Theorem~\ref{theorem:differential_complex} (Section~\ref{subsec:selecting_active_dofs}) & \multirow[t]{2}{0.28\textwidth}{Section~\ref{subsec:maxwell}} \\
+\multirow[t]{2}{*}{$\bullet$} & \multirow[t]{2}{0.24\textwidth}{Differential complex \guidance{($\extd \hierSDFspace{k}{\domseq}{\L} \subseteq \hierSDFspace{k+1}{\domseq}{\L}$)}} & Theorem~\ref{theorem:differential_complex} (Section~\ref{subsec:selecting_active_dofs}) & \multirow[t]{2}{0.28\textwidth}{Section~\ref{subsec:maxwell}} \\
  & & & \\
 \addlinespace
 \multirow[t]{2}{*}{$\circ$} & \multirow[t]{2}{0.24\textwidth}{Exactness / correct cohomology} & \multirow[t]{2}{0.32\textwidth}{Theorem~\ref{theorem:exactness} (Section~\ref{subsec:subdiv_partition})} & Figures~\ref{fig:pinch_resolution} and~\ref{fig:admissibility_padding} (Sec.~\ref{subsec:exactness_atomic}), \\
@@ -681,21 +698,26 @@ Two properties of the uniform spaces carry the construction, both established in
     \label{eq:nested_spaces}
     \SDFspace{k}{\lzero}{\L} \subset \SDFspace{k}{\lzero+1}{\L} \subset \hdots \subset \SDFspace{k}{\L}{\L} = \FEECspace{k}{\L},
 \end{equation}
-so that a coarse basis function can be written exactly in terms of finer ones, with the coefficients of that \emph{refinement relation} given by the entries of the subdivision matrix $\Amat{k}{\l}{\l+1}$. Second, the uniform spaces form a de Rham complex on every level $\l$,
+so that a coarse basis function can be written exactly in terms of finer ones, with the coefficients of that \emph{refinement relation} given by the entries of the subdivision matrix $\Amat{k}{\l}{\l+1}$. \guidance{Second, $\extd$ acts through the oriented incidence matrix $\Dmat{k}{\l}$ of $\T_\l$~\citep{Hirani.2003,Desbrun.2006}, so that only the $(k\!+\!1)$-simplices adjacent to a given $k$-simplex appear with non-zero coefficients, and the subdivision matrices commute with it,}
+\begin{equation}
+    \label{eq:commuting_property}
+    \guidance{\Dmat{k}{\L} \, \Amat{k}{\l}{\L} \; = \; \Amat{k+1}{\l}{\L} \, \Dmat{k}{\l},}
+\end{equation}
+\guidance{so that applying $\Dmat{k}{\L}$ to a form of $\SDFspace{k}{\l}{\L}$ lands in $\SDFspace{k+1}{\l}{\L}$. Consequently,} the uniform spaces form a de Rham complex on every level $\l$,
 \begin{equation}
 \begin{tikzcd}
-  \constrVec{\mathfrak{R}}{}{\l}{\L}\colon \quad 0 \arrow[r] & \SDFspace{0}{\l}{\L} \arrow[r, "\extd"] & \SDFspace{1}{\l}{\L} \arrow[r, "\extd"] & \SDFspace{2}{\l}{\L} \arrow[r] & 0,
+  \constrVec{\mathfrak{R}}{}{\l}{\L}\colon \quad 0 \arrow[r] & \SDFspace{0}{\l}{\L} \arrow[r, "\extd"] & \SDFspace{1}{\l}{\L} \arrow[r, "\extd"] & \SDFspace{2}{\l}{\L} \arrow[r] & 0\guidance{.}
 \end{tikzcd}
 \end{equation}
-in which $\extd$ acts through the oriented incidence matrix $\Dmat{k}{\l}$ of $\T_\l$~\citep{Hirani.2003,Desbrun.2006}, so that only the $(k\!+\!1)$-simplices adjacent to a given $k$-simplex appear with non-zero coefficients. The task of this section is to select active DoFs across levels that retain both properties: linear independence, which fails when a coarse active basis function is already representable by the active finer ones, and exactness, which fails when the derivative of an active $k$-form basis function is not representable in the active $(k\!+\!1)$-form space. The section ends by introducing admissible domain sequences, an object that parameterises the DoF selection and enforces admissibility through geometric constraints regarding the decomposition of the domain mesh into patches of different subdivision levels.
+The task of this section is to select active DoFs across levels that retain both properties: linear independence, which fails when a coarse active basis function is already representable by the active finer ones, \guidance{and exactness, which fails when a closed active $k$-form is not the derivative of any active $(k\!-\!1)$-form.} The section ends by introducing admissible domain sequences, an object that parameterises the DoF selection and enforces admissibility through geometric constraints regarding the decomposition of the domain mesh into patches of different subdivision levels.
 
 \subsection{Selection of active degrees of freedom}
 \label{subsec:selecting_active_dofs}
 
 Section~\ref{subsec:computational_representations} established that constructing the hierarchical subdivision matrix $\Amat{k}{\activeDoFs}{\L}$ reduces to choosing, at each level $\l$, an index set $\activeDoFSet{k}{\l} \subset \K^k_\l$ of active simplices. Each such choice selects the corresponding columns of $\Amat{k}{\l}{\L}$, assembling $\Amat{k}{\activeDoFs}{\L}$ block by block as in~\eqref{eq:hierarchical_matrix_blocks}. This section addresses the question left open there: which choices of $\activeDoFSet{k}{\l}$ are admissible? Recall that collecting the active simplices across levels yields the active DoFs
 \begin{equation}
-    \label{def:activeDoFs}
-    \activeDoFSet{k}{} \coloneq \bigcup_{\l=\lzero}^{\L} \;\, \activeDoFSet{k}{\l}.
+    \label{eq:activeDoFs}
+    \activeDoFSet{k}{} \coloneq \guidance{\bigsqcup_{\l=\lzero}^{\L}} \;\, \activeDoFSet{k}{\l}.
 \end{equation}
 
 We now provide a generic definition of the adaptive subdivision $k$-form spaces induced by an arbitrary set of active DoFs $\activeDoFSet{k}{}$.
@@ -708,9 +730,9 @@ We now provide a generic definition of the adaptive subdivision $k$-form spaces 
     \end{equation}
 \end{definition}
 
-Not every choice of active DoFs $\activeDoFSet{k}{}$ yields a well-behaved hierarchical spaces $\activeSDFspaces{k}{}$, cf. Section~\ref{subsec:unrefinement_and_solve}. Most importantly, the active DoFs $\activeDoFSet{k}{}$ must together represent forms that cover the entire domain, must be linearly independent, and should constitute a exact complex. The remainder of this section introduces the tools needed to parameterise the active DoFs $\activeDoFSet{k}{}$ and to reason about these properties of the adaptive subdivision $k$-form spaces $\activeSDFspaces{k}{}$.
+Not every choice of active DoFs $\activeDoFSet{k}{}$ yields a well-behaved hierarchical spaces $\activeSDFspaces{k}{}$, cf. Section~\ref{subsec:unrefinement_and_solve}. Most importantly, the active DoFs $\activeDoFSet{k}{}$ must together represent forms that cover the entire domain, must be linearly independent, and should constitute \guidance{an} exact complex. The remainder of this section introduces the tools needed to parameterise the active DoFs $\activeDoFSet{k}{}$ and to reason about these properties of the adaptive subdivision $k$-form spaces $\activeSDFspaces{k}{}$.
 
-Both requirements are local conditions on the active DoFs. A selection is linearly independent when no active DoF can be re-expressed through the active DoFs on finer levels, and the spaces constitute a differential complex when the $(k\!+\!1)$-simplices adjacent to any active $k$-simplex are themselves represented in the active $(k\!+\!1)$-form DoFs, either directly or through their finer levels. Both are characterised combinatorially in~\cite{companion_paper}; the domain sequences introduced below are the object that enforces them.
+\guidance{The latter two requirements are local conditions} on the active DoFs. A selection is linearly independent when no active DoF can be re-expressed through the active DoFs on finer levels, and the spaces constitute a differential complex when the $(k\!+\!1)$-simplices adjacent to any active $k$-simplex are themselves represented in the active $(k\!+\!1)$-form DoFs, either directly or through their finer levels\guidance{, which is the column-wise reading of~\eqref{eq:commuting_property}}. Both are characterised combinatorially in~\cite{companion_paper}; the domain sequences introduced below are the object that enforces them.
 
 
 
@@ -723,7 +745,7 @@ definitions are taken from~\cite{companion_paper}, whose results are stated on t
 
 \begin{definition}[Region]
     \label{def:region}
-    A \emph{region} $\R_\l \subseteq \F_\l(\T_\l)$ is a collection of faces of $\T_\l$. We write $\R_{\l \to \lone} \coloneq \Aop{}{\l}{\lone} \R_\l$ for the region obtained by repeatedly splitting $\R_\l$ from level $\l$ to $\lone$. \robert{The set complement $\R^\complement_\l \coloneq \F_\l(\T_\l) \setminus \R_\l$ of $\R_\l$ is also a region.}
+    A \emph{region} $\R_\l \subseteq \F_\l(\T_\l)$ is a collection of faces of $\T_\l$. \guidance{For $\lone \geq \l$ we write $\R_{\l \to \lone} \coloneq \Aop{}{\l}{\lone} \R_\l$ for the region obtained by repeatedly splitting $\R_\l$ from level $\l$ to $\lone$, the empty form degree marking this purely topological refinement.}
 \end{definition}
 
 \begin{figure}[tb]
@@ -744,10 +766,9 @@ definitions are taken from~\cite{companion_paper}, whose results are stated on t
     \label{fig:region_anatomy}
 \end{figure}
 
-Two operations on regions are used throughout and visualised in Figure~\ref{fig:region_anatomy}. \robert{We write $\FVl{\l}(\vertex{\l}{\coarseIdxone})$ for the faces of the entire mesh $\T_\l$ incident to a vertex $\vertex{\l}{\coarseIdxone}$, and $\V_\l(\R_\l)$ for the vertices of the faces ofthe region $\R_\l$.}
+Two operations on regions are used throughout and visualised in Figure~\ref{fig:region_anatomy}. We write $\FVl{\l}(\vertex{\l}{\coarseIdxone})$ for the \emph{mesh star} of $\vertex{\l}{\coarseIdxone}$, which collects all faces of the entire mesh $\T_\l$ incident to $\vertex{\l}{\coarseIdxone}$, and $\V_\l(\R_\l)$ for the vertices of the faces of the region $\R_\l$.
 
-The first operation grows a region by one strip of faces. The \emph{extension}
-$\extendedPatch{\R}_\l$ of a region $\R_\l$ is
+The first operation grows a region by one strip of faces. The \emph{extension} $\extendedPatch{\R}_\l$ of a region $\R_\l$ is
 \begin{equation}
     \label{eq:patch_extension}
     \R_\l \quad \mapsto \quad \extendedPatch{\R}_\l
@@ -756,12 +777,11 @@ $\extendedPatch{\R}_\l$ of a region $\R_\l$ is
 \end{equation}
 We refer to the faces $\extendedPatch{\R}_\l \setminus \R_\l$ added by the extension as \emph{collar}. Since the union runs over \emph{all} vertices of the region, the collar is added along the entire boundary of $\R_\l$. Figure~\ref{fig:region_anatomy_b} shows a dotted region and its extension with a solid outline. Where the region already reaches the boundary $\boundary \T_\l$ of the mesh there is nothing to add, so the collar grows only along the \emph{interface}, the part of the region boundary shared with the interior of the mesh.
 
-The second operation passes between a region and its refinement, and it is the one that carries a
-constraint.
+The second operation passes between a region and its refinement, and it is the one that carries a constraint.
 
 \begin{definition}[Ancestor region]
     \label{def:ancestor_patch}
-    A region $\R_{\l+1} \subseteq \F_{\l+1}(\T_{\l+1})$ is \emph{quadrisection-closed} if $\R_{\l+1} = \R_{\l \to \l+1}$ for some region $\R_\l \subseteq \F_\l(\T_\l)$. On these regions, the \emph{ancestor} operator $\ancestorPatch{\cdot}$ is defined by
+    A region $\R_{\l+1} \subseteq \F_{\l+1}(\T_{\l+1})$ is \emph{quadrisection-closed} if $\R_{\l+1} = \R_{\l \to \l+1}$ for some region $\R_\l \subseteq \F_\l(\T_\l)$\guidance{, which is then unique because quadrisection is injective on face sets}. On these regions, the \emph{ancestor} operator $\ancestorPatch{\cdot}$ is defined by
     \begin{equation}
         \R_{\l+1} = \R_{\l \to \l+1} \quad \Longleftrightarrow \quad \ancestorPatch{\R_{\l+1}} = \R_{\l}.
     \end{equation}
@@ -770,16 +790,16 @@ constraint.
 
 \begin{definition}[Domain sequence]
     \label{def:domseq}
-    A domain sequence $\domseq[\L] \coloneq \bigcup_{\l=\lzero}^{\L} \M_\l$ is a set of regions $\M_\l$ that satisfy
+    A domain sequence $\domseq[\L] \coloneq \guidance{\bigsqcup_{\l=\lzero}^{\L}} \M_\l$ is a set of regions $\M_\l$, \guidance{quadrisection-closed for every $\l > \lzero$ so that $\ancestorPatch{\M_\l}$ is defined,} that satisfy
     \begin{equation}
-        \M_\lzero = \T_\lzero \qquad \text{and} \qquad \ancestorPatch{\M_{\l+1}} \subseteq \M_\l.
+        \guidance{\M_\lzero = \F_\lzero(\T_\lzero)} \qquad \text{and} \qquad \ancestorPatch{\M_{\l+1}} \subseteq \M_\l.
     \end{equation}
     for $\l \in \{ \lzero, \, \dots, \, \L \}$. By convention, $\M_{\L+1} = \varnothing$. Typically each $\M_\l$ consists of several disjoint patches. The set of all domain sequences is denoted by $\alldomseqs_\L$.
 \end{definition}
 
 Regions are allowed to be empty. If $\M_{\lone} = \varnothing$ for every $\lone > \l$, the nesting condition reduces to $\varnothing \subseteq \M_{\l}$ and holds for free, so $\domseq[\L]$ is a domain sequence of $\T_\L$ whose finest faces sit on level $\l$. Thus, the single index $\L$ carries two roles at once: a maximum for $\l$ or a minimum number of smoothing steps $\L-\l$ for all basis functions (cf.~\cite{Piel.2026}). The first case simply allows basis functions to be selected across the entire hierarchy from $\T_\lzero$ to $\T_\L$. In the second case, the non-empty regions up to level $\l$ hold the selected DoFe, while $\L$ itself fixes the mesh $\T_\L$ on which every basis function is represented and thus controls the smoothing. Both can be represented using the same notation, with $\M_{\lone} = \varnothing$ for the second case.
 
-The vertices $\V(\domseq[\L])$ of the domain sequence $\domseq[\L] = \bigsqcup_{\l = \lzero}^{\L} \M_\l$ given by
+The vertices $\V(\domseq[\L])$ of the domain sequence $\domseq[\L] = \bigsqcup_{\l = \lzero}^{\L} \M_\l$ \guidance{are} given by
 \begin{equation}
     \label{eq:vertices_of_domseq}
     \V(\domseq[\L]) \; \coloneq \; \bigsqcup\limits_{\l = \lzero}^{\L} \; \V_\l(\M_\l).
@@ -808,11 +828,9 @@ On the other hand, leaf faces are exactly the faces that are not refined beyond 
     \label{eq:leaf_mesh}
     \leafMesh(\domseq[\L]) \; \coloneq \; \bigsqcup\limits_{\l = \lzero}^{\L} \; \leafF{\l}(\domseq[\L])
 \end{equation}
-the \emph{leaf mesh} of $\domseq[\L]$. It is not a mesh in the strict sense because it can have hanging nodes and self-intersection for example. The leaf mesh is a useful tool to represent a domain sequence in plots, see for example Figure~\ref{fig:active_dofs}, with the understanding that the coarse parents of its faces are also in the domain sequence. 
+the \emph{leaf mesh} of $\domseq[\L]$. It is not a mesh in the strict sense because it can \guidance{have hanging nodes where faces of different levels meet}. The leaf mesh is a useful tool to represent a domain sequence in plots, see for example Figure~\ref{fig:active_dofs}, with the understanding that the coarse parents of its faces are also in the domain sequence. 
 
-The leaf mesh also tracks the refinement frontier in the sense that is a collection of the finest faces of a domain sequence that cover the faces of the domain $\T_\L$. Thus, the leaf mesh plays a large role in the definition of the refinement operators in Section~\ref{subsec:vertex_neighbourhoods}. 
-
-\todo{\robert{The two halves of~\eqref{eq:leaf_ancestor_split} are easy to conflate, since a level carries both, and the distinction matters wherever a construction is restricted to a vertex or to a region. Intersecting with $\M_\l$ keeps the faces refined beyond $\l$, intersecting with $\leafF{\l}(\domseq[\L])$ discards them, and the two agree only where nothing is refined further.}}
+The leaf mesh also tracks the refinement frontier in the sense that \guidance{it} is a collection of the finest faces of a domain sequence that cover the faces of the domain $\T_\L$. Thus, the leaf mesh plays a large role in the definition of the refinement operators in Section~\ref{subsec:vertex_neighbourhoods}. 
 
 \smallskip
 
@@ -845,7 +863,7 @@ region ends are the ones it rejects.
 
 \begin{definition}[Active $k$-form degrees of freedom]
     \label{def:active_k_form_dofs}
-    Let $\domseq[\L] = \bigcup_{\l = \lzero}^{\L} \M_\l$ be a domain sequence of $\T_\L$. The
+    Let $\domseq[\L] = \guidance{\bigsqcup_{\l = \lzero}^{\L}} \M_\l$ be a domain sequence of $\T_\L$. The
     active $k$-form degrees of freedom $\activeDoFSet{k}{}(\domseq[\L])$ are defined level by
     level as
     \begin{equation}
@@ -1006,15 +1024,13 @@ The other essential properties of the adaptive $k$-form subdivision spaces, name
         {images/visualisations/v6_boundary_threenotches_lvl1_lvl0_admissible_faces.pdf}
         {Admissible (green) and inadmissible (orange) leaf faces on level $\lzero$, with refinement-exterior vertices (hollow).}
         {fig:adm_faces}
-    \caption{The definition chain of this section read off a single domain sequence. Purple faces indicate the ancestor $\ancestorPatch{\M_{\l+1}}$ throughout, and thus marks the faces that are refined beyond the level we compute the predicates on. Panel~\subref{fig:adm_partition} shows the input the predicates use, namely the split~\eqref{eq:leaf_ancestor_split} of $\M_\l$ into the leaf faces $\leafF{\l}(\domseq)$ and the ancestor patch $\ancestorPatch{\M_{\l+1}}$. Panel~\subref{fig:adm_fan} uses that splitting to find the refinement fan $\refFan{\lzero}$ of a vertex, see Definition~\ref{def:refinement_fan}. Panel~\subref{fig:adm_exterior} marks every vertex of a different domain sequence with nested refinement by the level at which its refinement fan first becomes empty, i.e. from which it is refinement-exterior according to Definition~\ref{def:refinement_exterior_vertex}. \guidance{By~\eqref{eq:tau_is_first_full_level} that level is also the finest level $\targetlevel_\coarseIdxtwo$ of the vertex's leaf star, so the panel doubles as a plot of the level spans of Definition~\ref{def:level_span}.} Panel~\subref{fig:adm_faces} visualises the split of the leaf faces on level $0$ into admissible (green) and inadmissible (orange) by Definition~\ref{def:admissible_face}. The criterion is whether a leaf face contains at least one refinement-exterior vertex, drawn hollow.}
+    \caption{The definition chain of this section read off a single domain sequence. Purple faces indicate the ancestor $\ancestorPatch{\M_{\l+1}}$ throughout, and thus marks the faces that are refined beyond the level we compute the predicates on. Panel~\subref{fig:adm_partition} shows the input the predicates use, namely the split~\eqref{eq:leaf_ancestor_split} of $\M_\l$ into the leaf faces $\leafF{\l}(\domseq)$ and the ancestor patch $\ancestorPatch{\M_{\l+1}}$. Panel~\subref{fig:adm_fan} uses that splitting to find the refinement fan $\refFan{\lzero}$ of a vertex, see Definition~\ref{def:refinement_fan}. Panel~\subref{fig:adm_exterior} marks every vertex of a different domain sequence with nested refinement by the level at which its refinement fan first becomes empty, i.e. from which it is refinement-exterior according to Definition~\ref{def:refinement_exterior_vertex}. Panel~\subref{fig:adm_faces} visualises the split of the leaf faces on level $0$ into admissible (green) and inadmissible (orange) by Definition~\ref{def:admissible_face}. The criterion is whether a leaf face contains at least one refinement-exterior vertex, drawn hollow.}
     \label{fig:admissibility_chain}
 \end{figure}
 
-\prose{Everything in this section is a condition on the domain sequence itself. The predicates below refer only to how its regions sit inside one another, never to how the sequence was produced, and they are exactly what the two theorems at the end of the section assume. A reader who wants to know which domain sequences carry well-behaved spaces needs this section and nothing after it.}
+Section~\ref{subsec:selecting_active_dofs} selects the active DoFs of level $\l$ by the subtraction in Equation~\eqref{eq:active_k_form_dofs}: the open DoFs of the extended region $\extendedPatch{\M}_\l$, minus the open DoFs of the ancestor patch $\ancestorPatch{\M_{\l+1}}$, which the next level re-supplies at half the mesh size. This exchange of DoFs being clean in the right sense is what guarantees linear independence and the correct cohomology for the adaptive subdivision $k$-form spaces, see~\cite{companion_paper}. It is clean as long as the refined and extended region $\guidance{\extendedPatch{\M}_{\l+1}}$ \guidance{does not merge patches that are disconnected in} the ancestor region $\ancestorPatch{\M_{\l+1}}$. Looking at Figure~\ref{fig:region_anatomy}, we can see that this merging could happen when patches of $\ancestorPatch{\M_{\l+1}}$ would meet in one vertex or have only one strip of coarse faces between, since the extension would bridge that gap. The admissibility conditions presented in this section can be understood as enforcing a minimum distance between two patches to avoid these problematic geometries.
 
-\prose{Section~\ref{subsec:selecting_active_dofs} selects the active DoFs of level $\l$ by the subtraction in Equation~\eqref{eq:active_k_form_dofs}: the open DoFs of the extended region $\extendedPatch{\M}_\l$, less the open DoFs of the ancestor patch $\ancestorPatch{\M_{\l+1}}$, which the next level re-supplies at half the mesh size. Everything in this section follows from asking when that exchange is clean. It is clean as long as the part handed on, $\ancestorPatch{\M_{\l+1}}$, stays a minimum distance away from the collar that the extension adds around it. Where the two close in on one another, level $\l$ gives up DoFs that level $\l+1$ does not put back and the complex breaks; where coarse faces are enclosed by refinement instead, nothing coarse survives that the finer DoFs cannot already express and linear independence breaks.
-
-The geometric predicates of this section are the local tests for the three ways that distance collapses: a leaf face can be surrounded by refinement at every one of its vertices, two refined parts of one vertex star can meet at that vertex alone, and at the domain boundary a refined part of a star can reach the boundary only through the vertex. All three are read off a single object, the \emph{refinement fan} of a vertex, which collects the faces of the mesh at that vertex that the sequence refines beyond the current level. We define it first, then take the three configurations in turn. That ruling them out suffices for both properties is proved in~\cite{companion_paper}; what matters here is that each test is local, on one vertex or one face.}
+The geometric predicates of this section are local tests for the ways that distance can collapse. All of are read off a single object, the \emph{refinement fan} of a vertex, which collects the faces of the mesh at that vertex that the sequence refines beyond the current level.
 
 \begin{definition}[Refinement fan]
     \label{def:refinement_fan}
@@ -1024,29 +1040,31 @@ The geometric predicates of this section are the local tests for the three ways 
     \end{equation}
 \end{definition}
 
-\prose{An empty fan is the local statement that the finer level does not reach a vertex at all, and it is what the first two configurations are read against.}
+An empty refinement fan implies that vertex at level $\l$ is outside of the region $\ancestorPatch{\M_{\l+1}}$ of $\domseq[\L]$, and thus exterior to any refinement beyond $\l$. The following definition formalises that idea.
 
 \begin{definition}[Refinement-exterior vertex]
     \label{def:refinement_exterior_vertex}
     Let $\domseq[\L]$ be a domain sequence. A vertex $\vertex{\l}{\coarseIdxone} \in \V_\l(\T_\l)$ is \emph{refinement-exterior} at level $\l$ if its refinement fan in $\domseq[\L]$ is empty on that level, i.e. $\refFan{\l} \big( \vertex{\l}{\coarseIdxone} \big) = \varnothing$.
 \end{definition}
 
-\prose{The fan can only empty out: once nothing incident to a vertex is refined beyond a level, nothing is on any finer level either, so a vertex that is refinement-exterior at one level stays refinement-exterior at all finer ones. Every vertex therefore has a first such level, which is what Figure~\ref{fig:adm_exterior} colours it by.}
+Note that a refinement-exterior vertex of $\domseq[\L]$ at a given level $\l$ need not be in the interior of $\T_\l$ but can also lie on its boundary $\partial \T_\l$. For example, Figures~\ref{fig:adm_exterior} and~\ref{fig:adm_faces} display domain sequences with refinement-exterior vertices at the domain boundary.
 
-\guidance{Note that the set of refinement-exterior vertices of $\domseq$ at a given level does not only contain the interior vertices of the patches of $\domseq$ but can also contain interface vertices and vertices on the boundary $\partial \domseq$. For example, Figure~\ref{fig:adm_exterior} displays a domain sequence with nested refinement up to level $3$ towards its centre, with every vertex coloured by the level from which it is refinement-exterior. The outermost layer is refinement-exterior already at level $0$, because none of its incident faces is refined beyond that level, so its fan (Definition~\ref{def:refinement_fan}) is empty there. The next layer becomes refinement-exterior only at level $1$, since at level $0$ it still has incident faces that are refined beyond that level. This logic applies to all layers in the figure until we reach the finest level $3$, at which the remaining vertices become refinement-exterior.}
+The refinement fan can only empty out. \guidance{If none of a vertex' incident faces lies in $\ancestorPatch{\M_{\l+1}}$, then no face of $\M_{\l+1}$ contains it either, since each of those sits inside a coarse face that does not. The collar of the extension adds one strip of level-$(\l+1)$ faces, which is half a coarse face wide and therefore too narrow to bridge that gap, so the vertex stays outside $\extendedPatch{\M}_{\l+1}$ as well.} Thus, a vertex that is refinement-exterior at one level stays refinement-exterior at all finer ones. Every vertex therefore has a level at which it first becomes refinement-exterior, which is what Figure~\ref{fig:adm_exterior} colours it by. In this figure, the outermost layer is refinement-exterior already at level $\lzero$, because none of its incident faces is refined beyond that level, so its refinement fan is empty there according to Definition~\ref{def:refinement_fan}. The next layer becomes refinement-exterior only at level $1$, since at level $0$ it still has incident faces that are refined beyond that level. This logic applies to all layers in the figure until we reach the finest level $3$, at which the remaining vertices become refinement-exterior.
 
-\prose{The first configuration is a leaf face enclosed by refinement: if none of its vertices is refinement-exterior, the finer level reaches the face from every corner at once, and it is this case that costs linear independence. The predicate names the harmless complement.}
+\smallskip
+
+The first geometric predicate concerns a leaf face enclosed by refinement. If none of its vertices is refinement-exterior, the finer level extension reaches the coarse face from every corner at once, which can lead to linear dependence or merging patches. The predicate names the harmless complement.
 
 \begin{definition}[Admissible face]
     \label{def:admissible_face}
-    A face $\face{\l}{\coarseIdxone} \in \F_\l(\domseq[\L])$ is \emph{admissible} if at least one of its vertices is refinement-exterior at level $\l$. Otherwise, it is \emph{inadmissible}.
+    \guidance{A leaf face $\face{\l}{\coarseIdxone} \in \leafF{\l}(\domseq[\L])$} is \emph{admissible} if at least one of its vertices is refinement-exterior at level $\l$. Otherwise, it is \emph{inadmissible}.
 \end{definition}
 
-\prose{The second configuration is a vertex at which the refined part of the star falls into two or more pieces meeting only at the vertex itself. The coarse faces that separate them are squeezed to a point there, so the distance the subtraction relies on is lost, however wide the patches are elsewhere. Counting those pieces is what the next two definitions do.}
+The second problematic configuration is a vertex at which the refined part of its mesh star falls into two or more distinct patches meeting only at the vertex itself. The coarse faces that separate them are squeezed to a point there, so the extended refined patches are guaranteed to merge. \guidance{Counting these patches is what the next two definitions do.}
 
 \begin{definition}[Refinement arcs of a vertex]
     \label{def:refinement_arcs}
-    Let $\vertex{\l}{\coarseIdxone} \in \V(\domseq[\L])$. The \emph{refinement arcs of $\vertex{\l}{\coarseIdxone}$} are the maximal runs of consecutive faces in its cyclic (or, at a boundary vertex, linear) refinement fan $\refFan{\l}(\vertex{\l}{\coarseIdxone})$. Two faces of the same arc are connected through shared level-$\l$ edges at $\vertex{\l}{\coarseIdxone}$ while faces of distinct arcs are not.
+    Let $\vertex{\l}{\coarseIdxone} \in \V(\domseq[\L])$. The \emph{refinement arcs of $\vertex{\l}{\coarseIdxone}$} are the maximal runs of consecutive faces in its cyclic (or, at a boundary vertex, linear) refinement fan $\refFan{\l}(\vertex{\l}{\coarseIdxone})$. \guidance{Two faces of the same arc are connected by a chain of faces of the fan, consecutive ones sharing a level-$\l$ edge at $\vertex{\l}{\coarseIdxone}$, while faces of distinct arcs are not.}
 \end{definition}
 
 \begin{definition}[Pinch vertex]
@@ -1054,11 +1072,11 @@ The geometric predicates of this section are the local tests for the three ways 
     A vertex $\vertex{\l}{\coarseIdxone} \in \V(\domseq[\L])$ is a \emph{pinch vertex} if it has two or more refinement arcs.
 \end{definition}
 
-\prose{At the domain boundary the same collapse takes a second form that the number of pieces alone does not see: a single piece can be sealed off by coarse faces on both sides and touch the boundary only through the vertex.}
+At the domain boundary the same defect takes a second form that the number of pieces alone does not see. A single fine boundary vertex can be sealed off by coarse faces on both sides and touch the boundary only through the vertex. In that case, the open DoFs strip the single boundary vertex, while the open DoFs of the refined and extended version carry a boundary component.
 
 \begin{definition}[Boundary pinch vertex]
     \label{def:boundary_pinch}
-    Let $\vertex{\l}{\coarseIdxone} \in \V(\domseq[\L]) \cap \partial\T_\l$ lie on the boundary of $\T_\l$. Its refinement fan $\refFan{\l}(\vertex{\l}{\coarseIdxone})$ then contains two faces that contain domain boundary edges. We call a refinement arc \emph{anchored} if it contains such a face. The vertex $\vertex{\l}{\coarseIdxone}$ is a \emph{boundary pinch} if it has at least one refinement arc that is not anchored.
+    Let $\vertex{\l}{\coarseIdxone} \in \V(\domseq[\L]) \cap \partial\T_\l$ lie on the boundary of $\T_\l$. \guidance{Exactly two faces of its mesh star $\FVl{\l}(\vertex{\l}{\coarseIdxone})$ carry a domain boundary edge incident to $\vertex{\l}{\coarseIdxone}$, namely the two ends of its linear fan. We call a refinement arc \emph{anchored} if it contains one of them.} The vertex $\vertex{\l}{\coarseIdxone}$ is a \emph{boundary pinch} if it has at least one refinement arc that is not anchored.
 \end{definition}
 
 % --- Figure knobs: admissibility predicates on concrete domain sequences (single row, no dividers) ---
@@ -1108,7 +1126,7 @@ The predicates of face admissibility and vertex pinches allow us to define \emph
     We denote the set of admissible domain sequences by $\allpartitions(\T_\L)$.
 \end{definition}
 
-Condition (ii) is deliberately not restricted to interior vertices to cover cases like the one in Figure~\ref{fig:pinch_boundary_two_arcs}. The three conditions are the three collapses ruled out one by one, so together they are the minimum distance between the coarse region $\ancestorPatch{\M_{\l+1}}$ and its fine counterpart $\extendedPatch{\M}_{\l+1}$ that Section~\ref{subsec:selecting_active_dofs} needs, stated entirely in terms of one vertex or one face at a time. 
+Condition (ii) is deliberately not restricted to interior vertices to cover cases like the one in Figure~\ref{fig:pinch_boundary_two_arcs}. The three conditions are the three collapses ruled out one by one, \guidance{so together they keep distinct patches of $\ancestorPatch{\M_{\l+1}}$ far enough apart for the exchange of Section~\ref{subsec:selecting_active_dofs}, stated entirely in terms of one vertex or one face at a time, and~\cite{companion_paper} proves that they suffice.} 
 
 The following two theorems are from ~\cite{companion_paper} and show that both linear independence and the correct cohomology of the adaptive subdivision $k$-form spaces follow from the admissibility of the domain sequence they are defined on.
 
@@ -1134,7 +1152,7 @@ The previous section constrained the domain sequence. This section and the next 
 
 \begin{definition}[Covering face]
     \label{def:covering_face}
-    Let $\domseq[\L] \in \alldomseqs$ and let $\face{\lone}{\fineIdxone} \in \F_{\lone}(\T_\lone)$ be a face on level $\lone$. The \emph{covering face} of $\face{\lone}{\fineIdxone}$ is exactly the leaf face $\face{\l}{\coarseIdxone} \in \leafMesh(\domseq[\L])$ iff $\face{\lone}{\fineIdxone} \in \Aop{}{\l}{\lone} \face{\l}{\coarseIdxone}$. We denote this relationship by $\coveringFace{\face{\lone}{\fineIdxone}} = \face{\l}{\coarseIdxone}$. For $\l \leq \lone$, the covering face is unique because the leaf mesh $\leafMesh(\domseq[\L])$ is a tiling of the domain, and for $\l \!>\! \lone$, we define $\coveringFace{\face{\lone}{\fineIdxone}} = \varnothing$.
+    Let $\domseq[\L] \in \alldomseqs$ and let $\face{\lone}{\fineIdxone} \in \F_{\lone}(\T_\lone)$ be a face on level $\lone$. The \emph{covering face} of $\face{\lone}{\fineIdxone}$ is exactly the leaf face $\face{\l}{\coarseIdxone} \in \leafMesh(\domseq[\L])$ iff $\face{\lone}{\fineIdxone} \in \Aop{}{\l}{\lone} \face{\l}{\coarseIdxone}$. We denote this relationship by $\guidance{\coveringFace(\face{\lone}{\fineIdxone})} = \face{\l}{\coarseIdxone}$. \guidance{The covering face is unique whenever it exists, because the leaf mesh $\leafMesh(\domseq[\L])$ is a tiling of the domain, and we set $\guidance{\coveringFace(\face{\lone}{\fineIdxone})} = \varnothing$ when $\face{\lone}{\fineIdxone}$ is refined beyond level $\lone$ and therefore lies in no leaf face.}
 \end{definition}
 
 \begin{definition}[Leaf star]
@@ -1242,7 +1260,7 @@ The remainder of this section introduces operators that enable the kinds of refi
     $\l \in \{ \lzero, \, \dots \,, \L\}$, and let $\simplexsubset{2}{\l} \subseteq \F_\l(\M_\l)$
     be a set of faces marked for refinement beyond $\l$. The \emph{face quadrisection operator}
     \begin{equation}
-        \quadriF \; \colon \; \alldomseqs \times \powerset\big( \F_\l \big) \; \longrightarrow \; \alldomseqs
+        \quadriF \; \colon \; \alldomseqs \times \powerset\big( \F_\l \big) \; \longrightarrow \; \alldomseqs \guidance{\quad \text{for each level } \l}
     \end{equation}
     is defined by
     \begin{equation}
@@ -1289,7 +1307,7 @@ The quadrisection operators defined in this section are the basis upon which we 
     \label{eq:quadrisection_monotone}
     \hierSDFspace{k}{\domseq}{\L} \subseteq \hierSDFspace{k}{\quadriF(\domseq[\L], \simplexsubset{2}{\l})}{} \qquad \text{and} \qquad \hierSDFspace{k}{\domseq}{\L} \subseteq \hierSDFspace{k}{\quadriVup{\targetlevel}(\domseq[\L], \vertex{\l}{\coarseIdxone})}{}.
 \end{equation}
-The second inclusion follows from the first, since $\quadriVup{\targetlevel}$ is a composition of face quadrisections. The reason the refinement produces proper superspaces is that the domain sequences satisfy $\M_\l \subseteq \tilde{\M}_\l$, where $\M_\l$ and $\tilde{\M}_\l$ are the regions of $\domseq[\L]$ and $\quadriF(\domseq[\L], \simplexsubset{2}{\l})$ or $\quadriVup{\targetlevel}(\domseq[\L], \vertex{\l}{\coarseIdxone})$, respectively. \cite{companion_paper} prove the nestedness of the adaptive $k$-form spaces given that nestedness of regions.
+The second inclusion follows from the first, since $\quadriVup{\targetlevel}$ is a composition of face quadrisections. The reason the refinement produces \guidance{superspaces} is that the domain sequences satisfy $\M_\l \subseteq \tilde{\M}_\l$, where $\M_\l$ and $\tilde{\M}_\l$ are the regions of $\domseq[\L]$ and $\quadriF(\domseq[\L], \simplexsubset{2}{\l})$ or $\quadriVup{\targetlevel}(\domseq[\L], \vertex{\l}{\coarseIdxone})$, respectively. \cite{companion_paper} prove the nestedness of the adaptive $k$-form spaces given \guidance{the} nestedness of regions.
 
 \begin{figure}
 \begin{center}
@@ -1345,7 +1363,7 @@ The second inclusion follows from the first, since $\quadriVup{\targetlevel}$ is
 
 \smallskip
 
-Admissible domain sequences respect the geometric constraints necessary for linear independence and reproducing the correct cohomology. Unfortunately, in contrast to general domain sequences $\allcoverings$, admissible domain sequences are not closed under the quadrisection operators $\quadriF(\domseq[\L], \cdot)$, $\quadriVat{\l}(\domseq[\L], \cdot)$ and $\quadriVup{\targetlevel}(\domseq[\L], \cdot)$, meaning that they are maps $\allpartitions \to \allcoverings$. Thus, naive refinement of admissible domain sequences can reintroduce inadmissible geometry, for example a pinch vertex. This is exactly why Section~\ref{subsec:adaptive_loop} sets up a padding step that repairs these geometric defects and turns the domain sequence into a admissible domain sequence again.
+Admissible domain sequences respect the geometric constraints necessary for linear independence and reproducing the correct cohomology. Unfortunately, in contrast to general domain sequences $\guidance{\alldomseqs}$, admissible domain sequences are not closed under the quadrisection operators $\quadriF(\domseq[\L], \cdot)$, $\quadriVat{\l}(\domseq[\L], \cdot)$ and $\quadriVup{\targetlevel}(\domseq[\L], \cdot)$, meaning that they are maps $\allpartitions \to \guidance{\alldomseqs}$. Thus, naive refinement of admissible domain sequences can reintroduce inadmissible geometry, for example a pinch vertex. This is exactly why Section~\ref{subsec:adaptive_loop} sets up a padding step that repairs these geometric defects and turns the domain sequence into a admissible domain sequence again.
 
 
 
@@ -1363,7 +1381,7 @@ The loop used in the numerical experiments consists of the steps
 \end{tikzcd}
 \end{equation}
 
-and is initialized with a admissible domain sequence $\domseq^0$. Throughout the adaptive loop, the general picture of the computational objects in Section~\ref{subsec:computational_representations} stays the same, the loop only refines $\domseq$ iteratively, and with that the active DoFs $\activeDoFSet{k}{}(\domseq)$ and the adaptive subdivision $k$-form spaces $\hierSDFspace{k}{\domseq}{\L}$. The \textsc{Pad} step is necessary because the \textsc{Refine} step only guarantees $\domseq^{\mathrm{refine}} \in \allcoverings$, not $\domseq^{\mathrm{refine}} \in \allpartitions$, see Definition~\ref{def:subdiv_partition}. This means that the \textsc{Pad} step effectively restores linear independence and exactness of the complex.
+and is initialized with a admissible domain sequence $\domseq^0$. Throughout the adaptive loop, the general picture of the computational objects in Section~\ref{subsec:computational_representations} stays the same, the loop only refines $\domseq$ iteratively, and with that the active DoFs $\activeDoFSet{k}{}(\domseq)$ and the adaptive subdivision $k$-form spaces $\hierSDFspace{k}{\domseq}{\L}$. The \textsc{Pad} step is necessary because the \textsc{Refine} step only guarantees $\domseq^{\mathrm{refine}} \in \guidance{\alldomseqs}$, not $\domseq^{\mathrm{refine}} \in \allpartitions$, see Definition~\ref{def:subdiv_partition}. This means that the \textsc{Pad} step effectively restores linear independence and exactness of the complex.
 
 \subsection{Solve}
 \label{subsec:solve}
@@ -1819,7 +1837,7 @@ step.}
 \section{Numerical Experiments}
 \label{sec:numerical_experiments}
 
-This section verifies the properties of the adaptive subdivision $k$-form spaces $\hierSDFspace{k}{\domseq}{\L}$ and $\hierSDFspaceZero{k}{\domseq}{\L}$ predicted in Section~\ref{sec:construction_of_hierarchical_subdiv_spaces} and tests the adaptive loop presented in Section~\ref{subsec:adaptive_loop}. Section~\ref{subsec:exactness_atomic} illustrates how domain sequences with pinch vertices or inadmissible faces can break the de~Rham complex and linear independence, and how padding repairs the domain sequences. Section~\ref{subsec:maxwell} then confirms on the Maxwell eigenvalue problem that the spurious modes are confined to the eigenvalue $0$, implying that $\extd \circ \extd = 0$ pointwise for every domain sequence. Section~\ref{subsec:vector_laplace} exercises the full adaptive loop on a vector Laplace problem with a singular solution. The emphasis throughout is on the admissibility of the adaptive subdivision $k$-form spaces, i.e. whether the active DoFs are linearly independent and preserve the cohomology of the de Rham complex, rather than on approximation rates.
+This section verifies the properties of the adaptive subdivision $k$-form spaces $\hierSDFspace{k}{\domseq}{\L}$ and $\hierSDFspaceZero{k}{\domseq}{\L}$ predicted in Section~\ref{sec:construction_of_hierarchical_subdiv_spaces} and tests the adaptive loop presented in Section~\ref{subsec:adaptive_loop}. Section~\ref{subsec:exactness_atomic} illustrates how domain sequences with pinch vertices or inadmissible faces can break the de~Rham complex and linear independence, and how padding repairs the domain sequences. Section~\ref{subsec:maxwell} then confirms on the Maxwell eigenvalue problem that the spurious modes are confined to the eigenvalue $0$, \guidance{which reflects that $\extd$ maps $\hierSDFspaceZero{0}{\domseq}{\L}$ into $\hierSDFspaceZero{1}{\domseq}{\L}$ for every domain sequence.} Section~\ref{subsec:vector_laplace} exercises the full adaptive loop on a vector Laplace problem with a singular solution. The emphasis throughout is on the admissibility of the adaptive subdivision $k$-form spaces, i.e. whether the active DoFs are linearly independent and preserve the cohomology of the de Rham complex, rather than on approximation rates.
 
 \subsection{Exactness and padding on atomic partitions}
 \label{subsec:exactness_atomic}
@@ -2023,7 +2041,7 @@ This section confirms that the \textsc{Pad} step correctly restores the geometri
 \subsection{Maxwell Eigenvalue problem}
 \label{subsec:maxwell}
 
-This section studies the Maxwell eigenvalue problem, a classical test case to verify the properties of discrete differential complexes. Section~\ref{subsec:exactness_atomic} has already established that the \textsc{Pad} step restores the correct cohomology for the spaces $\hierSDFspace{k}{\domseq}{\L}$ by repairing the geometric defects of the domain sequence $\domseq$ so that it becomes a admissible domain sequence. In constrast, this section studies how the spurious harmonic $1$-forms of a domain sequence concretely affect the solution of the eigenproblem.
+This section studies the Maxwell eigenvalue problem, a classical test case to verify the properties of discrete differential complexes. Section~\ref{subsec:exactness_atomic} has already established that the \textsc{Pad} step restores the correct cohomology for the spaces $\hierSDFspace{k}{\domseq}{\L}$ by repairing the geometric defects of the domain sequence $\domseq$ so that it becomes a admissible domain sequence. \guidance{In contrast}, this section studies how the spurious harmonic $1$-forms of a domain sequence concretely affect the solution of the eigenproblem.
 
 The weak form of the Maxwell cavity (curl--curl) eigenvalue problem on the domain $\M = [0,\pi]^2$ with mesh $\T_\L$ is given by: Find $\lambda_{h,\coarseIdxone} \in \mathbb{R}$ and $u_\coarseIdxone \in \hierSDFspaceZero{1}{\domseq}{\L}$ such that
 \begin{equation}
@@ -2034,7 +2052,7 @@ with analytic spectrum $\lambda_\coarseIdxone = m^2 + n^2$, where $m$ and $n$ ar
 Applying Loop subdivision alters the domain slightly, so we do not compare the discrete spectrum directly with the analytic spectrum  $\lambda_\coarseIdxone$. Instead, we compare the discrete spectra $\lambda_\coarseIdxone$ with the spectrum of $\FEECspaceZero{k}{\L}$ with $\domseq^{\mathrm{FEEC}} = \T_\L$, a superspace of both $\hierSDFspaceZero{1}{\domseq^{\mathrm{pinch}}}{\L}$ and $\hierSDFspaceZero{1}{\domseq^{\mathrm{padded}}}{\L}$ that verifiably converges to the correct spectrum, see~\cite{Arnold.FEEC}.
 
 Figure~\ref{fig:Maxwell_eigenvalues} reports the discrete spectra with $\lambda_{h,\coarseIdxone} > 0$ for all three domain sequences. Outside of small approximation errors, the spectra agree across all the three
-partitions. That means that the defects caused by the spurious $1$-form harmonics of $\hierSDFspaceZero{1}{\domseq^{\mathrm{pinch}}}{\L}$ are confined to the eigenspace of $\lambda_{h,\coarseIdxone} = 0$. The reason for that behaviour is Theorem~\ref{theorem:differential_complex}, stating that $\extd \circ \extd \equiv 0$ holds pointwise on $\hierSDFspaceZero{0}{\domseq}{\L}$ for all domain sequences $\domseq \in \allcoverings$, regardless of whether they satisfy the admissible domain sequence conditions. This implies that $\extd u$ does not carry a spurious curl of any gradient, and thus the non-zero spectrum does not get polluted, cf.~\cite{Boffi.2010}.
+partitions. That means that the defects caused by the spurious $1$-form harmonics of $\hierSDFspaceZero{1}{\domseq^{\mathrm{pinch}}}{\L}$ are confined to the eigenspace of $\lambda_{h,\coarseIdxone} = 0$. The reason for that behaviour is Theorem~\ref{theorem:differential_complex}, stating that \guidance{$\extd \hierSDFspaceZero{0}{\domseq}{\L} \subseteq \hierSDFspaceZero{1}{\domseq}{\L}$ holds} for all domain sequences $\domseq \in \guidance{\alldomseqs}$, regardless of whether they satisfy the admissible domain sequence conditions. \guidance{Every gradient of an active $0$-form is therefore itself an active $1$-form and is annihilated by $\extd$, so it contributes to the eigenvalue $0$ rather than to the non-zero spectrum, cf.~\cite{Boffi.2010}.}
 
 \begin{figure}%[htbp]
     \centering
@@ -2304,7 +2322,7 @@ levels are independent, the loop below may be run in any order, or in parallel.
 \tcp{1.\ Recover the regions downward from the leaf partition}
 $\M_\L \leftarrow$ leaf faces at level $\L$\;
 \For{$\l = \L - 1, \, \ldots, \, \lzero$}{
-    $\M_\l \leftarrow \{\, \mathrm{parent}(f) \; : \; f \in \M_{\l+1} \,\} \; \cup \;$ leaf faces at level $\l$\;
+    $\M_\l \leftarrow \{\, \mathrm{parent}(f) \; : \; f \in \M_{\l+1} \,\} \; \guidance{\sqcup} \;$ leaf faces at level $\l$\;
 }
 \BlankLine
 \tcp{2.\ One independent set difference per level}
@@ -2317,7 +2335,7 @@ $\activeDoFSet{k}{} \leftarrow \emptyset$\;
     \tcp{(c) select by Definition~\ref{def:open_patch_dofs}: all containing faces inside}
     $I_\l \leftarrow \{ \simplex{k}{\l}{\coarseIdxone} \; : \; \F\K^k_\l(\simplex{k}{\l}{\coarseIdxone}) \subseteq \extendedPatch{\M}_\l \}$\;
     $R_\l \leftarrow \{ \simplex{k}{\l}{\coarseIdxone} \; : \; \F\K^k_\l(\simplex{k}{\l}{\coarseIdxone}) \subseteq A_\l \}$\;
-    $\activeDoFSet{k}{} \leftarrow \activeDoFSet{k}{} \; \cup \; \big( I_\l \setminus R_\l \big)$\;
+    $\activeDoFSet{k}{} \leftarrow \activeDoFSet{k}{} \; \guidance{\sqcup} \; \big( I_\l \setminus R_\l \big)$\;
 }
 \Return $\activeDoFSet{k}{}$\;
 \end{algorithm}
