@@ -97,6 +97,12 @@ Werner Bauer\footnote{University of Surrey, School of Mathematics and Physics, U
 \newcommand{\lmax}{\l_{\max}}
 \newcommand{\lmaxIdx}[1]{\l_{\max,#1}}
 \newcommand{\levelSpan}[1]{s_{#1}}
+% Meeting level of two vertex classes, defined at Eq.~\eqref{eq:meeting_level} in
+% Sec.~\ref{subsec:vertex_neighbourhoods} beside the class star, since like the
+% class star it reads the mesh hierarchy alone. Consumed by
+% Cor.~\ref{cor:graded_quadrisection_leafstar} and by the grading paragraph of
+% Sec.~\ref{subsec:padding}. Same slot as \lminIdx/\lmaxIdx but TWO indices.
+\newcommand{\lmeetIdx}[2]{\l_{\cap,#1#2}}
 % Level of the covering leaf face of a single face, i.e. where the ancestor walk
 % of Corollary~\ref{cor:ancestor_walk} stops. Same slot as \lmin/\lmax, but a
 % property of one FACE, not of a leaf star.
@@ -153,11 +159,16 @@ Werner Bauer\footnote{University of Surrey, School of Mathematics and Physics, U
 % Hierarchy-level, NOT domain-sequence dependent: the orbits are taken under the
 % injections of Eq.~\eqref{eq:vertex_injection}, which are read off T_l alone.
 % Bijective with \V_\L(\T_\L), which is why properties are stated through the
-% level-L representative. If Sec.~4 ends up needing only the classes that have a
-% representative inside \domseq, that is a SUBSET and wants its own notation --
-% \vertexClasses(\domseq[\L]) -- since a class born above \lzero need not meet
-% any region.
+% level-L representative. The classes that have a representative inside \domseq
+% are a SUBSET, written \vertexClasses(\domseq[\L]) and defined after
+% Def.~\ref{def:vertex_class}, since a class born above \lzero need not meet any
+% region.
 \newcommand{\vertexClasses}{\widehat{\V}}
+% Set of vertex classes handed to the graded vertex quadrisection
+% (Def.~\ref{def:graded_vertex_quadrisection}). A SUBSET of \vertexClasses, so its
+% elements are written \vertexClass{#1} and the marking is carried by the
+% membership, not by a second symbol for the same object.
+\newcommand{\markedVertexClasses}{\widehat{\mathcal{W}}}
 \newcommand{\vertexpos}[2]{\freeQ{\Vec{v}}{}{#1}{#2}}
 \newcommand{\edge}[2]{\freeQ{e}{}{#1}{#2}}
 \newcommand{\face}[2]{\freeQ{f}{}{#1}{#2}}
@@ -752,7 +763,7 @@ $\times$ & Well-conditioned solve & --- & Table~\ref{tab:solve_stats_L4} \\
 
 \FloatBarrier
 
-\section{Hierarchical subdivision $k$-form spaces and their refinement}
+\section{Hierarchical subdivision $k$-form spaces}
 \label{sec:construction_of_hierarchical_subdiv_spaces}
 
 The general matrix representation of Section~\ref{subsec:computational_representations} is unchanged in the following. This section presents the selection of admissible active DoFs.
@@ -903,7 +914,7 @@ the \emph{leaf mesh} of $\domseq[\L]$. It is not a mesh in the strict sense beca
 
 The leaf mesh also tracks the refinement frontier in the sense that \guidance{it} is a collection of the finest faces of a domain sequence that cover the faces of the domain $\T_\L$. Thus, the leaf mesh plays a large role in the definition of the refinement operators in Section~\ref{subsec:vertex_neighbourhoods}.
 
-\guidance{Lemma~\ref{lemma:ancestral_closure} (ancestral closure of a domain sequence) and Corollary~\ref{cor:leaf_faces_terminal} (leaf faces are terminal) used to stand here, between Definition~\ref{def:leaf_faces} and the active DoFs. They are properties of domain sequences and so belong to this section by subject, but neither is used anywhere before Section~\ref{subsec:refinement_operators}: their only consumers are Lemma~\ref{lemma:ancestry_absorbed} and Corollary~\ref{cor:graded_quadrisection_leafstar}. Standing here they only delayed the reader on the way to Definition~\ref{def:active_k_form_dofs}, so both now sit at the head of Section~\ref{subsec:vertex_neighbourhoods}, directly after the face ancestor and directly before Definition~\ref{def:covering_face}, which is their first consumer. Move them back if you would rather have this section carry every property of domain sequences the paper proves.}
+\guidance{Lemma~\ref{lemma:ancestral_closure} (ancestral closure of a domain sequence) and the terminal-leaf-faces corollary used to stand here, between Definition~\ref{def:leaf_faces} and the active DoFs. They are properties of domain sequences and so belong to this section by subject, but neither is used anywhere before Section~\ref{subsec:vertex_neighbourhoods}, and standing here they only delayed the reader on the way to Definition~\ref{def:active_k_form_dofs}. Both now sit at the head of Section~\ref{subsec:vertex_neighbourhoods}, directly after the face ancestor and directly before Definition~\ref{def:covering_face}. Move them back if you would rather have this section carry every property of domain sequences the paper proves. Note that the corollary is marked as a cut candidate there, since Proposition~\ref{proposition:class_star_levels} left it without consumers; the lemma stays either way, because Step~1 of Lemma~\ref{lemma:ancestor_walk_finest} uses it.}
 
 
 Now that domain sequences, regions, and their geometry are settled, we are now moving to defining active DoFs on them. \cite{companion_paper} distinguishes between two notions: the DoFs a region naturally carries, and the ones that are \emph{interior} to it in the sense that nothing outside the region touches them.
@@ -1110,6 +1121,7 @@ The geometric predicates of this section are local tests for the ways that dista
     \begin{equation}
         \refFan{\l} \big( \vertex{\l}{\coarseIdxone} \big) \coloneq \FVl{\l} \big( \vertex{\l}{\coarseIdxone} \big) \cap \ancestorPatch{\M_{\l+1}}.
     \end{equation}
+    \robert{The definition is read on every level $\lzero \leq \l \leq \L$, and at the finest one it is empty for every vertex, since Definition~\ref{def:domseq} sets $\M_{\L+1} = \varnothing$ and hence $\ancestorPatch{\M_{\L+1}} = \varnothing$. A domain sequence carries nothing beyond level $\L$, so no face of $\T_\L$ is refined beyond its own level.}
 \end{definition}
 
 An empty refinement fan implies that vertex at level $\l$ is outside of the region $\ancestorPatch{\M_{\l+1}}$ of $\domseq[\L]$, and thus exterior to any refinement beyond $\l$. The following definition formalises that idea.
@@ -1121,7 +1133,7 @@ An empty refinement fan implies that vertex at level $\l$ is outside of the regi
 
 Note that a refinement-exterior vertex of $\domseq[\L]$ at a given level $\l$ need not be in the interior of $\T_\l$ but can also lie on its boundary $\partial \T_\l$. For example, Figures~\ref{fig:adm_exterior} and~\ref{fig:adm_faces} display domain sequences with refinement-exterior vertices at the domain boundary.
 
-The refinement fan can only empty out. \guidance{If none of a vertex' incident faces lies in $\ancestorPatch{\M_{\l+1}}$, then no face of $\M_{\l+1}$ contains it either, since each of those sits inside a coarse face that does not. The collar of the extension adds one strip of level-$(\l+1)$ faces, which is half a coarse face wide and therefore too narrow to bridge that gap, so the vertex stays outside $\extendedPatch{\M}_{\l+1}$ as well.} Thus, a vertex that is refinement-exterior at one level stays refinement-exterior at all finer ones. Every vertex therefore has a level at which it first becomes refinement-exterior, which is what Figure~\ref{fig:adm_exterior} colours it by. In this figure, the outermost layer is refinement-exterior already at level $\lzero$, because none of its incident faces is refined beyond that level, so its refinement fan is empty there according to Definition~\ref{def:refinement_fan}. The next layer becomes refinement-exterior only at level $1$, since at level $0$ it still has incident faces that are refined beyond that level. This logic applies to all layers in the figure until we reach the finest level $3$, at which the remaining vertices become refinement-exterior.
+The refinement fan can only empty out. \guidance{If none of a vertex' incident faces lies in $\ancestorPatch{\M_{\l+1}}$, then no face of $\M_{\l+1}$ contains it either, since each of those sits inside a coarse face that does not. The collar of the extension adds one strip of level-$(\l+1)$ faces, which is half a coarse face wide and therefore too narrow to bridge that gap, so the vertex stays outside $\extendedPatch{\M}_{\l+1}$ as well.} Thus, a vertex that is refinement-exterior at one level stays refinement-exterior at all finer ones. \guidance{Decision: the monotonicity is now free. The third case of Proposition~\ref{proposition:class_star_levels} makes a vertex refinement-exterior exactly on the levels $\l \geq \lmax$, which is upward closed, so the first sentence of the note above can be replaced by a forward pointer. The collar sentence is a separate claim about $\extendedPatch{\M}_{\l+1}$ that the three cases do not cover, so it stays or gets settled on its own.} Every vertex therefore has a level at which it first becomes refinement-exterior, which is what Figure~\ref{fig:adm_exterior} colours it by. \robert{That level always exists and is at most $\L$, since the fan at the finest level is empty for every vertex, and Proposition~\ref{proposition:class_star_levels} identifies it as the finest level $\lmax$ of the leaf star of the vertex, once the leaf star is available in Section~\ref{subsec:vertex_neighbourhoods}.} In this figure, the outermost layer is refinement-exterior already at level $\lzero$, because none of its incident faces is refined beyond that level, so its refinement fan is empty there according to Definition~\ref{def:refinement_fan}. The next layer becomes refinement-exterior only at level $1$, since at level $0$ it still has incident faces that are refined beyond that level. This logic applies to all layers in the figure until we reach the finest level $3$, at which the remaining vertices become refinement-exterior.
 
 \smallskip
 
@@ -1216,15 +1228,20 @@ The minimum gap between two patches enforced by the admissibility of the domain 
     Let $\domseq \in \allpartitions$ be a admissible domain sequence. Then, the cohomology groups of the complexes $\mathfrak{R}_{\domseq}$ and $\mathring{\mathfrak{R}}_{\domseq}$ of adaptive $k$-form subdivision spaces from Theorem~\ref{theorem:differential_complex} are isomorphic to the ones of absolute and relative de Rham complexes, respectively.
 \end{theorem}
 
-
 \FloatBarrier
+
+\section{Constructing the refinement operators}
+\label{sec:refinement_operators}
+
+\robert{The previous section constrained the domain sequence and said which selections of active degrees of freedom are admissible. Everything in it is a property of the spaces and would be shared by any scheme that refines them. This section and the next are where this paper makes its own choices. The definitions from here on are answerable to the algorithm rather than to the theorems, meaning that they are chosen so that the operators of Section~\ref{subsec:refinement_operators} can be stated and implemented, and a different refinement strategy would replace them while leaving Section~\ref{subsec:subdiv_partition} untouched.}
 
 \subsection{Vertex neighbourhoods for the refinement operators}
 \label{subsec:vertex_neighbourhoods}
 
-The previous section constrained the domain sequence. This section and the next one build the machinery that carries our adaptive loop from one admissible domain sequence to a finer one, so the definitions from here on are answerable to the algorithm rather than to the theorems, meaning that they are chosen so that the operators of Section~\ref{subsec:refinement_operators} can be stated and implemented, and a different refinement strategy would replace them while leaving Section~\ref{subsec:subdiv_partition} untouched.
+This subsection defines three neighbourhoods of a vertex, and they differ in what they are allowed to read. The \emph{mesh star} $\FVl{\l}(\vertex{\l}{\coarseIdxone})$ of Section~\ref{subsec:selecting_active_dofs} collects the faces of $\T_\l$ incident to $\vertex{\l}{\coarseIdxone}$ and is a property of the uniform mesh alone, but it is only defined on the levels at which the vertex is a mesh vertex. The \emph{star ancestry} below removes that restriction while staying a property of the mesh hierarchy alone. The \emph{leaf star} defined afterwards is the only one of the three that reads the domain sequence.
 
-This section defines three neighbourhoods of a vertex, and they differ in what they are allowed to read. The \emph{mesh star} $\FVl{\l}(\vertex{\l}{\coarseIdxone})$ of Section~\ref{subsec:selecting_active_dofs} collects the faces of $\T_\l$ incident to $\vertex{\l}{\coarseIdxone}$ and is a property of the uniform mesh alone, but it is only defined on the levels at which the vertex is a mesh vertex. The \emph{star ancestry} below removes that restriction while staying a property of the mesh hierarchy alone. The \emph{leaf star} defined afterwards is the only one of the three that reads the domain sequence.
+\subsubsection{Faces and their ancestors across levels}
+\label{subsubsec:faces_across_levels}
 
 \begin{definition}[Face ancestor]
     \label{def:face_ancestor}
@@ -1260,21 +1277,6 @@ We keep both, because $\ancestorPatch{\cdot}$ carries that hypothesis in its not
 \begin{proof}
     The face ancestor operator acts facewise by Definition~\ref{def:face_ancestor}, so it suffices to walk a single face $\face{\lone}{\fineIdxone} \in \simplexsubset{2}{\lone} \subseteq \M_\lone$ down one level at a time. Let $\lzero \leq \l < \lone$ and suppose $\anc{\l+1}(\face{\lone}{\fineIdxone}) \in \M_{\l+1}$. Since $\l \geq \lzero$, Definition~\ref{def:domseq} makes $\M_{\l+1}$ quadrisection-closed, that is $\M_{\l+1} = \Aop{}{\l}{\l+1}(\ancestorPatch{\M_{\l+1}})$, so $\anc{\l+1}(\face{\lone}{\fineIdxone})$ is a child of a face of $\ancestorPatch{\M_{\l+1}}$, which can only be its parent $\anc{\l}(\face{\lone}{\fineIdxone})$. The nesting condition of the same definition carries that parent on into $\M_\l$. This is the assertion on level $\l$ and the supposition one level further down, and it starts at $\l = \lone \! - \! 1$ because $\face{\lone}{\fineIdxone} \in \M_\lone$.
 \end{proof}
-
-Read in reverse, Lemma~\ref{lemma:ancestral_closure} says that a face which fails to be refined beyond its level cuts off the hierarchy below it. This is the sense in which leaf faces are the frontier and not merely the currently finest thing present.
-
-\begin{corollary}[Leaf faces are terminal]
-    \label{cor:leaf_faces_terminal}
-    Let $\domseq[\L] \in \alldomseqs_\L$ and let $\face{\l}{\fineIdxone} \in \leafF{\l}(\domseq[\L])$ be a leaf face. Then no descendant of $\face{\l}{\fineIdxone}$ lies in any region of $\domseq[\L]$,
-    \begin{equation}
-        \label{eq:leaf_faces_terminal}
-        \Aop{}{\l}{\lone} \big( \face{\l}{\fineIdxone} \big) \, \cap \, \M_\lone \; = \; \varnothing \qquad \text{for all} \qquad \l < \lone \leq \L.
-    \end{equation}
-\end{corollary}
-\begin{proof}
-    Suppose some descendant $\face{\lone}{\fineIdxtwo} \in \Aop{}{\l}{\lone}(\face{\l}{\fineIdxone})$ lay in $\M_\lone$. Its level-$\l$ ancestor is $\face{\l}{\fineIdxone}$, so Lemma~\ref{lemma:ancestral_closure} would give $\face{\l}{\fineIdxone} \in \ancestorPatch{\M_{\l+1}}$, contradicting $\face{\l}{\fineIdxone} \in \leafF{\l}(\domseq[\L]) = \M_\l \setminus \ancestorPatch{\M_{\l+1}}$ of Definition~\ref{def:leaf_faces}.
-\end{proof}
-
 
 \begin{definition}[Covering face]
     \label{def:covering_face}
@@ -1453,16 +1455,19 @@ Lemma~\ref{lemma:ancestor_walk_finest} implies that the escape clause $\covering
     Neither branch depends on the descendant we picked. The branch is fixed by the hypothesis through the equivalence above, and $\lstar$ is then fixed by the uniqueness in~$(i)$.
 \end{proof}
 
-\robert{Figure~\ref{fig:ancestor_walk} draws the two results on the quadtree of the faces rather than on the mesh, which is where their content lives. The trichotomy is a statement about ancestry, and ancestry is the tree.}
+\robert{Figure~\ref{fig:ancestor_walk} draws the two results on the quadtree of the faces rather than on the mesh, which is where their content lives. The split by level is a statement about ancestry, and ancestry is the tree.}
 
 \medskip
 
-The rest of this section reads a vertex on more than one level, so we now fix what it means to speak of a vertex across the hierarchy. Loop subdivision retains every vertex of $\T_\l$ as a vertex of $\T_{\l+1}$ and inserts one new vertex per edge, see Section~\ref{subsec:subdiv_basis_functions}. This gives an injection
+The rest of this subsection reads a vertex on more than one level, so we now fix what it means to speak of a vertex across the hierarchy. Loop subdivision retains every vertex of $\T_\l$ as a vertex of $\T_{\l+1}$ and inserts one new vertex per edge, see Section~\ref{subsec:subdiv_basis_functions}. This gives an injection
 \begin{equation}
     \label{eq:vertex_injection}
     \V_\l(\T_\l) \; \hookrightarrow \; \V_{\l+1}(\T_{\l+1}) , \qquad \vertex{\l}{\coarseIdxone} \; \longmapsto \; \vertex{\l+1}{\coarseIdxone} ,
 \end{equation}
 whose complement is precisely the set of vertices inserted on level $\l \! + \! 1$. This is the action of $\Aop{}{\l}{\lone}$ on vertices used in Section~\ref{subsec:selecting_active_dofs}, and unlike its action on faces it is single-valued: a face has four children, a vertex has one image. The identification is combinatorial and not geometric, since subdivision moves the position of a vertex on every level.
+
+\subsubsection{Vertex classes and their stars}
+\label{subsubsec:vertex_classes}
 
 \begin{definition}[Vertex class and birth level]
     \label{def:vertex_class}
@@ -1477,6 +1482,13 @@ whose complement is precisely the set of vertices inserted on level $\l \! + \! 
 Every class has one representative on each level from its birth level up to $\L$ and none below. The classes of birth level $\lzero$ are the vertices of the control mesh, and a class of birth level $\l > \lzero$ is the vertex that the quadrisection of level $\l \! - \! 1$ inserts on one of its edges.
 
 The number of vertex classes $\vertexClasses$ is exactly the number of vertices of level $\L$ because every vertex $\vertex{\L}{\coarseIdxone}$ is a representative of its vertex class $\vertexClass{\coarseIdxone}$. For that reason, we will often state properties and operators on $\vertexClasses$ in terms of $\vertex{\L}{\coarseIdxone}$.
+
+\robert{Given a domain sequence $\domseq[\L]$ we write
+\begin{equation}
+    \label{eq:vertex_classes_of_domseq}
+    \vertexClasses(\domseq[\L]) \; \coloneq \; \big\{ \vertexClass{\coarseIdxone} \in \vertexClasses \; \colon \;\; \vertex{\l}{\coarseIdxone} \in \V_\l(\M_\l) \;\text{ for at least one level }\; \l \big\}
+\end{equation}
+for the classes that have a representative among the vertices~\eqref{eq:vertices_of_domseq} of the domain sequence. This is in general a proper subset of $\vertexClasses$, because a class born above $\lzero$ need not meet any region. Proposition~\ref{proposition:class_star_levels} identifies the levels on which a class of $\vertexClasses(\domseq[\L])$ has such a representative.}
 
 \begin{definition}[Class star]
     \label{def:star_ancestry}
@@ -1517,24 +1529,36 @@ The class star of Definition~\ref{def:star_ancestry} and the leaf star of Defini
 
 % --- Figure knobs: one vertex read at every level. Generated by
 % plot_leaf_star_duality.py in the subdiv_FE repo from input_partition.vtk and
-% input_level_meshes.vtk of padding_output/v8_graded_top_bottom_sides -- the
-% same domain sequence, and the same marked vertex, as
-% Figure~\ref{fig:pinch_single_arc}, so the purple in that panel is this
-% vertex's refinement fan at level 0. The second file exists for this figure:
-% the leaf mesh alone carries neither the level-$\l$ faces inside a coarse leaf
-% nor the level-$\l$ face a refined region descends from, and both are drawn
-% here. No panel is zoomed, so all four show the same domain at the same scale
-% and the shrinking star is read against a fixed frame. The first panel is
-% narrower only because its generated aspect ratio differs, so that the four
-% come out the same height. Reuses \cvsubfig from
+% input_level_meshes.vtk of padding_output/v6_centre_two_spires, written by
+% TestPaddingAndExactness.LeafStarPanelsValence6CentreTwoSpires. The second file
+% exists for this figure: the leaf mesh alone carries neither the level-$\l$
+% faces inside a coarse leaf nor the level-$\l$ face a refined region descends
+% from, and both are drawn here.
+%
+% SUPERSEDED (2026-08-25): the panels used to come from
+% padding_output/v8_graded_top_bottom_sides, whose marked vertex has
+% $\lmin = \lzero$. Its level-0 panel therefore already had a partial fan and
+% the row never showed the FIRST case of
+% Proposition~\ref{proposition:class_star_levels}, the whole class star refined
+% beyond its own level. Those four PDFs are still in images/visualisations, and
+% the old block was:
+%   \cvsubfigrot[0.2383]{...v8_graded_top_bottom_sides_leafstar_overview.pdf}
+%       {The leaf mesh of $\domseq[2]$ and the query vertex ... (yellow).}{fig:leafstar_overview}
+%   \cvsubfigrot[0.235]{...lvl0.pdf}{$\l = \lzero$: six of the eight star faces
+%       are refined beyond level $\lzero$, two are leaf faces.}{fig:leafstar_l0}
+%   \cvsubfigrot[0.235]{...lvl1.pdf}{$\l = 1$: two faces refined beyond level $1$,
+%       four leaf faces on level $1$, two from level $\lzero$.}{fig:leafstar_l1}
+%   \cvsubfigrot[0.235]{...lvl2.pdf}{$\l = 2$: no faces refined beyond level $2$,
+%       so the leaf star covers the whole mesh star.}{fig:leafstar_l2}
+% \cvsubfigrot, which is \cvsubfig with a quarter turn applied before the width
+% is fit, is kept defined below for that block. The new panels come out of the
+% generator already upright, so they use plain \cvsubfig from
 % Section~\ref{subsec:subdiv_partition}.
-% The panels are generated in the orientation the solver writes them and are
-% turned a quarter turn anticlockwise here, so that regenerating them does not
-% undo the rotation. \cvsubfigrot is \cvsubfig with that rotation applied
-% before the width is fit, so #1 is still the panel width on the page. The
-% width fractions are those of the rotated panels: the three level panels are
-% square, the overview is 110.574 x 109.041 pt before rotation and so is fit
-% slightly wider than they are, to come out at the same height.
+%
+% No panel is zoomed. Each level panel draws its whole level mesh at the scale
+% of panel (a), so a face keeps the size its level gives it and the level is
+% read off the panel directly. All four panels come out at 111.283 x 96.5664 pt,
+% so one width fraction fits them all and they land at the same height.
 \newcommand{\cvsubfigrot}[4][\cvScale]{% #1 width fraction  #2 image path  #3 caption  #4 label
     \begin{subfigure}[t]{#1\textwidth}
         \centering
@@ -1545,26 +1569,26 @@ The class star of Definition~\ref{def:star_ancestry} and the leaf star of Defini
 }
 \begin{figure}[tb]
     \centering
-    \cvsubfigrot[0.2383]
-        {images/visualisations/v8_graded_top_bottom_sides_leafstar_overview.pdf}
+    \cvsubfig[0.235]
+        {images/visualisations/v6_centre_two_spires_leafstar_overview.pdf}
         {The leaf mesh of $\domseq[2]$ and the query vertex $\vertex{2}{\coarseIdxone}$ (yellow).}
         {fig:leafstar_overview}
     \hfill
-    \cvsubfigrot[0.235]
-        {images/visualisations/v8_graded_top_bottom_sides_leafstar_lvl0.pdf}
-        {$\l = \lzero$: six of the eight star faces are refined beyond level $\lzero$, two are leaf faces.}
+    \cvsubfig[0.235]
+        {images/visualisations/v6_centre_two_spires_leafstar_lvl0.pdf}
+        {$\l = \lzero$: all six star faces are refined beyond level $\lzero$, none is a leaf face.}
         {fig:leafstar_l0}
     \hfill
-    \cvsubfigrot[0.235]
-        {images/visualisations/v8_graded_top_bottom_sides_leafstar_lvl1.pdf}
-        {$\l = 1$: two faces refined beyond level $1$, four leaf faces on level $1$, two from level $\lzero$.}
+    \cvsubfig[0.235]
+        {images/visualisations/v6_centre_two_spires_leafstar_lvl1.pdf}
+        {$\l = 1$: three faces refined beyond level $1$, three leaf faces on level $1$.}
         {fig:leafstar_l1}
     \hfill
-    \cvsubfigrot[0.235]
-        {images/visualisations/v8_graded_top_bottom_sides_leafstar_lvl2.pdf}
-        {$\l = 2$: no faces refined beyond level $2$, so the leaf star covers the whole mesh star.}
+    \cvsubfig[0.235]
+        {images/visualisations/v6_centre_two_spires_leafstar_lvl2.pdf}
+        {$\l = 2$: no face refined beyond level $2$, three leaf faces on level $2$, three from level $1$.}
         {fig:leafstar_l2}
-    \caption{Decomposition of the mesh stars of the yellow vertex across levels $\lzero$, $1$, and $2$ according to Equation~\eqref{eq:star_splits}. Panels~\subref{fig:leafstar_l0} to~\subref{fig:leafstar_l2} show the whole uniform mesh $\T_\l$ of its level, with the eight faces of the mesh star $\FVl{\l}$ of the yellow vertex outlined. The refinement fan $\refFan{\l}$ is purple, the leaf star $\FVleaf{}$ is blue with each of its leaf faces outlined so that they can be identified across levels. Reading across, the refinement fan empties while the leaf star fills, and the first level at which nothing is refined beyond it is $\lmax = 2$, where the leaf star covers the mesh star with faces from levels $\lzero$, $1$ and $2$ together.}
+    \caption{One vertex class with birth level $\lzero$ read at every level of a domain sequence with $\lmin = 1$ and $\lmax = 2$, so that the three panels~\subref{fig:leafstar_l0} to~\subref{fig:leafstar_l2} are one per case of Proposition~\ref{proposition:class_star_levels}. Each shows the whole uniform mesh $\T_\l$ of its level at the scale of panel~\subref{fig:leafstar_overview}, so that the size of a face is that of its level, with the six faces of the mesh star $\FVl{\l}$ of the yellow vertex outlined. The refinement fan $\refFan{\l}$ is purple, the level-$\l$ slice $\FVleaf{\l}$ of the leaf star is deep blue, and the members of the leaf star carried on a coarser level are sky blue, drawn at their own level so that they reach outside the star outline. Reading across, the fan is the whole mesh star below $\lmin$, a proper part of it on the levels of the level span, and empty from $\lmax$ on, while the leaf star fills in behind it by splitting off one slice per level as in~\eqref{eq:star_splits}.}
     \label{fig:leaf_star_levels}
 \end{figure}
 
@@ -1573,14 +1597,6 @@ By Definition~\ref{def:leaf_star}, a leaf face of the leaf star covers a face of
     \label{eq:leaf_star_in_ancestry}
     \FVleaf{\l} \big( \vertexClass{\coarseIdxone} \big) \; \subseteq \; \FVanc{\l} \big( \vertexClass{\coarseIdxone} \big).
 \end{equation}
-
-Fix a vertex class $\vertexClass{\coarseIdxone}$ and a level $\l \geq \birthLevel(\vertexClass{\coarseIdxone})$, so that the class has a representative $\vertex{\l}{\coarseIdxone}$ on that level. Corollary~\ref{cor:ancestor_walk} applies to a face of the mesh star $\FVl{\l}(\vertex{\l}{\coarseIdxone})$ read at level $\l$. It gives either no covering face or exactly one, on a level $\lstar \leq \l$. Three cases follow. A face with no covering face is refined beyond $\l$ and lies in the refinement fan $\refFan{\l}(\vertex{\l}{\coarseIdxone})$. A face with $\lstar = \l$ is its own covering face and lies in the slice $\FVleaf{\l}(\vertexClass{\coarseIdxone})$. A face with $\lstar < \l$ descends from a coarser leaf face in $\FVleaf{\lstar}(\vertexClass{\coarseIdxone})$. The three cases are exhaustive and disjoint because $\lstar$ is unique whenever it exists. Removing the third case leaves the first two, that is
-\begin{equation}
-    \label{eq:star_splits}
-    \FVl{\l}(\vertex{\l}{\coarseIdxone}) \, \setminus \, \bigsqcup\limits_{\lstar = \lzero}^{\l-1} \; \Aop{}{\lstar}{\l} \, \big( \FVleaf{\lstar} (\vertexClass{\coarseIdxone}) \big) \; = \; \refFan{\l} \big( \vertex{\l}{\coarseIdxone} \big) \; \sqcup \;  \FVleaf{\l} \big( \vertexClass{\coarseIdxone} \big) \qquad \forall \l \; \geq \; \birthLevel(\vertexClass{\coarseIdxone}) .
-\end{equation}
-
-Figure~\ref{fig:leaf_star_levels} follows a single vertex class through~\eqref{eq:star_splits}. Read across the row the refinement fan turns into the leaf star level by level by splitting off the level-$\l$ slice $\FVleaf{\l} ( \vertexClass{\coarseIdxone} )$.
 
 \begin{definition}[Coarsest and finest level of a leaf star]
     \label{def:level_range}
@@ -1593,155 +1609,307 @@ Figure~\ref{fig:leaf_star_levels} follows a single vertex class through~\eqref{e
     for the coarsest and the finest level of faces contained in the leaf star of $\vertexClass{\coarseIdxone}$. Finally, we define the \emph{level span} $\mu_\coarseIdxone$ of the leaf star by $\levelSpan{\coarseIdxone} \coloneq \lmaxIdx{\coarseIdxone} - \lminIdx{\coarseIdxone}$.
 \end{definition}
 
+The class star, the leaf star and the refinement fan of Section~\ref{subsec:subdiv_partition} are three readings of one neighbourhood, and which of them a level carries is decided by that level alone. Applying the ancestor walk of Lemma~\ref{lemma:ancestor_walk_finest} to every face of the mesh star on level $\L$ at once puts all three into a single statement, which closes this section.
+
+\subsubsection{The class star level by level}
+\label{subsubsec:level_split}
+
+\begin{proposition}[\robert{The class star split by level}]
+    \label{proposition:class_star_levels}
+    Let $\domseq[\L] \in \alldomseqs_\L$ with regions $\M_\l$ and let $\vertexClass{\coarseIdxone} \in \vertexClasses(\domseq[\L])$ have leaf star $\FVleaf{}(\vertexClass{\coarseIdxone})$ of coarsest level $\lmin$ and finest level $\lmax$ as in Definition~\ref{def:level_range}. Then the part of the class star that is refined beyond its own level is
+    \begin{equation}
+        \label{eq:class_star_levels}
+        \FVanc{\l} \big( \vertexClass{\coarseIdxone} \big) \cap \ancestorPatch{\M_{\l+1}} \; \begin{cases}
+            = \; \FVanc{\l} \big( \vertexClass{\coarseIdxone} \big) & \text{for} \quad \lzero \leq \l < \lmin , \\[2pt]
+            \subsetneq \; \FVanc{\l} \big( \vertexClass{\coarseIdxone} \big) \quad \text{and} \quad \neq \; \varnothing & \text{for} \quad \lmin \leq \l < \lmax , \\[2pt]
+            = \; \varnothing & \text{for} \quad \lmax \leq \l \leq \L ,
+        \end{cases}
+    \end{equation}
+    and below $\lmin$ the domain sequence already contains all children of the class star,
+    \begin{equation}
+        \label{eq:class_star_children}
+        \Aop{}{\l}{\l+1} \big( \FVanc{\l} ( \vertexClass{\coarseIdxone} ) \big) \; \subseteq \; \M_{\l+1} \qquad \text{for all} \qquad \lzero \leq \l < \lmin.
+    \end{equation}
+    On the levels $\l \geq \birthLevel(\vertexClass{\coarseIdxone})$ at which the class has a representative, the class star is the mesh star by~\eqref{eq:star_ancestry_is_star} and the intersection in~\eqref{eq:class_star_levels} is the refinement fan $\refFan{\l}(\vertex{\l}{\coarseIdxone})$ of Definition~\ref{def:refinement_fan}. The three cases then read that the fan is the full mesh star below $\lmin$, a non-empty proper subset of it on the levels $\lmin \leq \l < \lmax$, and empty from $\lmax$ on. In particular $\vertex{\l}{\coarseIdxone}$ is refinement-exterior in the sense of Definition~\ref{def:refinement_exterior_vertex} exactly on the levels $\l \geq \lmax$. The third case is never vacuous, because $\lmax \leq \L$ by Definition~\ref{def:level_range} and the fan on the finest level is empty for every vertex anyway. Above $\lmax$ the class star misses the region $\M_\l$ altogether, so the class has a representative in $\V(\domseq[\L])$ exactly on the levels $\birthLevel(\vertexClass{\coarseIdxone}) \leq \l \leq \lmax$.
+\end{proposition}
+\begin{proof}
+    Let $\face{\L}{\fineIdxtwo} \in \FVl{\L}(\vertex{\L}{\coarseIdxone})$ be a face of the mesh star at the finest level and let $\lstar(\face{\L}{\fineIdxtwo})$ be the level Lemma~\ref{lemma:ancestor_walk_finest} gives for it. Its covering face lies in the leaf star by Definition~\ref{def:leaf_star}, so
+    \begin{equation}
+        \label{eq:crossing_level_range}
+        \lmin \; \leq \; \lstar \big( \face{\L}{\fineIdxtwo} \big) \; \leq \; \lmax \qquad \text{for every} \qquad \face{\L}{\fineIdxtwo} \in \FVl{\L}(\vertex{\L}{\coarseIdxone}),
+    \end{equation}
+    and both bounds are attained by Definition~\ref{def:level_range}. Every face of the class star on level $\l$ is $\anc{\l}(\face{\L}{\fineIdxtwo})$ for such a face by Definition~\ref{def:star_ancestry}, and which row of~\eqref{eq:ancestor_walk} it falls into is decided by comparing $\l$ with $\lstar(\face{\L}{\fineIdxtwo})$. The three cases are the three ways the level $\l$ can sit against the range~\eqref{eq:crossing_level_range}.
+
+    \emph{Below $\lmin$.} Every face of the mesh star has $\l < \lmin \leq \lstar$, so every face of the class star falls in the third row of~\eqref{eq:ancestor_walk} and lies in $\ancestorPatch{\M_{\l+1}}$. That is the first case, and a face of $\ancestorPatch{\M_{\l+1}}$ has all four of its children in $\M_{\l+1}$, which is~\eqref{eq:class_star_children}.
+
+    \emph{Inside the level span.} Let $\lmin \leq \l < \lmax$. A face of the mesh star with $\lstar = \lmax > \l$ exists and falls in the third row, so its level-$\l$ ancestor lies in the intersection and the intersection is not empty. A face with $\lstar = \lmin \leq \l$ exists as well and falls in the first or the second row, so its level-$\l$ ancestor lies outside $\M_\l$ or is a leaf face, and the splitting~\eqref{eq:leaf_ancestor_split} keeps both apart from $\ancestorPatch{\M_{\l+1}}$. That ancestor is in the class star and not in the intersection, so the inclusion is proper.
+
+    \emph{From $\lmax$ on.} Every face of the mesh star has $\lstar \leq \lmax \leq \l$, so no face of the class star falls in the third row of~\eqref{eq:ancestor_walk} and none of them lies in $\ancestorPatch{\M_{\l+1}}$. For $\l > \lmax$ the inequality is strict, the first row applies to every face of the mesh star, and the whole class star lies outside $\M_\l$. The faces of $\M_\l$ containing $\vertex{\l}{\coarseIdxone}$ are exactly $\FVanc{\l}(\vertexClass{\coarseIdxone}) \cap \M_\l$ by~\eqref{eq:star_ancestry_is_star}, so $\vertex{\l}{\coarseIdxone} \notin \V_\l(\M_\l)$ there, whereas on $\birthLevel(\vertexClass{\coarseIdxone}) \leq \l \leq \lmax$ the level-$\l$ ancestor of a face of the mesh star with $\lstar = \lmax \geq \l$ lies in $\M_\l$ by the second or the third row.
+\end{proof}
+
+Read at one fixed level instead of across levels, the same walk splits the mesh star itself. The proof sorts the faces of $\FVl{\l}(\vertex{\l}{\coarseIdxone})$ with $\l \geq \birthLevel(\vertexClass{\coarseIdxone})$ by the row of~\eqref{eq:ancestor_walk} their crossing level puts them in, and the rows are exhaustive and disjoint because $\lstar$ is unique whenever it exists. They are the faces refined beyond $\l$, which form the refinement fan $\refFan{\l}(\vertex{\l}{\coarseIdxone})$, the faces that are their own covering face, which form the slice $\FVleaf{\l}(\vertexClass{\coarseIdxone})$, and the strict descendants of the coarser leaf faces $\FVleaf{\lstar}(\vertexClass{\coarseIdxone})$, $\lstar < \l$. Removing the third group leaves the first two,
+\begin{equation}
+    \label{eq:star_splits}
+    \FVl{\l}(\vertex{\l}{\coarseIdxone}) \, \setminus \, \bigsqcup\limits_{\lstar = \lzero}^{\l-1} \; \Aop{}{\lstar}{\l} \, \big( \FVleaf{\lstar} (\vertexClass{\coarseIdxone}) \big) \; = \; \refFan{\l} \big( \vertex{\l}{\coarseIdxone} \big) \; \sqcup \;  \FVleaf{\l} \big( \vertexClass{\coarseIdxone} \big) \qquad \forall \l \; \geq \; \birthLevel(\vertexClass{\coarseIdxone}) .
+\end{equation}
+
+Figure~\ref{fig:leaf_star_levels} follows a single vertex class through~\eqref{eq:class_star_levels} and~\eqref{eq:star_splits} together. Read across the row the refinement fan empties into the leaf star level by level by splitting off the level-$\l$ slice $\FVleaf{\l} ( \vertexClass{\coarseIdxone} )$, and the level at which it is empty is $\lmax$.
+
+\smallskip
+
+Proposition~\ref{proposition:class_star_levels} is the central result of this section and summarises the different cases an algorithm could meet and needs to avoid to guarantee admissibility of domain sequences according to Definition~\ref{def:domseq}. The refinement operators introduced in the next section generally aim to close the level span $\levelSpan{\coarseIdxone} = \lmaxIdx{\coarseIdxone} - \lminIdx{\coarseIdxone}$ by raising both of them to a prescribed target level. We call this process \emph{homogenisation} of the class star because the proposition shows that $\lminIdx{\coarseIdxone} = \lmaxIdx{\coarseIdxone}$ implies that the leaf star of $\vertexClasses{\coarseIdxone}$ is entirely on level $\lmaxIdx{\coarseIdxone}$.
+
+The third case of Proposition~\ref{proposition:class_star_levels} names the level at which a vertex first becomes refinement-exterior as the finest level $\lmax$ of its leaf star, which Section~\ref{subsec:subdiv_partition} leaves unnamed and Figure~\ref{fig:adm_exterior} colours its vertices by. The second case says that a partial refinement fan occurs exactly between the levels of the level span of Definition~\ref{def:level_range}, and so that these are the only levels at which the vertex can be a pinch in the sense of Definition~\ref{def:pinch_vertex}.
+
+
+\subsubsection{Interactions of vertex classes and their stars}
+\label{subsubsec:two_classes}
+
+\robert{The three neighbourhoods so far were read at one vertex class. Read at two classes, they also say when they decouple, and the refinement operators of Section~\ref{subsec:refinement_operators} need to know how far one class can reach into the neighbourhood of another. Three statements answer that, one for the mesh hierarchy alone and two that add the domain sequence.}
+
+\robert{The levels on which the class stars of $\vertexClass{\coarseIdxone}$ and $\vertexClass{\coarseIdxtwo}$ share a face are downward closed, since the ancestor of a common face is a common face and $\anc{}$ composes. We may therefore write $\lmeetIdx{\coarseIdxone}{\coarseIdxtwo}$ for the finest level at which they still share one,
+\begin{equation}
+    \label{eq:meeting_level}
+    \lmeetIdx{\coarseIdxone}{\coarseIdxtwo} \; \coloneq \; \max \big\{ \l \; \colon \;\; \FVanc{\l} ( \vertexClass{\coarseIdxone} ) \cap \FVanc{\l} ( \vertexClass{\coarseIdxtwo} ) \neq \varnothing \big\},
+\end{equation}
+and $\lmeetIdx{\coarseIdxone}{\coarseIdxtwo} \coloneq \lzero \! - \! 1$ if the two never share a face. On the levels $\l$ at which both classes have a representative, sharing a face means that $\vertex{\l}{\coarseIdxone}$ and $\vertex{\l}{\coarseIdxtwo}$ lie in a common face of $\T_\l$ by~\eqref{eq:star_ancestry_is_star}, so there $\lmeetIdx{\coarseIdxone}{\coarseIdxtwo}$ is the finest level at which the two representatives are still adjacent. Like the class star itself, this reads the mesh hierarchy alone and no domain sequence.}
+
+\robert{Two distinct classes can be adjacent on at most one level. Let $\vertex{\l}{\coarseIdxone}$ and $\vertex{\l}{\coarseIdxtwo}$ share a face $\face{\l}{\fineIdxone}$ of $\T_\l$. Quadrisection gives $\face{\l}{\fineIdxone}$ its three corners and its three edge midpoints as vertices, and each of its four children carries at most one of the three corners, the three corner children one each and the middle child none. No child holds both $\vertex{\l}{\coarseIdxone}$ and $\vertex{\l}{\coarseIdxtwo}$, and a level-$(\l \! + \! 1)$ face holding both would lie inside a level-$\l$ face holding both, so the two are not adjacent on level $\l \! + \! 1$.}
+
+\robert{Together with the downward closure this pins the meeting level to the birth levels. The meeting levels form the interval $\{ \lzero, \, \dots, \, \lmeetIdx{\coarseIdxone}{\coarseIdxtwo} \}$, and above $\max ( \birthLevel(\vertexClass{\coarseIdxone}), \birthLevel(\vertexClass{\coarseIdxtwo}) )$ meeting is adjacency, so that interval cannot hold two levels there. Hence
+\begin{equation}
+    \label{eq:meeting_level_bound}
+    \lmeetIdx{\coarseIdxone}{\coarseIdxtwo} \; \leq \; \max \big( \birthLevel(\vertexClass{\coarseIdxone}), \, \birthLevel(\vertexClass{\coarseIdxtwo}) \big) \qquad \text{for} \qquad \vertexClass{\coarseIdxone} \neq \vertexClass{\coarseIdxtwo},
+\end{equation}
+with equality exactly when the two representatives are adjacent on that level. Two distinct classes therefore decouple no later than the birth of the later born one, and the meeting level never has to be computed level by level. As a special case, $\lmeetIdx{\coarseIdxone}{\coarseIdxtwo} = \L$ forces one of the two classes to be born on the finest level, so the only pairs that never decouple are those. Corollary~\ref{cor:graded_quadrisection_leafstar} is where this is used.}
+
+\begin{lemma}[\robert{Two classes part inside their own leaf stars}]
+    \label{lemma:meeting_level_leafstar}
+    \robert{Let $\domseq[\L] \in \alldomseqs_\L$ and let $\vertexClass{\coarseIdxone} \neq \vertexClass{\coarseIdxtwo}$ be two distinct vertex classes of $\vertexClasses(\domseq[\L])$. Then
+    \begin{equation}
+        \label{eq:meeting_level_leafstar}
+        \lmeetIdx{\coarseIdxone}{\coarseIdxtwo} \; \leq \; \min \big( \lmaxIdx{\coarseIdxone}, \, \lmaxIdx{\coarseIdxtwo} \big).
+    \end{equation}
+    Two classes of a domain sequence stop sharing a face no later than the finest level either of their leaf stars carries.}
+\end{lemma}
+\begin{proof}
+    \robert{By symmetry it is enough to prove $\lmeetIdx{\coarseIdxone}{\coarseIdxtwo} \leq \lmaxIdx{\coarseIdxone}$, so assume $\l \coloneq \lmeetIdx{\coarseIdxone}{\coarseIdxtwo} > \lmaxIdx{\coarseIdxone}$ and let $\face{\l}{\fineIdxone} \in \FVanc{\l}(\vertexClass{\coarseIdxone}) \cap \FVanc{\l}(\vertexClass{\coarseIdxtwo})$ be a shared face.
+
+    Three facts to start. Since $\l > \lmaxIdx{\coarseIdxone}$, Proposition~\ref{proposition:class_star_levels} puts the whole class star of $\vertexClass{\coarseIdxone}$ outside the region on level $\l$, so
+    \begin{equation}
+        \label{eq:meeting_leafstar_step}
+        \face{\l}{\fineIdxone} \; \notin \; \M_\l .
+    \end{equation}
+    Both classes lie in $\vertexClasses(\domseq[\L])$, so each has a representative in $\V(\domseq[\L])$ and hence $\birthLevel(\vertexClass{\coarseIdxone}) \leq \lmaxIdx{\coarseIdxone} < \l$ and $\birthLevel(\vertexClass{\coarseIdxtwo}) \leq \lmaxIdx{\coarseIdxtwo}$ by the same proposition. With $\birthLevel(\vertexClass{\coarseIdxone}) < \l$, the bound~\eqref{eq:meeting_level_bound} forces $\birthLevel(\vertexClass{\coarseIdxtwo}) \geq \l$. Finally $\vertex{\l}{\coarseIdxone}$ exists and $\FVanc{\l}(\vertexClass{\coarseIdxone}) = \FVl{\l}(\vertex{\l}{\coarseIdxone})$ by~\eqref{eq:star_ancestry_is_star}, so $\vertex{\l}{\coarseIdxone}$ is a vertex of $\face{\l}{\fineIdxone}$, and $\l > \lzero$ so that $\M_\l$ is quadrisection-closed.
+
+    Write $b \coloneq \birthLevel(\vertexClass{\coarseIdxtwo}) \geq \l$. The class $\vertexClass{\coarseIdxtwo}$ has a representative on its own birth level, so some face $\face{b}{\fineIdxtwo} \in \M_b$ carries $\vertex{b}{\coarseIdxtwo}$. Its level-$\l$ ancestor lies in $\FVanc{\l}(\vertexClass{\coarseIdxtwo})$ because $\anc{}$ composes, and it lies in $\M_\l$, by Lemma~\ref{lemma:ancestral_closure} when $b > \l$ and because it is $\face{b}{\fineIdxtwo}$ itself when $b = \l$. So $\FVanc{\l}(\vertexClass{\coarseIdxtwo})$ contains a face of $\M_\l$, which by~\eqref{eq:meeting_leafstar_step} is not $\face{\l}{\fineIdxone}$. We distinguish the two ways $\vertexClass{\coarseIdxtwo}$ can sit on level $\l$.
+
+    \emph{Born above level $\l$.} Let $b > \l$, so $\vertex{b}{\coarseIdxtwo}$ is the midpoint of an edge of $\T_{b-1}$ and $\FVanc{b-1}(\vertexClass{\coarseIdxtwo})$ is the set of at most two faces of $\T_{b-1}$ carrying that edge. Its image under $\anc{\l}$ is $\FVanc{\l}(\vertexClass{\coarseIdxtwo})$, which therefore has at most two elements, and by the previous paragraph exactly two. Two adjacent faces with distinct ancestors have adjacent ancestors, so $\FVanc{\l}(\vertexClass{\coarseIdxtwo}) = \{ \face{\l}{\fineIdxone}, \face{\l}{\fineIdxtwo} \}$ for the two faces of $\T_\l$ carrying one edge $e$, with $\face{\l}{\fineIdxtwo} \in \M_\l$ refined beyond level $\l$ by Lemma~\ref{lemma:ancestral_closure}.
+
+    If $\vertex{\l}{\coarseIdxone}$ is an endpoint of $e$, then $\face{\l}{\fineIdxtwo}$ carries it too, so the class star of $\vertexClass{\coarseIdxone}$ on level $\l$ meets $\ancestorPatch{\M_{\l+1}}$, which Proposition~\ref{proposition:class_star_levels} forbids for $\l \geq \lmaxIdx{\coarseIdxone}$. Otherwise $\vertex{\l}{\coarseIdxone}$ is the vertex of $\face{\l}{\fineIdxone}$ opposite $e$. Quadrisection creates the midpoints on level $\l$, so the only vertex of $\face{\l}{\fineIdxone}$ that already exists on level $\l \! - \! 1$ is a corner of the parent $\anc{\l-1}(\face{\l}{\fineIdxone})$, and $\vertex{\l}{\coarseIdxone}$ is such a vertex because $\birthLevel(\vertexClass{\coarseIdxone}) < \l$. Hence $\face{\l}{\fineIdxone}$ is the corner child of its parent at $\vertex{\l}{\coarseIdxone}$, the opposite edge $e$ is interior to that parent, and $\face{\l}{\fineIdxtwo}$ is the middle child of the same parent. Then $\face{\l}{\fineIdxtwo} \in \M_\l$ and quadrisection-closedness put all four children of that parent into $\M_\l$, including $\face{\l}{\fineIdxone}$, against~\eqref{eq:meeting_leafstar_step}.
+
+    \emph{Born on level $\l$.} Let $b = \l$. Then $\vertex{\l}{\coarseIdxtwo}$ is a vertex of $\T_\l$ and $\face{\l}{\fineIdxone}$ carries both representatives, so they are adjacent on level $\l$. As above $\face{\l}{\fineIdxone}$ is the corner child of its parent $\face{\l-1}{\fineIdxone}$ at $\vertex{\l}{\coarseIdxone}$, and its other two vertices are the midpoints of the two edges of that parent at $\vertex{\l}{\coarseIdxone}$. So $\vertex{\l}{\coarseIdxtwo}$ is the midpoint of an edge $e'$ of $\T_{\l-1}$ having $\vertex{\l-1}{\coarseIdxone}$ as an endpoint. The face $\face{\l}{\fineIdxtwo} \in \M_\l$ carries $\vertex{\l}{\coarseIdxtwo}$ and is therefore a child of a face of $\T_{\l-1}$ carrying $e'$. Quadrisection-closedness puts that parent in $\ancestorPatch{\M_\l}$, and it carries $\vertex{\l-1}{\coarseIdxone}$ because $e'$ does. So the class star of $\vertexClass{\coarseIdxone}$ on level $\l \! - \! 1$ meets $\ancestorPatch{\M_\l}$, which Proposition~\ref{proposition:class_star_levels} forbids for $\l \! - \! 1 \geq \lmaxIdx{\coarseIdxone}$.
+
+    Every case contradicts, so $\l \leq \lmaxIdx{\coarseIdxone}$.}
+\end{proof}
+
 \subsection{Refinement operators}
 \label{subsec:refinement_operators}
 \label{subsec:operations_on_coverings}
 
-The remainder of this section introduces operators that enable the kinds of refinement that we will later need for the adaptive loop in Section~\ref{subsec:adaptive_loop}. The \emph{face quadrisection operator} $\quadriF(\domseq[\L], \simplexsubset{2}{})$ refines a set of faces $\simplexsubset{2}{}$, given one level at a time, by adding their children to the next level of the domain sequence and leaving everything else untouched.
+The remainder of this section introduces the operators themselves, which enable the kinds of refinement that we will later need for the adaptive loop in Section~\ref{subsec:adaptive_loop}. The \emph{face quadrisection operator} $\quadriF(\domseq[\L], \simplexsubset{2}{})$ refines a set of faces $\simplexsubset{2}{}$, given one level at a time, by adding their children to the next level of the domain sequence and leaving everything else untouched.
 
 \begin{definition}[Face quadrisection operator]
     \label{def:face_quadrisection_operator}
-    Let $\domseq[\L] \in \alldomseqs$ be a domain sequence with regions $\M_\l$, $\l \in \{ \lzero, \, \dots \,, \L\}$, and let $\simplexsubset{2}{}$ be a set of faces of $\domseq[\L]$ given by
+    Let $\domseq[\L] \in \alldomseqs$ be a domain sequence with regions $\M_\l$, $\l \in \{ \lzero, \, \dots \,, \L\}$. A \emph{marked family} for $\domseq[\L]$ is a disjoint union of face sets, one on each level below the finest,
     \begin{equation}
         \label{eq:marked_face_family}
-        \simplexsubset{2}{} \; \subseteq \bigsqcup\limits_{\l = \lzero}^{\L-1} \M_\l \quad \text{and} \quad \simplexsubset{2}{\l} \; \coloneq \; \simplexsubset{2}{} \cap \M_\l.
+        \simplexsubset{2}{} \; = \bigsqcup\limits_{\l = \lzero}^{\L-1} \simplexsubset{2}{\l}, \qquad \simplexsubset{2}{\lzero} \, \subseteq \, \F_\lzero(\T_\lzero), \qquad \simplexsubset{2}{\l+1} \, \subseteq \, \M_{\l+1} \, \cup \, \Aop{}{\l}{\l+1} ( \simplexsubset{2}{\l} )
     \end{equation}
-    The \emph{face quadrisection operator} $\quadriF \; \colon \; \alldomseqs \times \powerset \big( \bigsqcup_{\l = \lzero}^{\L-1} \M_\l \big) \; \longrightarrow \; \alldomseqs$ is defined levelwise by
+    for $\lzero \leq \l \leq \L \! - \! 2$. The \emph{face quadrisection operator} $\quadriF \; \colon \; \alldomseqs_\L \times \powerset \big( \bigsqcup_{\l = \lzero}^{\L-1} \F_\l(\T_\l) \big) \; \longrightarrow \; \alldomseqs_\L$ is defined on the marked families of its first argument levelwise by
     \begin{equation}
         \label{eq:def_face_quadrisection_operator}
         \quadriF \big( \domseq[\L], \, \simplexsubset{2}{} \big) \; \coloneq \; \M_\lzero \, \sqcup \; \bigsqcup\limits_{\l = \lzero}^{\L-1} \, \big( \M_{\l+1} \, \cup \, \Aop{}{\l}{\l+1}(\simplexsubset{2}{\l}) \big).
     \end{equation}
-    We keep writing $\quadriF ( \domseq[\L], \simplexsubset{2}{\l} )$ if $\simplexsubset{2}{}$ is a single-level $\l$ set of faces.
+    We keep writing $\quadriF ( \domseq[\L], \simplexsubset{2}{\l} )$ if only the level-$\l$ slice $\simplexsubset{2}{\l}$ is non-empty.
 \end{definition}
 
-The result is again a domain sequence because each added set is quadrisection-closed with ancestor $\simplexsubset{2}{\l}$, and so is a union of such sets. The nesting condition of Definition~\ref{def:domseq} holds because $\ancestorPatch{\M_{\l+1} \cup \Aop{}{\l}{\l+1}(\simplexsubset{2}{\l})} = \ancestorPatch{\M_{\l+1}} \cup \simplexsubset{2}{\l} \subseteq \M_\l$ because the slices of $\simplexsubset{2}{}$ are subsets of the regions by~\eqref{eq:marked_face_family}. Note further that if $\simplexsubset{2}{\l} \subseteq \ancestorPatch{\M_{\l+1}}$ on every level $\l$, then $\quadriF ( \domseq[\L], \simplexsubset{2}{} ) = \domseq[\L]$ is the identity, because all marked faces already are refined beyond their level in the domain sequence.
+The recursion in~\eqref{eq:marked_face_family} is what the levelwise formula can digest, and it is weaker than asking $\simplexsubset{2}{\l+1} \subseteq \M_{\l+1}$. A marked face on level $\l\!+\!1$ has to lie in the region of the \emph{output} on its level, and that region is $\M_{\l+1}$ enlarged by the children of the slice below. The narrower condition would forbid refining a face and then one of its children in a single application, which is precisely what the graded vertex quadrisection below needs. The base case carries no condition at all, since $\M_\lzero = \F_\lzero(\T_\lzero)$ by Definition~\ref{def:domseq}.
+
+The result of the face quadrisection operator is again a domain sequence because each added set is quadrisection-closed with ancestor $\simplexsubset{2}{\l}$, and so is a union of such sets. Writing $\M'_\l$ for the regions of $\quadriF ( \domseq[\L], \simplexsubset{2}{\l} )$ the nesting condition of Definition~\ref{def:domseq} reads
+\begin{equation}
+    \label{eq:face_quadrisection_nesting}
+    \ancestorPatch{\M'_{\l+1}} \; = \; \ancestorPatch{\M_{\l+1}} \, \cup \, \simplexsubset{2}{\l} \; \subseteq \; \M_\l \, \cup \, \Aop{}{\l-1}{\l} \big( \simplexsubset{2}{\l-1} \big) \; = \; \M'_\l
+\end{equation}
+for $\l > \lzero$, where the inclusion is the nesting condition of the input together with the recursion in~\eqref{eq:marked_face_family}. At $\l = \lzero$ it holds because $\M_\lzero$ contains every level-$\lzero$ face.
+
+The levels can also be walked one at a time, which is how an implementation will evaluate the operator. Refining the slices in increasing order gives the same result as one application, because each level adjoins a set that depends on the input slice alone and not on the region it is adjoined to. Only the hypothesis cares about the order. A slice above level $\lzero$ lies inside its region once the slice below it has been refined and not before, unless every slice already lies in $\M_\l$ on the input.
 
 \smallskip
 
-The refinement and padding steps of the adaptive loop in Section~\ref{subsec:adaptive_loop} iterate over the vertices $\V(\domseq[\L])$ of the domain sequence $\domseq[\L]$ defined in Equation~\eqref{eq:vertices_of_domseq}. This is the set of vertices on which the following refinement operators are defined. Recall that Equation~\eqref{eq:vertices_of_domseq} takes the disjoint union over the levels, so an element of $\V(\domseq[\L])$ is a vertex \emph{together with} a level at which it exists, and a subset of $\V(\domseq[\L])$ may carry the same vertex on several levels.
+The refinement and padding steps of the adaptive loop in Section~\ref{subsec:adaptive_loop} iterate over the vertex classes $\vertexClasses(\domseq[\L])$ of the domain sequence $\domseq[\L]$ and their representatives on level $\l$ as defined in Definition~\ref{def:vertex_class}. The following refinement operator raises a whole neighbourhood of a vertex to a prescribed target level. It adds exactly the class star $\FVanc{\l}(\vertexClass{\coarseIdxone})$ of the representative vertex $\vertex{\l}{\coarseIdxone}$ of level $\l$ level up to that target, which is what makes it close a pinch, cf.\ Lemma~\ref{lemma:pinch_spent}. Whether a class star has to be added on a given level is decided by the leaf star, which is what Proposition~\ref{proposition:class_star_levels} settles.
 
-The remaining refinement operator raises a whole neighbourhood of a vertex to a prescribed target level. In spirit it adds the mesh star of the vertex on every level up to that target, which is what makes it close a pinch, cf.\ Lemma~\ref{lemma:pinch_spent}. On the levels coarser than the one the vertex is born on, where the vertex is not a mesh vertex and has no mesh star, the star ancestry $\FVanc{\lone}$ of Definition~\ref{def:star_ancestry} takes its place.
-
-Whether a star ancestry has to be added at all is decided by the leaf star, and the following lemma is the one place where the two meet. \robert{It locates the sharp threshold: below the coarsest level of the leaf star the star ancestry is not merely present in the domain sequence, it is already refined beyond its level, and at that coarsest level it stops being so.}
-
-\begin{lemma}[Absorption of the star ancestry]
-    \label{lemma:ancestry_absorbed}
-    Let $\domseq[\L] \in \alldomseqs$ with regions $\M_\lone$, let $\vertex{\l}{\coarseIdxone} \in \V(\domseq[\L])$ with leaf star $\FVleaf{}(\vertex{\l}{\coarseIdxone})$ of coarsest level $\lmin$. Then every face of the star ancestry below $\lmin$ is refined beyond its own level,
-    \begin{equation}
-        \label{eq:ancestry_absorbed}
-        \FVanc{\lone} \big( \vertex{\l}{\coarseIdxone} \big) \; \subseteq \; \ancestorPatch{\M_{\lone+1}} \qquad \text{for all} \qquad \lzero \leq \lone < \lmin,
-    \end{equation}
-    and consequently the domain sequence already contains all children of that star ancestry,
-    \begin{equation}
-        \label{eq:ancestry_absorbed_children}
-        \Aop{}{\lone}{\lone+1} \Big( \FVanc{\lone} \big( \vertex{\l}{\coarseIdxone} \big) \Big) \; \subseteq \; \M_{\lone+1} \qquad \text{for all} \qquad \lzero \leq \lone < \lmin.
-    \end{equation}
-    Both fail the first time at $\lone = \lmin$.
-\end{lemma}
-\begin{proof}
-    \robert{Let $\lone < \lmin$ and let $\face{\lone}{\fineIdxone} \in \FVanc{\lone}(\vertex{\l}{\coarseIdxone})$. By Definition~\ref{def:star_ancestry} it is $\anc{\lone}(\face{\L}{\fineIdxtwo})$ for some $\face{\L}{\fineIdxtwo} \in \FVl{\L}(\vertex{\L}{\coarseIdxone})$, so Lemma~\ref{lemma:ancestor_walk_finest} applies to $\face{\L}{\fineIdxtwo}$. Its covering face lies in the leaf star by Definition~\ref{def:leaf_star}, so the level $\lstar$ of that covering face satisfies $\lstar \geq \lmin > \lone$. This is the only place at which the hypothesis $\lone < \lmin$ enters. The third row of~\eqref{eq:ancestor_walk} read at $\l = \lone$ is then~\eqref{eq:ancestry_absorbed}, and a face of $\ancestorPatch{\M_{\lone+1}}$ has all four of its children in $\M_{\lone+1}$, which is~\eqref{eq:ancestry_absorbed_children}.
-
-    At $\lone = \lmin$ both inclusions genuinely fail. The slice $\FVleaf{\lmin}(\vertex{\l}{\coarseIdxone})$ is non-empty by the definition of $\lmin$ and contained in $\FVanc{\lmin}(\vertex{\l}{\coarseIdxone})$ by~\eqref{eq:leaf_star_in_ancestry}. Any of its faces is a leaf face, so it lies outside $\ancestorPatch{\M_{\lmin+1}}$ by Definition~\ref{def:leaf_faces} and no descendant of it lies in $\M_{\lmin+1}$ by Corollary~\ref{cor:leaf_faces_terminal}. These are the two failures.}
-\end{proof}
-
-\robert{Since the star ancestry is fixed by the vertex and the uniform meshes, several vertices can be raised at once by taking the union, and no order has to be fixed. This is the form in which Section~\ref{subsec:adaptive_loop} uses the operator: each of its steps supplies a set of vertices and a target level for each of them.}
+Since the class star on level $\l$ depends only on the vertex class and the uniform meshes and not on the domain sequence, several vertices can be raised at once by taking the union, and no order has to be fixed. This is the form in which Section~\ref{subsec:adaptive_loop} uses the operator. Each of its steps supplies a set of vertices and a target level for each of them.
 
 \begin{definition}[Graded vertex quadrisection operator]
     \label{def:graded_vertex_quadrisection}
-    Let $\domseq[\L] \in \alldomseqs$ with regions $\M_\l$, let $W \subseteq \V(\domseq[\L])$ be a set of vertices of the domain sequence, and let $\targetlevel \colon W \to \{ \lzero, \, \dots, \, \L \}$ assign a target level to each of them. The \emph{graded vertex quadrisection operator}
+    Let $\domseq[\L] \in \alldomseqs_\L$ with regions $\M_\l$, let $\markedVertexClasses \subseteq \vertexClasses(\domseq[\L])$ be a set of vertex classes of $\domseq[\L]$ marked for refinement, and let $\targetlevel$ assign a target level $\targetlevel_\coarseIdxone \coloneq \targetlevel(\vertexClass{\coarseIdxone}) \in \{ \lzero, \, \dots, \, \L \}$ to each class. The \emph{graded vertex quadrisection operator}
     \begin{equation}
-        \quadriVup{\targetlevel} \; \colon \; \alldomseqs \times \powerset\big( \V(\domseq[\L]) \big) \; \longrightarrow \; \alldomseqs
+        \quadriV \; \colon \; \alldomseqs_\L \times \powerset(\vertexClasses) \times \{ \lzero, \, \dots, \, \L \}^{\vertexClasses} \; \longrightarrow \; \alldomseqs_\L
     \end{equation}
     is defined levelwise by
     \begin{equation}
         \label{eq:graded_vertex_quadrisection}
-        \quadriVup{\targetlevel} \big( \domseq[\L], \, W \big) \; \coloneq \; \M_\lzero \, \sqcup \bigsqcup\limits_{\lone = \lzero}^{\L-1} \Bigg( \M_{\lone+1} \; \cup \bigcup\limits_{\substack{w \, \in \, W \\ \lone \, < \, \targetlevel(w)}} \Aop{}{\lone}{\lone+1} \big( \FVanc{\lone}(w) \big) \Bigg),
+        \quadriV \big( \domseq[\L], \, \markedVertexClasses, \, \targetlevel \big) \; \coloneq \; \M_\lzero \, \sqcup \bigsqcup\limits_{\l = \lzero}^{\L-1} \Big( \M_{\l+1} \; \cup \bigcup\limits_{\substack{\vertexClass{\coarseIdxone} \, \in \, \markedVertexClasses \\ \l \, < \, \targetlevel_\coarseIdxone}} \Aop{}{\l}{\l+1} \big( \FVanc{\l}(\vertexClass{\coarseIdxone}) \big) \Big),
     \end{equation}
-    \robert{indexed, like the face quadrisection~\eqref{eq:def_face_quadrisection_operator}, by the level $\lone$ of the faces that are refined.} We write $\quadriVup{t}(\domseq[\L], W)$ when the target level $\targetlevel \equiv t$ is the same for all vertices, and $\quadriVup{\targetlevel}(\domseq[\L], w)$ for a single vertex $W = \{ w \}$.
+    indexed, like the face quadrisection~\eqref{eq:def_face_quadrisection_operator}, by the level $\l$ of the faces that are refined. The condition $\l < \targetlevel_\coarseIdxone$ selects which marked classes contribute on the level $\l$ that the outer union has fixed. Only the restriction of $\targetlevel$ to $\markedVertexClasses$ is ever read, which is what keeps the third factor of the signature independent of the second.
 \end{definition}
 
-\robert{The right-hand side of~\eqref{eq:graded_vertex_quadrisection} is again a domain sequence. Every added set is quadrisection-closed, hence so is every union of them, and the nesting condition of Definition~\ref{def:domseq} follows from~\eqref{eq:star_ancestry_nested},
-\begin{equation}
-    \ancestorPatch{\tilde{\M}_{\lone+1}} \; = \; \ancestorPatch{\M_{\lone+1}} \cup \bigcup\limits_{\substack{w \, \in \, W \\ \lone \, < \, \targetlevel(w)}} \FVanc{\lone}(w) \; \subseteq \; \M_\lone \cup \bigcup\limits_{\substack{w \, \in \, W \\ \lone - 1 \, < \, \targetlevel(w)}} \Aop{}{\lone-1}{\lone} \big( \FVanc{\lone-1}(w) \big) \; = \; \tilde{\M}_\lone,
-\end{equation}
-where the index set grows because $\lone < \targetlevel(w)$ implies $\lone \! - \! 1 < \targetlevel(w)$.}
+The vertex quadrisection operator is not a new construction. It is the face quadrisection applied to the family of class stars, and everything that has to be checked about it is the check already made in Definition~\ref{def:face_quadrisection_operator}.
 
-\begin{corollary}[\robert{Vertexwise decomposition of the graded quadrisection}]
+\begin{corollary}[The graded vertex quadrisection is a face quadrisection]
+    \label{cor:graded_is_face_quadrisection}
+    Let $\domseq[\L]$, $\markedVertexClasses$ and $\targetlevel$ be as in Definition~\ref{def:graded_vertex_quadrisection} and put
+    \begin{equation}
+        \label{eq:graded_marked_family}
+        \simplexsubset{2}{\l} \; \coloneq \bigcup\limits_{\substack{\vertexClass{\coarseIdxone} \, \in \, \markedVertexClasses \\ \l \, < \, \targetlevel_\coarseIdxone}} \FVanc{\l} \big( \vertexClass{\coarseIdxone} \big), \qquad \lzero \leq \l \leq \L \! - \! 1.
+    \end{equation}
+    Then $\simplexsubset{2}{} = \bigsqcup_\l \simplexsubset{2}{\l}$ is a marked family for $\domseq[\L]$ in the sense of~\eqref{eq:marked_face_family}, and
+    \begin{equation}
+        \label{eq:graded_is_face_quadrisection}
+        \quadriV \big( \domseq[\L], \, \markedVertexClasses, \, \targetlevel \big) \; = \; \quadriF \big( \domseq[\L], \, \simplexsubset{2}{} \big).
+    \end{equation}
+    In particular the right-hand side of~\eqref{eq:graded_vertex_quadrisection} is again a domain sequence.
+\end{corollary}
+\begin{proof}
+    The two closed forms~\eqref{eq:def_face_quadrisection_operator} and~\eqref{eq:graded_vertex_quadrisection} adjoin the same set to $\M_{\l+1}$ on every level, because $\Aop{}{\l}{\l+1}$ distributes over the union in~\eqref{eq:graded_marked_family}. That the family is a marked one needs no argument on level $\lzero$. For $\l > \lzero$, every class of the index set of level $\l$ is in the index set of level $\l \! - \! 1$ as well, since $\l < \targetlevel_\coarseIdxone$ implies $\l \! - \! 1 < \targetlevel_\coarseIdxone$, and the nestedness~\eqref{eq:star_ancestry_nested} of the class star gives $\FVanc{\l}(\vertexClass{\coarseIdxone}) \subseteq \Aop{}{\l-1}{\l}(\FVanc{\l-1}(\vertexClass{\coarseIdxone}))$. Taking the union over the index set yields $\simplexsubset{2}{\l} \subseteq \Aop{}{\l-1}{\l}(\simplexsubset{2}{\l-1})$, which is the recursion in~\eqref{eq:marked_face_family} without needing the region at all.
+\end{proof}
+
+\begin{corollary}[Vertexwise decomposition of the graded quadrisection]
     \label{cor:graded_quadrisection_composition}
-    \robert{Let $\domseq[\L] \in \alldomseqs$, let $W \subseteq \V(\domseq[\L])$ and $\targetlevel \colon W \to \{ \lzero, \, \dots, \, \L \}$ be as in Definition~\ref{def:graded_vertex_quadrisection}, and let $w_1, \, \dots, \, w_{\vert W \vert}$ be any enumeration of $W$. Then
+    Let $\domseq[\L] \in \alldomseqs_\L$, let $\markedVertexClasses$ and $\targetlevel$ be as in Definition~\ref{def:graded_vertex_quadrisection}, and let $\vertexClass{\coarseIdxone_1}, \, \dots, \, \vertexClass{\coarseIdxone_{\vert \markedVertexClasses \vert}}$ be any enumeration of $\markedVertexClasses$. Then
     \begin{equation}
         \label{eq:graded_quadrisection_composition}
-        \quadriVup{\targetlevel} \big( \domseq[\L], \, W \big) \; = \; \domseq[\L]^{\vert W \vert}, \qquad \domseq[\L]^{0} \coloneq \domseq[\L], \qquad \domseq[\L]^{p} \coloneq \quadriVup{\targetlevel(w_p)} \big( \domseq[\L]^{p-1}, \, w_p \big).
+        \quadriV \big( \domseq[\L], \, \markedVertexClasses, \, \targetlevel \big) \; = \; \domseq[\L]^{\vert \markedVertexClasses \vert}, \qquad \text{with} \quad \domseq[\L]^{p} \coloneq \quadriV \big( \domseq[\L]^{p-1}, \, \{ \vertexClass{\coarseIdxone_p} \}, \, \targetlevel \big) \quad \text{and} \quad  \domseq[\L]^{0} \coloneq \domseq[\L].
     \end{equation}
-    In particular the result is independent of the enumeration and the operator is idempotent. Moreover, $\quadriVup{\targetlevel}(\domseq[\L], W) = \domseq[\L]$ is the identity if and only if every $w \in W$ satisfies $\lmin(\FVleaf{}(w)) \geq \targetlevel(w)$ in $\domseq[\L]$.}
+    In particular the result is independent of the enumeration and the operator is idempotent. Moreover, $\quadriV(\domseq[\L], \markedVertexClasses, \targetlevel) = \domseq[\L]$ is the identity if and only if every $\vertexClass{\coarseIdxone} \in \markedVertexClasses$ satisfies $\lmin(\vertexClass{\coarseIdxone}) \geq \targetlevel_\coarseIdxone$ in $\domseq[\L]$.
 \end{corollary}
 \begin{proof}
-    \robert{Definition~\ref{def:graded_vertex_quadrisection} adjoins to each region the union of sets that depend on the vertex and its target level alone, so both sides of~\eqref{eq:graded_quadrisection_composition} adjoin the same union to $\M_\lone$, and unions are commutative, associative and idempotent. The last assertion compares two thresholds on the same axis. Definition~\ref{def:graded_vertex_quadrisection} adjoins something for $w$ exactly on the levels $\lone < \targetlevel(w)$, and~\eqref{eq:ancestry_absorbed_children} says that what it would adjoin is already there exactly on the levels $\lone < \lmin$. If $\targetlevel(w) \leq \lmin$ for every $w \in W$, the first range is contained in the second and every adjoined set is redundant. If $\lmin < \targetlevel(w)$ for some $w$, then $\lone = \lmin$ lies in the first range but not in the second, so the operator adjoins a child of $\FVanc{\lmin}(w)$ that Lemma~\ref{lemma:ancestry_absorbed} places outside $\M_{\lmin+1}$.}
+    \robert{Definition~\ref{def:graded_vertex_quadrisection} adjoins to each region the union of sets that depend on the class and its target level alone, so both sides of~\eqref{eq:graded_quadrisection_composition} adjoin the same union to $\M_\lone$, and unions are commutative, associative and idempotent. The last assertion compares two thresholds on the same axis. Definition~\ref{def:graded_vertex_quadrisection} adjoins something for $\vertexClass{\coarseIdxone}$ exactly on the levels $\lone < \targetlevel_\coarseIdxone$, and~\eqref{eq:class_star_children} says that what it would adjoin is already there exactly on the levels $\lone < \lmin$. If $\targetlevel_\coarseIdxone \leq \lmin$ for every marked class, the first range is contained in the second and every adjoined set is redundant. If $\lmin < \targetlevel_\coarseIdxone$ for some class, then $\lone = \lmin$ lies in the first range but not in the second, so the operator adjoins a child of $\FVanc{\lmin}(\vertexClass{\coarseIdxone})$ that the second case of~\eqref{eq:class_star_levels} places outside $\M_{\lmin+1}$.}
 \end{proof}
 
-\robert{The operator also fixes what the leaf star of the vertex looks like afterwards, which is what the grading step of Section~\ref{subsec:padding} reads off it.}
+The operator also fixes what the leaf star of the vertex looks like afterwards, which is what the grading step of Section~\ref{subsec:padding} reads off it.
 
-\begin{corollary}[\robert{Leaf star of the output}]
+\begin{corollary}[Leaf star of the output]
     \label{cor:graded_quadrisection_leafstar}
-    \robert{Let $\domseq[\L] \in \alldomseqs$, let $\vertex{\l}{\coarseIdxone} \in \V(\domseq[\L])$ with leaf star of coarsest level $\lmin$ and finest level $\lmax$, and let $\targetlevel \in \{ \lzero, \, \dots, \, \L \}$. The leaf star of $\vertex{\l}{\coarseIdxone}$ read on $\quadriVup{\targetlevel}(\domseq[\L], \vertex{\l}{\coarseIdxone})$ has
+    Let $\domseq[\L] \in \alldomseqs_\L$, let the vertex class $\vertexClass{\coarseIdxone} \in \vertexClasses(\domseq[\L])$ have leaf star of coarsest level $\lminIdx{\coarseIdxone}$ and finest level $\lmaxIdx{\coarseIdxone}$. Let $\targetlevel$ be a target level map as in Definition~\ref{def:graded_vertex_quadrisection} with value $\targetlevel_\coarseIdxone$ at $\vertexClass{\coarseIdxone}$. The leaf star of $\vertexClass{\coarseIdxone}$ read on $\domseq[\L]' = \quadriV(\domseq[\L], \{ \vertexClass{\coarseIdxone} \}, \targetlevel)$ has
     \begin{equation}
         \label{eq:graded_quadrisection_leafstar}
-        \lmin' \; = \; \max \big( \lmin, \, \targetlevel \big) \qquad \text{and} \qquad \lmax' \; = \; \max \big( \lmax, \, \targetlevel \big),
+        \lminIdx{\coarseIdxone}' \; = \; \max \big( \lminIdx{\coarseIdxone}, \, \targetlevel_\coarseIdxone \big) \qquad \text{and} \qquad \lmaxIdx{\coarseIdxone}' \; = \; \max \big( \lmaxIdx{\coarseIdxone}, \, \targetlevel_\coarseIdxone \big),
     \end{equation}
-    and hence level span $\mu' = \max(\lmax, \targetlevel) - \max(\lmin, \targetlevel)$. In particular $\mu' = \lmax - \targetlevel$ whenever $\lmin < \targetlevel \leq \lmax$. For a set $W \ni \vertex{\l}{\coarseIdxone}$ of vertices the two equalities weaken to $\lmin' \geq \max(\lmin, \targetlevel(\vertex{\l}{\coarseIdxone}))$ and $\lmax' \geq \max(\lmax, \targetlevel(\vertex{\l}{\coarseIdxone}))$, because the other vertices of $W$ may refine into this leaf star as well.}
+    and hence level span $\levelSpan{\coarseIdxone}' = \max(\lmaxIdx{\coarseIdxone}, \targetlevel_\coarseIdxone) - \max(\lminIdx{\coarseIdxone}, \targetlevel_\coarseIdxone)$. In particular $\levelSpan{\coarseIdxone}' = \lmaxIdx{\coarseIdxone} - \targetlevel_\coarseIdxone$ whenever $\lminIdx{\coarseIdxone} < \targetlevel_\coarseIdxone \leq \lmaxIdx{\coarseIdxone}$. For a marked set $\markedVertexClasses \ni \vertexClass{\coarseIdxone}$ the second equality becomes the range
+    \begin{equation}
+        \label{eq:graded_quadrisection_leafstar_set}
+        \max \big( \lmaxIdx{\coarseIdxone}, \, \targetlevel_\coarseIdxone \big) \; \leq \; \lmaxIdx{\coarseIdxone}' \; \leq \; \max \big( \lmaxIdx{\coarseIdxone} \! + \! 1, \, \targetlevel_\coarseIdxone \big),
+    \end{equation}
+    because the other classes of $\markedVertexClasses$ may refine into the leaf star of $\vertexClass{\coarseIdxone}$ as well, but by Lemma~\ref{lemma:meeting_level_leafstar} they part from it early enough to lift its finest level by at most one. Whatever the rest of $\markedVertexClasses$ is graded to, only $\targetlevel_\coarseIdxone$ can carry the leaf star of $\vertexClass{\coarseIdxone}$ further than one level past where it already was.
 \end{corollary}
 \begin{proof}
-    \robert{Write $\vertex{\L}{\coarseIdxone} = \Aop{}{\l}{\L}(\vertex{\l}{\coarseIdxone})$ and let $\tilde{\M}$ denote the regions of the output. If $\lmin \geq \targetlevel$ the operator is the identity by Corollary~\ref{cor:graded_quadrisection_composition} and there is nothing to prove, so let $\lmin < \targetlevel$.
+    \robert{Let $\vertex{\L}{\coarseIdxone}$ be the representative of $\vertexClass{\coarseIdxone}$ on level $\L$ as in Definition~\ref{def:vertex_class}, and let $\M'$ denote the regions of the output. If $\lminIdx{\coarseIdxone} \geq \targetlevel_\coarseIdxone$ the operator is the identity by Corollary~\ref{cor:graded_quadrisection_composition} and there is nothing to prove, so let $\lminIdx{\coarseIdxone} < \targetlevel_\coarseIdxone$.}
 
-    For every $\lone < \targetlevel$, Definition~\ref{def:graded_vertex_quadrisection} puts $\Aop{}{\lone}{\lone+1}(\FVanc{\lone}(\vertex{\l}{\coarseIdxone}))$ into $\tilde{\M}_{\lone+1}$, so $\FVanc{\lone}(\vertex{\l}{\coarseIdxone}) \subseteq \ancestorPatch{\tilde{\M}_{\lone+1}}$ because $\tilde{\M}_{\lone+1}$ is quadrisection-closed. Each face of $\FVl{\L}(\vertex{\L}{\coarseIdxone})$ has its level-$\lone$ ancestor in $\FVanc{\lone}(\vertex{\l}{\coarseIdxone})$ by Definition~\ref{def:star_ancestry}, so that ancestor is refined beyond $\lone$ and the face is covered on no level below $\targetlevel$. Hence $\lmin' \geq \targetlevel$. Conversely, pick a leaf face $\face{\lmin}{\coarseIdxone} \in \FVleaf{\lmin}(\vertex{\l}{\coarseIdxone})$ of the input. No descendant of it lies in a region of $\domseq[\L]$ by Corollary~\ref{cor:leaf_faces_terminal}, and the operator adjoins faces on no level above $\targetlevel$, so its descendant in $\FVanc{\targetlevel}(\vertex{\l}{\coarseIdxone})$ is a leaf face of the output on level $\targetlevel$ covering a face of the mesh star. Thus $\lmin' = \targetlevel = \max(\lmin, \targetlevel)$.
+    \robert{By Proposition~\ref{proposition:class_star_levels} read on the output, $\lminIdx{\coarseIdxone}'$ is the coarsest level at which the class star is not entirely refined beyond its own level. Definition~\ref{def:graded_vertex_quadrisection} puts $\Aop{}{\lone}{\lone+1}(\FVanc{\lone}(\vertexClass{\coarseIdxone}))$ into $\M'_{\lone+1}$ for every $\lone < \targetlevel_\coarseIdxone$, so the class star lies in $\ancestorPatch{\M'_{\lone+1}}$ on all those levels because $\M'_{\lone+1}$ is quadrisection-closed, and hence $\lminIdx{\coarseIdxone}' \geq \targetlevel_\coarseIdxone$. The operator adjoins no face on a level above $\targetlevel_\coarseIdxone$, so $\M'_{\targetlevel_\coarseIdxone+1} = \M_{\targetlevel_\coarseIdxone+1}$ and the intersection at level $\targetlevel_\coarseIdxone$ is the one the input carries, which is not the whole class star by the second or the third case of~\eqref{eq:class_star_levels} because $\lminIdx{\coarseIdxone} \leq \targetlevel_\coarseIdxone$. Thus $\lminIdx{\coarseIdxone}' = \targetlevel_\coarseIdxone = \max(\lminIdx{\coarseIdxone}, \targetlevel_\coarseIdxone)$.
 
-    For the finest level, the operator refines only faces of the star ancestries on levels $\lone < \targetlevel$, so a leaf face of the input leaf star on a level $\geq \targetlevel$ is untouched and remains one of the output. If $\targetlevel \leq \lmax$, the level-$\lmax$ leaf face survives and nothing finer is added, giving $\lmax' = \lmax$. If $\targetlevel > \lmax$, the previous paragraph lifts every leaf face of the star to $\targetlevel$ and $\lmax' = \targetlevel$. Both cases are $\lmax' = \max(\lmax, \targetlevel)$. The statement for a set follows because the regions only grow when further vertices are added, so no leaf face of the star gets coarser.}
+    For the finest level, the operator refines only faces of the class star on levels $\lone < \targetlevel_\coarseIdxone$, so a leaf face of the input leaf star on a level $\geq \targetlevel_\coarseIdxone$ is untouched and remains one of the output. If $\targetlevel_\coarseIdxone \leq \lmaxIdx{\coarseIdxone}$, the level-$\lmaxIdx{\coarseIdxone}$ leaf face survives and nothing finer is added, giving $\lmaxIdx{\coarseIdxone}' = \lmaxIdx{\coarseIdxone}$. If $\targetlevel_\coarseIdxone > \lmaxIdx{\coarseIdxone}$, then $\lminIdx{\coarseIdxone}' = \targetlevel_\coarseIdxone$ by the previous paragraph, and the regions above level $\targetlevel_\coarseIdxone$ are those of the input, which carry no leaf face of this star above $\lmaxIdx{\coarseIdxone}$, so the output leaf star sits entirely on level $\targetlevel_\coarseIdxone$ and $\lmaxIdx{\coarseIdxone}' = \targetlevel_\coarseIdxone$. Both cases are $\lmaxIdx{\coarseIdxone}' = \max(\lmaxIdx{\coarseIdxone}, \targetlevel_\coarseIdxone)$.
+
+    For a marked set, the two lower bounds of~\eqref{eq:graded_quadrisection_leafstar_set} follow because the regions only grow when further classes are added, so no leaf face of the star gets coarser. For the upper bound, let $\face{\lone}{\fineIdxone}$ be a leaf face of the output leaf star of $\vertexClass{\coarseIdxone}$ on level $\lone$, so $\face{\lone}{\fineIdxone} \in \FVanc{\lone}(\vertexClass{\coarseIdxone})$. If $\face{\lone}{\fineIdxone} \in \M_\lone$ already, then it was a leaf face of the input as well, since a face refined beyond its level stays refined beyond it, and hence $\lone \leq \lmaxIdx{\coarseIdxone}$. Otherwise the operator adjoined it, so Definition~\ref{def:graded_vertex_quadrisection} gives a marked class $\vertexClass{\coarseIdxtwo}$ with $\lone \! - \! 1 < \targetlevel_\coarseIdxtwo$ and $\face{\lone}{\fineIdxone} \in \Aop{}{\lone-1}{\lone}(\FVanc{\lone-1}(\vertexClass{\coarseIdxtwo}))$. Applying $\anc{\lone-1}$ to the two memberships puts the level-$(\lone \! - \! 1)$ ancestor of $\face{\lone}{\fineIdxone}$ into $\FVanc{\lone-1}(\vertexClass{\coarseIdxtwo})$, because refining and then coarsening returns the argument, and into $\FVanc{\lone-1}(\vertexClass{\coarseIdxone})$, because $\anc{}$ composes. The two class stars therefore share a face on level $\lone \! - \! 1$, so $\lone \leq \lmeetIdx{\coarseIdxone}{\coarseIdxtwo} \! + \! 1$ by~\eqref{eq:meeting_level}, and $\lone \leq \targetlevel_\coarseIdxtwo$ at the same time. If $\vertexClass{\coarseIdxtwo} = \vertexClass{\coarseIdxone}$ the second of these is $\lone \leq \targetlevel_\coarseIdxone$. Otherwise the first one is $\lone \leq \lmaxIdx{\coarseIdxone} \! + \! 1$ by Lemma~\ref{lemma:meeting_level_leafstar}. Every leaf face of the output leaf star therefore sits on a level at most $\max(\lmaxIdx{\coarseIdxone} \! + \! 1, \targetlevel_\coarseIdxone)$.}
 \end{proof}
 
-\guidance{This is what licenses the sentence in the grading paragraph of Section~\ref{subsec:padding} that $\quadriVup{\lmax{}_{,\coarseIdxtwo} - g}$ ``closes the level span to exactly $g$''. With $\targetlevel = \lmax - g$ and $\mu > g$ one has $\lmin < \targetlevel \leq \lmax$, so $\mu' = g$ by~\eqref{eq:graded_quadrisection_leafstar}. Note the caveat in the last sentence of the corollary. Grading refines a whole set of vertices at once, so the span of a graded vertex can come out \emph{below} $g$ if a neighbour's grading reaches into its leaf star. Worth deciding whether the grading paragraph should say ``at most $g$'' rather than ``exactly $g$''.}
+The upper bound of~\eqref{eq:graded_quadrisection_leafstar_set} can exceed the lower bound under one condition only. It needs a marked class $\vertexClass{\coarseIdxtwo} \neq \vertexClass{\coarseIdxone}$ with $\lmeetIdx{\coarseIdxone}{\coarseIdxtwo} = \lmaxIdx{\coarseIdxone}$ and $\targetlevel_\coarseIdxtwo > \lmaxIdx{\coarseIdxone}$. The proof delivers the first of the two as $\lmeetIdx{\coarseIdxone}{\coarseIdxtwo} \geq \lmaxIdx{\coarseIdxone}$, and Lemma~\ref{lemma:meeting_level_leafstar} closes it to an equality. Read on the mesh, the two classes are still adjacent on level $\lmaxIdx{\coarseIdxone}$, and $\vertexClass{\coarseIdxtwo}$ is graded past that level. If no marked class meets both requirements, then $\lmaxIdx{\coarseIdxone}' = \max(\lmaxIdx{\coarseIdxone}, \targetlevel_\coarseIdxone)$, which is the second equality of~\eqref{eq:graded_quadrisection_leafstar}.
 
-\robert{The operator is not evaluated through~\eqref{eq:graded_vertex_quadrisection} in practice. The implementation never forms a star ancestry and works with the leaf star instead, one vertex and one level at a time.}
+The condition is attainable. Take $\L = 2$ and a uniformly once refined domain sequence $\domseq[2] = \M_\lzero \sqcup \M_1 \sqcup \varnothing$. Let $\vertexClass{\coarseIdxone}$ be a vertex class with a representative $\vertex{\lzero}{\coarseIdxone}$ on level $\lzero$, and let $\vertex{\lzero}{\coarseIdxone}$ be a corner vertex of the face $\face{\lzero}{\fineIdxone}$. Let $\vertexClass{\coarseIdxtwo}$ be a vertex class whose level-$1$ representative $\vertex{1}{\coarseIdxtwo}$ is the midpoint of an edge of $\face{\lzero}{\fineIdxone}$ that touches $\vertex{\lzero}{\coarseIdxone}$. Every leaf face of the input $\domseq[2]$ sits on level $1$, so $\lmaxIdx{\coarseIdxone} = \lmaxIdx{\coarseIdxtwo} = 1$. The two classes are adjacent on level $1$, and their birth levels are $\birthLevel(\vertexClass{\coarseIdxone}) = \lzero$ and $\birthLevel(\vertexClass{\coarseIdxtwo}) = 1$, so~\eqref{eq:meeting_level_bound} closes the meeting level to $\lmeetIdx{\coarseIdxone}{\coarseIdxtwo} = 1 = \lmaxIdx{\coarseIdxone}$. Set $\targetlevel_\coarseIdxone = 1$ and $\targetlevel_\coarseIdxtwo = 2$ and compute $\domseq[2]' = \quadriV(\domseq[2], \{ \vertexClass{\coarseIdxone}, \vertexClass{\coarseIdxtwo} \}, \targetlevel)$. The lower bound of~\eqref{eq:graded_quadrisection_leafstar_set} is $1$. But the child of $\face{\lzero}{\fineIdxone}$ at the corner $\vertex{1}{\coarseIdxone}$ carries $\vertex{1}{\coarseIdxtwo}$ as a vertex, so refining the class star of $\vertexClass{\coarseIdxtwo}$ to $\targetlevel_\coarseIdxtwo = 2$ also puts a level-$2$ leaf face into the leaf star of $\vertexClass{\coarseIdxone}$. Hence $\lmaxIdx{\coarseIdxone}' = 2$ and the upper bound $\lmaxIdx{\coarseIdxone} \! + \! 1 = 2$ is attained. 
 
-\begin{remark}[\robert{How the implementation evaluates $\quadriVup{\targetlevel}$}]
+Note that the condition asks only that $\targetlevel_\coarseIdxtwo > \lmaxIdx{\coarseIdxone}$ but not how far past $\lmaxIdx{\coarseIdxone}$ the target sits, so a marked neighbour lifts this leaf star by one level at most, whatever it is graded to. As a result, $\targetlevel_\coarseIdxtwo = 3$ would still leave $\lmaxIdx{\coarseIdxone}' = 2$ in the example.
+
+\smallskip
+
+Corollary~\ref{cor:graded_quadrisection_leafstar} says how the vertex quadrisection operator changes the level spans of the leaf stars of the input domain sequence. The next lemma shows that it achieves it by refining as little as possible, which is the reason for adding the class star and nothing wider.
+
+The next lemma orders domain sequences. For two domain sequences $\domseq[\L], \domseq[\L]' \in \alldomseqs_\L$ of the same $\T_\L$ with regions $\M_\l$ and $\M'_\l$, respectively, we write $\domseq[\L]' \supseteq \domseq[\L]$ when
+\begin{equation}
+    \label{eq:domseq_order}
+    \M_\l \; \subseteq \; \M'_\l \qquad \text{for all} \qquad \lzero \leq \l \leq \L .
+\end{equation}
+Reflexivity, antisymmetry and transitivity are inherited from set inclusion on each level, so this is a partial order. It is not a total one, since two domain sequences that refine different parts of $\T_\lzero$ are incomparable. It says that $\domseq[\L]'$ is at least as refined as $\domseq[\L]$ on every level, and read on the mesh it says that every leaf face of $\domseq[\L]'$ is a descendant of a leaf face of $\domseq[\L]$. A leaf face of $\domseq[\L]'$ on level $\lone$ is not refined beyond level $\lone$ in $\domseq[\L]'$, hence not in $\domseq[\L]$ either, so Corollary~\ref{cor:ancestor_walk} supplies it with a covering face there. It is also the order the adaptive loop of Section~\ref{subsec:adaptive_loop} moves along, since the operators of this section only ever add faces to a region, and the adaptive spaces nest along it by~\eqref{eq:quadrisection_monotone}. The minimum in~\eqref{eq:graded_quadrisection_minimal} is a least element and not merely a minimal one, so it sits below every competitor and antisymmetry makes it unique. A partial order need not have one, so its existence is part of the claim, and the proof supplies it by exhibiting the operator itself.
+
+\todo{rewrite lemma and proof using the partial order from above.}
+
+\begin{lemma}[The graded vertex quadrisection is the least-refinement homogenisation]
+    \label{lemma:graded_quadrisection_minimal}
+    Order the domain sequences in $\alldomseqs_\L$ of $\T_\L$ by inclusion of their regions on every level. Let $\domseq[\L] \in \alldomseqs_\L$ and let $\markedVertexClasses$ and $\targetlevel$ be as in Definition~\ref{def:graded_vertex_quadrisection}. Then
+    \begin{equation}
+        \label{eq:graded_quadrisection_minimal}
+        \quadriV \big( \domseq[\L], \, \markedVertexClasses, \, \targetlevel \big) \; = \; \min \, \Big\{ \, \domseq[\L]' \, \supseteq \, \domseq[\L] \;\; \colon \;\; \lmin \big( \FVleaf{}(\vertexClass{\coarseIdxone}) \big) \, \geq \, \targetlevel_\coarseIdxone \;\text{ read on }\; \domseq[\L]' \;\text{ for every }\; \vertexClass{\coarseIdxone} \in \markedVertexClasses \Big\},
+    \end{equation}
+    the coarsest refinement of $\domseq[\L]$ that homogenises every marked class to its target level.
+\end{lemma}
+\begin{proof}
+    \robert{Let $\domseq[\L]' \supseteq \domseq[\L]$ with regions $\M'_\l$ satisfy the constraint, let $\vertexClass{\coarseIdxone} \in \markedVertexClasses$ and let $\l < \targetlevel_\coarseIdxone$. Every face of the mesh star $\FVl{\L}(\vertex{\L}{\coarseIdxone})$ is covered in $\domseq[\L]'$ by a leaf face on a level $\geq \targetlevel_\coarseIdxone > \l$, so its level-$\l$ ancestor is refined beyond level $\l$ and hence lies in $\ancestorPatch{\M'_{\l+1}}$. Those ancestors are exactly the class star $\FVanc{\l}(\vertexClass{\coarseIdxone})$ by Definition~\ref{def:star_ancestry}, so $\Aop{}{\l}{\l+1}(\FVanc{\l}(\vertexClass{\coarseIdxone})) \subseteq \M'_{\l+1}$. Taking the union over the marked classes and over the levels below their targets, and using $\M_{\l+1} \subseteq \M'_{\l+1}$, gives $\quadriV(\domseq[\L], \markedVertexClasses, \targetlevel) \subseteq \domseq[\L]'$ on every level by~\eqref{eq:graded_vertex_quadrisection}. The operator itself lies in the set, since Corollary~\ref{cor:graded_quadrisection_leafstar} gives $\lmin' \geq \max(\lmin, \targetlevel_\coarseIdxone)$ for every marked class, so it is the minimum.}
+\end{proof}
+
+The lemma is what rules out the wider neighbourhoods one might reach for instead. Refining the class star from level $\lzero$ up to $\l$ at every marked class would also homogenise, and would be strictly larger whenever some class already carries part of its star beyond $\lzero$. The levels below the birth level of a class are not a wider choice, however, but a forced one. A face enters a region only together with its ancestors, so reaching the class star on level $\l$ at all requires the class stars on the coarser levels, and Definition~\ref{def:star_ancestry} is what names that forced chain where the class has no representative to hang it on.
+
+\smallskip
+
+The graded vertex quadrisection operator is not evaluated through~\eqref{eq:graded_vertex_quadrisection} in practice. The implementation never forms a class star and works with the leaf star instead, one class and one level at a time.
+
+
+\vspace{20mm}
+\hrule
+
+\todo{Does that make sense though? Isn't the closed form easier to implement? No re-computation, just adding the class stars level by level? That could mean that everything below the hrule can be cut.}
+
+\begin{remark}[\robert{How the implementation evaluates $\quadriV$}]
     \label{rem:graded_quadrisection_algorithm}
-    \robert{Let $\vertex{\l}{\coarseIdxone} \in \V(\domseq[\L])$ be a single vertex with target level $\targetlevel$, and let $\lmin = \lmin(\FVleaf{}(\vertex{\l}{\coarseIdxone}))$ be read on the input $\domseq[\L]$. The implementation grades the leaf star from $\lmin$ to $\targetlevel$ by the iterative refinement algorithm}
+    \robert{Let $\vertexClass{\coarseIdxone} \in \vertexClasses(\domseq[\L])$ be a single marked class with target level $\targetlevel_\coarseIdxone$, and let $\lmin = \lmin(\FVleaf{}(\vertexClass{\coarseIdxone}))$ be read on the input $\domseq[\L]$. The implementation grades the leaf star from $\lmin$ to $\targetlevel_\coarseIdxone$ by the iterative refinement algorithm}
     \begin{enumerate}
         \item initialise $\domseq[\L,\lmin] \coloneq \domseq[\L]$,
-        \item iterate \robert{$\domseq[\L, \lone + 1] = \quadriF \big( \domseq[\L, \lone], \, \FVleaf{\lone}(\vertex{\l}{\coarseIdxone}) \big)$}, refining the coarsest slice of the leaf star read on $\domseq[\L, \lone]$, for $\lone \in \{ \lmin, \dots, \targetlevel-1 \}$,
-        \item \robert{return $\domseq[\L, \targetlevel]$, and return $\domseq[\L]$ unchanged if $\lmin \geq \targetlevel$.}
+        \item iterate \robert{$\domseq[\L, \lone + 1] = \quadriF \big( \domseq[\L, \lone], \, \FVleaf{\lone}(\vertexClass{\coarseIdxone}) \big)$}, refining the coarsest slice of the leaf star read on $\domseq[\L, \lone]$, for $\lone \in \{ \lmin, \dots, \targetlevel_\coarseIdxone \! - \! 1 \}$,
+        \item \robert{return $\domseq[\L, \targetlevel_\coarseIdxone]$, and return $\domseq[\L]$ unchanged if $\lmin \geq \targetlevel_\coarseIdxone$.}
     \end{enumerate}
-    Note that step 2 recomputes the leaf star on every $\domseq[\L,\lone]$ that resulted from refining its coarsest faces on the previous step. This ensures that the refined children of exactly these faces are picked up and refined again until the target level is reached. Figure~\ref{fig:refine_interface} displays the nested refinement produced by graded quadrisection to the leaf stars of two interface vertices. The iterations up to $\targetlevel = \lmax \!+\! 1$ bring the neighbourhood up to the finest level the leaf star already carries, and the last iteration refines every leaf face that contains the vertex one level further.
+    Note that step 2 recomputes the leaf star on every $\domseq[\L,\lone]$ that resulted from refining its coarsest faces on the previous step. This ensures that the refined children of exactly these faces are picked up and refined again until the target level is reached. Figure~\ref{fig:refine_interface} displays the nested refinement produced by graded quadrisection to the leaf stars of two interface vertices. The iterations up to $\targetlevel_\coarseIdxone = \lmax \!+\! 1$ bring the neighbourhood up to the finest level the leaf star already carries, and the last iteration refines every leaf face that contains the vertex one level further.
 \end{remark}
+
+\todo{can probably go once we have changed the algorithm above to be honest, seems more complicated to keep it.}
 
 \begin{lemma}[\robert{The algorithm evaluates the operator}]
     \label{lemma:graded_quadrisection_closed_form}
-    \robert{Let $\domseq[\L] \in \alldomseqs$, let $\vertex{\l}{\coarseIdxone} \in \V(\domseq[\L])$ and let $\targetlevel \in \{ \lzero, \, \dots, \, \L \}$. The algorithm of Remark~\ref{rem:graded_quadrisection_algorithm} returns $\quadriVup{\targetlevel}(\domseq[\L], \vertex{\l}{\coarseIdxone})$.}
+    \robert{Let $\domseq[\L] \in \alldomseqs$, let $\vertexClass{\coarseIdxone} \in \vertexClasses(\domseq[\L])$ and let $\targetlevel$ be a target level map. The algorithm of Remark~\ref{rem:graded_quadrisection_algorithm} returns $\quadriV(\domseq[\L], \{ \vertexClass{\coarseIdxone} \}, \targetlevel)$.}
 \end{lemma}
 \begin{proof}
-    \robert{Write $\vertex{\L}{\coarseIdxone} = \Aop{}{\l}{\L}(\vertex{\l}{\coarseIdxone})$. If $\lmin \geq \targetlevel$, the algorithm returns $\domseq[\L]$ and the operator is the identity by Corollary~\ref{cor:graded_quadrisection_composition}.
+    \robert{Let $\vertex{\L}{\coarseIdxone}$ be the representative of $\vertexClass{\coarseIdxone}$ on level $\L$ as in Definition~\ref{def:vertex_class}, and for a level $\lone$ write $\targetlevel^{\lone}$ for the target level map that sends $\vertexClass{\coarseIdxone}$ to $\lone$, so that $\targetlevel = \targetlevel^{\targetlevel_\coarseIdxone}$ as far as this class is concerned. If $\lmin \geq \targetlevel_\coarseIdxone$, the algorithm returns $\domseq[\L]$ and the operator is the identity by Corollary~\ref{cor:graded_quadrisection_composition}.
 
-    Let now $\lmin < \targetlevel$ and let $\M^{(\lone)}$ denote the regions of the intermediate domain sequence $\domseq[\L, \lone]$ of the algorithm. We show by induction over $\lone \in \{ \lmin, \, \dots, \, \targetlevel \}$ that $\domseq[\L, \lone] = \quadriVup{\lone}(\domseq[\L], \vertex{\l}{\coarseIdxone})$ and that the leaf star of $\vertex{\l}{\coarseIdxone}$ read on $\domseq[\L, \lone]$ has coarsest level $\lone$.
+    Let now $\lmin < \targetlevel_\coarseIdxone$ and let $\M^{(\lone)}$ denote the regions of the intermediate domain sequence $\domseq[\L, \lone]$ of the algorithm. We show by induction over $\lone \in \{ \lmin, \, \dots, \, \targetlevel_\coarseIdxone \}$ that $\domseq[\L, \lone] = \quadriV(\domseq[\L], \{ \vertexClass{\coarseIdxone} \}, \targetlevel^{\lone})$. \tobecut{and that the leaf star of $\vertexClass{\coarseIdxone}$ read on $\domseq[\L, \lone]$ has coarsest level $\lone$.} \robert{The leaf star of $\vertexClass{\coarseIdxone}$ read on such a $\domseq[\L, \lone]$ then has coarsest level $\max(\lmin, \lone) = \lone$ by Corollary~\ref{cor:graded_quadrisection_leafstar}, which is what the step below reads off it, so this does not have to be carried as a second claim.}
 
-    Both hold at $\lone = \lmin$. The algorithm initialises $\domseq[\L, \lmin] = \domseq[\L]$, whose leaf star has coarsest level $\lmin$ by the definition of $\lmin$, and $\quadriVup{\lmin}(\domseq[\L], \vertex{\l}{\coarseIdxone}) = \domseq[\L]$ by Corollary~\ref{cor:graded_quadrisection_composition}.
+    This holds at $\lone = \lmin$, since the algorithm initialises $\domseq[\L, \lmin] = \domseq[\L]$ and $\quadriV(\domseq[\L], \{ \vertexClass{\coarseIdxone} \}, \targetlevel^{\lmin}) = \domseq[\L]$ by Corollary~\ref{cor:graded_quadrisection_composition}.
 
-    Now take the step from $\lone$ to $\lone \! + \! 1$ with $\lone < \targetlevel$. We first check that $\FVanc{\lone}(\vertex{\l}{\coarseIdxone}) \subseteq \M^{(\lone)}_\lone$. For $\lone = \lzero$ this is immediate, since $\M_\lzero = \F_\lzero(\T_\lzero)$ contains every level-$\lzero$ face. For $\lone > \lzero$ read~\eqref{eq:ancestry_absorbed_children} on $\domseq[\L, \lone]$ at level $\lone \! - \! 1$. The induction hypothesis permits that, because the leaf star of $\vertex{\l}{\coarseIdxone}$ read there has coarsest level $\lone$ and so $\lone \! - \! 1$ lies below it. It places the children of $\FVanc{\lone-1}(\vertex{\l}{\coarseIdxone})$ in $\M^{(\lone)}_\lone$, and~\eqref{eq:star_ancestry_nested} places $\FVanc{\lone}(\vertex{\l}{\coarseIdxone})$ among those children. The split~\eqref{eq:leaf_ancestor_split} of the region into leaf faces and ancestor patch therefore applies to the star ancestry and gives
+    Now take the step from $\lone$ to $\lone \! + \! 1$ with $\lone < \targetlevel_\coarseIdxone$. We first check that $\FVanc{\lone}(\vertexClass{\coarseIdxone}) \subseteq \M^{(\lone)}_\lone$. For $\lone = \lzero$ this is immediate, since $\M_\lzero = \F_\lzero(\T_\lzero)$ contains every level-$\lzero$ face. For $\lone > \lzero$ read~\eqref{eq:class_star_children} on $\domseq[\L, \lone]$ at level $\lone \! - \! 1$. That reading is permitted because the leaf star of $\vertexClass{\coarseIdxone}$ read there has coarsest level $\lone$ and so $\lone \! - \! 1$ lies below it. It places the children of $\FVanc{\lone-1}(\vertexClass{\coarseIdxone})$ in $\M^{(\lone)}_\lone$, and~\eqref{eq:star_ancestry_nested} places $\FVanc{\lone}(\vertexClass{\coarseIdxone})$ among those children. The split~\eqref{eq:leaf_ancestor_split} of the region into leaf faces and ancestor patch therefore applies to the star ancestry and gives
     \begin{equation}
         \label{eq:ancestry_splits}
-        \FVanc{\lone}(\vertex{\l}{\coarseIdxone}) \; = \; \FVleaf{\lone}(\vertex{\l}{\coarseIdxone}) \; \sqcup \; \Big( \FVanc{\lone}(\vertex{\l}{\coarseIdxone}) \cap \ancestorPatch{\M^{(\lone)}_{\lone+1}} \Big),
+        \FVanc{\lone}(\vertexClass{\coarseIdxone}) \; = \; \FVleaf{\lone}(\vertexClass{\coarseIdxone}) \; \sqcup \; \Big( \FVanc{\lone}(\vertexClass{\coarseIdxone}) \cap \ancestorPatch{\M^{(\lone)}_{\lone+1}} \Big),
     \end{equation}
-    where the leaf star is read on $\domseq[\L, \lone]$. Indeed, a face of $\FVanc{\lone}(\vertex{\l}{\coarseIdxone})$ that is a leaf face on level $\lone$ covers a face of $\FVl{\L}(\vertex{\L}{\coarseIdxone})$ and hence lies in $\FVleaf{\lone}(\vertex{\l}{\coarseIdxone})$, and conversely by~\eqref{eq:leaf_star_in_ancestry}. By the induction hypothesis the leaf star of $\vertex{\l}{\coarseIdxone}$ read on $\domseq[\L, \lone]$ has coarsest level $\lone$, so step 2 refines $\FVleaf{\lone}(\vertex{\l}{\coarseIdxone})$ and adds $\Aop{}{\lone}{\lone+1}(\FVleaf{\lone}(\vertex{\l}{\coarseIdxone}))$ to $\M^{(\lone)}_{\lone+1}$. The children of the second part of~\eqref{eq:ancestry_splits} already lie in $\M^{(\lone)}_{\lone+1}$, whence
+    where the leaf star is read on $\domseq[\L, \lone]$. Indeed, a face of $\FVanc{\lone}(\vertexClass{\coarseIdxone})$ that is a leaf face on level $\lone$ covers a face of $\FVl{\L}(\vertex{\L}{\coarseIdxone})$ and hence lies in $\FVleaf{\lone}(\vertexClass{\coarseIdxone})$, and conversely by~\eqref{eq:leaf_star_in_ancestry}. The leaf star of $\vertexClass{\coarseIdxone}$ read on $\domseq[\L, \lone]$ has coarsest level $\lone$, so step 2 refines $\FVleaf{\lone}(\vertexClass{\coarseIdxone})$ and adds $\Aop{}{\lone}{\lone+1}(\FVleaf{\lone}(\vertexClass{\coarseIdxone}))$ to $\M^{(\lone)}_{\lone+1}$. The children of the second part of~\eqref{eq:ancestry_splits} already lie in $\M^{(\lone)}_{\lone+1}$, whence
     \begin{equation}
-        \M^{(\lone+1)}_{\lone+1} \; = \; \M^{(\lone)}_{\lone+1} \; \cup \; \Aop{}{\lone}{\lone+1} \big( \FVanc{\lone}(\vertex{\l}{\coarseIdxone}) \big)
+        \M^{(\lone+1)}_{\lone+1} \; = \; \M^{(\lone)}_{\lone+1} \; \cup \; \Aop{}{\lone}{\lone+1} \big( \FVanc{\lone}(\vertexClass{\coarseIdxone}) \big)
     \end{equation}
-    and no other region changes, which by Definition~\ref{def:graded_vertex_quadrisection} is $\quadriVup{\lone+1}(\domseq[\L], \vertex{\l}{\coarseIdxone})$. Finally, every face of $\FVl{\L}(\vertex{\L}{\coarseIdxone})$ has its level-$\lone$ ancestor in $\FVanc{\lone}(\vertex{\l}{\coarseIdxone})$, and that ancestor is now refined beyond level $\lone$, so no face of the mesh star is covered on level $\lone$ or coarser and the leaf star of $\vertex{\l}{\coarseIdxone}$ read on $\domseq[\L, \lone \! + \! 1]$ has coarsest level $\lone \! + \! 1$. The case $\lone = \targetlevel$ of the induction is the assertion.}
+    and no other region changes, which by Definition~\ref{def:graded_vertex_quadrisection} is $\quadriV(\domseq[\L], \{ \vertexClass{\coarseIdxone} \}, \targetlevel^{\lone+1})$. \tobecut{Finally, every face of $\FVl{\L}(\vertex{\L}{\coarseIdxone})$ has its level-$\lone$ ancestor in $\FVanc{\lone}(\vertexClass{\coarseIdxone})$, and that ancestor is now refined beyond level $\lone$, so no face of the mesh star is covered on level $\lone$ or coarser and the leaf star of $\vertexClass{\coarseIdxone}$ read on $\domseq[\L, \lone \! + \! 1]$ has coarsest level $\lone \! + \! 1$.} The case $\lone = \targetlevel_\coarseIdxone$ of the induction is the assertion.}
 \end{proof}
 
-The quadrisection operators defined in this section are the basis upon which we will later build the algorithms in the adaptive loop in Section~\ref{subsec:adaptive_loop}. They enable nested refinement of the adaptive subdivision $k$-form spaces $\hierSDFspace{k}{\domseq}{\L}$ in the sense that
+The quadrisection operators defined in this section are the basis upon which we build the algorithms in the adaptive loop in Section~\ref{subsec:adaptive_loop}. They enable nested refinement of the adaptive subdivision $k$-form spaces $\hierSDFspace{k}{\domseq}{\L}$ in the sense that
 \begin{equation}
     \label{eq:quadrisection_monotone}
-    \hierSDFspace{k}{\domseq}{\L} \subseteq \hierSDFspace{k}{\quadriF(\domseq[\L], \simplexsubset{2}{})}{} \qquad \text{and} \qquad \hierSDFspace{k}{\domseq}{\L} \subseteq \hierSDFspace{k}{\quadriVup{\targetlevel}(\domseq[\L], W)}{}.
+    \hierSDFspace{k}{\domseq}{\L} \subseteq \hierSDFspace{k}{\quadriF(\domseq[\L], \simplexsubset{2}{})}{} \qquad \text{and} \qquad \hierSDFspace{k}{\domseq}{\L} \subseteq \hierSDFspace{k}{\quadriV(\domseq[\L], \markedVertexClasses, \targetlevel)}{}.
 \end{equation}
-The second inclusion follows from the first, since $\quadriVup{\targetlevel}$ is a composition of face quadrisections\robert{, cf.\ Definition~\ref{def:graded_vertex_quadrisection} and Corollary~\ref{cor:graded_quadrisection_composition}}. The reason the refinement produces \guidance{superspaces} is that the domain sequences satisfy $\M_\l \subseteq \tilde{\M}_\l$, where $\M_\l$ and $\tilde{\M}_\l$ are the regions of $\domseq[\L]$ and $\quadriF(\domseq[\L], \simplexsubset{2}{})$ or $\quadriVup{\targetlevel}(\domseq[\L], W)$, respectively\robert{, which both definitions make manifest because they only ever add faces to a region}. \cite{companion_paper} prove the nestedness of the adaptive $k$-form spaces given \guidance{the} nestedness of regions.
+The second inclusion follows from the first, since $\quadriV$ is \tobecut{a composition of face quadrisections}\robert{a face quadrisection by Corollary~\ref{cor:graded_is_face_quadrisection}}. The reason the refinement produces \guidance{superspaces} is that the domain sequences satisfy $\M_\l \subseteq \M'_\l$, where $\M_\l$ and $\M'_\l$ are the regions of $\domseq[\L]$ and $\quadriF(\domseq[\L], \simplexsubset{2}{})$ or $\quadriV(\domseq[\L], \markedVertexClasses, \targetlevel)$, respectively\robert{, which both definitions make manifest because they only ever add faces to a region}. \cite{companion_paper} prove the nestedness of the adaptive $k$-form spaces given \guidance{the} nestedness of regions.
 
 \begin{figure}
 \begin{center}
@@ -1797,7 +1965,7 @@ The second inclusion follows from the first, since $\quadriVup{\targetlevel}$ is
 
 \smallskip
 
-Admissible domain sequences respect the geometric constraints necessary for linear independence and reproducing the correct cohomology. Unfortunately, in contrast to general domain sequences $\guidance{\alldomseqs}$, admissible domain sequences are not closed under the quadrisection operators $\quadriF(\domseq[\L], \cdot)$ \robert{and} $\quadriVup{\targetlevel}(\domseq[\L], \cdot)$, meaning that they are maps $\allpartitions \to \guidance{\alldomseqs}$. Thus, naive refinement of admissible domain sequences can reintroduce inadmissible geometry, for example a pinch vertex. This is exactly why Section~\ref{subsec:adaptive_loop} sets up a padding step that repairs these geometric defects and turns the domain sequence into a admissible domain sequence again.
+Admissible domain sequences respect the geometric constraints necessary for linear independence and reproducing the correct cohomology. Unfortunately, in contrast to general domain sequences $\guidance{\alldomseqs}$, admissible domain sequences are not closed under the quadrisection operators $\quadriF(\domseq[\L], \cdot)$ \robert{and} $\quadriV(\domseq[\L], \cdot, \cdot)$, meaning that they are maps $\allpartitions \to \guidance{\alldomseqs}$. Thus, naive refinement of admissible domain sequences can reintroduce inadmissible geometry, for example a pinch vertex. This is exactly why Section~\ref{subsec:adaptive_loop} sets up a padding step that repairs these geometric defects and turns the domain sequence into a admissible domain sequence again.
 
 
 
@@ -1806,7 +1974,7 @@ Admissible domain sequences respect the geometric constraints necessary for line
 \section{Implementation and adaptive loop}
 \label{subsec:adaptive_loop}
 
-This section turns the constructions of Section~\ref{sec:construction_of_hierarchical_subdiv_spaces} into a working adaptive algorithm. Given an admissible domain sequence $\domseq$, the active DoFs $\activeDoFSet{k}{}(\domseq)$ follow from Definition~\ref{def:active_k_form_dofs} level by level --- Algorithm~\ref{alg:buildactivedofs} in Appendix~\ref{app:active_dof_pseudocode} evaluates it directly --- and the adaptive subdivision matrix $\Amat{k}{\activeDoFs}{\L}$ collects the corresponding columns of $\Amat{k}{\l}{\L}$ block by block as in Equation~\eqref{eq:hierarchical_matrix_blocks}. What remains is to embed this machinery in a standard \textsc{Solve}--\textsc{Estimate}--\textsc{Mark}--\textsc{Refine}--\textsc{Pad} adaptive loop, where the additional \textsc{Pad} restores the domain sequence output by \textsc{Refine} to an admissible one (Definition~\ref{def:subdiv_partition}) after each refinement via pinch resolution, confinement padding, and grading.
+This section turns the constructions of Sections~\ref{sec:construction_of_hierarchical_subdiv_spaces} \robert{and~\ref{sec:refinement_operators}} into a working adaptive algorithm. Given an admissible domain sequence $\domseq$, the active DoFs $\activeDoFSet{k}{}(\domseq)$ follow from Definition~\ref{def:active_k_form_dofs} level by level --- Algorithm~\ref{alg:buildactivedofs} in Appendix~\ref{app:active_dof_pseudocode} evaluates it directly --- and the adaptive subdivision matrix $\Amat{k}{\activeDoFs}{\L}$ collects the corresponding columns of $\Amat{k}{\l}{\L}$ block by block as in Equation~\eqref{eq:hierarchical_matrix_blocks}. What remains is to embed this machinery in a standard \textsc{Solve}--\textsc{Estimate}--\textsc{Mark}--\textsc{Refine}--\textsc{Pad} adaptive loop, where the additional \textsc{Pad} restores the domain sequence output by \textsc{Refine} to an admissible one (Definition~\ref{def:subdiv_partition}) after each refinement via pinch resolution, confinement padding, and grading.
 
 The loop used in the numerical experiments consists of the steps
 \begin{equation}
@@ -1877,7 +2045,7 @@ where the notation $\markableVerts(\domseq[\L])$ indicates that all vertices in 
     \qquad \mathrm{where} \qquad
     a_\coarseIdxtwo = \sum\limits_{\face{\l}{\coarseIdxone} \; \in \; \simplexsubset{2}{}} \mathrm{area}(\face{\l}{\coarseIdxone})
 \end{equation}
-and $\simplexsubset{2}{} = \FVleaf{}(\vertex{\L}{\coarseIdxtwo}) \setminus \F_\L(\T_\L)$ contains all faces in the leaf star that are not on level $\L$ and can thus be refined to reduce the residual.Dividing by the cumulative area $a_\coarseIdxtwo$ of the faces rescales the integral face estimator to a density per vertex. This rescaling makes the marking roughly level- and valence-agnostic. Otherwise, the contribution of coarse faces would be weighted higher and their adjacent vertices would be over-represented during the Dörfler marking step.
+and $\simplexsubset{2}{} = \FVleaf{}(\vertexClass{\coarseIdxtwo}) \setminus \F_\L(\T_\L)$ contains all faces in the leaf star that are not on level $\L$ and can thus be refined to reduce the residual.Dividing by the cumulative area $a_\coarseIdxtwo$ of the faces rescales the integral face estimator to a density per vertex. This rescaling makes the marking roughly level- and valence-agnostic. Otherwise, the contribution of coarse faces would be weighted higher and their adjacent vertices would be over-represented during the Dörfler marking step.
 
 \begin{figure}%[htbp]
     \centering
@@ -1906,7 +2074,7 @@ and $\simplexsubset{2}{} = \FVleaf{}(\vertex{\L}{\coarseIdxtwo}) \setminus \F_\L
 \subsection{Marking}
 \label{subsec:mark}
 
-Our code marks vertices rather than faces. This enables us to use the graded vertex quadrisection operator $\quadriVup{\targetlevel}$ to refine single vertex stars. We rank the markable vertices $\markableVerts(\domseq[\L])$ by the vertex estimator $\nu_\coarseIdxtwo$, see Equation~\eqref{eq:vertex_residual}. For this purpose, we enumerate the markable vertices in order of decreasing residual, so that $\nu_{\coarseIdxtwo_1} \geq \nu_{\coarseIdxtwo_2} \geq \ldots \geq \nu_{\coarseIdxtwo_{\vert \markableVerts(\domseq[\L]) \vert}}$.
+Our code marks vertices rather than faces. This enables us to use the graded vertex quadrisection operator $\quadriV$ to refine single vertex stars. We rank the markable vertices $\markableVerts(\domseq[\L])$ by the vertex estimator $\nu_\coarseIdxtwo$, see Equation~\eqref{eq:vertex_residual}. For this purpose, we enumerate the markable vertices in order of decreasing residual, so that $\nu_{\coarseIdxtwo_1} \geq \nu_{\coarseIdxtwo_2} \geq \ldots \geq \nu_{\coarseIdxtwo_{\vert \markableVerts(\domseq[\L]) \vert}}$.
 
 Dörfler marking~\citep{Doerfler.1996} marks the set $\markableVerts^\mathrm{mark} \coloneq \{ \vertex{\L}{\coarseIdxtwo_1}, \, \dots, \, \vertex{\L}{\coarseIdxtwo_q} \} \subseteq \markableVerts(\domseq[\L])$ by greedily selecting the first $q$ vertices with the largest estimators such that the \emph{marked refinable residual}
 \begin{equation}
@@ -1923,9 +2091,9 @@ where $\theta \in (0, 1]$ is the Dörfler parameter. The set $\R_\theta$ collect
 \subsection{Refinement}
 \label{subsec:refine}
 
-The \textsc{Refine} step refines the marked faces $\face{\l}{\coarseIdxone} \in \R_\theta$ in the leaf stars of the selected vertices $\vertex{\L}{\coarseIdxtwo} \in \markableVerts^\mathrm{mark}$ from Equation~\eqref{eq:marked_refinable_residual} as shown in Figure~\ref{fig:pipeline_marking_c}. We denote by $\lmax{}_{,\coarseIdxtwo} = \lmax \big( \FVleaf{}(\vertex{\L}{\coarseIdxtwo}) \big)$ and similarly $\lmin{}_{,\coarseIdxtwo} = \lmin \big( \FVleaf{}(\vertex{\L}{\coarseIdxtwo}) \big)$ the finest level and coarsest levels of faces occurring in the leaf star of $\vertex{\L}{\coarseIdxtwo}$ according to Definition~\ref{def:level_range}. 
+The \textsc{Refine} step refines the marked faces $\face{\l}{\coarseIdxone} \in \R_\theta$ in the leaf stars of the selected vertices $\vertex{\L}{\coarseIdxtwo} \in \markableVerts^\mathrm{mark}$ from Equation~\eqref{eq:marked_refinable_residual} as shown in Figure~\ref{fig:pipeline_marking_c}. We denote by $\lmax{}_{,\coarseIdxtwo} = \lmax \big( \FVleaf{}(\vertexClass{\coarseIdxtwo}) \big)$ and similarly $\lmin{}_{,\coarseIdxtwo} = \lmin \big( \FVleaf{}(\vertexClass{\coarseIdxtwo}) \big)$ the finest level and coarsest levels of faces occurring in the leaf star of $\vertex{\L}{\coarseIdxtwo}$ according to Definition~\ref{def:level_range}. 
 
-The \textsc{Refine} step homogenises the leaf star of each marked vertex $\vertex{\L}{\coarseIdxtwo}$ at one level beyond the finest level it currently carries unless is already carries the finest level $\L$. Thus, the target level of the graded vertex quadrisection operator $\quadriVup{\targetlevel_\coarseIdxtwo}(\domseq[\L], \vertex{\L}{\coarseIdxtwo})$ of Definition~\ref{def:graded_vertex_quadrisection} is given by $\targetlevel_\coarseIdxtwo = \min(\lmax{}_{,\coarseIdxtwo} \! + \! 1, \, \L)$. The target levels $\targetlevel_\coarseIdxtwo$ for all marked vertices must be computed on the fixed input domain sequence $\domseq[\L]$ before any refinement takes place to avoid a cascade of ever increasing target levels. 
+The \textsc{Refine} step homogenises the leaf star of each marked vertex $\vertex{\L}{\coarseIdxtwo}$ at one level beyond the finest level it currently carries unless is already carries the finest level $\L$. Thus, the target level map $\targetlevel$ handed to the graded vertex quadrisection operator $\quadriV$ of Definition~\ref{def:graded_vertex_quadrisection} is given by $\targetlevel_\coarseIdxtwo = \min(\lmax{}_{,\coarseIdxtwo} \! + \! 1, \, \L)$. The target levels $\targetlevel_\coarseIdxtwo$ for all marked vertices must be computed on the fixed input domain sequence $\domseq[\L]$ before any refinement takes place to avoid a cascade of ever increasing target levels. 
 
 \smallskip
 
@@ -1934,7 +2102,7 @@ The \textsc{Refine} step homogenises the leaf star of each marked vertex $\verte
     \item initialise $\domseq[\L]^0 = \domseq[\L]$,
     \item refine vertex stars iteratively for all $\vertex{\L}{\coarseIdxtwo_p} \in \markableVerts^\mathrm{mark}$ with $p = 1, \, \dots, \, \vert \markableVerts^\mathrm{mark}\vert$ to obtain
     \begin{equation}
-        \domseq[\L]^{p} = \quadriVup{\targetlevel_{\coarseIdxtwo_p}} \big( \domseq[\L]^{p-1}, \, \vertex{\L}{\coarseIdxtwo_p} \big),
+        \domseq[\L]^{p} = \quadriV \big( \domseq[\L]^{p-1}, \, \{ \vertexClass{\coarseIdxtwo_p} \}, \, \targetlevel \big),
     \end{equation}
     \vspace{-7mm}
     \item set $\domseq[\L]^{\mathrm{refine}} \coloneq \domseq[\L]^{\vert \markableVerts^\mathrm{mark} \vert}$.
@@ -1947,7 +2115,7 @@ Because the expected target levels $\targetlevel_{\coarseIdxtwo}$ are computed o
 
 The \textsc{Refine} step in the previous section produces the domain sequence $\domseq[\L]^{\mathrm{refine}}$. Crucially, $\domseq[\L]^{\mathrm{refine}}$ is not a admissible domain sequence because $\domseq[\L]^{\mathrm{refine}}$ might now contain confined faces, pinch vertices, or boundary pinch vertices. The \textsc{Pad} step described in this section repairs these defects and turns $\domseq[\L]^{\mathrm{refine}}$ into an admissible domain sequence $\domseq[\L]^{\mathrm{pad}}$. The goal is to keep the padded faces added during this process to a minimum to avoid inflating the number of DoFs in non-marked regions. The only exception is some optional grading that we apply around vertices whose leaf star covers too many levels.
 
-The \textsc{Pad} step needs no machinery beyond the quadrisection operators $\quadriF$ \robert{and} $\quadriVup{\targetlevel}$ of Section~\ref{subsec:refinement_operators}, since every padding substep is a quadrisection of either a vertex star or a set of confined faces.
+The \textsc{Pad} step needs no machinery beyond the quadrisection operators $\quadriF$ \robert{and} $\quadriV$ of Section~\ref{subsec:refinement_operators}, since every padding substep is a quadrisection of either a vertex star or a set of confined faces.
 
 \robert{Each of the three substeps has the same shape. A \emph{candidate set} of vertices or of leaf faces is tested against the substep's predicate on the unmutated domain sequence, every candidate that fires is repaired, and the candidates of the next round are read off the faces that the repair has actually refined. Testing the whole candidate set before repairing any of it makes a round independent of the order in which its repairs are applied. What makes the restricted candidate set of the next round sufficient is that a quadrisection can change a predicate only at the vertices of the faces it refines, and only on the level of those faces.}
 
@@ -1955,7 +2123,7 @@ The \textsc{Pad} step needs no machinery beyond the quadrisection operators $\qu
 % claims $\quadriF$ "changes the region $\M_{\l+1}$ and no other", which is false
 % for the multi-level operator of Definition~\ref{def:face_quadrisection_operator}.
 % Replaced by the version below, which runs over all levels at once and therefore
-% also covers $\quadriVup{\targetlevel}$ in one application rather than factor by
+% also covers $\quadriV$ in one application rather than factor by
 % factor. Kept for cherry-picking.
 \tobecut{
 \begin{lemma}[Locality of the padding predicates, single level]
@@ -1973,7 +2141,7 @@ The \textsc{Pad} step needs no machinery beyond the quadrisection operators $\qu
 
 \begin{lemma}[\robert{Locality of the padding predicates}]
     \label{lemma:pad_locality}
-    \robert{Let $\domseq[\L] \in \alldomseqs$, let $\simplexsubset{2}{}$ be a set of leaf faces of $\domseq[\L]$ below level $\L$, that is $\simplexsubset{2}{\l} \subseteq \leafF{\l}(\domseq[\L])$ for every $\l < \L$, and let $\domseq[\L]' \coloneq \quadriF(\domseq[\L], \simplexsubset{2}{})$ with refinement fans $\refFan{\lone}'$. Then
+    \robert{Let $\domseq[\L] \in \alldomseqs$, let $\simplexsubset{2}{}$ with slices $\simplexsubset{2}{\l}$ be a marked family for $\domseq[\L]$ in the sense of~\eqref{eq:marked_face_family}, and let $\domseq[\L]' \coloneq \quadriF(\domseq[\L], \simplexsubset{2}{})$ with refinement fans $\refFan{\lone}'$. \tobecut{The earlier version of this lemma asked for a set of leaf faces, $\simplexsubset{2}{\l} \subseteq \leafF{\l}(\domseq[\L])$ for every $\l < \L$, which the proof never uses.} Then
     \begin{equation}
         \label{eq:pad_locality}
         \refFan{\lone}' \big( \vertex{\lone}{\coarseIdxtwo} \big) \; = \; \refFan{\lone} \big( \vertex{\lone}{\coarseIdxtwo} \big)
@@ -1986,17 +2154,17 @@ The \textsc{Pad} step needs no machinery beyond the quadrisection operators $\qu
     The predicates of a vertex or a face therefore change only on the level of the faces that were refined beneath it, and only in the one-ring of those faces read on that level.}
 \end{lemma}
 \begin{proof}
-    \robert{By Definition~\ref{def:face_quadrisection_operator}, $\quadriF(\domseq[\L], \simplexsubset{2}{})$ enlarges the region $\M_{\lone+1}$ by $\Aop{}{\lone}{\lone+1}(\simplexsubset{2}{\lone})$ on every level, so it enlarges the ancestor patch $\ancestorPatch{\M_{\lone+1}}$ by exactly the slice $\simplexsubset{2}{\lone}$ and by nothing else. The refinement fan $\refFan{\lone}(\vertex{\lone}{\coarseIdxtwo}) = \FVl{\lone}(\vertex{\lone}{\coarseIdxtwo}) \cap \ancestorPatch{\M_{\lone+1}}$ of Definition~\ref{def:refinement_fan} can therefore only change at a vertex whose mesh star on level $\lone$ meets $\simplexsubset{2}{\lone}$, that is at a vertex of a face of $\simplexsubset{2}{\lone}$, which is~\eqref{eq:pad_locality}. Note that the levels do not interact: the slice $\simplexsubset{2}{\lone}$ alone decides what changes on level $\lone$, whatever the other slices contain. Both consequences follow because the three predicates are read off the refinement fan alone: the pinch of Definition~\ref{def:pinch_vertex} and the boundary pinch of Definition~\ref{def:boundary_pinch} count its arcs, and the confined face of Definition~\ref{def:confined_face} asks whether one of its vertices has an empty fan.}
+    \robert{By Definition~\ref{def:face_quadrisection_operator}, $\quadriF(\domseq[\L], \simplexsubset{2}{})$ enlarges the region $\M_{\lone+1}$ by $\Aop{}{\lone}{\lone+1}(\simplexsubset{2}{\lone})$ on every level, so it enlarges the ancestor patch $\ancestorPatch{\M_{\lone+1}}$ by exactly the slice $\simplexsubset{2}{\lone}$ and by nothing else\robert{, as computed in~\eqref{eq:face_quadrisection_nesting}}. The refinement fan $\refFan{\lone}(\vertex{\lone}{\coarseIdxtwo}) = \FVl{\lone}(\vertex{\lone}{\coarseIdxtwo}) \cap \ancestorPatch{\M_{\lone+1}}$ of Definition~\ref{def:refinement_fan} can therefore only change at a vertex whose mesh star on level $\lone$ meets $\simplexsubset{2}{\lone}$, that is at a vertex of a face of $\simplexsubset{2}{\lone}$, which is~\eqref{eq:pad_locality}. Note that the levels do not interact: the slice $\simplexsubset{2}{\lone}$ alone decides what changes on level $\lone$, whatever the other slices contain. Both consequences follow because the three predicates are read off the refinement fan alone: the pinch of Definition~\ref{def:pinch_vertex} and the boundary pinch of Definition~\ref{def:boundary_pinch} count its arcs, and the confined face of Definition~\ref{def:confined_face} asks whether one of its vertices has an empty fan.}
 \end{proof}
 
-\robert{Two remarks on the reach of the lemma. First, it says nothing about the faces that $\quadriF$ creates: the children of $\simplexsubset{2}{\lone}$ are new leaf faces on level $\lone\!+\!1$ and have to be tested, which is what the candidate sets below do. It does settle the new \emph{vertices}, which are born on level $\lone\!+\!1$ with an empty refinement fan and are therefore neither pinches nor boundary pinches there. Second, the lemma covers the graded vertex quadrisection in a single application and not factor by factor. Its proof uses only that the ancestor patch on level $\lone$ grows by the slice $\simplexsubset{2}{\lone}$ and by nothing else, and Definition~\ref{def:graded_vertex_quadrisection} grows it by
-\begin{equation}
-    \label{eq:graded_quadrisection_patch_growth}
-    \ancestorPatch{\tilde{\M}_{\lone+1}} \; \setminus \; \ancestorPatch{\M_{\lone+1}} \; \subseteq \bigcup\limits_{\substack{w \, \in \, W \\ \lone \, < \, \targetlevel(w)}} \FVanc{\lone}(w),
-\end{equation}
-as computed after that definition. So the same argument applies with the slice read as the right-hand side of~\eqref{eq:graded_quadrisection_patch_growth}: the vertices whose predicates can have changed under $\quadriVup{\targetlevel}(\cdot, W)$ are the vertices of the star ancestries of $W$, each read on the level of the face that carried it.}
+\robert{Two remarks on the reach of the lemma. First, it says nothing about the faces that $\quadriF$ creates. The children of $\simplexsubset{2}{\lone}$ are new leaf faces on level $\lone\!+\!1$ and have to be tested, which is what the candidate sets below do. It does settle the new \emph{vertices}, which are born on level $\lone\!+\!1$ with an empty refinement fan and are therefore neither pinches nor boundary pinches there. Second, the lemma covers the graded vertex quadrisection in a single application and not factor by factor. By Corollary~\ref{cor:graded_is_face_quadrisection} the operator $\quadriV(\cdot, \markedVertexClasses, \targetlevel)$ is a face quadrisection on the family~\eqref{eq:graded_marked_family} of class stars, so reading that family as the slice gives the statement. The vertices whose predicates can have changed are the vertices of the class stars of $\markedVertexClasses$, each read on the level of the face that carried it.}
 
-\guidance{Why~\eqref{eq:graded_quadrisection_patch_growth} rather than an appeal to $\quadriVup{\targetlevel}$ being an instance of $\quadriF$: it is one, as far as the two formulas go, but not one that satisfies this lemma's hypothesis. The lemma asks for $\simplexsubset{2}{} \subseteq \leafMesh(\domseq[\L])$, whereas a face of $\FVanc{\lone}(w)$ need not lie in $\M_\lone$ at all on the input --- it can still be covered by a coarser leaf face, and only the coarser slices of the same application put it into the region. The growth of the ancestor patch is what the proof actually uses, and it is available for both operators.}
+% SUPERSEDED (2026-08-25): the workaround this note explained is gone.
+% eq:marked_face_family now admits the class-star family, and this lemma asks for
+% a marked family rather than for leaf faces, so
+% Corollary~\ref{cor:graded_is_face_quadrisection} applies directly and the patch
+% growth display it referred to has been deleted. Kept for cherry-picking.
+\tobecut{Why the patch growth rather than an appeal to $\quadriVup{\targetlevel}$ being an instance of $\quadriF$: it is one, as far as the two formulas go, but not one that satisfies this lemma's hypothesis. The lemma asks for $\simplexsubset{2}{} \subseteq \leafMesh(\domseq[\L])$, whereas a face of $\FVanc{\lone}(w)$ need not lie in $\M_\lone$ at all on the input --- it can still be covered by a coarser leaf face, and only the coarser slices of the same application put it into the region. The growth of the ancestor patch is what the proof actually uses, and it is available for both operators.}
 
 
 \paragraph{Resolving vertex pinches.}
@@ -2008,9 +2176,11 @@ We scan every level of the refined domain sequence $\domseq[\L]^\mathrm{refine}$
 according to Definitions~\ref{def:pinch_vertex} and~\ref{def:boundary_pinch}. Note that the pinch test is applied at every level at which the vertex exists in the domain sequence, not only at its finest one. The domain sequence $\domseq[\L]^{\mathrm{pinch}} \coloneq \domseq[\L]^{\vert \V^{\mathrm{pinch}} \vert}$ with all pinches resolved is obtained from the iteration
 \begin{equation}
     \label{eq:pinch_resolved_subdiv_partition}
-    \domseq[\L]^p = \quadriVup{\l + 1} \big( \domseq[\L]^{p-1}, \, (\vertex{\l}{\coarseIdxtwo})_p \big) \qquad \text{for all} \qquad (\vertex{\l}{\coarseIdxtwo})_p \in \V^{\mathrm{pinch}}(\domseq[\L]^{\mathrm{refine}}),
+    \domseq[\L]^p = \quadriV \big( \domseq[\L]^{p-1}, \, \{ \vertexClass{\coarseIdxtwo_p} \}, \, \targetlevel \big) \qquad \text{for all} \qquad (\vertex{\l}{\coarseIdxtwo})_p \in \V^{\mathrm{pinch}}(\domseq[\L]^{\mathrm{refine}}),
 \end{equation}
-where $p \in \{1, \, \dots, \, \vert \V^{\mathrm{pinch}}(\domseq[\L]^{\mathrm{refine}}) \vert \}$ is an enumeration of the pinch vertices and $\domseq[\L]^0 = \domseq[\L]^\mathrm{refine}$ is initialised to the domain sequence after the \textsc{Refine} step.
+where $p \in \{1, \, \dots, \, \vert \V^{\mathrm{pinch}}(\domseq[\L]^{\mathrm{refine}}) \vert \}$ is an enumeration of the pinch vertices and $\domseq[\L]^0 = \domseq[\L]^\mathrm{refine}$ is initialised to the domain sequence after the \textsc{Refine} step. \robert{Each step hands Definition~\ref{def:graded_vertex_quadrisection} the class $\vertexClass{\coarseIdxtwo_p}$ of the pinch vertex $(\vertex{\l}{\coarseIdxtwo})_p$, with the target level map given by $\targetlevel_\coarseIdxtwo = \l \! + \! 1$ read off the level at which the vertex was detected.}
+
+\robert{The set $\V^{\mathrm{pinch}}$ is a set of vertices and not of classes, because the pinch test runs at every level. One class can therefore appear in it twice, once at a level $\l$ and once at a level $\lone > \l$. Written as a single application of $\quadriV$, the marked set is the set of classes occurring in $\V^{\mathrm{pinch}}$ and the target of such a class is the largest of the levels at which it was detected, plus one. Nothing is lost by taking the maximum, since the union in~\eqref{eq:graded_vertex_quadrisection} adds for a class marked at two targets exactly what the larger of the two adds on its own. The same holds for the grading step below, where a class can carry only one level span and the question does not arise.}
 
 \guidance{To be reworded once the iteration below is settled: $\domseq[\L]^{\mathrm{pinch}}$ is the fixed point of that iteration and not the last element $\domseq[\L]^{\vert \V^{\mathrm{pinch}} \vert}$ of a single enumeration. Equations~\eqref{eq:pinch_resolved_subdiv_partition} should keep the enumeration but produce $\domseq[\L]^{\mathrm{pinch},k}$ of round $k$, and the definition of $\domseq[\L]^{\mathrm{pinch}}$ should move to step~4 of the iteration. That also gives the index set $\V^{\mathrm{pinch}}$ a definition per round, which it currently lacks in the iteration counts.}
 
@@ -2038,13 +2208,13 @@ Detection and repair are separate phases. The whole set $\V^{\mathrm{pinch}}(\do
     \item stop at the first round with $\V^{\mathrm{pinch},k} = \varnothing$ and set $\domseq[\L]^{\mathrm{pinch}} \coloneq \domseq[\L]^{\mathrm{pinch},k}$.
 \end{enumerate}}
 
-\robert{The candidate set~\eqref{eq:pinch_candidates} is exactly what Lemma~\ref{lemma:pad_locality} permits, and it differs from the one-ring of the repaired vertices in both directions. It is narrower, because a vertex enters as a candidate only on the level of the face that carried it and not on every level at which it exists. It is wider, because $\quadriVup{\l+1}$ refines faces on all levels between $\lmin$ and $\l$, and a face on a level $\lone < \l$ of the leaf star of $\vertex{\l}{\coarseIdxtwo}$ need not carry $\vertex{\l}{\coarseIdxtwo}$ as a vertex at all: a vertex born on level $\l$ can lie in the interior of an edge of the leaf face covering it, and then the candidates are its level-$\lone$ neighbours, which lie further out than its level-$\l$ ring.}
+\robert{The candidate set~\eqref{eq:pinch_candidates} is exactly what Lemma~\ref{lemma:pad_locality} permits, and it differs from the one-ring of the repaired vertices in both directions. It is narrower, because a vertex enters as a candidate only on the level of the face that carried it and not on every level at which it exists. It is wider, because $\quadriV$ with target $\l \! + \! 1$ refines faces on all levels between $\lmin$ and $\l$, and a face on a level $\lone < \l$ of the leaf star of $\vertex{\l}{\coarseIdxtwo}$ need not carry $\vertex{\l}{\coarseIdxtwo}$ as a vertex at all: a vertex born on level $\l$ can lie in the interior of an edge of the leaf face covering it, and then the candidates are its level-$\lone$ neighbours, which lie further out than its level-$\l$ ring.}
 
 \robert{The repaired vertices themselves need not be carried over, which is the content of the next lemma. Its second half also bounds how often the iteration can repeat.}
 
 \begin{lemma}[\robert{Pinch resolution spends its vertex}]
     \label{lemma:pinch_spent}
-    \robert{Let $\vertex{\l}{\coarseIdxtwo}$ be a pinch of $\domseq[\L]$ on level $\l$ and let $\domseq[\L]' \coloneq \quadriVup{\l+1}(\domseq[\L], \vertex{\l}{\coarseIdxtwo})$. Then the refinement fan of $\vertex{\l}{\coarseIdxtwo}$ in $\domseq[\L]'$ is its entire mesh star,
+    \robert{Let $\vertex{\l}{\coarseIdxtwo}$ be a pinch of $\domseq[\L]$ on level $\l$ and let $\domseq[\L]' \coloneq \quadriV(\domseq[\L], \{ \vertexClass{\coarseIdxtwo} \}, \targetlevel)$ with $\targetlevel_\coarseIdxtwo = \l \! + \! 1$. Then the refinement fan of $\vertex{\l}{\coarseIdxtwo}$ in $\domseq[\L]'$ is its entire mesh star,
     \begin{equation}
         \label{eq:pinch_spent}
         \refFan{\lone}' \big( \vertex{\lone}{\coarseIdxtwo} \big) \; = \; \FVl{\lone} \big( \vertex{\lone}{\coarseIdxtwo} \big),
@@ -2065,10 +2235,21 @@ Detection and repair are separate phases. The whole set $\V^{\mathrm{pinch}}(\do
 % directly. Kept for cherry-picking.
     \tobecut{By the iterative algorithm of Remark~\ref{rem:graded_quadrisection_algorithm} the operator refines the coarsest slice of the leaf star of $\vertex{\l}{\coarseIdxtwo}$ once per level, and each such refinement raises the coarsest level of that leaf star by one, so the leaf star of $\vertex{\l}{\coarseIdxtwo}$ in $\domseq[\L]'$ carries no face below level $\l\!+\!1$. Let $\lone \leq \l$ and let $\face{\lone}{\coarseIdxone} \in \FVl{\lone}(\vertex{\lone}{\coarseIdxtwo})$. The faces of the mesh star $\FVl{\L}(\vertex{\L}{\coarseIdxtwo})$ that descend from $\face{\lone}{\coarseIdxone}$ are covered by leaf faces on levels $\geq \l\!+\!1 > \lone$, so $\face{\lone}{\coarseIdxone} \in \ancestorPatch{\M_{\lone+1}}$ and hence $\face{\lone}{\coarseIdxone} \in \refFan{\lone}'(\vertex{\lone}{\coarseIdxtwo})$, which is~\eqref{eq:pinch_spent}.}
 
-    \robert{Let $\lone \leq \l$ be a level at which $\vertex{\l}{\coarseIdxtwo}$ exists. By Definition~\ref{def:graded_vertex_quadrisection} with $\targetlevel = \l \! + \! 1$, the regions of $\domseq[\L]'$ contain $\Aop{}{\lone}{\lone+1}(\FVanc{\lone}(\vertex{\l}{\coarseIdxtwo}))$ on level $\lone \! + \! 1$, so every face of $\FVanc{\lone}(\vertex{\l}{\coarseIdxtwo})$ lies in $\ancestorPatch{\M'_{\lone+1}}$ and is refined beyond level $\lone$. That star ancestry is the mesh star $\FVl{\lone}(\vertex{\lone}{\coarseIdxtwo})$ by~\eqref{eq:star_ancestry_is_star}, so the refinement fan $\refFan{\lone}'(\vertex{\lone}{\coarseIdxtwo}) = \FVl{\lone}(\vertex{\lone}{\coarseIdxtwo}) \cap \ancestorPatch{\M'_{\lone+1}}$ of Definition~\ref{def:refinement_fan} is the whole mesh star, which is~\eqref{eq:pinch_spent}. The regions of a domain sequence only grow under the quadrisection operators, so~\eqref{eq:pinch_spent} survives every later refinement. A full refinement fan is a single arc and contains both extremes of a linear fan, so it is neither a pinch by Definition~\ref{def:pinch_vertex} nor a boundary pinch by Definition~\ref{def:boundary_pinch}. For the bound, every productive round repairs at least one pair of a vertex and a level, no pair is ever repaired twice by the first half, and pinches are detected only on levels $\l < \L$. The last round detects nothing and stops the iteration.}
+    % SUPERSEDED (2026-08-25): the first two sentences are the first case of
+    % Proposition~\ref{proposition:class_star_levels} read on the output. Kept for cherry-picking.
+    \tobecut{Let $\lone \leq \l$ be a level at which $\vertex{\l}{\coarseIdxtwo}$ exists. By Definition~\ref{def:graded_vertex_quadrisection} with $\targetlevel = \l \! + \! 1$, the regions of $\domseq[\L]'$ contain $\Aop{}{\lone}{\lone+1}(\FVanc{\lone}(\vertex{\l}{\coarseIdxtwo}))$ on level $\lone \! + \! 1$, so every face of $\FVanc{\lone}(\vertex{\l}{\coarseIdxtwo})$ lies in $\ancestorPatch{\M'_{\lone+1}}$ and is refined beyond level $\lone$. That star ancestry is the mesh star $\FVl{\lone}(\vertex{\lone}{\coarseIdxtwo})$ by~\eqref{eq:star_ancestry_is_star}, so the refinement fan $\refFan{\lone}'(\vertex{\lone}{\coarseIdxtwo}) = \FVl{\lone}(\vertex{\lone}{\coarseIdxtwo}) \cap \ancestorPatch{\M'_{\lone+1}}$ of Definition~\ref{def:refinement_fan} is the whole mesh star, which is~\eqref{eq:pinch_spent}.}
+
+    \robert{The leaf star of $\vertex{\l}{\coarseIdxtwo}$ read on $\domseq[\L]'$ has coarsest level $\lmin' = \l \! + \! 1$ by Corollary~\ref{cor:graded_quadrisection_leafstar}. The first case of~\eqref{eq:class_star_levels} read on $\domseq[\L]'$ therefore refines the whole class star beyond its own level on every level $\lone < \l \! + \! 1$, and that class star is the mesh star $\FVl{\lone}(\vertex{\lone}{\coarseIdxtwo})$ by~\eqref{eq:star_ancestry_is_star} at the levels $\lone$ at which the vertex exists, which is~\eqref{eq:pinch_spent}. The regions of a domain sequence only grow under the quadrisection operators, so~\eqref{eq:pinch_spent} survives every later refinement. A full refinement fan is a single arc and contains both extremes of a linear fan, so it is neither a pinch by Definition~\ref{def:pinch_vertex} nor a boundary pinch by Definition~\ref{def:boundary_pinch}. For the bound, every productive round repairs at least one pair of a vertex and a level, no pair is ever repaired twice by the first half, and pinches are detected only on levels $\l < \L$. The last round detects nothing and stops the iteration.}
 \end{proof}
 
 \robert{A round that detects nothing certifies more than its own emptiness. Every vertex whose refinement fan has changed since the previous detection is a candidate by Lemma~\ref{lemma:pad_locality}, so an empty round proves that no vertex of $\domseq[\L]^{\mathrm{pinch}}$ is a pinch or a boundary pinch on any level. The substep therefore has an exact postcondition: $\domseq[\L]^{\mathrm{pinch}}$ satisfies clauses~(ii) and~(iii) of Definition~\ref{def:subdiv_partition}.}
+
+\begin{remark}[\robert{Why the repair homogenises the whole star}]
+    \label{rem:pinch_repair_choice}
+    \robert{The repair refines more than the defect requires. Arcs and gaps alternate around the mesh star, so their numbers agree, and Definition~\ref{def:pinch_vertex} asks for at least two gaps. Filling one gap merges the two arcs beside it, so a vertex with $k$ arcs needs $k \! - \! 1$ of its gaps filled and not all $k$, while the target $\l \! + \! 1$ fills every one. The gap left over would not have to be filled later either. Refinement only adds faces to a fan, so a gap can shrink from an end, split in two if it has at least three faces, or close and merge its arcs. A single gap of one or two faces has no interior face and can therefore never split, which leaves the vertex permanently free of pinches at that level. Homogenising is minimal neither among repairs nor among the repairs that last.
+
+    We homogenise for three reasons. It is canonical, since no gap has to be selected and the result depends on the class and the target alone, which is what makes Corollary~\ref{cor:graded_quadrisection_composition} independent of the order. It costs no new operator and no new notion, because \textsc{Refine} and the grading step ask for homogenisation on their own account, whereas a partial repair would need a partial fan that Proposition~\ref{proposition:class_star_levels} does not cover. And it keeps the accounting short, since a full fan cannot be split, which is the whole of Lemma~\ref{lemma:pinch_spent} and hence of the bound~\eqref{eq:pinch_rounds}. A repair leaving one short gap would be spent as well by the argument above, so that bound is not lost in principle, but proving it would mean carrying gap lengths through the iteration. A partial repair would also refine a neighbourhood on one side only, working against the grading step below and its purpose of smoothing transitions. What is given up is one gap at one vertex on one level per repair, and Lemma~\ref{lemma:graded_quadrisection_minimal} bounds it from the other side, since the operator is the least refinement that homogenises at all.}
+\end{remark}
 
 \guidance{Measured, for the discussion of the bound: the pinch iteration has never needed more than one productive round, neither at any step of the adaptive runs of Section~\ref{subsec:vector_laplace} nor in any of the exhaustive marking sweeps, so in practice it costs one repair round and one certifying round. The bound~\eqref{eq:pinch_rounds} is crude and depends on the mesh. Unlike the confinement iteration below, there is no bound by the number of levels here, because a repair on level $\l$ can open a pinch on any level $\leq \l$; that is the same mechanism that drives the outer loop, cf.\ Remark~\ref{rem:padding_chain}.}
 
@@ -2100,7 +2281,7 @@ according to Definition~\ref{def:confined_face}. The repaired domain sequence $\
         \F^{\mathrm{confined},k} \coloneq \big\{ \face{\l}{\coarseIdxone} \in \F^{\mathrm{cand},k-1} \; \colon \; \face{\l}{\coarseIdxone} \text{ is confined in } \domseq[\L]^{\mathrm{unconfined},k-1} \big\},
     \end{equation}
     \vspace{-7mm}
-    \item refine them level by level as in~\eqref{eq:confined_faces_resolved_subdiv_partition} to obtain $\domseq[\L]^{\mathrm{unconfined},k}$, and take the children of the faces just refined as the candidates of the next round,
+    \item refine them \tobecut{level by level }as in~\eqref{eq:confined_faces_resolved_subdiv_partition} to obtain $\domseq[\L]^{\mathrm{unconfined},k}$, and take the children of the faces just refined as the candidates of the next round,
     \begin{equation}
         \label{eq:confined_candidates}
         \F^{\mathrm{cand},k} \coloneq \Aop{}{\l}{\l+1} \big( \F^{\mathrm{confined},k} \big),
@@ -2113,12 +2294,19 @@ according to Definition~\ref{def:confined_face}. The repaired domain sequence $\
 
 \begin{lemma}[\robert{Confinement padding confines only its own children}]
     \label{lemma:confined_children}
-    \robert{Let $\domseq[\L] \in \alldomseqs$, let $\F^{\mathrm{confined}} \subseteq \leafMesh(\domseq[\L])$ be a set of leaf faces, every one of which is confined in $\domseq[\L]$, and let $\domseq[\L]'$ be the result of refining them level by level as in~\eqref{eq:confined_faces_resolved_subdiv_partition}. Then every leaf face of $\domseq[\L]'$ that is confined in $\domseq[\L]'$ and was not confined in $\domseq[\L]$ is a child of a face of $\F^{\mathrm{confined}}$.}
+    \robert{Let $\domseq[\L] \in \alldomseqs$, let $\F^{\mathrm{confined}} \subseteq \leafMesh(\domseq[\L])$ be a set of leaf faces, every one of which is confined in $\domseq[\L]$, and let $\domseq[\L]' \coloneq \quadriF(\domseq[\L], \F^{\mathrm{confined}})$ be the result of refining them as in~\eqref{eq:confined_faces_resolved_subdiv_partition}. Then every leaf face of $\domseq[\L]'$ that is confined in $\domseq[\L]'$ and was not confined in $\domseq[\L]$ is a child of a face of $\F^{\mathrm{confined}}$.}
 \end{lemma}
 \begin{proof}
-    \robert{The regions of a domain sequence only grow under quadrisection, so a refinement-exterior vertex can only lose that property and a confined face stays confined. The hypothesis therefore still holds at every level of the sweep, and it suffices to consider the refinement of the faces of $\F^{\mathrm{confined}}$ on one level $\l$.
+    % SUPERSEDED (2026-08-25): the sweep over levels, and with it the split into
+    % the two cases l' = l and l' != l, was an artefact of reading a single
+    % multi-level application one level at a time. Lemma~\ref{lemma:pad_locality}
+    % is stated for a whole marked family, so the argument runs once, on the level
+    % of the face. Kept for cherry-picking.
+    \tobecut{The regions of a domain sequence only grow under quadrisection, so a refinement-exterior vertex can only lose that property and a confined face stays confined. The hypothesis therefore still holds at every level of the sweep, and it suffices to consider the refinement of the faces of $\F^{\mathrm{confined}}$ on one level $\l$.
 
     Let $\face{\lone}{\fineIdxone}$ be a leaf face of $\domseq[\L]$ that is unconfined, and let $\vertex{\lone}{\coarseIdxtwo}$ be one of its vertices that is refinement-exterior on level $\lone$. If $\lone \neq \l$, then $\refFan{\lone}(\vertex{\lone}{\coarseIdxtwo})$ is unchanged by Lemma~\ref{lemma:pad_locality}. If $\lone = \l$, then $\vertex{\l}{\coarseIdxtwo}$ is a vertex of no face of $\F^{\mathrm{confined}}$ on level $\l$: such a face is confined and therefore has no refinement-exterior vertex on level $\l$ by Definition~\ref{def:confined_face}, whereas $\vertex{\l}{\coarseIdxtwo}$ has an empty fan there. So $\refFan{\l}(\vertex{\l}{\coarseIdxtwo})$ is unchanged by Lemma~\ref{lemma:pad_locality} as well. In both cases $\vertex{\lone}{\coarseIdxtwo}$ stays refinement-exterior and $\face{\lone}{\fineIdxone}$ stays unconfined. The only faces of $\domseq[\L]'$ that are not faces of $\domseq[\L]$ are the children of $\F^{\mathrm{confined}}$.}
+
+    \robert{Let $\face{\lone}{\fineIdxone}$ be a leaf face of $\domseq[\L]$ that is unconfined in $\domseq[\L]$ and is still a leaf face of $\domseq[\L]'$, and let $\vertex{\lone}{\coarseIdxtwo}$ be one of its vertices that is refinement-exterior on level $\lone$. Then $\vertex{\lone}{\coarseIdxtwo}$ is a vertex of no face of the slice $\F^{\mathrm{confined}}_\lone$. Such a face is confined and therefore has no refinement-exterior vertex on level $\lone$ by Definition~\ref{def:confined_face}, whereas the fan of $\vertex{\lone}{\coarseIdxtwo}$ is empty there. Lemma~\ref{lemma:pad_locality} therefore leaves $\refFan{\lone}(\vertex{\lone}{\coarseIdxtwo})$ unchanged, the vertex stays refinement-exterior and $\face{\lone}{\fineIdxone}$ stays unconfined. The only faces of $\domseq[\L]'$ that are not faces of $\domseq[\L]$ are the children of $\F^{\mathrm{confined}}$.}
 \end{proof}
 
 \begin{corollary}[\robert{The confinement iteration advances one level per round}]
@@ -2131,7 +2319,7 @@ according to Definition~\ref{def:confined_face}. The repaired domain sequence $\
     The iteration performs $q^{\mathrm{confined}} \! + \! 1$ rounds and returns a domain sequence $\domseq[\L]^{\mathrm{unconfined}}$ without confined leaf faces, that is, one satisfying clause~(i) of Definition~\ref{def:subdiv_partition}.}
 \end{corollary}
 \begin{proof}
-    \robert{By Lemma~\ref{lemma:confined_children} the set $\F^{\mathrm{confined},k+1}$ is contained in the candidate set $\F^{\mathrm{cand},k}$ of~\eqref{eq:confined_candidates}, whose faces are children of faces of $\F^{\mathrm{confined},k}$ and hence lie on levels $\geq \l_k \! + \! 1$. No leaf face on level $\L$ is ever confined, because no face is refined beyond $\L$, so $\refFan{\L}$ is empty at every vertex and every vertex is refinement-exterior on level $\L$. Hence $\l_k \leq \L \! - \! 1$ for every productive round, which gives~\eqref{eq:confinement_rounds}. An empty round certifies that no leaf face is confined, since by Lemma~\ref{lemma:confined_children} every face whose confinement has changed since the previous detection is a candidate.}
+    \robert{By Lemma~\ref{lemma:confined_children} the set $\F^{\mathrm{confined},k+1}$ is contained in the candidate set $\F^{\mathrm{cand},k}$ of~\eqref{eq:confined_candidates}, whose faces are children of faces of $\F^{\mathrm{confined},k}$ and hence lie on levels $\geq \l_k \! + \! 1$. No leaf face on level $\L$ is ever confined, since every vertex is refinement-exterior on level $\L$ by Definition~\ref{def:refinement_fan}. Hence $\l_k \leq \L \! - \! 1$ for every productive round, which gives~\eqref{eq:confinement_rounds}. An empty round certifies that no leaf face is confined, since by Lemma~\ref{lemma:confined_children} every face whose confinement has changed since the previous detection is a candidate.}
 \end{proof}
 
 \robert{The cost of the iteration is therefore bounded by the number of levels rather than by the size of the mesh, and after the first round each round only tests the children of the faces the previous one refined. The number of productive rounds is the depth by which the neighbourhood of the deepest confined face is refined beyond it, so it is one exactly when no confined face is buried by more than one level, which is the case at all but one step of the adaptive runs of Section~\ref{subsec:vector_laplace}.}
@@ -2144,7 +2332,7 @@ according to Definition~\ref{def:confined_face}. The repaired domain sequence $\
 
 The grading is supposed to smooth out transitions across vertices $\vertex{\l}{\coarseIdxtwo}$ of $\domseq^{\mathrm{unconfined}}$ whose leaf stars still have large level spans, see Definition~\ref{def:level_range}. Unlike the pinch resolution and the confinement padding, the grading step does not restore exactness or linear independence but is intended to improve the conditioning of the matrix-vector system and to avoid numerical artifacts in the transition areas. Thus, grading is an optional padding step.
 
-The predicate to identify the vertices $(\vertex{\l}{\coarseIdxtwo})$ to grade is the level span $\mu_\coarseIdxtwo \coloneq \lmax{}_{,\coarseIdxtwo} - \lmin{}_{,\coarseIdxtwo}$ of its leaf star $\FVleaf{}(\vertex{\l}{\coarseIdxtwo})$. The detection algorithm fixes a maximum level span $g \in \mathbb{N}$ and assembles the set
+The predicate to identify the vertices $(\vertex{\l}{\coarseIdxtwo})$ to grade is the level span $\mu_\coarseIdxtwo \coloneq \lmax{}_{,\coarseIdxtwo} - \lmin{}_{,\coarseIdxtwo}$ of its leaf star $\FVleaf{}(\vertexClass{\coarseIdxtwo})$. The detection algorithm fixes a maximum level span $g \in \mathbb{N}$ and assembles the set
 \begin{equation}
     \V^{\mathrm{grading}}(\domseq[\L]^\mathrm{confined}) \coloneq \big\{ \vertex{\l}{\coarseIdxtwo} \in \V(\domseq[\L]^\mathrm{confined}) \; \colon \; \mu_\coarseIdxtwo > \guidance{g} \big\}
 \end{equation}
@@ -2152,14 +2340,14 @@ The predicate to identify the vertices $(\vertex{\l}{\coarseIdxtwo})$ to grade i
 The vertices marked for grading are refined using the graded quadrisection operator to obtain the graded domain sequence $\domseq[\L]^{\mathrm{grading}} \coloneq \domseq^{\vert \V^{\mathrm{grading}} \vert}$ as the result of the iterative algorithm
 \begin{equation}
     \label{eq:grading_subdiv_partition}
-    \domseq^p = \quadriVup{\lmax{}_{,m} - g} \big( \domseq^{p-1}, \, (\vertex{\l}{\coarseIdxtwo})_p \big) \quad \text{for all} \quad (\vertex{\l}{\coarseIdxtwo})_p \in \V^{\mathrm{grading}}(\domseq[\L]^\mathrm{confined}),
+    \domseq^p = \quadriV \big( \domseq^{p-1}, \, \{ \vertexClass{\coarseIdxtwo_p} \}, \, \targetlevel \big) \quad \text{for all} \quad (\vertex{\l}{\coarseIdxtwo})_p \in \V^{\mathrm{grading}}(\domseq[\L]^\mathrm{confined}),
 \end{equation}
-where $p \in \{1, \, \dots, \, \vert \V^{\mathrm{grading}}(\domseq[\L]^\mathrm{confined}) \vert \}$ is an enumeration of the vertices to be graded and $\domseq[\L]^0 = \domseq[\L]^{\mathrm{confined}}$. Note the additional $-g$ in the target level of $\quadriVup{\lmax{}_{,\coarseIdxtwo} - g}$. \robert{By Corollary~\ref{cor:graded_quadrisection_leafstar} it raises the coarsest level $\lmin{}_{,\coarseIdxtwo}$ of the leaf star of $\vertex{\l}{\coarseIdxtwo}$ to $\lmax{}_{,\coarseIdxtwo} - g$ while leaving $\lmax{}_{,\coarseIdxtwo}$ where it is, and thus closes its level span to at most $g$. The span can come out below $g$ because the vertices are graded as a set and the grading of a neighbour may reach into this leaf star as well, which is the inequality in the last sentence of that corollary.} We use $g = 2$ throughout, which works well in the simulations of Section~\ref{subsec:vector_laplace}.
+where $p \in \{1, \, \dots, \, \vert \V^{\mathrm{grading}}(\domseq[\L]^\mathrm{confined}) \vert \}$ is an enumeration of the vertices to be graded and $\domseq[\L]^0 = \domseq[\L]^{\mathrm{confined}}$. Note the additional $-g$ in the target level map $\targetlevel_\coarseIdxtwo = \lmax{}_{,\coarseIdxtwo} - g$. \robert{Applied to $\vertexClass{\coarseIdxtwo}$ on its own, Corollary~\ref{cor:graded_quadrisection_leafstar} raises the coarsest level $\lminIdx{\coarseIdxtwo}$ of its leaf star to $\lmaxIdx{\coarseIdxtwo} - g$ and leaves $\lmaxIdx{\coarseIdxtwo}$ where it is, so the level span closes to exactly $g$. The classes are graded as a set, and then the span can come out on either side of $g$ by~\eqref{eq:graded_quadrisection_leafstar_set}, but by at most one level in the fine direction. It is smaller when the grading of a neighbour lifts the coarse end of this leaf star as well. It is larger, and then by exactly one, when a class still adjacent to $\vertexClass{\coarseIdxtwo}$ on level $\lmaxIdx{\coarseIdxtwo}$ is graded past that level, which asks it to carry a finest level more than $g$ above $\lmaxIdx{\coarseIdxtwo}$. That is a jump of more than $g$ between neighbours on the input to the step, which is the configuration the step exists to remove, and the outer loop of Section~\ref{subsec:termination} is what closes it.} We use $g = 2$ throughout, which works well in the simulations of Section~\ref{subsec:vector_laplace}.
 \guidance{Decision left open on purpose: grading is a vertex quadrisection, so by Lemma~\ref{lemma:pad_locality} it can reopen both of the other two predicates, and it can raise the level span at a neighbour and so reopen its own. It is written here as a single sweep, whereas the implementation runs one grading round followed by the confinement iteration and repeats that until no span violation is left. Because grading is optional and does not affect admissibility, the postcondition of $\textsc{Pad}$ on clauses~(i) to~(iii) does not depend on which of the two is meant; only the span does, and the outer loop of Section~\ref{subsec:termination} closes that. If grading is to get the same treatment as the two substeps above, its candidate set after a round is the set of vertices of the faces that round refined, exactly as in~\eqref{eq:pinch_candidates}, and the round count would need its own bound.}
 
 \paragraph{Summary.}
 
-Every stage of the \textsc{Pad} step uses either the graded vertex quadrisection operator $\quadriVup{\targetlevel}$ or the face quadrisection operator $\quadriF$.
+Every stage of the \textsc{Pad} step uses either the graded vertex quadrisection operator $\quadriV$ or the face quadrisection operator $\quadriF$.
 
 The pinch padding resolves pinch vertices and boundary pinch vertices, and thus targets clauses~(ii) and~(iii) of Definition~\ref{def:subdiv_partition}. The confinement padding resolves confined leaf faces and addresses clause~(i) of that definition. The optional grading step only refines around vertices with large level jumps to improve the conditioning of the resulting linear system. 
 
@@ -2208,7 +2396,7 @@ observation.
 % Corollary~\ref{cor:graded_quadrisection_composition}. Kept for cherry-picking.
     \tobecut{At a pinch vertex $\vertex{\l}{\coarseIdxone}$, two distinct refinement arcs of the refinement fan at level $\l$ are separated by at least one face by Definition~\ref{def:pinch_vertex}. That face is not refined beyond level $\l$, so its children incident to $\vertex{\l}{\coarseIdxone}$ are not leaf faces, and the last factor $\quadriVat{\l}$ of $\quadriVup{\l+1}$ quadrisects at least one of them. The same argument covers a boundary pinch, whose unanchored arc is separated from both extremes of the linear refinement fan by such a face.}
 
-    \robert{At a pinch vertex $\vertex{\l}{\coarseIdxone}$, two distinct refinement arcs of the refinement fan at level $\l$ are separated by at least one face by Definition~\ref{def:pinch_vertex}. That face is not refined beyond level $\l$, so the leaf face covering it lies on a level $\leq \l$ and the leaf star of $\vertex{\l}{\coarseIdxone}$ satisfies $\lmin \leq \l < \l \! + \! 1$. By Corollary~\ref{cor:graded_quadrisection_composition}, $\quadriVup{\l+1}$ is therefore not the identity at that vertex. The same argument covers a boundary pinch, whose unanchored arc is separated from both extremes of the linear refinement fan by such a face.} A confined face is detected on the leaf faces only, so $\quadriF$ is not the identity on it. A vertex of level span greater than \guidance{$g$} carries leaf faces below \guidance{$\targetlevel_\coarseIdxone \! - \! g$}, so \guidance{$\quadriVup{\targetlevel_\coarseIdxone - g}$} quadrisects at least one of them. Pinches are detected only at levels $\l < \L$ and the grading target never exceeds \guidance{$\L \! - \! g$}, so no repair refines beyond level $\L$.
+    \robert{At a pinch vertex $\vertex{\l}{\coarseIdxone}$, two distinct refinement arcs of the refinement fan at level $\l$ are separated by at least one face by Definition~\ref{def:pinch_vertex}, \robert{so the fan is not the whole mesh star and the first case of~\eqref{eq:class_star_levels} gives $\lmin \leq \l < \l \! + \! 1$.} \tobecut{That face is not refined beyond level $\l$, so the leaf face covering it lies on a level $\leq \l$ and the leaf star of $\vertex{\l}{\coarseIdxone}$ satisfies $\lmin \leq \l < \l \! + \! 1$.} By Corollary~\ref{cor:graded_quadrisection_composition}, $\quadriVup{\l+1}$ is therefore not the identity at that vertex. The same argument covers a boundary pinch, whose unanchored arc is separated from both extremes of the linear refinement fan by such a face.} A confined face is detected on the leaf faces only, so $\quadriF$ is not the identity on it. A vertex of level span greater than \guidance{$g$} carries leaf faces below \guidance{$\targetlevel_\coarseIdxone \! - \! g$}, so \guidance{$\quadriVup{\targetlevel_\coarseIdxone - g}$} quadrisects at least one of them. Pinches are detected only at levels $\l < \L$ and the grading target never exceeds \guidance{$\L \! - \! g$}, so no repair refines beyond level $\L$.
 \end{proof}
 
 \guidance{This lemma is stated for one firing of one predicate, so it applies to a single round of either inner iteration just as it does to a whole pass. Worth saying so in one sentence, since it is now the productivity half of three termination arguments rather than one.}
