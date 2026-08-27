@@ -81,6 +81,27 @@ Werner Bauer\footnote{University of Surrey, School of Mathematics and Physics, U
 % Q_{faces}(D). Was: \mathcal{Q}^{\triangle}_{#1} and \mathcal{Q}^{\star \to #2}_{#1}.
 \newcommand{\quadriF}{\mathcal{Q}^{\triangle}}                   % face quadrisection; args (domain sequence, level-indexed family of face sets)
 \newcommand{\quadriV}{\mathcal{Q}^{\star}}                       % bare symbol; \quadriVup is built from it, and \tobecut call sites still typeset
+% Detection carries the same star/triangle superscripts as the quadrisections it
+% feeds. \detectV eats a candidate VERTEX set and returns the pair of arguments
+% \quadriV asks for; \detectF eats a candidate FACE set and returns the family
+% \quadriF asks for. Pi is free (no \prod in the paper) and reads as pinch.
+\newcommand{\detectV}{\Pi^{\star}}                               % pinch detection on vertices
+\newcommand{\detectF}{\Pi^{\triangle}}                           % confined-face detection
+% Candidate collection, the move back. \collectV reads the vertices a marked
+% family newly refined; \collectF is the face counterpart (children of the
+% refined faces, by lemma:confined_children). Gamma is free; \partial carries
+% every boundary in the paper.
+\newcommand{\collectV}{\Gamma^{\star}}                           % next vertex candidates
+\newcommand{\collectF}{\Gamma^{\triangle}}                       % next face candidates
+% The classes \detectV returns. \markedVertexClasses stays the GENERIC argument
+% of \quadriV, since \textsc{Refine} and the grading mark for their own reasons.
+% This is the pinch-specific set, matching \V^{pinch} and \F^{confined}.
+% Takes the cycle index as an OPTIONAL argument, since the superscript slot is
+% already spent: \pinchClasses is \widehat{\V}^{pinch} and \pinchClasses[c] is
+% \widehat{\V}^{pinch,c}. Writing \pinchClasses[c] would be a double superscript.
+\makeatletter
+\DeclareRobustCommand{\pinchClasses}[1][]{\widehat{\V}^{\mathrm{pinch}\ifx\@empty#1\@empty\else,#1\fi}}
+\makeatother
 % The target level rides on the OPERATOR, never in an argument slot. This is not
 % the old \mathcal{Q}^{\star \to #2}_{#1} -- that carried source AND target and so
 % named a value, not a map; here only the target ever appears, and the operator
@@ -1804,7 +1825,7 @@ The levels can also be walked one at a time, which is how an implementation will
 
 \smallskip
 
-The refinement and padding steps of the adaptive loop in Section~\ref{subsec:adaptive_loop} iterate over the vertex classes $\vertexClasses(\domseq[\L])$ of the domain sequence $\domseq[\L]$ and their representatives on level $\l$ as defined in Definition~\ref{def:vertex_class}. The following refinement operator raises a whole neighbourhood of a vertex to a prescribed target level. It adds exactly the class star $\FVanc{\l}(\vertexClass{\coarseIdxone})$ of the representative vertex $\vertex{\l}{\coarseIdxone}$ of level $\l$ level up to that target, which is what makes it close a pinch, cf.\ Lemma~\ref{lemma:pinch_spent}. Whether a class star has to be added on a given level is decided by the leaf star, which is what Proposition~\ref{proposition:class_star_levels} settles.
+The refinement and padding steps of the adaptive loop in Section~\ref{subsec:adaptive_loop} iterate over the vertex classes $\vertexClasses(\domseq[\L])$ of the domain sequence $\domseq[\L]$ and their representatives on level $\l$ as defined in Definition~\ref{def:vertex_class}. The following refinement operator raises a whole neighbourhood of a vertex to a prescribed target level. It adds exactly the class star $\FVanc{\l}(\vertexClass{\coarseIdxone})$ of the representative vertex $\vertex{\l}{\coarseIdxone}$ of level $\l$ level up to that target, which is what makes it close a pinch, cf.\ Corollary~\ref{lemma:pinch_spent}. Whether a class star has to be added on a given level is decided by the leaf star, which is what Proposition~\ref{proposition:class_star_levels} settles.
 
 Since the class star on level $\l$ depends only on the vertex class and the uniform meshes and not on the domain sequence, several vertices can be raised at once by taking the union, and no order has to be fixed. This is the form in which Section~\ref{subsec:adaptive_loop} uses the operator. Each of its steps supplies a set of vertices and a target level for each of them.
 
@@ -1979,6 +2000,38 @@ Reflexivity, antisymmetry and transitivity are inherited from set inclusion on e
 \robert{Two things are worth reading off the statement. The first is the shape of~\eqref{eq:graded_quadrisection_minimal}. It compares the operator with every homogenisation at once, which is a stronger claim than saying that no homogenisation is strictly coarser than the operator. The two come apart in a partial order. Several homogenisations can each have nothing strictly below them and still be incomparable to one another, and then none of them is the coarsest. The second is that~\eqref{eq:graded_quadrisection_minimal}, together with the operator being a homogenisation itself, makes it the unique such element. That is the last line of the proof, and it is where antisymmetry is spent. Nothing guarantees that a partial order has a least element at all, so its existence is part of what the lemma asserts, and the proof settles it by exhibiting the operator. This is what lets us call the output \emph{the} coarsest homogenisation rather than one of several.}
 
 Lemma~\ref{lemma:graded_quadrisection_minimal} rules out the wider neighbourhoods one might reach for instead. One example would be a non-graded operator, which refines the level-$\lzero$ class star of every marked class uniformly up to its target level and never re-reads the class star in between. It homogenises as well, and it is strictly larger as soon as some target level exceeds $1$ because it keeps all $4$ children of a refined face rather than only the one that touches the vertex class on every level.
+
+\robert{What a homogenisation does to the refinement fan of a marked class is fixed by the constraint~\eqref{eq:homogenisation_constraint} alone. The padding step of Section~\ref{subsec:padding} runs on this.}
+
+\begin{corollary}[\robert{Homogenisation spends its vertices}]
+    \label{lemma:pinch_spent}
+    \robert{Let $\domseq[\L]' \in \alldomseqs_\L$ be any homogenisation of $\domseq[\L]$ for $\markedVertexClasses$ and $\targetlevel$ in the sense of Lemma~\ref{lemma:graded_quadrisection_minimal} and let $\vertexClass{\coarseIdxone} \in \markedVertexClasses$ be a marked class. Then the refinement fan of $\vertexClass{\coarseIdxone}$ in $\domseq[\L]'$ is its entire mesh star,
+    \begin{equation}
+        \label{eq:pinch_spent}
+        \refFan{\l}' \big( \vertex{\l}{\coarseIdxone} \big) \; = \; \FVl{\l} \big( \vertex{\l}{\coarseIdxone} \big),
+    \end{equation}
+    on every level $\l < \targetlevel_\coarseIdxone$ at which the vertex exists. In particular $\vertex{\l}{\coarseIdxone}$ is neither a pinch nor a boundary pinch on such a level. The operator $\quadriV(\domseq[\L], \markedVertexClasses, \targetlevel)$ is such a homogenisation, and so is every domain sequence obtained from it by further quadrisection.}
+\end{corollary}
+\begin{proof}
+    \robert{The leaf star of $\vertexClass{\coarseIdxone}$ read on $\domseq[\L]'$ has coarsest level $\lminIdx{\coarseIdxone}' \geq \targetlevel_\coarseIdxone$ by~\eqref{eq:homogenisation_constraint}. Every level $\l < \targetlevel_\coarseIdxone$ therefore falls in the first case of~\eqref{eq:class_star_levels}, which refines the whole class star beyond its own level. At the levels at which the vertex exists that class star is the mesh star by~\eqref{eq:star_ancestry_is_star} and the intersection with $\ancestorPatch{\M'_{\l+1}}$ is the refinement fan of Definition~\ref{def:refinement_fan}, which is~\eqref{eq:pinch_spent}. The operator is a homogenisation by Lemma~\ref{lemma:graded_quadrisection_minimal}, and a further quadrisection only grows the regions, which leaves both~\eqref{eq:domseq_order} and~\eqref{eq:homogenisation_constraint} standing. A full refinement fan is a single arc and contains both extremes of a linear fan, so neither Definition~\ref{def:pinch_vertex} nor Definition~\ref{def:boundary_pinch} can fire.}
+\end{proof}
+
+\robert{Nothing here forbids $\vertexClass{\coarseIdxtwo}$ from being a pinch on a level $\lone \geq \targetlevel_\coarseIdxtwo$, and nothing should. The constraint~\eqref{eq:homogenisation_constraint} is a floor on the leaf star and says nothing about the levels above the target.}
+
+\begin{remark}[\robert{Why the repair homogenises the whole star}]
+    \label{rem:pinch_repair_choice}
+    \robert{The repair overshoots, and it is worth saying by how much and what the overshoot buys.
+
+    Arcs and gaps alternate around the mesh star, so their numbers agree, and Definition~\ref{def:pinch_vertex} asks for at least two of each. Filling one gap merges the two arcs beside it, so a vertex with $a$ arcs needs $a \! - \! 1$ of its gaps filled and not all $a$, while the target $\l \! + \! 1$ fills every one. Nor would the leftover gap have to be filled later. Refinement only adds faces to a fan, so a gap can shrink from an end, split, or close, and splitting needs an interior face. A gap of one or two faces has none and can never split, so it leaves the vertex permanently free of pinches at that level. Homogenising is therefore minimal neither among repairs nor among the repairs that last, and it costs one gap at one vertex on one level per repair.
+
+    We homogenise for two reasons, and each of them is a result already proved. A third reason is what it does to the accounting of the pinch iteration, which Section~\ref{subsec:padding} takes up.
+
+    It is canonical. No gap has to be selected, so the outcome depends on the class and the target alone, which is what makes Corollary~\ref{cor:graded_quadrisection_composition} give order-independence and idempotence. A rule that picks $a \! - \! 1$ of $a$ gaps has neither.
+
+    It costs no new notion. \textsc{Refine} and the grading step ask for homogenisation on their own account, and a homogenised class has the closed-form leaf star~\eqref{eq:graded_quadrisection_leafstar} and falls under the three cases of Proposition~\ref{proposition:class_star_levels}. A partially filled fan has no such description, so a partial repair would need machinery that nothing else in this section could reuse.
+
+    The overshoot is bounded from the other side. By Lemma~\ref{lemma:graded_quadrisection_minimal} the operator is the least refinement that homogenises to the target at all, so beyond that one gap per repair nothing is spent. A partial repair would also refine a neighbourhood on one side only, working against the grading step and its purpose of smoothing transitions.}
+\end{remark}
 
 \smallskip
 
@@ -2199,120 +2252,116 @@ Two remarks on the reach of the two lemmas. First, neither of them says anything
 
 Second, the lemma covers the graded vertex quadrisection in a single application and not one level at a time. By Corollary~\ref{cor:graded_is_face_quadrisection} the operator $\quadriV(\cdot, \markedVertexClasses, \targetlevel)$ is a face quadrisection on the family~\eqref{eq:graded_marked_family} of class stars, so reading that family as the slice gives the statement. On level $\l$ the slice is the union of the class stars $\FVanc{\l}(\vertexClass{\coarseIdxone})$ over the marked classes with $\targetlevel_\coarseIdxone > \l$, and the predicates that can have changed on level $\l$ are those of its vertices.
 
+\robert{The proof of Lemma~\ref{lemma:pad_locality} gives a little more than the statement. It enlarges the ancestor patch by the slice, so a face of $\simplexsubset{2}{\l}$ that already lies in $\ancestorPatch{\M_{\l+1}}$ enlarges nothing and leaves every refinement fan alone. Only the faces a quadrisection refines for the first time can move a predicate. Both substeps read their next candidates off exactly those faces, so we name the map once.}
+
+\begin{definition}[\robert{Candidate collection}]
+    \label{def:candidate_collection}
+    \robert{Let $\domseq[\L] \in \alldomseqs_\L$ with regions $\M_\l$ and let $\simplexsubset{2}{}$ with slices $\simplexsubset{2}{\l}$ be a marked family for $\domseq[\L]$ in the sense of~\eqref{eq:marked_face_family}. \emph{Candidate collection} is the map
+    \begin{equation}
+        \label{eq:candidate_collection}
+        \collectV \big( \domseq[\L], \, \simplexsubset{2}{} \big) \; \coloneq \bigsqcup\limits_{\l = \lzero}^{\L-1} \; \V_\l \big( \simplexsubset{2}{\l} \, \setminus \, \ancestorPatch{\M_{\l+1}} \big)
+    \end{equation}
+    onto the vertices of the faces that $\quadriF(\domseq[\L], \simplexsubset{2}{})$ refines for the first time, each read at the level of its face.}
+\end{definition}
+
+\robert{By Lemma~\ref{lemma:pad_locality} no vertex outside~\eqref{eq:candidate_collection} carries a pinch or a boundary pinch of $\quadriF(\domseq[\L], \simplexsubset{2}{})$ that it did not already carry in $\domseq[\L]$. By Lemma~\ref{lemma:new_vertices} the vertices the quadrisection adds need no separate test, since case $(i)$ puts such a vertex into~\eqref{eq:candidate_collection} on its own and case $(ii)$ leaves nothing to test. The superscript is the one $\quadriV$ carries, and the face counterpart $\collectF$ belongs to the confinement substep, where Lemma~\ref{lemma:confined_children} narrows the same collection to the children of the refined faces.}
+
+\guidance{Two things to check before this is final. The subtraction of $\ancestorPatch{\M_{\l+1}}$ in~\eqref{eq:candidate_collection} is new. The old candidate set was $\V_\l(\simplexsubset{2}{\l})$ over the whole slice, which is strictly larger whenever a marked class star reaches into a region that is already refined, and that happens in every cycle after the first. Confirm that the implementation subtracts as well before the counts of Section~\ref{sec:numerical_experiments} are read against this. The other point is $\collectF$. It is defined as a macro but not used, because the confinement candidates of~\eqref{eq:confined_candidates} are the children of the refined faces and not the vertices of them, so the two members of the family do not share a formula, only a role.}
+
 
 \subsubsection{Resolving vertex pinches}
 
-\robert{The substep detects pinches with Definitions~\ref{def:pinch_vertex} and~\ref{def:boundary_pinch} and repairs them with the graded vertex quadrisection $\quadriV$. We write $\V^{\mathrm{pinch}}(\domseq[\L]) \subseteq \V(\domseq[\L])$ for the vertices of a domain sequence that are a pinch or a boundary pinch, each at the levels at which they are one. The test runs at every level at which the vertex exists in the domain sequence and not only at its finest one, so one class can occur in $\V^{\mathrm{pinch}}$ at several levels at once.}
+\robert{This substep detects pinches with Definitions~\ref{def:pinch_vertex} and~\ref{def:boundary_pinch} and repairs them with the graded vertex quadrisection $\quadriV$. We write $\V^{\mathrm{pinch}}(\domseq[\L]) \subseteq \V(\domseq[\L])$ for the vertices of a domain sequence that are a pinch or a boundary pinch, each at the levels at which they are one. The test runs at every level at which the vertex exists in the domain sequence and not only at its finest one, so one class can occur in $\V^{\mathrm{pinch}}$ at several levels at once.}
 
-\robert{The target level $\l \! + \! 1$ is what merges the arcs, and it is the least target that does. The refinement arcs at level $\l$ are separated by faces that are not refined beyond level $\l$. Grading the leaf star to $\l \! + \! 1$ refines every one of them, so the fan at level $\l$ becomes the whole mesh star. Quadrisecting that mesh star once, without the grading, does not suffice, because the separation between the arcs can be covered by a leaf face at a level well below $\l$, and one round then lifts it by one level only and leaves the arcs separated.}
+\robert{Detection does not return a set of vertices to repair. It returns the pair of arguments that the graded vertex quadrisection $\quadriV$ of Definition~\ref{def:graded_vertex_quadrisection} asks for.}
 
-\begin{lemma}[\robert{Pinch resolution spends its vertex}]
-    \label{lemma:pinch_spent}
-    \robert{Let $\domseq[\L]' \coloneq \quadriV(\domseq[\L], \markedVertexClasses, \targetlevel)$ and let $\vertexClass{\coarseIdxtwo} \in \markedVertexClasses$ be any marked class. Then the refinement fan of $\vertexClass{\coarseIdxtwo}$ in $\domseq[\L]'$ is its entire mesh star,
+\begin{definition}[\robert{Pinch detection}]
+    \label{def:pinch_detection}
+    \robert{Let $\domseq[\L] \in \alldomseqs_\L$ and let $\V^{\mathrm{cand}} \subseteq \V(\domseq[\L])$ be a set of candidate vertices, each read at a level. \emph{Pinch detection} is the map
     \begin{equation}
-        \label{eq:pinch_spent}
-        \refFan{\lone}' \big( \vertex{\lone}{\coarseIdxtwo} \big) \; = \; \FVl{\lone} \big( \vertex{\lone}{\coarseIdxtwo} \big),
+        \label{eq:pinch_detection}
+        \detectV \big( \domseq[\L], \, \V^{\mathrm{cand}} \big) \; \coloneq \; \big( \pinchClasses, \, \targetlevel \big)
     \end{equation}
-    on every level $\lone < \targetlevel_\coarseIdxtwo$ at which the vertex exists, and the same holds in every domain sequence obtained from $\domseq[\L]'$ by further quadrisection. In particular, $\vertex{\lone}{\coarseIdxtwo}$ is never again a pinch or a boundary pinch on such a level. Read on a pinch caught at level $\l$ with the target $\l \! + \! 1$, this is what closes that pinch and what settles every level below $\l$ at the same time.}
-\end{lemma}
-\begin{proof}
-    \robert{The leaf star of $\vertexClass{\coarseIdxtwo}$ read on $\domseq[\L]'$ has coarsest level $\lmin' \geq \targetlevel_\coarseIdxtwo$ by Corollary~\ref{cor:graded_quadrisection_leafstar}, with equality when $\vertexClass{\coarseIdxtwo}$ is marked on its own and $\lmin'$ only larger when a neighbour's class star reaches it too. The first case of~\eqref{eq:class_star_levels} read on $\domseq[\L]'$ therefore refines the whole class star beyond its own level on every level $\lone < \targetlevel_\coarseIdxtwo$, and that class star is the mesh star $\FVl{\lone}(\vertex{\lone}{\coarseIdxtwo})$ by~\eqref{eq:star_ancestry_is_star} at the levels $\lone$ at which the vertex exists, which is~\eqref{eq:pinch_spent}. The regions of a domain sequence only grow under the quadrisection operators, so~\eqref{eq:pinch_spent} survives every later refinement. A full refinement fan is a single arc and contains both extremes of a linear fan, so it is neither a pinch by Definition~\ref{def:pinch_vertex} nor a boundary pinch by Definition~\ref{def:boundary_pinch}.}
-\end{proof}
-
-\begin{corollary}[\robert{A repaired class leaves the candidate set}]
-    \label{cor:pinch_spent_candidates}
-    \robert{In the situation of Lemma~\ref{lemma:pinch_spent}, no vertex
+    onto the vertex classes caught among the candidates,
     \begin{equation}
-        \label{eq:pinch_spent_vertices}
-        \vertex{\lone}{\coarseIdxtwo} \quad \text{with} \quad \vertexClass{\coarseIdxtwo} \in \markedVertexClasses \quad \text{and} \quad \lone \, < \, \targetlevel_\coarseIdxtwo
+        \label{eq:pinch_detection_classes}
+        \pinchClasses \; \coloneq \; \big\{ \vertexClass{\coarseIdxone} \in \vertexClasses(\domseq[\L]) \; \colon \;\; \vertex{\l}{\coarseIdxone} \in \V^{\mathrm{pinch}}(\domseq[\L]) \, \cap \, \V^{\mathrm{cand}} \;\text{ for at least one level }\; \l \big\},
     \end{equation}
-    is a pinch or a boundary pinch of $\domseq[\L]'$, nor of any domain sequence obtained from $\domseq[\L]'$ by further quadrisection. Such a vertex therefore never has to be tested again, whatever is refined later and in whatever order.}
-\end{corollary}
-\begin{proof}
-    \robert{By~\eqref{eq:pinch_spent} its refinement fan is the whole mesh star on every such level, and Lemma~\ref{lemma:pinch_spent} carries that through every later quadrisection. A full fan is a single arc and contains both extremes of a linear fan, so Definition~\ref{def:pinch_vertex} and Definition~\ref{def:boundary_pinch} both fail. Testing it can only ever return nothing.}
-\end{proof}
+    and the target level map on them,
+    \begin{equation}
+        \label{eq:pinch_detection_target}
+        \targetlevel_\coarseIdxone \; \coloneq \; \max \big\{ \, \l \! + \! 1 \; \colon \;\; \vertex{\l}{\coarseIdxone} \in \V^{\mathrm{pinch}}(\domseq[\L]) \, \cap \, \V^{\mathrm{cand}} \big\} .
+    \end{equation}
+    The set in~\eqref{eq:pinch_detection_target} is non-empty for every $\vertexClass{\coarseIdxone} \in \pinchClasses$ by~\eqref{eq:pinch_detection_classes}, so the maximum is always taken over at least one level.}
+\end{definition}
 
-\robert{Nothing here forbids $\vertexClass{\coarseIdxtwo}$ from becoming a pinch on a level $\lone \geq \targetlevel_\coarseIdxtwo$, and nothing should. By~\eqref{eq:graded_marked_family} the application has slices on the levels below its target only and says nothing about the levels above. A class spent up to its target re-enters at a finer level through the slice of a different class, exactly as it should, which is why~\eqref{eq:pinch_spent_vertices} names vertices and not classes.}
+\robert{The superscript is the one $\quadriV$ carries, since $\detectV$ produces exactly what $\quadriV$ consumes. Detection does two things at once. It squashes the candidate vertices down to their classes by~\eqref{eq:pinch_detection_classes}, because $\quadriV$ marks classes and not vertices. It then reads one level off the levels at which the class was caught by~\eqref{eq:pinch_detection_target}. A pinch at level $\l$ contributes the target $\l \! + \! 1$, and a class caught at several levels keeps the finest of them. A candidate class that is caught at no level is not marked at all.}
 
-\robert{Detection therefore does not return a set of vertices to repair. It returns the target level map $\targetlevel$, one value per vertex class, which is the second argument $\quadriV$ asks for. A class caught at several levels is repaired at the finest of them, since Lemma~\ref{lemma:pinch_spent} settles every level below the target in one go. A class caught at none is given its own $\lminIdx{\coarseIdxone}$, which makes the map total and is inert, because Corollary~\ref{cor:graded_quadrisection_composition} makes $\quadriV$ the identity at a class with $\targetlevel_\coarseIdxone \leq \lminIdx{\coarseIdxone}$. That floor never overrides a detection, since a pinch at level $\l$ has a refinement fan that is a non-empty proper subset of the mesh star, so $\lminIdx{\coarseIdxone} \leq \l < \l \! + \! 1$ by Proposition~\ref{proposition:class_star_levels}.}
+\robert{We write $\pinchClasses$ and not $\markedVertexClasses$ because the marked set of Definition~\ref{def:graded_vertex_quadrisection} is a generic argument. The \textsc{Refine} step of Section~\ref{subsec:mark_refine} marks by residual and the grading substep marks by level span, and neither has anything to do with pinches. The notation matches the sets the other two substeps detect, $\V^{\mathrm{pinch}}$ here and $\F^{\mathrm{confined}}$ in Section~\ref{subsubsec:confined_faces}, with the hat saying that these are classes rather than vertices.}
 
-\robert{The repair is then a single application of $\quadriV$ and not an enumeration over the caught vertices. Corollary~\ref{cor:graded_quadrisection_composition} says the two agree, so nothing is given up and independence of any ordering comes for free.}
+\robert{The repair homogenises every marked class to its target in the sense of~\eqref{eq:homogenisation_constraint}. Corollary~\ref{lemma:pinch_spent} then spends the vertex on every level below that target.}
 
-\robert{One such application does not leave a domain sequence free of pinches. A repair can open a pinch at a vertex that carried none, at the vertices Lemma~\ref{lemma:pad_locality} allows. The substep is therefore an iteration, and we state it over a candidate set from the start. Let $\V^{\mathrm{seed}} \subseteq \V(\domseq[\L]^{\mathrm{refine}})$ be a \emph{seed}.}
+\robert{One application does not leave a domain sequence free of pinches. A repair can open a pinch at a vertex that carried none, at the vertices Lemma~\ref{lemma:pad_locality} allows. The substep is therefore an iteration over a candidate set. A vertex $\vertex{\l}{\coarseIdxone}$ spent on a level $\l < \targetlevel_\coarseIdxone$ never returns to that set. Its class $\vertexClass{\coarseIdxone}$ can return on a level $\lone \geq \targetlevel_\coarseIdxone$, through the slice of a different class. Let $\V^{\mathrm{seed}} \subseteq \V(\domseq[\L]^{\mathrm{refine}})$ be a \emph{seed}.}
 
-\begin{iteration}[\robert{Pinch resolution}]
+\begin{iteration}[Pinch resolution]
 \label{it:pinch_iteration}
-\robert{\begin{enumerate}[topsep=3pt, itemsep=-2pt]
-    \item Initialise $\domseq[\L]^{\mathrm{pinch},0} \coloneq \domseq[\L]^{\mathrm{refine}}$ and $\V^{\mathrm{cand},0} \coloneq \V^{\mathrm{seed}}$.
-    \item In round $k \geq 1$, let $\markedVertexClasses^k$ be the classes occurring in $\V^{\mathrm{cand},k-1}$ and compute the target level map $\targetlevel^k$ on them, with the pinches read on the unmutated $\domseq[\L]^{\mathrm{pinch},k-1}$ and restricted to the candidates,
+    The pinch resolution step is initialised with the domain sequence $\domseq[\L]^{\mathrm{pinch},0} \coloneq \domseq[\L]^{\mathrm{refine}}$ and candidate set $\V^{\mathrm{cand},0} \coloneq \V^{\mathrm{seed}}$. It then iterates the following \emph{pinch resolution cycle} for $c \in \{1, \, \ldots, \, q^{\mathrm{pinch}} \}$:
+    \begin{enumerate}[topsep=3pt, itemsep=-2pt]
+    \item Detect pinches for the candidate set $\V^{\mathrm{cand},c-1}$ of the previous cycle on the domain sequence $\domseq[\L]^{\mathrm{pinch},c-1}$ to obtain
     \begin{equation}
         \label{eq:pinch_round_detection}
-        \targetlevel^k_\coarseIdxone \; = \; \max \Big( \lminIdx{\coarseIdxone}, \; \max \big\{ \, \l \! + \! 1 \; \colon \; \vertex{\l}{\coarseIdxone} \in \V^{\mathrm{pinch}} \big( \domseq[\L]^{\mathrm{pinch},k-1} \big) \, \cap \, \V^{\mathrm{cand},k-1} \big\} \Big).
+        \big( \pinchClasses[c], \, \targetlevel^c \big) \; \coloneq \; \detectV \big( \domseq[\L]^{\mathrm{pinch},c-1}, \, \V^{\mathrm{cand},c-1} \big).
     \end{equation}
     \vspace{-7mm}
-    \item Repair in one application,
+    \item Repair the detected pinches by homogenising every caught class to its target
     \begin{equation}
         \label{eq:pinch_round_repair}
-        \domseq[\L]^{\mathrm{pinch},k} \; \coloneq \; \quadriV \big( \domseq[\L]^{\mathrm{pinch},k-1}, \, \markedVertexClasses^k, \, \targetlevel^k \big).
+        \domseq[\L]^{\mathrm{pinch},c} \; \coloneq \; \quadriV \big( \domseq[\L]^{\mathrm{pinch},c-1}, \, \pinchClasses[c], \, \targetlevel^c \big).
     \end{equation}
     \vspace{-7mm}
-    \item Round $k$ is a quadrisection of the marked family $\simplexsubset{2}{k}$ that~\eqref{eq:graded_marked_family} builds from $\markedVertexClasses^k$ and $\targetlevel^k$, with slices $\simplexsubset{2}{k,\l}$. The candidates of the next round are its vertices, less what Corollary~\ref{cor:pinch_spent_candidates} has already spent,
+    \item Collect the candidates for the next cycle based on the marked family $\simplexsubset{2,c}{}$ that~\eqref{eq:graded_marked_family} builds from $\pinchClasses[c]$ and $\targetlevel^c$, less what Corollary~\ref{lemma:pinch_spent} has already spent,
     \begin{equation}
         \label{eq:pinch_candidates}
-        \V^{\mathrm{cand},k} \coloneq \Big( \bigsqcup\limits_{\l = \lzero}^{\L-1} \V_\l \big( \simplexsubset{2}{k,\l} \big) \Big) \; \setminus \; \big\{ \vertex{\lone}{\coarseIdxone} \; \colon \; \vertexClass{\coarseIdxone} \in \markedVertexClasses^k \; \text{ and } \; \lone < \targetlevel^k_\coarseIdxone \big\} ,
+        \V^{\mathrm{cand},c} \coloneq \collectV \big( \domseq[\L]^{\mathrm{pinch},c-1}, \, \simplexsubset{2,c}{} \big) \; \setminus \; \big\{ \vertex{\l}{\coarseIdxone} \; \colon \; \vertexClass{\coarseIdxone} \in \pinchClasses[c] \; \text{ and } \; \l < \targetlevel^c_\coarseIdxone \big\} ,
     \end{equation}
-    \vspace{-7mm}
-    \item Stop at the first round in which $\targetlevel^k$ is inert on every class, that is $\targetlevel^k_\coarseIdxone \leq \lminIdx{\coarseIdxone}$ throughout, and set $\domseq[\L]^{\mathrm{pinch}} \coloneq \domseq[\L]^{\mathrm{pinch},k}$.
-\end{enumerate}}
+\end{enumerate}
+We repeat steps $1$ to $3$ until the pinch detection in~\eqref{eq:pinch_round_detection} detects no more pinches. We then set $\domseq[\L]^{\mathrm{pinch}} \coloneq \domseq[\L]^{\mathrm{pinch},c}$ and write $q^{\mathrm{pinch}} \coloneq c \! - \! 1$ for the number of cycles until the fixed point was reached.
 \end{iteration}
 
-\robert{Every class the round repaired is spent up to its own target, permanently, so the subtraction in step $4$ strikes its vertices below that target rather than carrying them. By Corollary~\ref{cor:graded_quadrisection_composition} the stopping test of step $5$ says exactly that round $k$ is the identity, and by~\eqref{eq:pinch_round_detection} it says exactly that no candidate was caught. Detection and repair stay separate phases within a round, since $\targetlevel^k$ is computed on the whole candidate set before any of it is refined.}
+The iteration stops when the pinch detection catches nothing, i.e. $\pinchClasses[c] = \varnothing$. This criterion is equivalent to three other ones. First, in implies an empty  marked family $\simplexsubset{2,c}{}$. An empty marked family adjoins nothing in~\eqref{eq:graded_vertex_quadrisection} and leaves the candidate collection~\eqref{eq:candidate_collection} with no candidates to collect, so $\V^{\mathrm{cand},c} = \varnothing$. Finally, the stopping rule above is also the fixed point $\domseq[\L]^{\mathrm{pinch},c} = \domseq[\L]^{\mathrm{pinch},c-1}$ of the iteration.
 
-\robert{The seed may always be taken to be everything, $\V^{\mathrm{seed}} = \V(\domseq[\L]^{\mathrm{refine}})$, which is every vertex on every level by~\eqref{eq:vertices_of_domseq}. That is what our implementation does and it is what the counts of Section~\ref{sec:numerical_experiments} come from. A smaller seed is enough whenever the domain sequence entering the substep is already known to be free of pinches outside some set, which is the case in every pass of the padding loop, and we pick that thread up in Remark~\ref{rem:substep_seeding} of Section~\ref{subsec:termination}.}
+The seed $\V^{\mathrm{seed}}$ may always be taken to be all vertices $\V(\domseq[\L]^{\mathrm{refine}})$ of the input domain sequence. A smaller seed can be used whenever the domain sequence entering the substep is already known to be free of pinches outside a given vertex set, which is the case in every pass of the overarching padding loop in Section~\ref{subsec:termination}.
 
-\begin{corollary}[\robert{The pinch iteration terminates}]
+\begin{corollary}[The pinch iteration terminates]
     \label{cor:pinch_rounds}
-    \robert{The number $q^{\mathrm{pinch}}$ of productive rounds of the iteration above is bounded by the number of vertex-level pairs the domain sequence carries,
+    The number $q^{\mathrm{pinch}}$ of productive pinch resolution cycles of Iteration~\ref{it:pinch_iteration} above is bounded by the number of vertices the input domain sequence $\domseq[\L]^{\mathrm{refine}}$ with regions $\M^{\mathrm{pinch}}_\l$ carries below level $\L$, i.e.
     \begin{equation}
         \label{eq:pinch_rounds}
-        q^{\mathrm{pinch}} \; \leq \; \sum\limits_{\l = \lzero}^{\L-1} \big\vert \V_\l(\M_\l) \big\vert ,
+        q^{\mathrm{pinch}} \; \leq \; \sum\limits_{\l = \lzero}^{\L-1} \; \big\vert \, \V_\l(\M^{\mathrm{pinch}}_\l) \, \big\vert \, .
     \end{equation}
-    and the iteration performs $q^{\mathrm{pinch}} \! + \! 1$ rounds in total.}
 \end{corollary}
 \begin{proof}
-    \robert{Every productive round catches at least one pair of a vertex and a level, no pair is ever caught twice by Lemma~\ref{lemma:pinch_spent}, and pinches are detected only on levels $\l < \L$. The last round catches nothing and stops the iteration by step $5$.}
+    Every productive round catches at least one pair of a vertex and a level, no pair is ever caught twice by Corollary~\ref{lemma:pinch_spent}, and pinches are detected only on levels $\l < \L$.
 \end{proof}
 
-\robert{The candidate set~\eqref{eq:pinch_candidates} is exactly what Lemma~\ref{lemma:pad_locality} permits, and it differs from the one-ring of the repaired vertices in both directions. It is narrower, because a vertex enters only on the level $\l$ of the slice $\simplexsubset{2}{k,\l}$ containing it and not on every level at which it exists. It is wider, because $\quadriV$ with target $\l \! + \! 1$ refines faces on all levels between $\lmin$ and $\l$, and a face on a level $\lone < \l$ of the leaf star of $\vertex{\l}{\coarseIdxtwo}$ need not carry $\vertex{\l}{\coarseIdxtwo}$ as a vertex at all. A vertex born on level $\l$ can lie in the interior of an edge of the leaf face covering it, and then the candidates are its level-$\lone$ neighbours, which lie further out than its level-$\l$ ring.}
+\begin{remark}[Why the bound is not local]
+    \label{rem:pinch_rounds_bound}
+The right-hand side of~\eqref{eq:pinch_rounds} is the size of the input domain sequence. The corollary therefore settles only eventual termination, and better upper bounds remain an open question in this work. This remark explains where a sharper bound would have to come from and why it is difficult to achieve.
 
-\robert{The target level $\targetlevel = \l\!+\!1$ is what merges the arcs.} The refinement arcs at level $\l$ are separated by faces that are not refined beyond \robert{level $\l$}. Grading the leaf star to $\l\!+\!1$ refines every one of them, so the fan at level $\l$ becomes the whole mesh star. \robert{Quadrisecting the mesh star once, without the grading,} does not suffice, because the separation between the refinement arcs can be covered by a leaf face at a level well below $\l$, in which case one round lifts it only by one level and leaves the arcs separated.
+The iteration is local from one cycle to the next because it only advances the frontier of candidates by one ring of faces, so the refinement never jumps to an unrelated part of the mesh. The iteration bound factors~\eqref{eq:pinch_rounds} roughly into two contributions: the number of classes ever reached by the expanding frontier and the number of times one class is caught within that frontier.
 
-\robert{Nothing is lost by repairing a class at the finest level it was caught on. The union in~\eqref{eq:graded_vertex_quadrisection} adds, for a class marked at two targets, exactly what the larger of the two adds on its own.}
+The second factor is bounded by the level range of the class alone. A class caught at level $\l$ is repaired to target $\l \! + \! 1$, and Corollary~\ref{lemma:pinch_spent} then forbids it to be a pinch on any level below that target. Every later catch of the same class is at a strictly higher level, so the class is caught at most $\L - \lminIdx{\coarseIdxone}$ times.
 
-\robert{The repaired vertices themselves need not be carried over, which is the content of the next lemma. Its second half also bounds how often the iteration can repeat.}
+The first factor is what we cannot currently bound. Every iteration advances the frontier and can create another pinch in turn. Figure~\ref{fig:padding_chain} shows the mechanism and Section~\ref{subsec:termination} discusses it, where stricter version of thse chain drive the count of outer padding cycles $q$. Nothing in the argument limits how far a chain runs, so the recruitment stops only when it runs out of mesh, which is what~\eqref{eq:pinch_rounds} reports.
 
+Problem~\ref{prob:padding_passes} asks for a bound on the outer count $q$ in terms of the control mesh and for a localisation of the faces $\textsc{Pad}$ refines. The inner count $q^{\mathrm{pinch}}$ has the same status and is open for the same reason.
 
-
-\robert{A round that detects nothing certifies more than its own emptiness. Every vertex whose refinement fan has changed since the previous detection is a candidate by Lemma~\ref{lemma:pad_locality}, and every vertex the round has added is a candidate or refinement-exterior by Lemma~\ref{lemma:new_vertices}. So an empty round proves that no vertex of $\domseq[\L]^{\mathrm{pinch}}$ is a pinch or a boundary pinch on any level. The substep therefore has an exact postcondition\robert{. The output} $\domseq[\L]^{\mathrm{pinch}}$ satisfies clauses~(ii) and~(iii) of Definition~\ref{def:subdiv_partition}.}
-
-\begin{remark}[\robert{Why the repair homogenises the whole star}]
-    \label{rem:pinch_repair_choice}
-    \robert{The repair overshoots, and it is worth saying by how much and what the overshoot buys.
-
-    Arcs and gaps alternate around the mesh star, so their numbers agree, and Definition~\ref{def:pinch_vertex} asks for at least two of each. Filling one gap merges the two arcs beside it, so a vertex with $a$ arcs needs $a \! - \! 1$ of its gaps filled and not all $a$, while the target $\l \! + \! 1$ fills every one. Nor would the leftover gap have to be filled later. Refinement only adds faces to a fan, so a gap can shrink from an end, split, or close, and splitting needs an interior face. A gap of one or two faces has none and can never split, so it leaves the vertex permanently free of pinches at that level. Homogenising is therefore minimal neither among repairs nor among the repairs that last, and it costs one gap at one vertex on one level per repair.
-
-    We homogenise for three reasons, and each of them is a result already proved.
-
-    It is canonical. No gap has to be selected, so the outcome depends on the class and the target alone, which is what makes Corollary~\ref{cor:graded_quadrisection_composition} give order-independence and idempotence. A rule that picks $a \! - \! 1$ of $a$ gaps has neither.
-
-    It costs no new notion. \textsc{Refine} and the grading step ask for homogenisation on their own account, and a homogenised class has the closed-form leaf star~\eqref{eq:graded_quadrisection_leafstar} and falls under the three cases of Proposition~\ref{proposition:class_star_levels}. A partially filled fan has no such description, so a partial repair would need machinery that the rest of the section then could not use.
-
-    It keeps the accounting short, and this is where it pays. A full fan is a single arc and cannot be split again, which is the whole of Lemma~\ref{lemma:pinch_spent}. Everything downstream is that one fact read twice. The round bound~\eqref{eq:pinch_rounds} is it counted over the iteration, and Corollary~\ref{cor:pinch_spent_candidates} is it read on the candidate set, where it is what lets a repaired class be struck from~\eqref{eq:pinch_candidates} permanently rather than carried and retested. A repair leaving one short gap would be spent as well, by the argument above, so neither is lost in principle. Proving them would mean carrying gap lengths through the iteration instead of a single target level.
-
-    The overshoot is bounded from the other side. By Lemma~\ref{lemma:graded_quadrisection_minimal} the operator is the least refinement that homogenises to the target at all, so beyond that one gap per repair nothing is spent. A partial repair would also refine a neighbourhood on one side only, working against the grading step and its purpose of smoothing transitions.}
+\robert{Table~\ref{tab:padding_interface_L4} reports $q^{\mathrm{pinch}}$ for every substep of the padding step for the mixed vector Laplacian discussed in Section~\ref{subsec:vector_laplace}. The counts stay small and do not grow with the mesh. The chains described in the previous paragraph are therefore short in practice on the meshes we run, even though we do not prove that.}
 \end{remark}
 
+
 \subsubsection{Resolving confined faces}
+\label{subsubsec:confined_faces}
 
 Similarly to resolving pinches, we iterate over all leaf faces $\face{\l}{\coarseIdxone}$ of a domain sequence $\domseq[\L]$ to build the set of confined faces
 \begin{equation}
@@ -2433,7 +2482,7 @@ according to Definition~\ref{def:confined_face}. \robert{A set $\F^\star \subset
     \label{fig:candidate_sets}
 \end{figure}
 
-\robert{The two round counts $q^{\mathrm{pinch}}$ of Lemma~\ref{lemma:pinch_spent} and $q^{\mathrm{confined}}$ above are the counts of the two inner iterations. They are not part of the count $q$ of productive $\textsc{Pad}$ passes of Section~\ref{subsec:termination}, which counts the passes driven by the links between the substeps alone.}
+\robert{The two round counts $q^{\mathrm{pinch}}$ of Corollary~\ref{lemma:pinch_spent} and $q^{\mathrm{confined}}$ above are the counts of the two inner iterations. They are not part of the count $q$ of productive $\textsc{Pad}$ passes of Section~\ref{subsec:termination}, which counts the passes driven by the links between the substeps alone.}
 
 \subsubsection{Grading leaf stars}
 
@@ -2494,7 +2543,7 @@ Our implementation wraps $\textsc{Pad}$ in a loop that stops once a pass no long
 \end{equation}
 That the loop terminates at all and at an admissible domain sequence rests on a single
 observation.
-\robert{The first two factors of $\textsc{Pad}$ in~\eqref{eq:pad_operator} are themselves iterations, so $q$ counts the passes driven by the links between the substeps and nothing else. The counts $q^{\mathrm{pinch}}$ of Lemma~\ref{lemma:pinch_spent} and $q^{\mathrm{confined}}$ of Corollary~\ref{cor:confinement_rounds} are the two inner counts and are not part of $q$. This is how the implementation has always run, so the counts reported in Section~\ref{sec:numerical_experiments} are the ones this definition produces.}
+\robert{The first two factors of $\textsc{Pad}$ in~\eqref{eq:pad_operator} are themselves iterations, so $q$ counts the passes driven by the links between the substeps and nothing else. The counts $q^{\mathrm{pinch}}$ of Corollary~\ref{lemma:pinch_spent} and $q^{\mathrm{confined}}$ of Corollary~\ref{cor:confinement_rounds} are the two inner counts and are not part of $q$. This is how the implementation has always run, so the counts reported in Section~\ref{sec:numerical_experiments} are the ones this definition produces.}
 
 \begin{lemma}[A firing predicate refines at least one face]
     \label{lemma:pad_productive}
@@ -2522,7 +2571,7 @@ first half makes an unproductive pass certify that no predicate fires, so the fi
 $\textsc{Pad}$ are exactly the admissible domain sequences of level span at most $g$, and
 $\domseq^{\mathrm{pad}} \in \allpartitions$.
 
-\guidance{The same counting argument bounds the rounds of the two inner iterations, which is how Lemma~\ref{lemma:pinch_spent} and Corollary~\ref{cor:confinement_rounds} could have been proved; both give something sharper instead, a spent vertex-level pair and a strictly increasing level.}
+\guidance{The same counting argument bounds the rounds of the two inner iterations, which is how Corollary~\ref{lemma:pinch_spent} and Corollary~\ref{cor:confinement_rounds} could have been proved; both give something sharper instead, a spent vertex-level pair and a strictly increasing level.}
 
 \begin{remark}[The order of the padding substeps]
 \label{rem:padding_order}
