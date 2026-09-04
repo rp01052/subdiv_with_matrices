@@ -101,21 +101,25 @@ Werner Bauer\footnote{University of Surrey, School of Mathematics and Physics, U
 % every boundary in the paper.
 \newcommand{\collectV}{\Gamma^{\star}}                           % next vertex candidates
 \newcommand{\collectF}{\Gamma^{\triangle}}                       % next face candidates
-% There is no \collectG for the level span. It was written and retired the same
-% day: the span is the one predicate a newborn midpoint can fire, so the map would
-% have had to read the CHILDREN rather than the slice, and the grading is optional
-% enough that a scan of the classes is the honest cost. See the remark after
-% def:candidate_collection.
 % The classes \detectV returns. \markedVertexClasses stays the GENERIC argument
 % of \quadriV, since \textsc{Refine} and the grading mark for their own reasons.
 % This is the pinch-specific set, matching \V^{pinch} and \F^{confined}.
 % Takes the cycle index as an OPTIONAL argument, since the superscript slot is
-% already spent: \pinchClasses is \widehat{\V}^{pinch} and \pinchClasses[c] is
-% \widehat{\V}^{pinch,c}. Writing \pinchClasses[c] would be a double superscript.
+% already spent: \pinchClasses is \widehat{\V}^{pinch} and \pinchClasses[t] is
+% \widehat{\V}^{pinch,t}. Writing \pinchClasses[t] would be a double superscript.
 \makeatletter
 \DeclareRobustCommand{\pinchClasses}[1][]{\widehat{\V}^{\mathrm{pinch}\ifx\@empty#1\@empty\else,#1\fi}}
 % The classes \detectG returns, same optional-index trick.
 \DeclareRobustCommand{\gradeClasses}[1][]{\widehat{\V}^{\mathrm{grading}\ifx\@empty#1\@empty\else,#1\fi}}
+% The faces the confinement detection marks for repair, i.e. the third slot on the
+% face side: \F^{confined} is the PREDICATE set on a domain sequence, \F^{cand} is
+% the candidate set, and this is the subset of the candidates that actually fires.
+% \markedFaces is the GENERIC argument of \quadriF (the old \F^\star) and
+% \markedFaces[t] is the set cycle t marks, matching \pinchClasses / \pinchClasses[t].
+% Triangle, not star: \quadriF is \mathcal{Q}^\triangle and \collectF is
+% \Gamma^\triangle, so the face side carries the triangle. No hat, since the hat
+% means vertex class (\vertexClass) or region (\reducedPatch) and faces are neither.
+\DeclareRobustCommand{\markedFaces}[1][]{\F^{\triangle\ifx\@empty#1\@empty\else,#1\fi}}
 \makeatother
 % The target level rides on the OPERATOR, never in an argument slot. This is not
 % the old \mathcal{Q}^{\star \to #2}_{#1} -- that carried source AND target and so
@@ -2338,7 +2342,30 @@ The first part of the decomposition is discharged by the following lemma, which 
     By Definition~\ref{def:face_quadrisection_operator}, $\quadriF(\domseq[\L], \simplexsubset{2}{})$ enlarges the region $\M_{\l+1}$ by $\Aop{}{\l}{\l+1}(\simplexsubset{2}{\l})$ on every level, so it enlarges the ancestor patch $\ancestorPatch{\M_{\l+1}}$ by exactly the slice $\simplexsubset{2}{\l}$ and by nothing else, as computed in~\eqref{eq:face_quadrisection_nesting}. The refinement fan $\refFan{\l}(\vertex{\l}{\coarseIdxone}) = \FVl{\l}(\vertex{\l}{\coarseIdxone}) \cap \ancestorPatch{\M_{\l+1}}$ of Definition~\ref{def:refinement_fan} can therefore only change at a vertex whose mesh star on level $\l$ meets the enlargement. That enlargement is $\simplexsubset{2}{\l} \setminus \ancestorPatch{\M_{\l+1}}$ and not the whole slice, since a marked face already in $\ancestorPatch{\M_{\l+1}}$ adds nothing to it. So the refinement fan can change only at a vertex of a face of $\simplexsubset{2}{\l} \setminus \ancestorPatch{\M_{\l+1}}$, which is~\eqref{eq:pad_locality}. The converse holds as well. If such a face is incident to the vertex it enters the fan of the output and not that of the input, so the refinement fan does move there. Note that the levels do not interact. The slice $\simplexsubset{2}{\l}$ alone decides what changes on level $\l$, whatever the other slices contain. Both consequences follow because the three predicates are read off the refinement fan alone. The pinch of Definition~\ref{def:pinch_vertex} and the boundary pinch of Definition~\ref{def:boundary_pinch} count its arcs, and the confined face of Definition~\ref{def:confined_face} asks whether one of its vertices has an empty fan.
 \end{proof}
 
-Note that Lemma~\ref{lemma:pad_locality} also covers graded vertex quadrisection. By Corollary~\ref{cor:graded_is_face_quadrisection} the operator $\quadriV(\cdot, \markedVertexClasses, \targetlevel)$ is a face quadrisection on the family~\eqref{eq:graded_marked_family} of class stars, so reading that family as the slice makes the lemma applicable. On level $\l$ the slice is the union of the class stars $\FVanc{\l}(\vertexClass{\coarseIdxone})$ over the marked classes with $\targetlevel_\coarseIdxone > \l$, and the predicates that can have changed on level $\l$ are those of its vertices.
+\robert{The level span of Definition~\ref{def:level_range} is not a refinement fan predicate, so the lemma above does not reach it. It is read off the leaf star, and the leaf star has a locality statement of its own. We give it here, and name the faces a quadrisection actually refines on the way.}
+
+\begin{lemma}[\robert{A repair moves a leaf star only where it refines}]
+    \label{lemma:leafstar_locality}
+    \robert{Let $\domseq[\L] \in \alldomseqs_\L$ with regions $\M_\l$, let $\simplexsubset{2}{}$ be a marked family for $\domseq[\L]$, and let $\domseq[\L]' \coloneq \quadriF(\domseq[\L], \simplexsubset{2}{})$. Write
+    \begin{equation}
+        \label{eq:refined_slice}
+        \simplexsubset{2,\mathrm{new}}{\l} \; \coloneq \; \simplexsubset{2}{\l} \setminus \ancestorPatch{\M_{\l+1}}
+    \end{equation}
+    for the faces the repair actually refines on level $\l$. If the leaf star of $\vertexClass{\coarseIdxone} \in \vertexClasses(\domseq[\L])$ meets none of them, then it is the same set read on $\domseq[\L]'$, and hence
+    \begin{equation}
+        \label{eq:leafstar_locality}
+        \FVleaf{}(\vertexClass{\coarseIdxone}) \cap \bigsqcup\limits_{\l = \lzero}^{\L-1} \simplexsubset{2,\mathrm{new}}{\l} \; = \; \varnothing
+        \qquad \Longrightarrow \qquad
+        \lminIdx{\coarseIdxone}' = \lminIdx{\coarseIdxone}, \quad \lmaxIdx{\coarseIdxone}' = \lmaxIdx{\coarseIdxone}, \quad \levelSpan{\coarseIdxone}' = \levelSpan{\coarseIdxone} .
+    \end{equation}}
+\end{lemma}
+\begin{proof}
+    \robert{By Definition~\ref{def:leaf_star} the leaf star collects the covering faces of the mesh star $\FVl{\L}(\vertex{\L}{\coarseIdxone})$, and the mesh star does not depend on the regions. A covering face of $\domseq[\L]$ is a leaf face, so it is a covering face of $\domseq[\L]'$ as well unless $\quadriF$ refined it, and $\quadriF$ refines exactly the faces of $\simplexsubset{2,\mathrm{new}}{\l}$ by~\eqref{eq:face_quadrisection_nesting}. If none of them lies in the leaf star, every covering face is carried over and the collection is unchanged. The three quantities of Definition~\ref{def:level_range} are read off that collection alone.}
+\end{proof}
+
+\guidance{The slice~\eqref{eq:refined_slice} is the set that~\eqref{eq:vertex_decomposition}, both displays of Lemma~\ref{lemma:pad_locality}, its two clauses and~\eqref{eq:candidate_collection_faces} all write out in full. Now that it carries a name, the naming can be pulled up to~\eqref{eq:vertex_decomposition} and those occurrences shortened. Not done here, since it touches text this move does not otherwise change.}
+
+Note that \robert{both lemmas above cover} graded vertex quadrisection. By Corollary~\ref{cor:graded_is_face_quadrisection} the operator $\quadriV(\cdot, \markedVertexClasses, \targetlevel)$ is a face quadrisection on the family~\eqref{eq:graded_marked_family} of class stars, so reading that family as the slice makes \robert{them} applicable. On level $\l$ the slice is the union of the class stars $\FVanc{\l}(\vertexClass{\coarseIdxone})$ over the marked classes with $\targetlevel_\coarseIdxone > \l$, and the predicates that can have changed on level $\l$ are those of its vertices.
 
 We can now use the split in~\eqref{eq:vertex_decomposition} to collect the vertex candidates with the help of Lemma~\ref{lemma:pad_locality} in the following definition. \robert{The candidate faces are defined alongside. One term carries the faces that touch a vertex whose refinement fan changed. The other carries the children of the refined faces, which do not, and which are there for a different reason given below.}
 
@@ -2380,14 +2407,19 @@ Definition~\ref{def:candidate_collection} gives the two maps and Figure~\ref{fig
     Figure~\ref{fig:padding_interactions_b} depicts the overall composition of the individual substep iterations. We keep the inner pinch resolution $\to$ pinch resolution and confinement padding $\to$ confinement padding loops separate and couple them only once they have exhausted their own candidates. This interaction of inner and outer loops allows us to keep track of the properties of intermediate domain sequences more easily and separates the mechanisms that drive the number of necessary cycles. This enables the following two subsections to bound the cycle counts of the substeps separately.
 \end{remark}
 
-The two substeps that restore admissibility now follow, one section each, in the order the cycle runs them. Both have the shape set out above. A candidate set is tested on a fixed input, everything that fires is repaired at once, and Definition~\ref{def:candidate_collection} reads the candidates of the next cycle off what the repair refined. Both are iterated to a fixed point of their own predicate before the next substep begins, which is the arrangement Figure~\ref{fig:padding_interactions_b} boxes, and each carries its own bound on the number of cycles it needs. The grading follows them in Section~\ref{subsubsec:grading}, and Section~\ref{subsec:termination} closes the outer loop around all three.
+The two substeps that restore admissibility now follow, one section each, in the order the cycle runs them. Both have the shape set out above. A candidate set is tested on a fixed input, everything that fires is repaired at once, and Definition~\ref{def:candidate_collection} reads the candidates of the next cycle off what the repair refined. Both are iterated to a fixed point of their own predicate before the next substep begins, which is the arrangement Figure~\ref{fig:padding_interactions_b} boxes, and each carries its own bound on the number of cycles it needs. The grading follows them in Section~\ref{subsubsec:grading}, and Section~\ref{subsec:outer_loop} closes the outer loop around all three.
 
 \subsubsection{Resolving vertex pinches}
 \label{subsubsec:pinch_resolution}
 
 This substep covers the inner pinch resolution loop in Figure~\ref{fig:padding_interactions_b}. Every cycle first detects pinches with Definitions~\ref{def:pinch_vertex} and~\ref{def:boundary_pinch} and then repairs them by applying the graded vertex quadrisection operator $\quadriV$. Finally, the cycle determines the vertex candidates for the next cycle. This section describes the steps of the inner pinch resolution loop in more detail and highlights the properties of the resulting domain sequence.
 
-Pinch detection computes the arguments that the graded vertex quadrisection $\quadriV$ of Definition~\ref{def:graded_vertex_quadrisection} asks for, namely the vertex classes that contain pinches and a target level that repairs the finest pinch of each vertex class.
+Given a domain sequence $\domseq[\L]$ we write
+\begin{equation}
+    \label{eq:pinch_set}
+    \V^{\mathrm{pinch}}(\domseq[\L]) \; \coloneq \; \big\{ \vertex{\l}{\coarseIdxone} \in \V(\domseq[\L]) \; \colon \;\; \vertex{\l}{\coarseIdxone} \;\text{ is a pinch vertex or a boundary pinch} \big\}
+\end{equation}
+for the vertices caught by Definitions~\ref{def:pinch_vertex} and~\ref{def:boundary_pinch}. The pinch detection defined below derives the arguments of the graded vertex quadrisection $\quadriV$ of Definition~\ref{def:graded_vertex_quadrisection} from the pinch vertices $\V^{\mathrm{pinch}}$, namely the vertex classes that contain pinches and a target level that repairs the finest pinch of each vertex class, relative to a candidate set.
 
 \begin{definition}[Pinch detection]
     \label{def:pinch_detection}
@@ -2396,151 +2428,210 @@ Pinch detection computes the arguments that the graded vertex quadrisection $\qu
         \label{eq:pinch_detection}
         \detectV \big( \domseq[\L], \, \V^{\mathrm{cand}} \big) \; \coloneq \; \big( \pinchClasses, \, \targetlevel \big)
     \end{equation}
-    onto the vertex classes caught among the candidates,
+    into the vertex classes caught among the candidates
     \begin{equation}
         \label{eq:pinch_detection_classes}
-        \pinchClasses \; \coloneq \; \big\{ \vertexClass{\coarseIdxone} \in \vertexClasses(\domseq[\L]) \; \colon \;\; \vertex{\l}{\coarseIdxone} \in \V^{\mathrm{cand}} \text{\; is a pinch of } \domseq[\L] \;\text{ for at least one level }\; \l \big\},
+        \pinchClasses \; \coloneq \; \big\{ \vertexClass{\coarseIdxone} \in \vertexClasses(\domseq[\L]) \; \colon \;\; \vertex{\l}{\coarseIdxone} \in \V^{\mathrm{cand}} \cap \V^{\mathrm{pinch}}(\domseq[\L]) \;\text{ for at least one level }\; \l \big\},
     \end{equation}
-    and the target level map on them,
+    and their target level map
     \begin{equation}
         \label{eq:pinch_detection_target}
-        \targetlevel_\coarseIdxone \; \coloneq \; \max \big\{ \, \l \! + \! 1 \; \colon \;\; \vertex{\l}{\coarseIdxone} \in \V^{\mathrm{cand}} \text{\; is a pinch of } \domseq[\L] \big\} .
+        \targetlevel \; \colon \;\; \pinchClasses \; \to \; \{ \lzero, \, \dots, \, \L \}, \qquad \vertexClass{\coarseIdxone} \; \mapsto \; \max \big\{ \, \l \! + \! 1 \; \colon \;\; \vertex{\l}{\coarseIdxone} \in \V^{\mathrm{pinch}}(\domseq[\L]) \big\} .
     \end{equation}
-    Here and below a \emph{pinch} means a pinch or a boundary pinch, that is, membership in $\V^{\mathrm{pinch}}(\domseq[\L])$. The set in~\eqref{eq:pinch_detection_target} is non-empty for every $\vertexClass{\coarseIdxone} \in \pinchClasses$ by~\eqref{eq:pinch_detection_classes}, so the maximum is always taken over at least one level.
+    The set on the right of~\eqref{eq:pinch_detection_target} is non-empty for every $\vertexClass{\coarseIdxone} \in \pinchClasses$ by~\eqref{eq:pinch_detection_classes}, so the maximum exists. A vertex has an empty refinement fan at level $\L$, so no pinches exist on level $\L$ and the maximum never exceeds $\L$.
 \end{definition}
 
-\robert{The repair homogenises every marked class to its target in the sense of~\eqref{eq:homogenisation_constraint}. Corollary~\ref{lemma:pinch_spent} then spends the vertex on every level below that target.}
-
-\robert{One application does not leave a domain sequence free of pinches. A repair can open a pinch at a vertex that carried none, at the vertices Lemma~\ref{lemma:pad_locality} allows. The substep is therefore an iteration over a candidate set. A vertex $\vertex{\l}{\coarseIdxone}$ spent on a level $\l < \targetlevel_\coarseIdxone$ never returns to that set. Its class $\vertexClass{\coarseIdxone}$ can return on a level $\lone \geq \targetlevel_\coarseIdxone$, through the slice of a different class. Let $\V^{\mathrm{seed}} \subseteq \V(\domseq[\L]^{\mathrm{refine}})$ be a \emph{seed}.}
+Applying the vertex quadrisection operator once homogenises every detected pinch class in $\pinchClasses$ to its target $\targetlevel$ in the sense of~\eqref{eq:homogenisation_constraint}. 
+However, a single iteration ony guarantees that the detected pinches are resolved but not that the domain sequence is free of pinches afterwards. A repair can create a new pinch at a vertex at the candidates Lemma~\ref{lemma:pad_locality} allows. The pinch resolution substep is therefore an iteration over these candidate set until it is exhausted and the domain sequence is pinch-free.
 
 \begin{iteration}[Pinch resolution]
 \label{it:pinch_iteration}
-    The pinch resolution step is initialised with the domain sequence $\domseq[\L]^{\mathrm{pinch},0} \coloneq \domseq[\L]^{\mathrm{refine}}$ and candidate set $\V^{\mathrm{cand},0} \coloneq \V^{\mathrm{seed}}$. It then iterates the following \emph{pinch resolution cycle} for $c \in \{1, \, \ldots, \, q^{\mathrm{pinch}} \}$:
+    The pinch resolution substep is initialised with the domain sequence $\domseq[\L]^{\mathrm{pinch},0} \coloneq \domseq[\L]^{\mathrm{refine}}$ and candidate set $\V^{\mathrm{cand},0} \coloneq \V^{\mathrm{seed}}$, where $\V^{\mathrm{seed}} \subseteq \V(\domseq[\L]^{\mathrm{refine}})$ is a given initial candidate set. It then iterates the following \emph{pinch resolution cycle} for $t \in \{1, \, \ldots, \, q^{\mathrm{pinch}} \}$:
     \begin{enumerate}[topsep=3pt, itemsep=-2pt]
-    \item Detect pinches for the candidate set $\V^{\mathrm{cand},c-1}$ of the previous cycle on the domain sequence $\domseq[\L]^{\mathrm{pinch},c-1}$ to obtain
+    \item Detect pinches for the candidate set $\V^{\mathrm{cand},t-1}$ of the previous cycle on the domain sequence $\domseq[\L]^{\mathrm{pinch},t-1}$ to obtain
     \begin{equation}
         \label{eq:pinch_round_detection}
-        \big( \pinchClasses[c], \, \targetlevel^c \big) \; \coloneq \; \detectV \big( \domseq[\L]^{\mathrm{pinch},c-1}, \, \V^{\mathrm{cand},c-1} \big).
+        \big( \pinchClasses[t], \, \targetlevel^t \big) \; \coloneq \; \detectV \big( \domseq[\L]^{\mathrm{pinch},t-1}, \, \V^{\mathrm{cand},t-1} \big).
     \end{equation}
     \vspace{-7mm}
     \item Repair the detected pinches by homogenising every caught class to its target
     \begin{equation}
         \label{eq:pinch_round_repair}
-        \domseq[\L]^{\mathrm{pinch},c} \; \coloneq \; \quadriV \big( \domseq[\L]^{\mathrm{pinch},c-1}, \, \pinchClasses[c], \, \targetlevel^c \big).
+        \domseq[\L]^{\mathrm{pinch},t} \; \coloneq \; \quadriV \big( \domseq[\L]^{\mathrm{pinch},t-1}, \, \pinchClasses[t], \, \targetlevel^t \big).
     \end{equation}
     \vspace{-7mm}
-    \item Collect the candidates for the next cycle based on the marked family $\simplexsubset{2,c}{}$ that~\eqref{eq:graded_marked_family} builds from $\pinchClasses[c]$ and $\targetlevel^c$, less what Corollary~\ref{lemma:pinch_spent} has already spent,
+    \item Collect the candidates for the next cycle based on the marked family $\simplexsubset{2,t}{}$ that~\eqref{eq:graded_marked_family} builds from $\pinchClasses[t]$ and $\targetlevel^t$, less what Corollary~\ref{lemma:pinch_spent} has already spent,
     \begin{equation}
         \label{eq:pinch_candidates}
-        \V^{\mathrm{cand},c} \coloneq \collectV \big( \domseq[\L]^{\mathrm{pinch},c-1}, \, \simplexsubset{2,c}{} \big) \; \setminus \; \big\{ \vertex{\l}{\coarseIdxone} \; \colon \; \vertexClass{\coarseIdxone} \in \pinchClasses[c] \; \text{ and } \; \l < \targetlevel^c_\coarseIdxone \big\} ,
+        \V^{\mathrm{cand},t} \coloneq \collectV \big( \domseq[\L]^{\mathrm{pinch},t-1}, \, \simplexsubset{2,t}{} \big) \; \setminus \; \big\{ \vertex{\l}{\coarseIdxone} \; \colon \; \vertexClass{\coarseIdxone} \in \pinchClasses[t] \; \text{ and } \; \l < \targetlevel^t_\coarseIdxone \big\} ,
     \end{equation}
+    \vspace{-7mm}
+    \item \robert{Accumulate what the substeps after this one will have to test, the leaf faces and the vertex classes of the same marked family,}
+    \begin{equation}
+        \label{eq:pinch_handover}
+        \F^{\mathrm{pinch}} \; \coloneq \bigcup\limits_{r = 1}^{t} \collectF \big( \domseq[\L]^{\mathrm{pinch},r-1}, \, \simplexsubset{2,r}{} \big)
+        \qquad \text{and} \qquad
+        \vertexClasses^{\mathrm{pinch}} \; \coloneq \bigcup\limits_{r = 1}^{t} \vertexClasses^{\mathrm{cand},r} ,
+    \end{equation}
+    \robert{where $\vertexClasses^{\mathrm{cand},r}$ is the set~\eqref{eq:grading_class_candidates} of Remark~\ref{rem:grading_seed} read on the repair of cycle $r$.}
 \end{enumerate}
-We repeat steps $1$ to $3$ until the pinch detection in~\eqref{eq:pinch_round_detection} detects no more pinches. We then set $\domseq[\L]^{\mathrm{pinch}} \coloneq \domseq[\L]^{\mathrm{pinch},c}$ and write $q^{\mathrm{pinch}} \coloneq c \! - \! 1$ for the number of cycles until the fixed point was reached.
+We repeat steps $1$ to \robert{$4$} until the pinch detection in~\eqref{eq:pinch_round_detection} detects no more pinches. We then set $\domseq[\L]^{\mathrm{pinch}} \coloneq \domseq[\L]^{\mathrm{pinch},t}$ and write $q^{\mathrm{pinch}} \coloneq t \! - \! 1$ for the number of cycles until the fixed point was reached. \robert{The substep returns $\domseq[\L]^{\mathrm{pinch}}$ together with the two accumulated sets of~\eqref{eq:pinch_handover}.}
+
+\robert{The narrowing of step $3$ does not carry into step $4$. Corollary~\ref{lemma:pinch_spent} says which vertices this substep has spent for its own predicate, and it says nothing about the faces or the classes it hands on, so~\eqref{eq:pinch_handover} takes both terms of~\eqref{eq:candidate_collection_faces} and the full set~\eqref{eq:grading_class_candidates}. The union runs over the cycles because a face confined in one cycle may be refined away in the next, and the substeps downstream are entitled to test it either way.}
 \end{iteration}
 
-The iteration stops when the pinch detection catches nothing, i.e. $\pinchClasses[c] = \varnothing$. This criterion is equivalent to three other ones. First, in implies an empty  marked family $\simplexsubset{2,c}{}$. An empty marked family adjoins nothing in~\eqref{eq:graded_vertex_quadrisection} and leaves the candidate collection~\eqref{eq:candidate_collection} with no candidates to collect, so $\V^{\mathrm{cand},c} = \varnothing$. Finally, the stopping rule above is also the fixed point $\domseq[\L]^{\mathrm{pinch},c} = \domseq[\L]^{\mathrm{pinch},c-1}$ of the iteration.
+The iteration stops when the pinch detection catches nothing, i.e. $\pinchClasses[t] = \varnothing$. This criterion is equivalent to three other ones. First, in implies an empty  marked family $\simplexsubset{2,t}{}$. An empty marked family adjoins nothing in~\eqref{eq:graded_vertex_quadrisection} and leaves the candidate collection~\eqref{eq:candidate_collection} with no candidates to collect, so $\V^{\mathrm{cand},t} = \varnothing$. Finally, the stopping rule above is also the fixed point $\domseq[\L]^{\mathrm{pinch},t} = \domseq[\L]^{\mathrm{pinch},t-1}$ of the iteration.
 
-The seed $\V^{\mathrm{seed}}$ may always be taken to be all vertices $\V(\domseq[\L]^{\mathrm{refine}})$ of the input domain sequence. A smaller seed can be used whenever the domain sequence entering the substep is already known to be free of pinches outside a given vertex set, which is the case in every pass of the overarching padding loop in Section~\ref{subsec:termination}.
+The seed $\V^{\mathrm{seed}}$ may always be taken to be all vertices $\V(\domseq[\L]^{\mathrm{refine}})$ of the input domain sequence. A smaller seed can be used whenever the domain sequence entering the substep is already known to be free of pinches outside a given vertex set, which is the case in every pass of the overarching padding loop in Section~\ref{subsec:outer_loop}.
 
 \begin{corollary}[The pinch iteration terminates]
     \label{cor:pinch_rounds}
-    The number $q^{\mathrm{pinch}}$ of productive pinch resolution cycles of Iteration~\ref{it:pinch_iteration} above is bounded by the number of vertices the input domain sequence $\domseq[\L]^{\mathrm{refine}}$ with regions $\M^{\mathrm{pinch}}_\l$ carries below level $\L$, i.e.
+    The number $q^{\mathrm{pinch}}$ of productive pinch resolution cycles of Iteration~\ref{it:pinch_iteration} above is bounded by the room for refinement the input domain sequence $\domseq[\L]^{\mathrm{refine}}$ with regions $\M^{\mathrm{refine}}_\l$ leaves inside the hierarchy, i.e.
     \begin{equation}
         \label{eq:pinch_rounds}
-        q^{\mathrm{pinch}} \; \leq \; \sum\limits_{\l = \lzero}^{\L-1} \; \big\vert \, \V_\l(\M^{\mathrm{pinch}}_\l) \, \big\vert \, .
+        q^{\mathrm{pinch}} \; \leq \; \sum\limits_{\l = 1}^{\L} \; \big\vert \, \F_\l(\T_\l) \setminus \M^{\mathrm{refine}}_\l \, \big\vert \, .
     \end{equation}
 \end{corollary}
 \begin{proof}
-    Every productive round catches at least one pair of a vertex and a level, no pair is ever caught twice by Corollary~\ref{lemma:pinch_spent}, and pinches are detected only on levels $\l < \L$.
+    Every productive cycle marks at least one vertex class, and every marked class has $\lminIdx{\coarseIdxone} < \targetlevel_\coarseIdxone$, since a pinch on level $\l$ carries the target $\l \! + \! 1$. The repair is therefore not the identity by Corollary~\ref{cor:graded_quadrisection_composition} and thus $\simplexsubset{2}{}$ contains at least one face. Regions only grow, and every $\M^{\mathrm{refine}}_\l$ is bounded by $\F_\l(\T_\l)$. The sum starts at $\l = 1$ since $\F_\lzero(\T_{\lzero}) = \M_\lzero^{\mathrm{refine}}$.
 \end{proof}
 
-\begin{proposition}[\robert{The pinch iteration discharges clauses (ii) and (iii)}]
+\begin{proposition}[The pinch iteration discharges clauses (ii) and (iii)]
     \label{prop:pinch_discharged}
-    \robert{Let the seed cover the pinches of the input, $\V^{\mathrm{pinch}}(\domseq[\L]^{\mathrm{refine}}) \subseteq \V^{\mathrm{seed}}$. Then no vertex of the output $\domseq[\L]^{\mathrm{pinch}}$ of Iteration~\ref{it:pinch_iteration} is a pinch or a boundary pinch on any level, so $\domseq[\L]^{\mathrm{pinch}}$ satisfies clauses~(ii) and~(iii) of Definition~\ref{def:subdiv_partition}.}
+    Let the seed cover the pinches of the input domain sequence, i.e. $\V^{\mathrm{pinch}}(\domseq[\L]^{\mathrm{refine}}) \subseteq \V^{\mathrm{seed}}$. Then no vertex of the output $\domseq[\L]^{\mathrm{pinch}}$ of Iteration~\ref{it:pinch_iteration} is a pinch or a boundary pinch on any level, so $\domseq[\L]^{\mathrm{pinch}}$ satisfies clauses~(ii) and~(iii) of Definition~\ref{def:subdiv_partition}.
 \end{proposition}
 \begin{proof}
-    \robert{The iteration reaches its stopping cycle by Corollary~\ref{cor:pinch_rounds}, so the output exists, and the stopping rule says that the detection~\eqref{eq:pinch_round_detection} catches nothing there. It remains to see that the detection tests enough, that is $\V^{\mathrm{pinch}}(\domseq[\L]^{\mathrm{pinch},c}) \subseteq \V^{\mathrm{cand},c}$ for every $c$. We show this by induction, the case $c = 0$ being the hypothesis on the seed. Let $\vertex{\l}{\coarseIdxone} \in \V^{\mathrm{pinch}}(\domseq[\L]^{\mathrm{pinch},c})$. It cannot have been a pinch of $\domseq[\L]^{\mathrm{pinch},c-1}$, because it would then lie in $\V^{\mathrm{cand},c-1}$ by induction, hence be caught with $\targetlevel^c_\coarseIdxone > \l$, and Corollary~\ref{lemma:pinch_spent} forbids a pinch below the target. So the pinch is new, and Definition~\ref{def:candidate_collection} puts $\vertex{\l}{\coarseIdxone}$ into $\collectV(\domseq[\L]^{\mathrm{pinch},c-1}, \simplexsubset{2,c}{})$. The set subtracted in~\eqref{eq:pinch_candidates} carries no pinch of $\domseq[\L]^{\mathrm{pinch},c}$, again by Corollary~\ref{lemma:pinch_spent}, so $\vertex{\l}{\coarseIdxone} \in \V^{\mathrm{cand},c}$. With the invariant, an empty detection on the stopping cycle reads $\V^{\mathrm{pinch}}(\domseq[\L]^{\mathrm{pinch}}) = \varnothing$.}
+    The iteration reaches its stopping cycle by Corollary~\ref{cor:pinch_rounds}, so the output $\domseq[\L]^{\mathrm{pinch}}$ exists, and the stopping rule says that the detection~\eqref{eq:pinch_round_detection} catches nothing there. It remains to see that the detection tests enough, that is $\V^{\mathrm{pinch}}(\domseq[\L]^{\mathrm{pinch},t}) \subseteq \V^{\mathrm{cand},t}$ for every cycle $t$. We show this by induction, the case $t = 0$ being the hypothesis on the seed. Consider $\vertex{\l}{\coarseIdxone} \in \V^{\mathrm{pinch}}(\domseq[\L]^{\mathrm{pinch},t})$. It cannot have been a pinch of $\domseq[\L]^{\mathrm{pinch},t-1}$, because it would then lie in $\V^{\mathrm{cand},t-1}$ by induction, hence be caught with $\targetlevel^t_\coarseIdxone > \l$, and Corollary~\ref{lemma:pinch_spent} forbids a pinch below the target. So the pinch is new, and Definition~\ref{def:candidate_collection} puts $\vertex{\l}{\coarseIdxone}$ into the candidate set $\collectV(\domseq[\L]^{\mathrm{pinch},t-1}, \simplexsubset{2,t}{})$. The set subtracted in~\eqref{eq:pinch_candidates} carries no pinch of $\domseq[\L]^{\mathrm{pinch},t}$, again by Corollary~\ref{lemma:pinch_spent}, so $\vertex{\l}{\coarseIdxone} \in \V^{\mathrm{cand},t}$. Thus, an empty detection on the stopping cycle implies the absence of pinch vertices, i.e. $\V^{\mathrm{pinch}}(\domseq[\L]^{\mathrm{pinch}}) = \varnothing$.
 \end{proof}
 
 \begin{remark}[Why the bound is not local]
     \label{rem:pinch_rounds_bound}
-The right-hand side of~\eqref{eq:pinch_rounds} is the size of the input domain sequence. The corollary therefore settles only eventual termination, and better upper bounds remain an open question in this work. This remark explains where a sharper bound would have to come from and why it is difficult to achieve.
+    The right-hand side of~\eqref{eq:pinch_rounds} is the refinement room the input leaves in the hierarchy. The corollary therefore settles only eventual termination, and better upper bounds remain an open question in this work. This remark explains where a sharper bound would have to come from and why it is difficult to achieve.
 
-The iteration is local from one cycle to the next because it only advances the frontier of candidates by one ring of faces, so the refinement never jumps to an unrelated part of the mesh. The iteration bound factors~\eqref{eq:pinch_rounds} roughly into two contributions: the number of classes ever reached by the expanding frontier and the number of times one class is caught within that frontier.
+    The iteration is local from one cycle to the next because it only advances the frontier of candidates by one ring of faces, so the refinement never jumps to an unrelated part of the mesh.
+    A sharper bound would factor the cycle count $q^{\mathrm{pinch}}$ into two contributions. The first is the number of classes ever reached by the expanding frontier on a given level. The second is the number of times a single class can be caught within the frontiers across all levels.
 
-The second factor is bounded by the level range of the class alone. A class caught at level $\l$ is repaired to target $\l \! + \! 1$, and Corollary~\ref{lemma:pinch_spent} then forbids it to be a pinch on any level below that target. Every later catch of the same class is at a strictly higher level, so the class is caught at most $\L - \lminIdx{\coarseIdxone}$ times.
+    The second factor is bounded by the level range of the class alone. A class caught at level $\l$ is repaired to target $\l \! + \! 1$, and Corollary~\ref{lemma:pinch_spent} then forbids it to be a pinch on any level below that target. Every later catch of the same class is at a strictly higher level, so the class is caught at most $\L - \lminIdx{\coarseIdxone}$ times.
 
-The first factor is what we cannot currently bound. Every iteration advances the frontier and can create another pinch in turn. Figure~\ref{fig:padding_chain} shows the mechanism and Section~\ref{subsec:termination} discusses it, where stricter version of thse chain drive the count of outer padding cycles $q$. Nothing in the argument limits how far a chain runs, so the recruitment stops only when it runs out of mesh, which is what~\eqref{eq:pinch_rounds} reports.
+    The first factor is what we cannot currently bound. Every iteration advances the frontier and can create another pinch in turn. Figure~\ref{fig:padding_chain} shows the mechanism and Section~\ref{subsec:termination} discusses it, where stricter version of thse chain drive the count of outer padding cycles $q$. Nothing in the argument limits how far a chain runs, so the recruitment stops only when it runs out of mesh, which is what~\eqref{eq:pinch_rounds} reports.
 
-Problem~\ref{prob:padding_passes} asks for a bound on the outer count $q$ in terms of the control mesh and for a localisation of the faces $\textsc{Pad}$ refines. The inner count $q^{\mathrm{pinch}}$ has the same status and is open for the same reason.
+    Problem~\ref{prob:padding_passes} asks for a bound on the outer count $q$ in terms of the control mesh and for a localisation of the faces $\textsc{Pad}$ refines. The inner count $q^{\mathrm{pinch}}$ has the same status and is open for the same reason.
 
 \robert{The chains described in the previous paragraph are short in practice on the meshes we run, even though we do not prove that.} \guidance{This paragraph used to cite Table~\ref{tab:padding_interface_L4} for $q^{\mathrm{pinch}}$. That table reports the outer count $q$ and no inner count, so the citation was wrong and is removed. Re-running the table with a $q^{\mathrm{pinch}}$ and a $q^{\mathrm{confined}}$ column would restore the claim.}
 \end{remark}
 
-
 \subsubsection{Resolving confined faces}
 \label{subsubsec:confined_faces}
 
-This substep detects confined faces with Definition~\ref{def:confined_face} and repairs them with the face quadrisection $\quadriF$. We write
+This section describes the confinement padding substep from Figure~\ref{fig:padding_interactions_b}. It has the same iterative structure as the inner loop of pinch resolution, which means it iterates detected and repair of confined faces using the face quadrisection operator $\quadriF$ until the candidate set is exhausted. We write
 \begin{equation}
     \label{eq:confined_set}
     \F^{\mathrm{confined}}(\domseq[\L]) = \big\{ \face{\l}{\fineIdxone} \in \leafF{\l}(\domseq[\L]) \; \colon \; \face{\l}{\fineIdxone} \text{\; is confined} \big\}.
 \end{equation}
-Detection needs no definition of its own here. The detection of unconfined faces is the evaluation of the predicate of Definition~\ref{def:confined_face} on the candidate set, and such a set of leaf faces is already a marked family in the sense of~\eqref{eq:marked_face_family}. The repair is then one application of the face quadrisection,
+Detection needs no definition of its own here. The detection of unconfined faces is the evaluation of the predicate of Definition~\ref{def:confined_face} on the candidate set, and such a set of leaf faces is already a marked family in the sense of~\eqref{eq:marked_face_family}. We write $\markedFaces$ for the faces the detection marks, which is the set the repair is applied to. The repair is then one application of the face quadrisection, i.e.
 \begin{equation}
     \label{eq:confined_faces_resolved_subdiv_partition}
-    \quadriF \big( \domseq[\L], \, \F^\star \big) \qquad \text{for a set} \qquad \F^\star \; \subseteq \; \F^{\mathrm{confined}}(\domseq[\L]) .
+    \quadriF \big( \domseq[\L], \, \markedFaces \big) \qquad \text{for a set} \qquad \markedFaces \; \subseteq \; \F^{\mathrm{confined}}(\domseq[\L]) .
 \end{equation}
 
 One application does not leave a domain sequence free of confined faces. The children of a confined face on level $\l$ inherit its neighbourhood. Suppose that neighbourhood is refined two or more levels beyond $\l$. Then the child at the corner shared by the finer faces has no refinement-exterior vertex on level $\l \! + \! 1$ either and is confined in turn. The substep is therefore an iteration over a candidate set, in the same shape as the pinch resolution. Its candidates are narrower than~\eqref{eq:candidate_collection_faces} allows.
 
 \begin{lemma}[Confinement padding confines only its own children]
     \label{lemma:confined_children}
-    Let $\domseq[\L] \in \alldomseqs_\L$, let $\F^\star \subseteq \F^{\mathrm{confined}}(\domseq[\L])$ with slices $\F^\star_\l$, and let $\domseq[\L]' \coloneq \quadriF(\domseq[\L], \F^\star)$ as in~\eqref{eq:confined_faces_resolved_subdiv_partition}. Then every leaf face of $\domseq[\L]'$ that is confined in $\domseq[\L]'$ and was not confined in $\domseq[\L]$ is a child of a face of $\F^\star$. The first term of~\eqref{eq:candidate_collection_faces} may therefore be dropped,
+    Let $\domseq[\L] \in \alldomseqs_\L$, let $\markedFaces \subseteq \F^{\mathrm{confined}}(\domseq[\L])$ with slices $\markedFaces_\l$, and let $\domseq[\L]' \coloneq \quadriF(\domseq[\L], \markedFaces)$ as in~\eqref{eq:confined_faces_resolved_subdiv_partition}. Then every leaf face of $\domseq[\L]'$ that is confined in $\domseq[\L]'$ and was not confined in $\domseq[\L]$ is a child of a face of $\markedFaces$. The first term of~\eqref{eq:candidate_collection_faces} may therefore be dropped,
     \begin{equation}
         \label{eq:confined_children}
-        \bigsqcup\limits_{\l = \lzero}^{\L-1} \Aop{}{\l}{\l+1} \big( \F^\star_\l \big) \; \subseteq \; \collectF \big( \domseq[\L], \, \F^\star \big) ,
+        \bigsqcup\limits_{\l = \lzero}^{\L-1} \Aop{}{\l}{\l+1} \big( \markedFaces_\l \big) \; \subseteq \; \collectF \big( \domseq[\L], \, \markedFaces \big) ,
     \end{equation}
     and the smaller set is still a sufficient candidate set.
 \end{lemma}
 \begin{proof}
-    \robert{Let $\face{\l}{\fineIdxone}$ be a leaf face of $\domseq[\L]$ that is unconfined in $\domseq[\L]$ and is still a leaf face of $\domseq[\L]'$, and let $\vertex{\l}{\coarseIdxone}$ be one of its vertices that is refinement-exterior on level $\l$. Then $\vertex{\l}{\coarseIdxone}$ is a vertex of no face of the slice $\F^\star_\l$. Such a face is confined and therefore has no refinement-exterior vertex on level $\l$ by Definition~\ref{def:confined_face}, whereas the fan of $\vertex{\l}{\coarseIdxone}$ is empty there. Lemma~\ref{lemma:pad_locality} therefore leaves $\refFan{\l}(\vertex{\l}{\coarseIdxone})$ unchanged, the vertex stays refinement-exterior and $\face{\l}{\fineIdxone}$ stays unconfined. The only faces of $\domseq[\L]'$ that are not faces of $\domseq[\L]$ are the children of $\F^\star$.}
+    \robert{Let $\face{\l}{\fineIdxone}$ be a leaf face of $\domseq[\L]$ that is unconfined in $\domseq[\L]$ and is still a leaf face of $\domseq[\L]'$, and let $\vertex{\l}{\coarseIdxone}$ be one of its vertices that is refinement-exterior on level $\l$. Then $\vertex{\l}{\coarseIdxone}$ is a vertex of no face of the slice $\markedFaces_\l$. Such a face is confined and therefore has no refinement-exterior vertex on level $\l$ by Definition~\ref{def:confined_face}, whereas the fan of $\vertex{\l}{\coarseIdxone}$ is empty there. Lemma~\ref{lemma:pad_locality} therefore leaves $\refFan{\l}(\vertex{\l}{\coarseIdxone})$ unchanged, the vertex stays refinement-exterior and $\face{\l}{\fineIdxone}$ stays unconfined. The only faces of $\domseq[\L]'$ that are not faces of $\domseq[\L]$ are the children of $\markedFaces$.}
 \end{proof}
 
-\robert{Both substeps narrow the collection of Definition~\ref{def:candidate_collection}, each by its own argument. The pinch resolution subtracts what Corollary~\ref{lemma:pinch_spent} has spent. This substep drops the one-ring term. Let $\F^{\mathrm{seed}} \subseteq \leafMesh(\domseq[\L]^{\mathrm{pinch}})$ be a \emph{seed}.}
+\robert{The same substep admits a second narrowing, for the classes the grading of Section~\ref{subsubsec:grading} has to test, and off the same lever. A confined face has no refinement-exterior vertex on its own level, so it never sits at the fine end of a leaf star.}
+
+\begin{lemma}[\robert{Confinement padding does not widen a leaf star}]
+    \label{lemma:confined_span}
+    \robert{Let $\domseq[\L] \in \alldomseqs_\L$, let $\markedFaces \subseteq \F^{\mathrm{confined}}(\domseq[\L])$ and let $\domseq[\L]' \coloneq \quadriF(\domseq[\L], \markedFaces)$. Then every class $\vertexClass{\coarseIdxone} \in \vertexClasses(\domseq[\L])$ satisfies
+    \begin{equation}
+        \label{eq:confined_span}
+        \lmaxIdx{\coarseIdxone}' \; = \; \lmaxIdx{\coarseIdxone}, \qquad \lminIdx{\coarseIdxone}' \; \geq \; \lminIdx{\coarseIdxone}, \qquad \levelSpan{\coarseIdxone}' \; \leq \; \levelSpan{\coarseIdxone} .
+    \end{equation}}
+\end{lemma}
+\begin{proof}
+    \robert{Let $\face{\l}{\fineIdxone} \in \markedFaces$ be a marked face lying in the leaf star of $\vertexClass{\coarseIdxone}$. We first show that $\l < \lmaxIdx{\coarseIdxone}$.
+
+    If $\birthLevel(\vertexClass{\coarseIdxone}) \leq \l$, then $\vertex{\l}{\coarseIdxone}$ exists and is one of the three vertices of $\face{\l}{\fineIdxone}$, since a level-$\l$ face carries no other level-$\l$ vertex. A confined face has no refinement-exterior vertex on its own level by Definition~\ref{def:confined_face}, so Proposition~\ref{proposition:class_star_levels} gives $\l < \lmaxIdx{\coarseIdxone}$. If instead $\birthLevel(\vertexClass{\coarseIdxone}) > \l$, then $\birthLevel(\vertexClass{\coarseIdxone}) \geq \l \! + \! 1$, and the same proposition bounds $\birthLevel(\vertexClass{\coarseIdxone}) \leq \lmaxIdx{\coarseIdxone}$ because $\vertexClass{\coarseIdxone}$ has a representative in $\V(\domseq[\L])$. Either way $\l \! + \! 1 \leq \lmaxIdx{\coarseIdxone}$.
+
+    The leaf star read on $\domseq[\L]'$ replaces every marked face of the leaf star by children one level finer and carries every other face over, by Lemma~\ref{lemma:leafstar_locality} applied face by face. No marked face sits on level $\lmaxIdx{\coarseIdxone}$ by the paragraph above, so that level is attained by a face that is carried over, and no child of a marked face exceeds it. This gives $\lmaxIdx{\coarseIdxone}' = \lmaxIdx{\coarseIdxone}$. Every face of the new leaf star is either carried over, hence on a level at least $\lminIdx{\coarseIdxone}$, or a child of a marked face on level $\l \! + \! 1 > \l \geq \lminIdx{\coarseIdxone}$, which gives $\lminIdx{\coarseIdxone}' \geq \lminIdx{\coarseIdxone}$. Subtracting the two ends gives the level span.}
+\end{proof}
+
+% 2026-09-04: moved here from Section~\ref{subsec:termination}. The two paragraphs
+% below said "within $g$" and "newly exceed $g$", which forward-referenced the
+% grading predicate of the next subsection. Reworded to the level span alone.
+% Kept for cherry-picking.
+\tobecut{A class of $\vertexClasses(\domseq[\L])$ within $g$ before the confinement padding is therefore within $g$ after it, so that substep never makes a class newly exceed the grading predicate. It hands the grading only the classes it creates, which are the midpoints born on the children of $\markedFaces$. This is the class counterpart of Lemma~\ref{lemma:confined_children}, which narrows the faces the same substep collects.
+
+Neither of the other two substeps admits this narrowing. Both are graded vertex quadrisections, and~\eqref{eq:graded_quadrisection_leafstar_unmarked} lets an unmarked neighbour gain a level at the fine end while its coarse end stays where it is, so an existing class can newly exceed $g$ across a pinch resolution or a grading sweep.}
+
+\robert{The level span of a class the input carries therefore never grows across the confinement padding, whatever bound it was under before. This substep hands the grading only the classes it creates,
+\begin{equation}
+    \label{eq:confined_class_candidates}
+    \vertexClasses(\domseq[\L]') \; \setminus \; \vertexClasses(\domseq[\L]) ,
+\end{equation}
+which are the midpoints born on the children of $\markedFaces$. This is the class counterpart of the narrowing above.}
+
+\robert{Neither of the other two substeps admits it. Both are graded vertex quadrisections, and~\eqref{eq:graded_quadrisection_leafstar_unmarked} lets an unmarked neighbour gain a level at the fine end while its coarse end stays where it is, so the level span of an existing class can grow across a pinch resolution or a grading sweep. Lemma~\ref{lemma:span_opens} says exactly when, and records this substep as the one that never can.}
+
+\robert{Back to the two maps of Definition~\ref{def:candidate_collection}. Both substeps narrow that collection too, each by its own argument. The pinch resolution subtracts what Corollary~\ref{lemma:pinch_spent} has spent. This substep drops the one-ring term. Let $\F^{\mathrm{seed}} \subseteq \leafMesh(\domseq[\L]^{\mathrm{pinch}})$ be a \emph{seed}.}
 
 \begin{iteration}[Confinement padding]
 \label{it:confined_iteration}
-    The confinement padding step is initialised with the domain sequence $\domseq[\L]^{\mathrm{confined},0} \coloneq \domseq[\L]^{\mathrm{pinch}}$ and candidate set $\F^{\mathrm{cand},0} \coloneq \F^{\mathrm{seed}}$. It then iterates the following \emph{confinement cycle} for $c \in \{1, \, \ldots, \, q^{\mathrm{confined}} \}$:
+    The confinement padding step is initialised with the domain sequence $\domseq[\L]^{\mathrm{confined},0} \coloneq \domseq[\L]^{\mathrm{pinch}}$ and candidate set $\F^{\mathrm{cand},0} \coloneq \F^{\mathrm{seed}}$. It then iterates the following \emph{confinement cycle} for $t \in \{1, \, \ldots, \, q^{\mathrm{confined}} \}$:
     \begin{enumerate}[topsep=3pt, itemsep=-2pt]
-    \item Detect confined faces for the candidate set $\F^{\mathrm{cand},c-1}$ of the previous cycle on the domain sequence $\domseq[\L]^{\mathrm{confined},c-1}$ to obtain
+    \item Detect confined faces for the candidate set $\F^{\mathrm{cand},t-1}$ of the previous cycle on the domain sequence $\domseq[\L]^{\mathrm{confined},t-1}$ to obtain
     \begin{equation}
         \label{eq:confined_cycle_detection}
-        \F^{\mathrm{confined},c} \; \coloneq \; \big\{ \face{\l}{\fineIdxone} \in \F^{\mathrm{cand},c-1} \; \colon \;\; \face{\l}{\fineIdxone} \text{\; is confined on } \domseq[\L]^{\mathrm{confined},c-1} \big\}.
+        \markedFaces[t] \; \coloneq \; \F^{\mathrm{cand},t-1} \, \cap \, \F^{\mathrm{confined}} \big( \domseq[\L]^{\mathrm{confined},t-1} \big) .
     \end{equation}
+    % Superseded 2026-09-03 by the intersection form above, which matches eq:pinch_detection_classes and reads the predicate off eq:confined_set instead of restating it in words. Kept for cherry-picking.
+    \tobecut{\begin{equation*}
+        \markedFaces[t] \; \coloneq \; \big\{ \face{\l}{\fineIdxone} \in \F^{\mathrm{cand},t-1} \; \colon \;\; \face{\l}{\fineIdxone} \text{\; is confined on } \domseq[\L]^{\mathrm{confined},t-1} \big\}.
+    \end{equation*}}
     \vspace{-7mm}
     \item Repair the detected faces by refining every one of them by one level,
     \begin{equation}
         \label{eq:confined_cycle_repair}
-        \domseq[\L]^{\mathrm{confined},c} \; \coloneq \; \quadriF \big( \domseq[\L]^{\mathrm{confined},c-1}, \, \F^{\mathrm{confined},c} \big).
+        \domseq[\L]^{\mathrm{confined},t} \; \coloneq \; \quadriF \big( \domseq[\L]^{\mathrm{confined},t-1}, \, \markedFaces[t] \big).
     \end{equation}
     \vspace{-7mm}
     \item Collect the candidates for the next cycle, which Lemma~\ref{lemma:confined_children} narrows to the children of the faces just refined, i.e.
     \begin{equation}
         \label{eq:confined_candidates}
-        \F^{\mathrm{cand},c} \; \coloneq \bigsqcup\limits_{\l = \lzero}^{\L-1} \Aop{}{\l}{\l+1} \big( \F^{\mathrm{confined},c}_\l \big),
+        \F^{\mathrm{cand},t} \; \coloneq \bigsqcup\limits_{\l = \lzero}^{\L-1} \Aop{}{\l}{\l+1} \big( \markedFaces[t]_\l \big),
+    \end{equation}
+    \vspace{-7mm}
+    \item \robert{Accumulate what the substeps after this one will have to test, the vertices of the same marked faces and the classes this substep creates,}
+    \begin{equation}
+        \label{eq:confined_handover}
+        \V^{\mathrm{confined}} \; \coloneq \bigcup\limits_{r = 1}^{t} \collectV \big( \domseq[\L]^{\mathrm{confined},r-1}, \, \markedFaces[r] \big)
+        \quad \text{and} \quad
+        \vertexClasses^{\mathrm{confined}} \; \coloneq \bigcup\limits_{r = 1}^{t} \big( \vertexClasses(\domseq[\L]^{\mathrm{confined},r}) \setminus \vertexClasses(\domseq[\L]^{\mathrm{confined},r-1}) \big) .
     \end{equation}
 \end{enumerate}
-We repeat steps $1$ to $3$ until the confinement detection in~\eqref{eq:confined_cycle_detection} detects no more confined faces. We then set $\domseq[\L]^{\mathrm{confined}} \coloneq \domseq[\L]^{\mathrm{confined},c}$ and write $q^{\mathrm{confined}} \coloneq c \! - \! 1$ for the number of cycles until the fixed point was reached.
+We repeat steps $1$ to \robert{$4$} until the confinement detection in~\eqref{eq:confined_cycle_detection} detects no more confined faces. We then set $\domseq[\L]^{\mathrm{confined}} \coloneq \domseq[\L]^{\mathrm{confined},t}$ and write $q^{\mathrm{confined}} \coloneq t \! - \! 1$ for the number of cycles until the fixed point was reached. \robert{The substep returns $\domseq[\L]^{\mathrm{confined}}$ together with the two accumulated sets of~\eqref{eq:confined_handover}.}
+
+\robert{As in the pinch resolution, the narrowing of step $3$ does not carry into step $4$. Lemma~\ref{lemma:confined_children} drops the one-ring term of~\eqref{eq:candidate_collection_faces} for the faces this substep tests itself, and says nothing about the vertices it owes the pinch resolution, so~\eqref{eq:confined_handover} collects them with $\collectV$ unnarrowed. The class term is the one that is narrowed, to the newborn classes alone, by clause~$(i)$ of Lemma~\ref{lemma:span_opens}.}
 \end{iteration}
 
-The iteration stops when the confinement detection catches nothing, i.e. $\F^{\mathrm{confined},c} = \varnothing$. That is an empty marked family, so~\eqref{eq:confined_cycle_repair} adds no refinement and~\eqref{eq:confined_candidates} leaves $\F^{\mathrm{cand},c} = \varnothing$. It is also the fixed point $\domseq[\L]^{\mathrm{confined},c} = \domseq[\L]^{\mathrm{confined},c-1}$ of the iteration.
+The iteration stops when the confinement detection catches nothing, i.e. $\markedFaces[t] = \varnothing$. That is an empty marked family, so~\eqref{eq:confined_cycle_repair} adds no refinement and~\eqref{eq:confined_candidates} leaves $\F^{\mathrm{cand},t} = \varnothing$. It is also the fixed point $\domseq[\L]^{\mathrm{confined},t} = \domseq[\L]^{\mathrm{confined},t-1}$ of the iteration.
 
-The seed $\F^{\mathrm{seed}}$ may always be taken to be all leaf faces $\leafMesh(\domseq[\L]^{\mathrm{pinch}})$ of the input domain sequence. A smaller seed can be used whenever that sequence is already known to carry no confined face outside a given set, which is the case in every pass of the overarching padding loop in Section~\ref{subsec:termination}.
+The seed $\F^{\mathrm{seed}}$ may always be taken to be all leaf faces $\leafMesh(\domseq[\L]^{\mathrm{pinch}})$ of the input domain sequence. A smaller seed can be used whenever that sequence is already known to carry no confined face outside a given set, which is the case in every pass of the overarching padding loop in Section~\ref{subsec:outer_loop}.
 
 \begin{corollary}[The confinement iteration advances one level per cycle]
     \label{cor:confinement_cycles}
-    Let $\l_c$ denote the coarsest level carrying a face of $\F^{\mathrm{confined},c}$ at cycle $c$. Then $\l_{c+1} \geq \l_c \! + \! 1$, and the number $q^{\mathrm{confined}}$ of productive cycles of Iteration~\ref{it:confined_iteration} satisfies
+    Let $\l_t$ denote the coarsest level carrying a face of $\markedFaces[t]$ at cycle $t$. Then $\l_{t+1} \geq \l_t \! + \! 1$, and the number $q^{\mathrm{confined}}$ of productive cycles of Iteration~\ref{it:confined_iteration} satisfies
     \begin{equation}
         \label{eq:confinement_cycles}
         q^{\mathrm{confined}} \; \leq \; \L - \l_1 \; \leq \; \L,
@@ -2548,7 +2639,7 @@ The seed $\F^{\mathrm{seed}}$ may always be taken to be all leaf faces $\leafMes
     where $\l_1$ is the level of the coarsest confined face of the input domain sequence.
 \end{corollary}
 \begin{proof}
-    By Lemma~\ref{lemma:confined_children} the set $\F^{\mathrm{confined},c+1}$ is contained in the candidate set $\F^{\mathrm{cand},c}$ of~\eqref{eq:confined_candidates}, whose faces are children of faces of $\F^{\mathrm{confined},c}$ and hence lie on levels $\lone \geq \l_c \! + \! 1$. Equality can fail, because no child of a face on level $\l_c$ has to be confined. A face whose neighbourhood is refined exactly one level beyond $\l_c$ leaves four children with a refinement-exterior vertex on level $\l_c \! + \! 1$ and drops out, and $\l_{c+1}$ is then read off whichever face of $\F^{\mathrm{confined},c}$ is buried deeper. No leaf face on level $\L$ is ever confined, since every vertex is refinement-exterior on level $\L$ by Definition~\ref{def:refinement_fan}. Hence $\l_c \leq \L \! - \! 1$ for every productive cycle, which gives~\eqref{eq:confinement_cycles}.
+    By Lemma~\ref{lemma:confined_children} the set $\markedFaces[t+1]$ is contained in the candidate set $\F^{\mathrm{cand},t}$ of~\eqref{eq:confined_candidates}, whose faces are children of faces of $\markedFaces[t]$ and hence lie on levels $\lone \geq \l_t \! + \! 1$. Equality can fail, because no child of a face on level $\l_t$ has to be confined. A face whose neighbourhood is refined exactly one level beyond $\l_t$ leaves four children with a refinement-exterior vertex on level $\l_t \! + \! 1$ and drops out, and $\l_{t+1}$ is then read off whichever face of $\markedFaces[t]$ is buried deeper. No leaf face on level $\L$ is ever confined, since every vertex is refinement-exterior on level $\L$ by Definition~\ref{def:refinement_fan}. Hence $\l_t \leq \L \! - \! 1$ for every productive cycle, which gives~\eqref{eq:confinement_cycles}.
 \end{proof}
 
 \begin{proposition}[The confinement iteration discharges clause (i)]
@@ -2558,15 +2649,16 @@ The seed $\F^{\mathrm{seed}}$ may always be taken to be all leaf faces $\leafMes
 \begin{proof}
     \robert{The iteration reaches its stopping cycle by Corollary~\ref{cor:confinement_cycles}, so the output exists, and the stopping rule says that the detection~\eqref{eq:confined_cycle_detection} catches nothing there. The induction of Proposition~\ref{prop:pinch_discharged} then runs unchanged on the invariant
     \begin{equation*}
-        \F^{\mathrm{confined}} \big( \domseq[\L]^{\mathrm{confined},c} \big) \; \subseteq \; \F^{\mathrm{cand},c} .
-    \end{equation*} A face already confined in $\domseq[\L]^{\mathrm{confined},c-1}$ lies in $\F^{\mathrm{cand},c-1}$ by induction, so~\eqref{eq:confined_cycle_repair} refines it and it is no longer a leaf face, which replaces the appeal to Corollary~\ref{lemma:pinch_spent}. A newly confined face is a child of $\F^{\mathrm{confined},c}$ by Lemma~\ref{lemma:confined_children} and hence lies in $\F^{\mathrm{cand},c}$.}
+        \F^{\mathrm{confined}} \big( \domseq[\L]^{\mathrm{confined},t} \big) \; \subseteq \; \F^{\mathrm{cand},t} .
+    \end{equation*} A face already confined in $\domseq[\L]^{\mathrm{confined},t-1}$ lies in $\F^{\mathrm{cand},t-1}$ by induction, so~\eqref{eq:confined_cycle_repair} refines it and it is no longer a leaf face, which replaces the appeal to Corollary~\ref{lemma:pinch_spent}. A newly confined face is a child of $\markedFaces[t]$ by Lemma~\ref{lemma:confined_children} and hence lies in $\F^{\mathrm{cand},t}$.}
 \end{proof}
 
-% 2026-09-02: superseded by the frontier-direction paragraph of the Summary,
-% which makes the same contrast for both substeps at once. Written as a plain
-% paragraph rather than a remark environment so it consumes no theorem number.
-% Kept for cherry-picking.
-\tobecut{\textbf{Superseded remark, why this bound is a level count.} The bound~\eqref{eq:confinement_cycles} is in the number of levels and not in the size of the mesh. That is the contrast with Remark~\ref{rem:pinch_rounds_bound} for pinch resolution. Lemma~\ref{lemma:confined_children} confines the next cycle to the children of this one, so the coarsest defect level strictly increases and the iteration cannot chain sideways.}
+\robert{Under the hypothesis of Proposition~\ref{prop:confined_discharged} the detection of every cycle is exhaustive,
+\begin{equation}
+    \label{eq:confined_detection_exhaustive}
+    \markedFaces[t] \; = \; \F^{\mathrm{confined}} \big( \domseq[\L]^{\mathrm{confined},t-1} \big) ,
+\end{equation}
+since the invariant of the proof makes the intersection with the candidates redundant. Without a covering seed the inclusion can be strict. That is why Iteration~\ref{it:confined_iteration} is stated with $\markedFaces[t]$ and not with the predicate set itself.}
 
 % --- Figure knobs: the candidate-set pipeline. The panels are authored at their
 % final printed size by plot_candidate_sets.py, so \includegraphics must not
@@ -2616,24 +2708,16 @@ The seed $\F^{\mathrm{seed}}$ may always be taken to be all leaf faces $\leafMes
     \label{fig:candidate_sets}
 \end{figure}
 
-\robert{The two cycle counts $q^{\mathrm{pinch}}$ of Corollary~\ref{cor:pinch_rounds} and $q^{\mathrm{confined}}$ of Corollary~\ref{cor:confinement_cycles} are the counts of the two inner iterations. They are not part of the count $q$ of productive $\textsc{Pad}$ passes of Section~\ref{subsec:termination}, which counts the passes driven by the links between the substeps alone.}
+\robert{The two cycle counts $q^{\mathrm{pinch}}$ of Corollary~\ref{cor:pinch_rounds} and $q^{\mathrm{confined}}$ of Corollary~\ref{cor:confinement_cycles} are the counts of the two inner iterations. They are not part of the count $q$ of productive $\textsc{Pad}$ passes of Section~\ref{subsec:outer_loop}, which counts the passes driven by the links between the substeps alone.}
 
 \subsubsection{Grading leaf stars}
 \label{subsubsec:grading}
 
-% 2026-09-02: the conditioning justification is not supported. Measured on the
-% L=4 run of Section~\ref{subsubsec:cl_performance}, kappa(P^-1 K) is flat with
-% and without the grading. Replaced by the coarse-mass rationale, which is
-% measured. Kept for cherry-picking.
-\tobecut{The grading is supposed to smooth out transitions across vertex classes $\vertexClass{\coarseIdxone}$ of $\domseq^{\mathrm{confined}}$ whose leaf stars still have large level spans, see Definition~\ref{def:level_range}. Unlike the pinch resolution and the confinement padding, the grading step does not restore exactness or linear independence but is intended to improve the conditioning of the matrix-vector system and to avoid numerical artifacts in the transition areas. Thus, grading is an optional padding step. It is the last of the three substeps, and it is a single sweep and not an iteration.}
+The grading substep is the last of the three padding substeps. Grading closes the level span of Definition~\ref{def:level_range} at the vertex classes of $\domseq^{\mathrm{confined}}$ by raising $\lminIdx{\coarseIdxone}$ towards $\lmaxIdx{\coarseIdxone}$.
 
-\robert{The grading closes the level span of Definition~\ref{def:level_range} at the vertex classes of $\domseq^{\mathrm{confined}}$ that carry a wide one. It raises $\lminIdx{\coarseIdxone}$ towards $\lmaxIdx{\coarseIdxone}$ and leaves the fine end alone, so it refines at the coarse end of a leaf star and nowhere else.}
+In contrast to the pinch resolution and confinement padding, grading is a single sweep and not an iteration because grading is optional for admissibility. No clause of Definition~\ref{def:subdiv_partition} mentions the level span, and the other two substeps discharge all three clauses without it. Grading targets only the coarse end of the leaf star of any vertex class. The marking of Section~\ref{subsubsec:refine_vertex} ranks vertex classes by the area density~\eqref{eq:vertex_residual}, so a coarse face away from the refined region ranks last and is never selected. Nothing else in the loop raises such a face either. Estimator mass sitting on it therefore stays there, while the bulk criterion~\eqref{eq:doerfler_selection} goes on counting it. The grading is the one step that moves that mass up a level and allows the estimator to be recognised for marking.
 
-\robert{Grading is optional for admissibility. No clause of Definition~\ref{def:subdiv_partition} mentions the level span, and the two substeps above discharge all three clauses without it. What it is for is the coarse end of the mesh. The marking of Section~\ref{subsubsec:refine_vertex} ranks vertex classes by the area density~\eqref{eq:vertex_residual}, so a coarse face away from the refined region ranks last and is never selected. Nothing else in the loop raises such a face either. Estimator mass sitting on it therefore stays there, while the bulk criterion~\eqref{eq:doerfler_selection} goes on counting it. The grading is the one step that moves that mass up a level.}
-
-\robert{Retuning the ranking is not a substitute, because the two act on different scales. A marked class is homogenised to $\targetlevel_\coarseIdxone = \min(\lmaxIdx{\coarseIdxone} \! + \! 1, \L)$, which advances a whole star by one level, whereas the grading refines only the coarse end of one. Section~\ref{subsubsec:cl_performance} measures both.}
-
-\robert{The grading is the last of the three substeps, and it is a single sweep and not an iteration.}
+\smallskip
 
 \robert{This substep detects large level spans with Definition~\ref{def:level_range} and repairs them with the graded vertex quadrisection $\quadriV$. The predicate fixes a maximum level span $g \in \mathbb{N}$ and catches the classes}
 \begin{equation}
@@ -2665,7 +2749,7 @@ The seed $\F^{\mathrm{seed}}$ may always be taken to be all leaf faces $\leafMes
 
 \robert{The target closes the span from the coarse end and leaves the fine end alone. Applied to $\vertexClass{\coarseIdxone}$ on its own, Corollary~\ref{cor:graded_quadrisection_leafstar} raises $\lminIdx{\coarseIdxone}$ to $\lmaxIdx{\coarseIdxone} \! - \! g$ and keeps $\lmaxIdx{\coarseIdxone}$ where it is, so the level span comes out at exactly $g$.}
 
-\robert{Unlike~\eqref{eq:pinch_detection_target} this map needs no $\lminIdx{\coarseIdxone}$ floor to be total. A caught class has $\levelSpan{\coarseIdxone} > g$ and therefore $\lminIdx{\coarseIdxone} = \lmaxIdx{\coarseIdxone} - \levelSpan{\coarseIdxone} < \lmaxIdx{\coarseIdxone} - g = \targetlevel_\coarseIdxone$, so the target already sits strictly above the coarse end of the leaf star and Corollary~\ref{cor:graded_quadrisection_composition} never reads the operator as the identity at a caught class.}
+\robert{Unlike~\eqref{eq:pinch_detection_target} this map needs no $\lminIdx{\coarseIdxone}$ floor to be total. A caught class has $\lminIdx{\coarseIdxone} < \lmaxIdx{\coarseIdxone} - g = \targetlevel_\coarseIdxone$, so Corollary~\ref{cor:graded_quadrisection_composition} never reads the repair as the identity there.}
 
 \robert{The repair is one application of the graded vertex quadrisection,}
 \begin{equation}
@@ -2678,15 +2762,61 @@ The seed $\F^{\mathrm{seed}}$ may always be taken to be all leaf faces $\leafMes
 
 \robert{The bound needs no assumption on the input. At a caught class, $\vertexClass{\coarseIdxone} \in \vertexClasses^\star$, the constraint~\eqref{eq:homogenisation_constraint} of Lemma~\ref{lemma:graded_quadrisection_minimal} gives $\lminIdx{\coarseIdxone}' \geq \targetlevel_\coarseIdxone = \lmaxIdx{\coarseIdxone} \! - \! g$ for the coarse end. For the fine end $\targetlevel_\coarseIdxone \leq \lmaxIdx{\coarseIdxone}$, so~\eqref{eq:graded_quadrisection_leafstar_set} reads $\lmaxIdx{\coarseIdxone}' \leq \lmaxIdx{\coarseIdxone} \! + \! 1$. Subtracting gives $\levelSpan{\coarseIdxone}' \leq g \! + \! 1$, whatever the span was before. At a class the sweep does not catch, $\vertexClass{\coarseIdxone} \notin \vertexClasses^\star$, the same two ends are bounded by~\eqref{eq:graded_quadrisection_leafstar_unmarked} instead, which gives $\levelSpan{\coarseIdxone}' \leq \levelSpan{\coarseIdxone} \! + \! 1$ and hence $\levelSpan{\coarseIdxone}' \leq g \! + \! 1$ for a class that was within $g$ to begin with.}
 
-\robert{The extra level is spent only under the condition recorded after Corollary~\ref{cor:graded_quadrisection_leafstar}, which the target~\eqref{eq:grading_detection_target} reads as a condition on two leaf stars. The neighbour has to be more than $g$ levels finer than $\vertexClass{\coarseIdxone}$, so that $\lmaxIdx{\coarseIdxtwo} > \lmaxIdx{\coarseIdxone} + g$, and it has to be still touching $\vertexClass{\coarseIdxone}$ at the fine end of its leaf star, so that $\lmeetIdx{\coarseIdxone}{\coarseIdxtwo} = \lmaxIdx{\coarseIdxone}$. That section shows the condition is attainable and that the lift stays at one level however far past $\lmaxIdx{\coarseIdxone}$ the neighbour is graded.}
+\robert{The extra level is spent only under the condition recorded after Corollary~\ref{cor:graded_quadrisection_leafstar}, which asks for a neighbouring class that is more than $g$ levels finer and still touches $\vertexClass{\coarseIdxone}$ at the fine end of its leaf star. That section shows the condition is attainable.}
 
 \robert{The residual is left to the next padding cycle, and that is why the grading needs no inner iteration of its own. The grading predicate is one of the three tested on every cycle, so a class sitting at $g \! + \! 1$ is caught again and repaired like any other defect, and by Section~\ref{subsec:termination} a fixed point of $\textsc{Pad}$ carries level span at most $g$. Iterating the sweep inside the substep would buy the same thing one loop lower down. It is the outer loop that closes the span, and the grading being optional is what makes it reasonable to leave a level to it.}
 
-\robert{The candidates the sweep hands on are the ones the two maps of Definition~\ref{def:candidate_collection} collect. The grading is a graded vertex quadrisection, hence a face quadrisection on the family~\eqref{eq:graded_marked_family} of class stars by Corollary~\ref{cor:graded_is_face_quadrisection}, so both maps apply to that family unchanged. Neither set is consumed inside this substep. They are handed forward to the next padding cycle. Let $\vertexClasses^{\mathrm{seed}} \subseteq \vertexClasses(\domseq[\L]^{\mathrm{confined}})$ be a \emph{seed}.}
+\robert{The condition of the paragraph above does more than bound the residual. It is the only way a level span can open at all, and read that way it narrows what this substep has to be handed.}
+
+\begin{lemma}[\robert{Where a level span can open}]
+    \label{lemma:span_opens}
+    \robert{Let $\domseq[\L] \in \alldomseqs_\L$, let $\vertexClass{\coarseIdxone} \in \vertexClasses(\domseq[\L])$ and write $\levelSpan{\coarseIdxone}'$ for its level span read on $\domseq[\L]'$.
+    \begin{enumerate}[topsep=3pt, itemsep=-2pt]
+        \item[$(i)$] If $\domseq[\L]' = \quadriF(\domseq[\L], \markedFaces)$ for a set $\markedFaces \subseteq \F^{\mathrm{confined}}(\domseq[\L])$, then $\levelSpan{\coarseIdxone}' \leq \levelSpan{\coarseIdxone}$.
+        \item[$(ii)$] If $\domseq[\L]' = \quadriV(\domseq[\L], \markedVertexClasses, \targetlevel)$ as in Definition~\ref{def:graded_vertex_quadrisection}, and $\targetlevel_\coarseIdxone \leq \lmaxIdx{\coarseIdxone}$ in case $\vertexClass{\coarseIdxone} \in \markedVertexClasses$, then $\levelSpan{\coarseIdxone}' > \levelSpan{\coarseIdxone}$ forces a marked class $\vertexClass{\coarseIdxtwo} \in \markedVertexClasses \setminus \{ \vertexClass{\coarseIdxone} \}$ with
+        \begin{equation}
+            \label{eq:span_opens}
+            \lmeetIdx{\coarseIdxone}{\coarseIdxtwo} \; = \; \lmaxIdx{\coarseIdxone}
+            \qquad \text{and} \qquad
+            \targetlevel_\coarseIdxtwo \; > \; \lmaxIdx{\coarseIdxone} ,
+        \end{equation}
+        and the span then opens by exactly one level.
+    \end{enumerate}}
+\end{lemma}
+\begin{proof}
+    \robert{Clause $(i)$ is Lemma~\ref{lemma:confined_span}. For clause $(ii)$, the coarse end never falls, since the regions only grow and both~\eqref{eq:graded_quadrisection_leafstar_set} and~\eqref{eq:graded_quadrisection_leafstar_unmarked} give $\lminIdx{\coarseIdxone}' \geq \lminIdx{\coarseIdxone}$. The same two equations bound the fine end by $\lmaxIdx{\coarseIdxone}' \leq \max(\lmaxIdx{\coarseIdxone} \! + \! 1, \, \targetlevel_\coarseIdxone)$, with the target term absent when $\vertexClass{\coarseIdxone}$ is unmarked and at most $\lmaxIdx{\coarseIdxone}$ by hypothesis when it is marked. So $\lmaxIdx{\coarseIdxone}' \leq \lmaxIdx{\coarseIdxone} \! + \! 1$ either way, and $\levelSpan{\coarseIdxone}' \leq \levelSpan{\coarseIdxone} \! + \! 1$, which gives the last assertion once the span opens at all. Opening it needs $\lmaxIdx{\coarseIdxone}' > \max(\lmaxIdx{\coarseIdxone}, \, \targetlevel_\coarseIdxone)$, that is the upper bound of~\eqref{eq:graded_quadrisection_leafstar_set} strictly above its lower bound, and the paragraph after Corollary~\ref{cor:graded_quadrisection_leafstar} shows this needs exactly~\eqref{eq:span_opens}.}
+\end{proof}
+
+\robert{Both padding substeps meet the hypothesis of clause $(ii)$ at every class they mark. The grading targets $\targetlevel_\coarseIdxone = \lmaxIdx{\coarseIdxone} \! - \! g$ by~\eqref{eq:grading_detection_target}. The pinch resolution targets $\l \! + \! 1$ for the finest pinch level $\l$ of the class by~\eqref{eq:pinch_detection_target}, and a pinch needs a partial refinement fan, which the second case of~\eqref{eq:class_star_levels} confines to the levels $\lminIdx{\coarseIdxone} \leq \l < \lmaxIdx{\coarseIdxone}$. The one graded vertex quadrisection of the adaptive loop that does not meet it is the \textsc{Refine} step of Section~\ref{subsec:refine}, which targets $\min(\lmaxIdx{\coarseIdxone} \! + \! 1, \, \L)$, and that step sits outside the padding loop and seeds its first pass.}
+
+\begin{remark}[\robert{A seed for the grading}]
+    \label{rem:grading_seed}
+    \robert{A class whose span the repair does not open cannot newly exceed $g$, so Lemma~\ref{lemma:span_opens} says which classes a later grading has to test at all. Let $\domseq[\L] \in \alldomseqs_\L$, let $\markedVertexClasses$ and $\targetlevel$ be as in Definition~\ref{def:graded_vertex_quadrisection}, let $\domseq[\L]' = \quadriV(\domseq[\L], \markedVertexClasses, \targetlevel)$ and write
+    \begin{equation}
+        \label{eq:grading_class_seed}
+        \vertexClasses^{\mathrm{open}} \big( \domseq[\L] \big) \; \coloneq \; \big\{ \vertexClass{\coarseIdxone} \in \vertexClasses(\domseq[\L]) \; \colon \;\; \vertexClass{\coarseIdxone} \;\text{ and some }\; \vertexClass{\coarseIdxtwo} \in \markedVertexClasses \setminus \{ \vertexClass{\coarseIdxone} \} \;\text{ satisfy}~\eqref{eq:span_opens} \big\}
+    \end{equation}
+    \robert{for the classes the repair can have opened. The argument is the sequence the repair was applied to, and the marked classes and targets are the repair's own, so no further decoration is needed at a use site.} Then any set covering
+    \begin{equation}
+        \label{eq:grading_class_candidates}
+        \big( \vertexClasses(\domseq[\L]') \setminus \vertexClasses(\domseq[\L]) \big) \; \cup \; \vertexClasses^{\mathrm{open}} \big( \domseq[\L] \big)
+    \end{equation}
+    meets the hypothesis that Proposition~\ref{prop:grading_span} places on the seed, read on $\domseq[\L]'$. For a confinement padding $\quadriF(\domseq[\L], \markedFaces)$ with $\markedFaces \subseteq \F^{\mathrm{confined}}(\domseq[\L])$ the second term is empty by clause $(i)$, and the newborn classes alone suffice.
+
+    Read plainly, the sweep has to test the classes the repair created, and the classes that were adjacent at the fine end of their own leaf star to a class graded past that end. The second condition reads the mesh hierarchy alone through the meeting level~\eqref{eq:meeting_level}, together with the target map the repair already carries, so it costs no traversal of the domain sequence. Both terms are supersets of the classes that newly exceed $g$, and the detection~\eqref{eq:grading_detection_classes} filters them.}
+\end{remark}
+
+\guidance{Not measured. The newborn term is what decides whether this seed is small in practice. The second term is empty for the confinement padding and needs the configuration attained in the example after Corollary~\ref{cor:graded_quadrisection_leafstar} for the other two, whereas a newborn midpoint is tested unconditionally and we have no bound of its own for it. Worth counting on the valence-$10$ domain sequence of Figure~\ref{fig:candidate_sets}, against the $16$ versus $629$ that the pinch seed gives there.}
+
+% 2026-09-04: superseded by the paragraph below, which adds the third collection.
+% Kept for cherry-picking.
+\tobecut{The candidates the sweep hands on are the ones the two maps of Definition~\ref{def:candidate_collection} collect. The grading is a graded vertex quadrisection, hence a face quadrisection on the family~\eqref{eq:graded_marked_family} of class stars by Corollary~\ref{cor:graded_is_face_quadrisection}, so both maps apply to that family unchanged. Neither set is consumed inside this substep. They are handed forward to the next padding cycle.}
+
+\robert{The candidates the sweep hands on are collected by the two maps of Definition~\ref{def:candidate_collection} and, for the classes, by Remark~\ref{rem:grading_seed}. The grading is a graded vertex quadrisection, hence a face quadrisection on the family~\eqref{eq:graded_marked_family} of class stars by Corollary~\ref{cor:graded_is_face_quadrisection}, so the first two apply to that family unchanged. None of the three sets is consumed inside this substep. They are handed forward to the next padding cycle. Let $\vertexClasses^{\mathrm{seed}} \subseteq \vertexClasses(\domseq[\L]^{\mathrm{confined}})$ be a \emph{seed}.}
 
 \begin{sweep}[\robert{Grading}]
 \label{sw:grading_sweep}
-    \robert{The grading step reads the domain sequence $\domseq[\L]^{\mathrm{confined}}$ and the candidate classes $\vertexClasses^{\mathrm{seed}}$, and runs the following three steps once.}
+    \robert{The grading step reads the domain sequence $\domseq[\L]^{\mathrm{confined}}$ and the candidate classes $\vertexClasses^{\mathrm{seed}}$, and runs the following four steps once.}
     \begin{enumerate}[topsep=3pt, itemsep=-2pt]
     \item \robert{Detect the classes of large level span among the candidates,}
     \begin{equation}
@@ -2700,20 +2830,32 @@ The seed $\F^{\mathrm{seed}}$ may always be taken to be all leaf faces $\leafMes
         \domseq[\L]^{\mathrm{grading}} \; \coloneq \; \quadriV \big( \domseq[\L]^{\mathrm{confined}}, \, \gradeClasses, \, \targetlevel \big).
     \end{equation}
     \vspace{-7mm}
-    \item \robert{Collect the candidates for the next padding cycle from the marked family $\simplexsubset{2}{}$ that~\eqref{eq:graded_marked_family} builds from $\gradeClasses$ and $\targetlevel$,}
+    \item \robert{Collect the vertex and face candidates for the next padding cycle from the marked family $\simplexsubset{2}{}$ that~\eqref{eq:graded_marked_family} builds from $\gradeClasses$ and $\targetlevel$,}
     \begin{equation}
         \label{eq:grading_sweep_candidates}
         \V^{\mathrm{cand}} \coloneq \collectV \big( \domseq[\L]^{\mathrm{confined}}, \, \simplexsubset{2}{} \big)
         \qquad \text{and} \qquad
-        \F^{\mathrm{cand}} \coloneq \collectF \big( \domseq[\L]^{\mathrm{confined}}, \, \simplexsubset{2}{} \big).
+        \F^{\mathrm{cand}} \coloneq \collectF \big( \domseq[\L]^{\mathrm{confined}}, \, \simplexsubset{2}{} \big),
+    \end{equation}
+    \vspace{-7mm}
+    \item \robert{and the class candidates of Remark~\ref{rem:grading_seed}, read on the marked classes and their targets,}
+    \begin{equation}
+        \label{eq:grading_sweep_classes}
+        \vertexClasses^{\mathrm{cand}} \; \coloneq \; \big( \vertexClasses(\domseq[\L]^{\mathrm{grading}}) \setminus \vertexClasses(\domseq[\L]^{\mathrm{confined}}) \big) \; \cup \; \vertexClasses^{\mathrm{open}} \big( \domseq[\L]^{\mathrm{confined}} \big) .
     \end{equation}
 \end{enumerate}
-\robert{The two sets of step $3$ seed the pinch resolution and the confinement padding of the next padding cycle. The sweep is not repeated.}
+\robert{The sets of steps $3$ and $4$ seed the next padding cycle. The first two seed its pinch resolution and its confinement padding, and both are the full collections of Definition~\ref{def:candidate_collection}, since the grading narrows neither. The third seeds its grading. The sweep is not repeated.}
 \end{sweep}
 
-\robert{The vertex set of~\eqref{eq:grading_sweep_candidates} is enough for the pinch side, because Remark~\ref{rem:new_vertices} retires the vertices the quadrisection creates there. The face set is needed in full, both terms of~\eqref{eq:candidate_collection_faces}. The slice refined here is a class star and not a set of confined faces, so Lemma~\ref{lemma:confined_children} does not apply and the children have to be carried along with the one-ring, exactly as in~\eqref{eq:seed_confined}. The grading collects nothing for itself.}
+% 2026-09-04: the reason given here was that a newborn midpoint can arrive with a
+% large span of its own. Remark~\ref{rem:grading_seed} carries the newborn classes
+% as a term of its own, so the reason no longer holds.
+% Kept for cherry-picking.
+\tobecut{The seed $\vertexClasses^{\mathrm{seed}}$ is all classes $\vertexClasses(\domseq[\L]^{\mathrm{confined}})$ of the input, and unlike the other two substeps the grading does not narrow it. A newborn midpoint can arrive with a large span of its own, so a class the sweep has to test need not be one that any earlier slice carries. The seed is an argument only so that Proposition~\ref{prop:grading_span} can state the hypothesis it uses.}
 
-\robert{The seed $\vertexClasses^{\mathrm{seed}}$ is all classes $\vertexClasses(\domseq[\L]^{\mathrm{confined}})$ of the input domain sequence, and unlike the other two substeps the grading does not narrow it. The remark after Definition~\ref{def:candidate_collection} says why. A class the sweep has to test need not be one that any earlier slice carries, since a newborn midpoint can arrive with a large span of its own. The seed is kept as an argument only so that Proposition~\ref{prop:grading_span} states the hypothesis it actually uses.}
+\robert{The seed $\vertexClasses^{\mathrm{seed}}$ may always be taken to be all classes $\vertexClasses(\domseq[\L]^{\mathrm{confined}})$ of the input. A smaller seed can be used whenever that sequence is already known to carry no class of level span above $g$ outside a given set, which is the case in every pass of the padding loop after the first, by Remark~\ref{rem:grading_seed} read on the three repairs of the pass before it. The seed is an argument so that Proposition~\ref{prop:grading_span} can state the hypothesis it uses.}
+
+\guidance{Not drafted, and moved here from Section~\ref{subsec:termination}. The seed of a pass would be assembled from Remark~\ref{rem:grading_seed} read on the pinch resolution, the confinement padding and the grading sweep of the previous pass, where the middle one contributes its newborn classes alone. Proposition~\ref{prop:grading_span} then keeps the hypothesis on the seed that it already states. The implementation scans $\vertexClasses(\domseq[\L]^{\mathrm{confined}})$ instead, which is where the reported counts come from.}
 
 \begin{proposition}[\robert{What one grading sweep achieves}]
     \label{prop:grading_span}
@@ -2725,39 +2867,14 @@ The seed $\F^{\mathrm{seed}}$ may always be taken to be all leaf faces $\leafMes
 
 \robert{The proposition speaks about the classes the input carries and not about the ones the sweep creates. A newborn midpoint is the one class the bound does not reach, which is the reason the seed above is not narrowed. The second clause is what Section~\ref{subsec:termination} uses. An unproductive padding pass certifies an empty detection in all three substeps, so the fixed point carries level span at most $g$ and the $g \! + \! 1$ never survives the loop.}
 
-\guidance{Nothing in Section~\ref{sec:numerical_experiments} separates what the grading costs from what admissibility costs. Table~\ref{tab:padding_interface_L4} reports the outer count $q$ and a single \emph{padded} face column that lumps all three substeps together. Splitting that column and running $\L = 4$ at $g = \infty$ against $g = 2$ is what would decide whether the grading survives into a paper at all.}
-
-% SUPERSEDED (2026-09-01): the per-vertex enumeration and the claim that one
-% sweep closes the span to g. Replaced by Sweep~\ref{sw:grading_sweep} and
-% Proposition~\ref{prop:grading_span}. Labels suffixed _old. Kept for cherry-picking.
-\tobecut{The grading is supposed to smooth out transitions across vertices $\vertex{\l}{\coarseIdxtwo}$ of $\domseq^{\mathrm{confined}}$ whose leaf stars still have large level spans, see Definition~\ref{def:level_range}. Unlike the pinch resolution and the confinement padding, the grading step does not restore exactness or linear independence but is intended to improve the conditioning of the matrix-vector system and to avoid numerical artifacts in the transition areas. Thus, grading is an optional padding step. \robert{It is the last of the three substeps, and it is run as a single sweep rather than as an iteration.}
-
-The predicate to identify the vertices $(\vertex{\l}{\coarseIdxtwo})$ to grade is the level span $\mu_\coarseIdxtwo \coloneq \lmax{}_{,\coarseIdxtwo} - \lmin{}_{,\coarseIdxtwo}$ of its leaf star $\FVleaf{}(\vertexClass{\coarseIdxtwo})$. The detection algorithm fixes a maximum level span $g \in \mathbb{N}$ and assembles the set
-\begin{equation}
-    \label{eq:grading_set_old}
-    \V^{\mathrm{grading}}(\domseq[\L]) \coloneq \big\{ \vertex{\l}{\coarseIdxtwo} \in \V(\domseq[\L]) \; \colon \; \mu_\coarseIdxtwo > g \big\}
-\end{equation}
-
-The vertices marked for grading are refined using the graded quadrisection operator to obtain the graded domain sequence $\domseq[\L]^{\mathrm{grading}} \coloneq \domseq^{\vert \V^{\mathrm{grading}} \vert}$ as the result of the iterative algorithm
-\begin{equation}
-    \label{eq:grading_subdiv_partition_old}
-    \domseq^p = \quadriV \big( \domseq^{p-1}, \, \{ \vertexClass{\coarseIdxtwo_p} \}, \, \targetlevel \big) \quad \text{for all} \quad (\vertex{\l}{\coarseIdxtwo})_p \in \V^{\mathrm{grading}}(\domseq[\L]^\mathrm{confined}),
-\end{equation}
-where $p \in \{1, \, \dots, \, \vert \V^{\mathrm{grading}}(\domseq[\L]^\mathrm{confined}) \vert \}$ is an enumeration of the vertices to be graded and $\domseq[\L]^0 = \domseq[\L]^{\mathrm{confined}}$. Note the additional $-g$ in the target level map $\targetlevel_\coarseIdxtwo = \lmax{}_{,\coarseIdxtwo} - g$. \robert{Applied to $\vertexClass{\coarseIdxtwo}$ on its own, Corollary~\ref{cor:graded_quadrisection_leafstar} raises the coarsest level $\lminIdx{\coarseIdxtwo}$ of its leaf star to $\lmaxIdx{\coarseIdxtwo} - g$ and leaves $\lmaxIdx{\coarseIdxtwo}$ where it is, so the level span closes to exactly $g$. The classes are graded as a set, and then the span can come out on either side of $g$ by~\eqref{eq:graded_quadrisection_leafstar_set}, but by at most one level in the fine direction. It is smaller when the grading of a neighbour lifts the coarse end of this leaf star as well. It is larger, and then by exactly one, when a class still adjacent to $\vertexClass{\coarseIdxtwo}$ on level $\lmaxIdx{\coarseIdxtwo}$ is graded past that level, which asks it to carry a finest level more than $g$ above $\lmaxIdx{\coarseIdxtwo}$. So one sweep leaves every class at a level span of at most $g \! + \! 1$.} We use $g = 2$ throughout, which works well in the simulations of Section~\ref{subsec:vector_laplace}.
-
-\robert{The grading is a single sweep per cycle and it comes last, which is what makes it read as an optional tack-on rather than a stage of its own.
-
-The reason is that it never has much to do. It is tempting to picture the loop starting from a domain sequence with wild level spans that the grading flattens before the small repairs run, but that picture is wrong. By Section~\ref{subsec:refine} the \textsc{Refine} step raises $\lmaxIdx{\coarseIdxtwo}$ by exactly one level at each marked class, and the two padding substeps ahead of it raise it at no class at all. A pinch is detected at a level $\l$ whose refinement fan is a non-empty proper subset of the mesh star, so $\lminIdx{\coarseIdxtwo} \leq \l < \lmaxIdx{\coarseIdxtwo}$ by Proposition~\ref{proposition:class_star_levels} and the target $\l \! + \! 1$ does not exceed $\lmaxIdx{\coarseIdxtwo}$. A confined face on level $\l$ has no refinement-exterior vertex there, so $\l < \lmaxIdx{\coarseIdxone}$ at each of its three vertices by the same proposition, and its children on level $\l \! + \! 1$ stay at or below $\lmaxIdx{\coarseIdxone}$ as well. A leaf star arriving at the grading step therefore carries a span at most one level over $g$, never more, and one sweep is enough to return it to $g$.
-
-That is also why the grading needs no inner iteration of its own. It is the outer loop that closes the span, since the grading predicate is one of the three tested on every cycle, so a fixed point of $\textsc{Pad}$ carries level span at most $g$ by construction. What the grading can open on its way is repaired by the next cycle like any other defect.}}
+\robert{Table~\ref{tab:grading_ab} of Section~\ref{subsubsec:cl_performance} runs the $\L = 4$ adaptive loop with and without the grading, and reports what the substep costs and what it returns.}
 
 \paragraph{Summary.}
 
 Every stage of the \textsc{Pad} step uses either the graded vertex quadrisection operator $\quadriV$ or the face quadrisection operator $\quadriF$.
 
-The pinch padding resolves pinch vertices and boundary pinch vertices, and thus targets clauses~(ii) and~(iii) of Definition~\ref{def:subdiv_partition}. The confinement padding resolves confined leaf faces and addresses clause~(i) of that definition. % 2026-09-02: same unsupported conditioning claim as in the grading subsection.
-% Kept for cherry-picking.
-\tobecut{The optional grading step only refines around the vertex classes of level span $\levelSpan{\coarseIdxone} > g$ of~\eqref{eq:grading_set}, to improve the conditioning of the resulting linear system.} \robert{The grading step is optional for admissibility. It refines around the vertex classes of level span $\levelSpan{\coarseIdxone} > g$ of~\eqref{eq:grading_set}, which raises the coarse end of a wide leaf star and keeps estimator mass from stranding on levels the marking never reaches. Section~\ref{subsubsec:cl_performance} measures what that is worth.}
+The pinch padding resolves pinch vertices and boundary pinch vertices, and thus targets clauses~(ii) and~(iii) of Definition~\ref{def:subdiv_partition}. The confinement padding resolves confined leaf faces and addresses clause~(i) of that definition.
+\robert{The grading step is optional for admissibility. It refines around the vertex classes of level span $\levelSpan{\coarseIdxone} > g$ of~\eqref{eq:grading_set}, which raises the coarse end of a wide leaf star and keeps estimator mass from stranding on levels the marking never reaches. Section~\ref{subsubsec:cl_performance} measures what that is worth.}
 
 Every padding step only ever adds a few faces that locally repair its violation, and no face is refined beyond level $\L$. As a result, the domain sequences are nested, and by Equation~\eqref{eq:quadrisection_monotone} that extends to the adaptive subdivision $k$-form spaces defined on them.
 
@@ -2765,13 +2882,13 @@ Every padding step only ever adds a few faces that locally repair its violation,
 
 The confinement padding keeps only the children. Lemma~\ref{lemma:confined_children} drops the one-ring term, so the frontier cannot move sideways, the coarsest defect level rises by at least one per cycle, and Corollary~\ref{cor:confinement_cycles} is a level count bounded by $\L$. The pinch resolution keeps both terms. Its frontier can travel sideways at a fixed level, which is exactly the chain of Remark~\ref{rem:padding_chain}, and no level count can bound it. That is the difference between the two inner iterations, and it is also why Problem~\ref{prob:padding_passes} is posed for the outer count and not for either inner one.}
 
-\robert{What one padding cycle does not do is leave an admissible domain sequence. Each substep can reopen the predicate of another, so the cycle has to be iterated, which is what the next Section~\ref{subsec:termination} studies.}
+\robert{What one padding cycle does not do is leave an admissible domain sequence. Each substep can reopen the predicate of another, so the cycle has to be iterated, which is what the next Section~\ref{subsec:outer_loop} studies.}
 
 
 \FloatBarrier
 
-\subsection{Termination of the padding loop}
-\label{subsec:termination}
+\subsection{The outer loop}
+\label{subsec:outer_loop}
 
 The three substeps of Section~\ref{subsec:padding} compose into the padding cycle
 \begin{equation}
@@ -2779,15 +2896,191 @@ The three substeps of Section~\ref{subsec:padding} compose into the padding cycl
     \textsc{Pad} \coloneq \textsc{Grade} \circ \textsc{PadConfinedFaces} \circ \textsc{ResolvePinches}
     \; \colon \; \alldomseqs \; \longrightarrow \; \alldomseqs,
 \end{equation}
-\robert{whose first two factors are the iterations of Section~\ref{subsubsec:pinch_resolution} and Section~\ref{subsubsec:confined_faces} and not single sweeps.} Our implementation wraps $\textsc{Pad}$ in a loop that stops once a pass no longer refines any face, and a counter records the number $q$ of \emph{productive} passes,
-\begin{equation}
-    \label{eq:pad_iteration}
-    \domseq^{0} = \domseq^{\mathrm{refine}}, \qquad
-    \domseq^{p+1} = \textsc{Pad} \big( \domseq^{p} \big), \qquad
-    \domseq^{\mathrm{pad}} = \domseq^{q}.
-\end{equation}
+whose first two factors are the iterations of Section~\ref{subsubsec:pinch_resolution} and Section~\ref{subsubsec:confined_faces} and not single sweeps. Our implementation wraps $\textsc{Pad}$ in a loop that stops once a pass no longer detects any defects, and a counter records the number $q$ of \emph{productive} passes. Written out, one pass runs the three substeps in the order~\eqref{eq:pad_operator} fixes and moves three types of candidate between them. Each substep is one step of the loop, and the inner cycles of Section~\ref{subsubsec:pinch_resolution} and Section~\ref{subsubsec:confined_faces} run inside their own step.
 
-\robert{What forces the loop is what a single cycle cannot discharge. Its first two substeps do discharge their own predicates, by Proposition~\ref{prop:pinch_discharged} and Proposition~\ref{prop:confined_discharged}, and the grading leaves its own one level short by Proposition~\ref{prop:grading_span}. What no cycle can discharge are the links \emph{between} the substeps. A pinch resolution can confine a face, the confinement padding can create a pinch, and the grading can do either. So $q$ counts those links and nothing else. The inner counts $q^{\mathrm{pinch}}$ of Corollary~\ref{cor:pinch_rounds} and $q^{\mathrm{confined}}$ of Corollary~\ref{cor:confinement_cycles} are not part of it. This is how the implementation has always run, so the counts reported in Section~\ref{sec:numerical_experiments} are the ones~\eqref{eq:pad_iteration} produces.}
+\begin{iteration}[Padding]
+\label{it:pad_iteration}
+    Write $\domseq[\L]$ for the domain sequence the \textsc{Refine} step of Section~\ref{subsec:refine} refines, and $\simplexsubset{2}{\mathrm{refine}}$ for the marked family it refined, so that $\domseq[\L]^{\mathrm{refine}} = \textsc{Refine} ( \domseq[\L] )$. The padding loop is initialised with the domain sequence $\domseq[\L]^{0} \coloneq \domseq[\L]^{\mathrm{refine}}$ and with the candidates that step leaves behind,
+    \begin{equation}
+        \label{eq:pad_initial_seeds}
+        \begin{aligned}
+            \V^{\mathrm{seed},1} \; &\coloneq \; \collectV \big( \domseq[\L], \, \simplexsubset{2}{\mathrm{refine}} \big) ,
+            \qquad
+            \F^{\mathrm{grading},0} \; \coloneq \; \collectF \big( \domseq[\L], \, \simplexsubset{2}{\mathrm{refine}} \big) , \\[2pt]
+            \vertexClasses^{\mathrm{grading},0} \; &\coloneq \; \big( \vertexClasses(\domseq[\L]^{\mathrm{refine}}) \setminus \vertexClasses(\domseq[\L]) \big) \; \cup \; \vertexClasses^{\mathrm{open}} \big( \domseq[\L] \big) ,
+        \end{aligned}
+    \end{equation}
+    All three collections are read on $\domseq[\L]$, the sequence the repair was applied to, as Definition~\ref{def:candidate_collection} and Remark~\ref{rem:grading_seed} ask. The padding loop then iterates the following \emph{padding pass} for $p = 1, \, 2, \, \ldots \;$:
+    \begin{enumerate}[topsep=3pt, itemsep=-2pt]
+    \item Resolve the pinches of the pass input with Iteration~\ref{it:pinch_iteration}, seeded by the vertices the previous pass handed over, and keep the faces and classes its cycles accumulated in~\eqref{eq:pinch_handover},
+    \begin{equation}
+        \label{eq:pad_step_pinch}
+        \big( \domseq[\L]^{\mathrm{pinch},p}, \; \F^{\mathrm{pinch},p}, \; \vertexClasses^{\mathrm{pinch},p} \big) \; \coloneq \; \textsc{ResolvePinches} \big( \domseq[\L]^{p-1}, \, \V^{\mathrm{seed},p} \big) ,
+    \end{equation}
+    where $\V^{\mathrm{seed}, p} = \V^{\mathrm{confined},p-1} \, \cup \, \V^{\mathrm{grading},p-1}$ are the seed vertices of the pinch resolution substep.
+    \item Pad the confined faces of that output with Iteration~\ref{it:confined_iteration}, seeded by the faces of step $1$ together with those the grading of the previous pass handed over, and keep the vertices and classes its cycles accumulated in~\eqref{eq:confined_handover},
+    \begin{equation}
+        \label{eq:pad_step_confined}
+        \big( \domseq[\L]^{\mathrm{confined},p}, \; \V^{\mathrm{confined},p}, \; \vertexClasses^{\mathrm{confined},p} \big) \; \coloneq \; \textsc{PadConfinedFaces} \big( \domseq[\L]^{\mathrm{pinch},p}, \, \F^{\mathrm{seed}, p} \big),
+    \end{equation}
+    where $\F^{\mathrm{seed}, p} =  \F^{\mathrm{pinch},p} \, \cup \, \F^{\mathrm{grading},p-1}$ are the seed faces of the confinement padding substep.
+    \item Grade that output with Sweep~\ref{sw:grading_sweep}, seeded by the classes of steps $1$ and $2$ together with those the grading of the previous pass handed over,
+    \begin{equation}
+        \label{eq:pad_step_grading_seed}
+        \vertexClasses^{\mathrm{seed},p} \; \coloneq \; \vertexClasses^{\mathrm{pinch},p} \, \cup \, \vertexClasses^{\mathrm{confined},p} \, \cup \, \vertexClasses^{\mathrm{grading},p-1} ,
+    \end{equation}
+    \vspace{-7mm}
+    \item[] and keep the three sets it hands forward,
+    \begin{equation}
+        \label{eq:pad_step_grading}
+        \big( \domseq[\L]^{p}, \; \V^{\mathrm{grading},p}, \; \F^{\mathrm{grading},p}, \; \vertexClasses^{\mathrm{grading},p} \big) \; \coloneq \; \textsc{Grade} \big( \domseq[\L]^{\mathrm{confined},p}, \, \vertexClasses^{\mathrm{seed},p} \big) .
+    \end{equation}
+\end{enumerate}
+We repeat steps $1$ to $3$ until no substep detects anything, that is until the pinch detection~\eqref{eq:pinch_round_detection} of step~$1$, the confinement detection~\eqref{eq:confined_cycle_detection} of step~$2$ and the grading detection~\eqref{eq:grading_sweep_detection} of step~$3$ all catch nothing the first time they are evaluated. The same condition read off what the pass collected is
+\begin{equation}
+    \label{eq:pad_stopping}
+    \F^{\mathrm{pinch},p} \; = \; \varnothing, \qquad \V^{\mathrm{confined},p} \; = \; \varnothing, \qquad \V^{\mathrm{grading},p} \; = \; \varnothing ,
+\end{equation}
+one set from each substep, since each of the three is collected from the faces its own substep refined. We then set $\domseq[\L]^{\mathrm{pad}} \coloneq \domseq[\L]^{p}$ and write $q \coloneq p \! - \! 1$ for the number of productive passes.
+\end{iteration}
+
+% ============================================================
+%  Signal-flow diagram of one padding pass.
+%  Convention: a signal ENTERS a substep on its left face and
+%  LEAVES on its right face, so every feedback path runs out to
+%  the right, around, and back in on the left. The four port
+%  heights are the same at all three substeps.
+%  The two admissibility channels run BELOW, the class channel
+%  alone runs ABOVE, so the one channel with three sources is
+%  isolated and crossing-free.
+%  The dashed box is the substep and carries every port; the
+%  solid box inside it is one cycle and carries the self-loop.
+%  The only crossing is the face return rising through the
+%  vertex return bus, drawn with a white halo.
+%  Geometry lives in the x and y keys alone, so rescaling the
+%  figure means changing those two numbers and nothing else.
+% ============================================================
+\begin{figure}[!tb]
+    \centering
+    \begin{tikzpicture}[
+        x=0.335cm, y=0.40cm,
+        sub/.style={draw, dashed, rounded corners=3pt, line width=0.6pt,
+                    minimum width=2.4cm, minimum height=3.84cm},
+        cyc/.style={draw, rounded corners=2pt, minimum width=1.8cm, minimum height=0.9cm,
+                    align=center, inner sep=1pt, font=\small},
+        jn/.style={circle, draw, inner sep=0pt, minimum size=4.0mm, font=\small},
+        arr/.style={->, >=Stealth, line width=0.9pt, shorten >=1pt},
+        pln/.style={-, line width=0.9pt},
+        sig/.style={font=\scriptsize, align=center, inner sep=1.5pt},
+        hop/.style={preaction={draw, line width=2.6pt, white}},
+        pscale/.style={draw=black!45, line width=0.7pt},
+        plab/.style={font=\scriptsize, color=black!55, inner sep=1.5pt},
+        delay/.style={draw, rounded corners=1pt, fill=white, inner sep=1.2pt,
+                      font=\scriptsize, minimum height=3.4mm}
+    ]
+    \path (-10.0, 9.2) rectangle (37.8, -11.8);   % bounding box
+
+    % ---- outer loop
+    \draw[dotted, line width=0.8pt, rounded corners=3pt] (-7.8, 8.6) rectangle (32.4, -11.2);
+    \node[sig, anchor=north west] at (-7.6, 8.3) {one $\textsc{Pad}$ pass, repeated $q$ times};
+
+    % ---- the three substeps. Dashed box = substep, solid box = one cycle.
+    \node[sub] (SP) at (0, 0.2) {};    \node[cyc] (P) at (0, 0)  {pinch\\resolution};
+    \node[sub] (SC) at (13, 0.2) {};   \node[cyc] (C) at (13, 0) {confinement\\padding};
+    \node[sub] (SG) at (25, 0.2) {};   \node[cyc] (G) at (25, 0) {grading};
+
+    % ---- inner loops touch the cycle, not the substep
+    \path[arr] (P) edge[loop, out=118, in=62, looseness=4.4] (P);
+    \path[arr] (C) edge[loop, out=118, in=62, looseness=4.4] (C);
+    \node[sig] at (0, 4.1)  {$\V^{\mathrm{cand},t}$, \eqref{eq:pinch_candidates}\\$q^{\mathrm{pinch}}$ cycles};
+    \node[sig] at (13, 4.1) {$\F^{\mathrm{cand},t}$, \eqref{eq:confined_candidates}\\$q^{\mathrm{confined}}$ cycles};
+
+    % ---- main path, through the substep boundary into the cycle
+    \draw[arr] (-8.6, 0) -- (-3.58, 0);
+    \node[sig] at (-5.9, 0.95) {$\domseq[\L]^{p-1}$};
+    \draw[arr] (3.58, 0) -- node[sig, above] {$\domseq[\L]^{\mathrm{pinch},p}$\\\eqref{eq:pad_step_pinch}} (9.42, 0);
+    \draw[arr] (16.58, 0) -- node[sig, above] {$\domseq[\L]^{\mathrm{confined},p}$\\\eqref{eq:pad_step_confined}} (21.42, 0);
+    \draw[arr] (28.58, 0) -- (33.3, 0);
+    \node[sig] at (30.4, 1.35) {$\domseq[\L]^{p}$\\\eqref{eq:pad_step_grading}};
+
+    % ---- port scale: a port's height is the type of candidate it carries
+    \node[plab] at (35.6, 4.3) {port height};
+    \draw[pscale] (34.0, 3.0) -- (34.0, -3.8);
+    \draw[pscale] (34.0, 3.0) -- (34.9, 3.0);
+    \node[plab, anchor=west] at (35.1, 3.0) {classes};
+    \draw[pscale] (34.0, 0) -- (34.9, 0);
+    \node[plab, anchor=west] at (35.1, 0) {$\domseq[\L]$};
+    \draw[pscale] (34.0, -2.2) -- (34.9, -2.2);
+    \node[plab, anchor=west] at (35.1, -2.2) {faces};
+    \draw[pscale] (34.0, -3.8) -- (34.9, -3.8);
+    \node[plab, anchor=west] at (35.1, -3.8) {vertices};
+
+    % ---- class channel, alone above, three sources into one junction
+    \node[jn] (JG) at (18.6, 6.4) {$\cup$};
+    \draw[pln] (3.58, 3.0) -- (4.2, 3.0) -- (4.2, 6.4);
+    \draw[arr] (4.2, 6.4) -- (JG);
+    \node[sig, anchor=east] at (18.0, 7.0) {$\vertexClasses^{\mathrm{pinch},p}$, \eqref{eq:pad_step_pinch}};
+    \draw[pln] (16.58, 3.0) -- (18.6, 3.0);
+    \draw[arr] (18.6, 3.0) -- (JG);
+    \node[sig, anchor=east] at (18.3, 5.6) {$\vertexClasses^{\mathrm{confined},p}$, \eqref{eq:pad_step_confined}};
+    \draw[pln] (28.58, 3.0) -- (30.1, 3.0) -- (30.1, 7.7) -- (18.6, 7.7);
+    \node[delay] at (30.1, 5.4) {$p\!+\!1$};
+    \draw[arr] (18.6, 7.7) -- (JG);
+    \node[sig, anchor=east] at (29.8, 7.2) {$\vertexClasses^{\mathrm{grading},p}$, \eqref{eq:pad_step_grading}};
+    \draw[pln] (JG) -- (19.9, 6.4) -- (19.9, 3.0);
+    \draw[arr] (19.9, 3.0) -- (21.42, 3.0);
+    \node[sig, anchor=west] at (20.2, 5.6) {$\vertexClasses^{\mathrm{seed},p}$, \eqref{eq:pad_step_grading_seed}};
+
+    % ---- face channel, below, out of the pinch resolution and back from the grading
+    \node[jn] (JF) at (7.6, -2.2) {$\cup$};
+    \draw[arr] (3.58, -2.2) -- (JF);
+    \node[sig] at (5.5, -3.5) {$\F^{\mathrm{pinch},p}$\\\eqref{eq:pad_step_pinch}};
+    \draw[arr] (JF) -- (9.42, -2.2);
+    \node[sig] at (8.5, -1.4) {\eqref{eq:pad_step_confined}};
+    \draw[pln] (28.58, -2.2) -- (31.2, -2.2) -- (31.2, -9.4) -- (7.6, -9.4);
+    \node[delay] at (31.2, -5.6) {$p\!+\!1$};
+    \draw[arr, hop] (7.6, -9.4) -- (JF);
+    \node[sig, anchor=north] at (20.0, -9.7) {$\F^{\mathrm{grading},p}$, \eqref{eq:pad_step_grading}};
+
+    % ---- vertex channel, below, out of the last two substeps back to the pinch resolution
+    \node[jn] (JV) at (20.6, -6.6) {$\cup$};
+    \draw[pln] (16.58, -3.8) -- (20.6, -3.8);
+    \draw[arr] (20.6, -3.8) -- (JV);
+    \node[sig, anchor=west] at (16.9, -2.9) {$\V^{\mathrm{confined},p}$\\\eqref{eq:pad_step_confined}};
+    \draw[pln] (28.58, -3.8) -- (29.4, -3.8) -- (29.4, -6.6);
+    \draw[arr] (29.4, -6.6) -- node[sig, above] {$\V^{\mathrm{grading},p}$, \eqref{eq:pad_step_grading}} (JV);
+    \draw[pln] (JV) -- (-6.5, -6.6) -- (-6.5, -3.8);
+    \node[delay] at (-6.5, -5.2) {$p\!+\!1$};
+    \draw[arr] (-6.5, -3.8) -- (-3.58, -3.8);
+    \node[sig, anchor=north] at (2.5, -6.9) {$\V^{\mathrm{seed},p+1}$, \eqref{eq:pad_step_pinch}};
+    \end{tikzpicture}
+
+    \caption{One pass of the padding loop of Iteration~\ref{it:pad_iteration}, drawn as a signal flow diagram. Every input enters a substep on its left side and every output leaves on its right side. The dashed boxes are the substeps of the outer loop in the dotted box. The input and output slots of all substeps are grouped by type as indicated by the scale on the right (grey). The solid box inside each substep is one cycle, and the self-loop that touches it is the inner iteration of Section~\ref{subsubsec:pinch_resolution} or Section~\ref{subsubsec:confined_faces}, with its own candidate set and its own cycle count. The grading carries no self-loop because it is a single sweep. The two channels that restore admissibility run below and the class channel runs above on its own, since it is the only one with three sources. The channels that have no predecessor in pass~$1$ are read from the initial seeds of Iteration~\ref{it:pad_iteration}. Every label names a set from the perspective of the substep producing it at pass $p$. A path that runs right to left crosses into the next pass, which the marker $p\!+\!1$ on that path records. The confinement padding drawn here therefore receives $\F^{\mathrm{grading},p-1}$ along the edge labelled $\F^{\mathrm{grading},p}$, and the vertex channel makes the same shift explicit in $\V^{\mathrm{seed},p+1}$.}
+    \label{fig:padding_signal_flow}
+\end{figure}
+
+The iteration is $q$ applications of the operator~\eqref{eq:pad_operator}, so we write the padding step as
+\begin{equation}
+    \label{eq:pad_power}
+    \domseq[\L]^{\mathrm{pad}} \; = \; \textsc{Pad}^{q} \big( \domseq[\L]^{\mathrm{refine}} \big),
+    \qquad \textsc{Pad}^{q} \; \colon \; \alldomseqs \; \longrightarrow \; \alldomseqs .
+\end{equation}
+The seeds do not appear there, and they are not an independent variable. The first pass may always detect against the global sets $\V^{\mathrm{pinch}}$, $\F^{\mathrm{confined}}$ and $\gradeClasses$ of $\domseq[\L]^{\mathrm{refine}}$ from Section~\ref{subsec:padding}, and every later seed is produced inside the iteration by the pass before it. A seed only has to cover the defects of its input, and when it does the detection of each substep is exhaustive, which~\eqref{eq:confined_detection_exhaustive} records for the confinement padding, the invariant in the proof of Proposition~\ref{prop:pinch_discharged} gives for the pinch resolution, and the hypothesis of Proposition~\ref{prop:grading_span} gives for the grading. So a seeded substep marks exactly what a full scan would mark, and~\eqref{eq:pad_power} is the map the loop computes however it is seeded.
+
+Nothing so far says that the stopping rule of Iteration~\ref{it:pad_iteration} ever fires. The question is whether some finite $q$ makes $\textsc{Pad}^{q}$ a map $\alldomseqs \to \allpartitions$, so that finitely many passes restore admissibility whatever the \textsc{Refine} step hands it. That, and how large $q$ has to be, are the subject of Section~\ref{subsec:termination}.
+
+\smallskip
+
+The remainder of this section illustrates the padding pass and the candidate sets that couple its substeps. Figure~\ref{fig:padding_signal_flow} draws an individual padding pass as a signal flow, which is Figure~\ref{fig:padding_interactions_b} with the grading step and all the candidates drawn in. The domain sequence runs along the main path and the candidate sets are the side channels, one per type. Each channel ends at the substep that consumes it, and carries what the substeps ahead of it produced in the same pass together with what the substeps behind it produced in the pass before. Which of the two a set is can be read off the figure, since a set spent inside the pass runs forward and a set carried over to the next pass runs back. As a result of the setup of the outer padding loop, no substep ever scans the whole domain sequence, and each one starts from what the substeps before it refined. Remark~\ref{rem:padding_order} discusses the order of substeps.
+
+Three substeps and three candidate types give nine interactions which are all drawn in the figure, seven as arrows and two as the self-loops. The figure provides a visual check that none is missing. That the drawn arrows capture all interactions and that no interaction between the substeps travels outside of them, is what the two locality statements give. Lemma~\ref{lemma:pad_locality} for the three refinement fan predicates and Lemma~\ref{lemma:leafstar_locality} for the level span both say a predicate can move only where the repair refined, so every interaction runs through a candidate set collected from refined faces and none can take another route. Exactly one of the nine is narrowed. The classes the confinement padding hands on are cut to the ones it creates, by clause~$(i)$ of Lemma~\ref{lemma:span_opens} and~\eqref{eq:confined_class_candidates}.
+
+One rule runs through the whole figure. Each substep iterates on its own candidate type and hands the other two off to other substeps. The pinch resolution circulates vertices in its inner loop and hands on faces and classes, the confinement padding circulates faces and hands on vertices and classes, and the grading circulates classes. The grading circulates them through the outer loop rather than an inner one, so its missing inner loop and the self-return of the class channel are the same fact read twice.
+
+\subsection{Termination and the number of passes}
+\label{subsec:termination}
+
+\robert{What forces the loop is what a single cycle cannot discharge. Its first two substeps do discharge their own predicates, by Proposition~\ref{prop:pinch_discharged} and Proposition~\ref{prop:confined_discharged}, and the grading leaves its own one level short by Proposition~\ref{prop:grading_span}. What no cycle can discharge are the links \emph{between} the substeps. A pinch resolution can confine a face, the confinement padding can create a pinch, and the grading can do either. So $q$ counts those links and nothing else. The inner counts $q^{\mathrm{pinch}}$ of Corollary~\ref{cor:pinch_rounds} and $q^{\mathrm{confined}}$ of Corollary~\ref{cor:confinement_cycles} are not part of it. This is how the implementation has always run, so the counts reported in Section~\ref{sec:numerical_experiments} are the ones Iteration~\ref{it:pad_iteration} produces.}
 
 That the loop terminates at all and at an admissible domain sequence rests on a single
 observation.
@@ -2804,6 +3097,8 @@ observation.
 
 \robert{The lemma is stated for one firing of one predicate, so it applies to a single round of either inner iteration just as it does to a whole pass. It is the productivity half of all three termination arguments at once.}
 
+\robert{It is also what makes the stopping rule of Iteration~\ref{it:pad_iteration} the right one. A pass whose three detections catch nothing is the identity, because an empty detection leaves an empty marked family and each substep says as much of itself, in Section~\ref{subsubsec:pinch_resolution} for the pinch iteration, in Section~\ref{subsubsec:confined_faces} for the confinement iteration and in the second clause of Proposition~\ref{prop:grading_span} for the grading. Conversely a pass that refines no face can have fired no predicate, by the lemma. So the rule stops on exactly the passes that refine nothing, and~\eqref{eq:pad_stopping} reads that off the candidates rather than the detections. The set $\F^{\mathrm{pinch},p}$ is needed there. The sets that cross the pass boundary do not suffice on their own, because the pinch resolution hands its faces to the confinement padding inside the same pass and they never reach the boundary.}
+
 Termination follows by counting. Both quadrisection operators only add the children of a
 marked face on the next finer level, so the number of faces carried by $\domseq[\L]$ across
 all levels grows strictly on every productive pass. By the second half of
@@ -2817,46 +3112,12 @@ $\domseq^{\mathrm{pad}} \in \allpartitions$.
 
 \begin{remark}[The order of the padding substeps]
 \label{rem:padding_order}
-    % OLD (pre-rename), delete once cherry-picked:
-    % Resolving a pinch vertex can make an admissible face inadmissible (e.g.\ Figure~\ref{fig:padding_chain}), the admissibility padding can in turn create a pinch, and the grading, being a vertex quadrisection, can create both.
-    \guidance{Resolving a pinch vertex can \checkit{confine} a face (e.g.\ Figure~\ref{fig:padding_chain}), the \checkit{confinement padding} can in turn create a pinch, and the grading, being a vertex quadrisection, can create both.} A single pass therefore never suffices in general, whichever order is used, and the order is not what makes $\textsc{Pad}$ terminate. The proof of Lemma~\ref{lemma:pad_productive} uses only that a substep is the identity when its own predicate does not fire, so the conclusion above holds for every ordering of the three substeps.
+    Resolving a pinch vertex can confine a face, as in Figure~\ref{fig:padding_chain}, the confinement padding can in turn create a pinch, and the grading, being a vertex quadrisection, can create both. A single pass therefore never suffices in general, whichever order is used, and the order is not what makes $\textsc{Pad}$ terminate. The proof of Lemma~\ref{lemma:pad_productive} uses only that a substep is the identity when its own predicate does not fire, so the conclusion above holds for every ordering of the three substeps.
 
     \robert{We run pinch resolution first because it refines the most, so that the faces it confines can still be repaired downstream in the same cycle, and the grading last because it has the least to do. That is a preference and not a bound. Proposition~\ref{prop:grading_span} closes the level span to $g \! + \! 1$ whatever reaches the grading, so the ordering costs nothing if a leaf star arrives wider than expected.}
 \end{remark}
 
-\begin{remark}[\robert{Seeding one substep from another}]
-    \label{rem:substep_seeding}
-    \robert{The chain of the next remark travels through a set this remark makes explicit. No substep has to start from the whole domain sequence. The initial candidate sets of the two substeps that restore admissibility are stated as $\V(\domseq[\L]^{\mathrm{refine}})$ and $\leafMesh(\domseq[\L]^{\mathrm{pinch}})$ in Section~\ref{subsec:padding} for readability, and the results already proved shrink both. Three of them compose. Each of the two discharges its own predicate, by Proposition~\ref{prop:pinch_discharged} and Proposition~\ref{prop:confined_discharged}. Lemma~\ref{lemma:pad_locality} says where a quadrisection can move a predicate. Remark~\ref{rem:new_vertices} settles the vertices a quadrisection creates, and the remark after it settles the faces.
-
-    Write $\simplexsubset{2}{\l}$ for the union over the rounds of a substep of the level-$\l$ slices it refined. Two handoffs follow.
-
-    From confinement to pinch. The sequence entering the confinement iteration carries no pinch on any level. So the pinch iteration of the next cycle may start from the vertices of what the confinement padding refined, together with what the grading refined if it was run,
-    \begin{equation}
-        \label{eq:seed_pinch}
-        \V^{\mathrm{cand},0} \; = \bigsqcup\limits_{\l = \lzero}^{\L-1} \V_\l \big( \simplexsubset{2}{\l} \big).
-    \end{equation}
-    % 2026-09-02: made conditional on the grading being run, since the grading is
-    % now stated as optional for admissibility. Kept for cherry-picking.
-    \tobecut{The grading has to be counted in, because it is a graded vertex quadrisection and runs last, so it can reopen all three predicates.} \robert{The grading contributes a slice only when it is run. When it is, that slice has to be counted in, because the grading is a graded vertex quadrisection and comes last, so it can reopen all three predicates. When the grading is switched off, $\simplexsubset{2}{}$ carries the confinement slices alone and the seed is correspondingly smaller.} Note also that these are the faces \emph{refined} and not the faces added. A predicate moves on level $\l$ at the vertices of the level-$\l$ slice, whereas the children lie on level $\l\!+\!1$ and the vertices born with them are settled by Remark~\ref{rem:new_vertices}.
-
-    From pinch to confinement. The confinement iteration of a cycle may start from the one-ring of the slices refined ahead of it together with their children,
-    \begin{equation}
-        \label{eq:seed_confined}
-        \F^{\mathrm{cand},0} \; = \; \collectF \big( \domseq[\L], \, \simplexsubset{2}{} \big) .
-    \end{equation}
-    % 2026-09-02: made conditional, as in eq:seed_pinch. Kept for cherry-picking.
-    \tobecut{Here $\simplexsubset{2}{}$ carries the pinch slices of this cycle \emph{and} the grading slice of the previous one. The grading has to be counted in for the same reason it is counted into~\eqref{eq:seed_pinch}.} \robert{Here $\simplexsubset{2}{}$ carries the pinch slices of this cycle, and the grading slice of the previous one whenever the grading was run. It is counted in for the same reason it is counted into~\eqref{eq:seed_pinch}.} It runs last, and it can confine a leaf face. Take a leaf face on level $\l$ that is unconfined only through one vertex $\vertex{\l}{\coarseIdxone}$. If a graded class star holds another face at $\vertex{\l}{\coarseIdxone}$ but not this one, then the sweep leaves the face a leaf face and makes $\vertex{\l}{\coarseIdxone}$ refinement-interior, so the face is confined in the output. \tobecut{Only the \textsc{Refine} step of the first cycle may be read without a grading term ahead of it, since its input is admissible.} \robert{With the grading running, the only cycle whose seed carries no grading term ahead of it is the first, since the input of the \textsc{Refine} step is admissible.}
-
-    % 2026-09-02: re-derives what Remark~\ref{rem:padding_interactions} already
-    % settles for the same term. Kept for cherry-picking.
-    \tobecut{The second term of~\eqref{eq:candidate_collection_faces} is not optional here. Clause~$(ii)$ of Lemma~\ref{lemma:pad_locality} speaks only about faces that were already leaf faces, and a child of a repaired class star can be confined by the same burial that Corollary~\ref{cor:confinement_cycles} counts. Lemma~\ref{lemma:confined_children} does not apply, because the slice refined here is a class star and not a set of confined faces.}
-
-    \robert{Both terms of~\eqref{eq:candidate_collection_faces} are needed here, since the slice refined ahead of this iteration is a class star and not a set of confined faces, so Lemma~\ref{lemma:confined_children} does not apply.}
-
-    Both seeds close the loop back to \textsc{Refine}. Its input is admissible, so the first cycle may be seeded by~\eqref{eq:seed_pinch} and~\eqref{eq:seed_confined} read on the marked family of the \textsc{Refine} step. The two substeps that restore admissibility then never scan the domain sequence at all, and touch only what the step before them has refined. The grading is left out of this. It is optional, its predicate is read off a leaf star that an earlier slice need not carry, and a scan of the classes is cheap next to a repair.}
-\end{remark}
-
-\guidance{The implementation does not do this. All three substeps restart from the full scan, which is what Section~\ref{subsec:padding} describes and what the reported counts come from. The saving is real but not on the critical path, since the scan is linear in the mesh and the solve dominates. Measured on the valence-$10$ domain sequence of the candidate-set figure, once that figure lands and this becomes a \texttt{\textbackslash ref}, the seed~\eqref{eq:seed_pinch} carries $16$ vertices against the $629$ that the full initial set carries.}
+\robert{The implementation does not seed this way. All three substeps restart from the full scan, which is what Section~\ref{subsec:padding} describes and what the reported counts come from. The saving is real but not on the critical path, since the scan is linear in the mesh and the solve dominates. Measured on the valence-$10$ domain sequence of Figure~\ref{fig:candidate_sets}, the seed that Iteration~\ref{it:pad_iteration} hands the first pinch resolution carries $16$ vertices against the $629$ that the full initial set carries.}
 
 \begin{remark}[Chaining of padding passes]
     \label{rem:padding_chain}
@@ -2897,13 +3158,13 @@ $\domseq^{\mathrm{pad}} \in \allpartitions$.
     \chainpanel{images/padding_chain/chain_pass2.pdf}
         {Pass~3 resolves the third pinch and pads one face (the last productive pass).}
         {fig:padding_chain_pass3}
-    \caption{A control mesh with three interior vertices of valence $8$ in a row on which $\textsc{Pad}$ needs one productive pass per vertex. The three valence-$8$ vertices are drawn in colour, and the one resolved in a pass is emphasised with a ring. \guidance{The marking consists of four vertex stars of the uniform domain sequence.} Each pass resolves exactly one pinch vertex and pads a single face that has become \checkit{confined} after the pinch resolution. \guidance{A pinch is resolved by refining the faces of its gaps, so that its arcs merge into one.} That padded face creates the next pinch along the vertex chain, so the refinement propagates down one vertex per pass. A fourth, unproductive pass confirms the fixed point.}
+    \caption{A control mesh with three interior vertices of valence $8$ in a row on which $\textsc{Pad}$ needs one productive pass per vertex. The three valence-$8$ vertices are drawn in colour, and the one resolved in a pass is emphasised with a ring. \guidance{Check against the generating script that the marking is the four vertex stars of the uniform domain sequence.} Each pass resolves exactly one pinch vertex and pads a single face that has become confined after the pinch resolution. A pinch is resolved by refining the faces of its gaps, so that its arcs merge into one. That padded face creates the next pinch along the vertex chain, so the refinement propagates down one vertex per pass. A fourth, unproductive pass confirms the fixed point.}
     \label{fig:padding_chain}
 \end{figure}
 
 \begin{remark}[Chaining at regular vertices]
 \label{rem:regular_chain}
-Once we allow $\L \geq 2$, even regular vertices can become pinch vertices with two gaps of two coarse faces. Refining the interface of an existing fine patch can lift a single coarse face and create an arc of one face, cf.\ the right-hand pair of Figure~\ref{fig:refine_interface}. The pinch survives the \checkit{confinement padding} step and needs a second pinch resolution. The number of irregular vertices of $\T_\lzero$ therefore does not bound $q$, and we observe a second productive pass on meshes that carry no irregular vertex at all.
+Once we allow $\L \geq 2$, even regular vertices can become pinch vertices with two gaps of two coarse faces. Refining the interface of an existing fine patch can lift a single coarse face and create an arc of one face, cf.\ the right-hand pair of Figure~\ref{fig:refine_interface}. The pinch survives the confinement padding step and needs a second pinch resolution. The number of irregular vertices of $\T_\lzero$ therefore does not bound $q$, and we observe a second productive pass on meshes that carry no irregular vertex at all.
 \end{remark}
 
 \begin{problem}[Bounding the number of padding passes]
@@ -2911,11 +3172,11 @@ Once we allow $\L \geq 2$, even regular vertices can become pinch vertices with 
     Bound the number $q$ of productive $\textsc{Pad}$ passes by a quantity depending only on the control mesh $\T_\lzero$. \checkit{Localise} the faces refined by $\textsc{Pad}$ to a neighbourhood of the defects of $\domseq[\L]$ of bounded size.
 \end{problem}
 
-\robert{The two halves are not equally open. For the first, a bound depending only on $\T_\lzero$ need not be a constant. The staircase configuration rules a constant out, and the chain argument through Lemma~\ref{lemma:class_reach} suggests a bound of the order of the diameter of $\T_\lzero$, which is admissible. The second half asks for localisation, and it is there to rule out the degenerate answer $\textsc{Pad}(\domseq[\L]) = \T_\L$, which stabilises in one pass and defeats the purpose of the adaptive algorithm. It is harder for a reason Remark~\ref{rem:class_reach} makes structural rather than technical. The padding is local on each level separately by Lemma~\ref{lemma:pad_locality}, but a single pinch repair refines on every level from $\lminIdx{\coarseIdxtwo}$ up to the detection level, and neighbours on level $\l \! - \! k$ are $2^k$ apart on level $\l$. A neighbourhood of bounded size in the finest mesh is therefore the wrong object to ask for. What one can reasonably hope to bound is the neighbourhood \emph{level by level}, which is what Lemma~\ref{lemma:pad_locality} already delivers, and the number of levels a single repair spans, which is the level span $\levelSpan{\coarseIdxtwo}$ that the grading step exists to control.}
+\robert{The two halves are not equally open. For the first, a bound depending only on $\T_\lzero$ need not be a constant. The staircase configuration rules a constant out, and the chain argument through Lemma~\ref{lemma:class_reach} suggests a bound of the order of the diameter of $\T_\lzero$, which is admissible. Lemma~\ref{lemma:span_opens} constrains the same walk from the other side. A level span opens only at a class that was adjacent, at the fine end of its own leaf star, to a class graded past that end, so the grading can hand work to the next pass only along the adjacency that Lemma~\ref{lemma:class_reach} already bounds, and the confinement padding cannot hand it on at all. The second half asks for localisation, and it is there to rule out the degenerate answer $\textsc{Pad}(\domseq[\L]) = \T_\L$, which stabilises in one pass and defeats the purpose of the adaptive algorithm. It is harder for a reason Remark~\ref{rem:class_reach} makes structural rather than technical. The padding is local on each level separately by Lemma~\ref{lemma:pad_locality}, but a single pinch repair refines on every level from $\lminIdx{\coarseIdxtwo}$ up to the detection level, and neighbours on level $\l \! - \! k$ are $2^k$ apart on level $\l$. A neighbourhood of bounded size in the finest mesh is therefore the wrong object to ask for. What one can reasonably hope to bound is the neighbourhood \emph{level by level}, which is what Lemma~\ref{lemma:pad_locality} already delivers, and the number of levels a single repair spans, which is the level span $\levelSpan{\coarseIdxtwo}$ that the grading step exists to control.}
 
-\guidance{What keeps the first half open is that a chain need not run through irregular vertices. Interface refinement supplies the ingredient a chain needs, an arc of a single face, and supplies it at a vertex of any valence, cf.\ Remark~\ref{rem:regular_chain}. It never supplies that arc alone, though: the marked class that lifts the coarse face refines the faces around it as well, so a surviving pinch needs two such arcs and carries two bulks of refinement beside them, which may always lie close enough for the \checkit{confinement padding} of the same pass to close the configuration. We have neither constructed a chain through regular vertices nor excluded one.}
+\robert{What keeps the first half open is that a chain need not run through irregular vertices. Interface refinement supplies the ingredient a chain needs, an arc of a single face, and supplies it at a vertex of any valence, cf.\ Remark~\ref{rem:regular_chain}. It never supplies that arc alone. The marked class that lifts the coarse face refines the faces around it as well, so a surviving pinch needs two such arcs and carries two bulks of refinement beside them, which may always lie close enough for the confinement padding of the same pass to close the configuration. We have neither constructed a chain through regular vertices nor excluded one.}
 
-We reiterate how rare padding chains are. The configurations with $q > 1$ above were searched for deliberately, in order to isolate the mechanism of Figure~\ref{fig:padding_chain}, whereas \guidance{every step of the adaptive runs of Section~\ref{subsec:vector_laplace} at $\L = 3$, $4$ and $5$ stabilises after a single productive pass, see the column $q$ of Table~\ref{tab:padding_interface_L4}, and pads a small fraction of the faces refined by the marking}.
+We reiterate how rare padding chains are. The configurations with $q > 1$ above were searched for deliberately, in order to isolate the mechanism of Figure~\ref{fig:padding_chain}, whereas \guidance{every step of the adaptive runs of Section~\ref{subsec:vector_laplace} at $\L = 3$, $4$ and $5$ stabilises after a single productive pass and pads a small fraction of the faces refined by the marking. Re-source before promoting this to prose. The claim came from the column $q$ of Table~\ref{tab:padding_interface_L4} and that table is stale}.
 
 \FloatBarrier
 
@@ -3385,7 +3646,7 @@ Table~\ref{tab:padding_interface_L4} tracks the number of active DoFs and how th
     6 & 9235 & 7335 & 1900 & $21\%$ & 6293 & ---   & ---  & \guidance{---} \\
     \bottomrule
   \end{tabular}
-  \caption{Metrics for all steps of the adaptive loop with $\L=4$. The first half shows the $1$-form DoFs and how they split into patch and interface DoFs, alongside the fraction of overall DoFs that are interface DoFs. The second half reports the number of faces of the admissible domain sequence $\domseq$ at the end of the step, and how they split into marked faces based on the estimator and additional refinement due to padding. \guidance{The last column reports the number $q$ of productive \textsc{Pad} passes of Section~\ref{subsec:termination} in that step, which is zero exactly when no predicate fired and never exceeds one anywhere in the run.}}
+  \caption{Metrics for all steps of the adaptive loop with $\L=4$. The first half shows the $1$-form DoFs and how they split into patch and interface DoFs, alongside the fraction of overall DoFs that are interface DoFs. The second half reports the number of faces of the admissible domain sequence $\domseq$ at the end of the step, and how they split into marked faces based on the estimator and additional refinement due to padding. \guidance{The last column reports the number $q$ of productive \textsc{Pad} passes of Section~\ref{subsec:outer_loop} in that step, which is zero exactly when no predicate fired and never exceeds one anywhere in the run.}}
   \label{tab:padding_interface_L4}
 \end{table}
 
