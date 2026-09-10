@@ -3228,6 +3228,13 @@ The vertex map and the face map carry all four branches of Figure~\ref{fig:paddi
 
 The pinch resolution and the grading are the two substeps that repair with $\quadriV$, and both meet the hypothesis of clause $(iii)$ of Lemma~\ref{lemma:span_opens}, which supplies the bounds on the coarsest and finest levels of the leaf stars of the refined vertex classes. The grading targets $\lmaxIdx{\coarseIdxone} \! - \! g$ by~\eqref{eq:grading_detection_target}. The pinch resolution targets $\l \! + \! 1$ for the finest pinch level $\l$ of the class by~\eqref{eq:pinch_detection_target}, which the second case of~\eqref{eq:class_star_levels} confines to the levels $\lminIdx{\coarseIdxone} \leq \l < \lmaxIdx{\coarseIdxone}$.
 
+\begin{definition}[\robert{Covering seed}]
+    \label{def:covering_seed}
+    \robert{Let $\domseq[\L] \in \alldomseqs_\L$. A set $\candV \subseteq \V(\domseq[\L])$ \emph{covers} $\domseq[\L]$ if $\V^{\mathrm{pinch}}(\domseq[\L]) \subseteq \candV$. A set $\candF \subseteq \leafMesh(\domseq[\L])$ covers $\domseq[\L]$ if $\F^{\mathrm{conf}}(\domseq[\L]) \subseteq \candF$, and a set $\candC \subseteq \vertexClasses(\domseq[\L])$ covers $\domseq[\L]$ if $\gradeClasses(\domseq[\L]) \subseteq \candC$. The \emph{full seeds} $\V(\domseq[\L])$, $\leafMesh(\domseq[\L])$ and $\vertexClasses(\domseq[\L])$ cover every domain sequence.}
+\end{definition}
+
+\robert{A detection run on a covering set is \emph{exhaustive}. It catches exactly what it catches on the full seed, since each of the detections of Definitions~\ref{def:pinch_detection},~\ref{def:confined_detection} and~\ref{def:grading_detection} tests its predicate on the candidates alone. A substep may therefore always be seeded with the full seed. A smaller seed suffices whenever the input is known to be free of the defect outside it, which Lemma~\ref{lemma:pad_seeds_cover} shows for every pass of the padding loop.}
+
 The two substeps that restore admissibility now follow, one section each, in the order the cycle runs them. Both have the shape set out above. A candidate set is tested on a fixed input, everything that fires is repaired at once, and Definition~\ref{def:candidate_collection} reads the candidates of the next cycle off what the repair refined. A candidate set is a superset of the defects and the detection filters it, so a non-empty candidate set is no claim that a defect appeared. Both are iterated to a fixed point of their own predicate before the next substep begins, which is the arrangement Figure~\ref{fig:padding_interactions_b} boxes, and each carries its own bound on the number of cycles it needs. The grading follows them in Section~\ref{subsubsec:grading}, and Section~\ref{subsec:outer_loop} closes the outer loop around all three.
 
 \subsubsection{Resolving vertex pinches}
@@ -3300,7 +3307,8 @@ The iteration stops when the pinch detection catches nothing, i.e. $\markedVerte
 
 The first column of Figure~\ref{fig:candidate_sets} shows one pinch resolution loop with two cycles. Its first cycle repairs the pinch of the input and opens another one beside it, which is what the second cycle then has to repair.
 
-The seed $\candV[\mathrm{seed}]$ may always be taken to be all vertices $\V(\domseq[\L]^{\mathrm{refine}})$ of the input domain sequence. A smaller seed can be used whenever the domain sequence entering the substep is already known to be free of pinches outside a given vertex set, which is the case in every pass of the overarching padding loop in Section~\ref{subsec:outer_loop}.
+% 2026-09-10: merged into Definition def:covering_seed and the paragraph after it. Kept for cherry-picking.
+\tobecut{The seed $\candV[\mathrm{seed}]$ may always be taken to be all vertices $\V(\domseq[\L]^{\mathrm{refine}})$ of the input domain sequence. A smaller seed can be used whenever the domain sequence entering the substep is already known to be free of pinches outside a given vertex set, which is the case in every pass of the overarching padding loop in Section~\ref{subsec:outer_loop}.}
 
 \begin{corollary}[The pinch iteration terminates]
     \label{cor:pinch_rounds}
@@ -3316,7 +3324,7 @@ The seed $\candV[\mathrm{seed}]$ may always be taken to be all vertices $\V(\dom
 
 \begin{proposition}[The pinch iteration discharges clauses (ii) and (iii)]
     \label{prop:pinch_discharged}
-    Let the seed cover the pinches of the input domain sequence, i.e. $\V^{\mathrm{pinch}}(\domseq[\L]^{\mathrm{refine}}) \subseteq \candV[\mathrm{seed}]$. Then no vertex of the output $\domseq[\L]^{\mathrm{pinch}}$ of Iteration~\ref{it:pinch_iteration} is a pinch or a boundary pinch on any level, so $\domseq[\L]^{\mathrm{pinch}}$ satisfies clauses~(ii) and~(iii) of Definition~\ref{def:subdiv_partition}.
+    Let the seed \tobecut{cover the pinches of the input domain sequence, i.e. $\V^{\mathrm{pinch}}(\domseq[\L]^{\mathrm{refine}}) \subseteq \candV[\mathrm{seed}]$}\robert{$\candV[\mathrm{seed}]$ cover the input $\domseq[\L]^{\mathrm{refine}}$ in the sense of Definition~\ref{def:covering_seed}}. Then no vertex of the output $\domseq[\L]^{\mathrm{pinch}}$ of Iteration~\ref{it:pinch_iteration} is a pinch or a boundary pinch on any level, so $\domseq[\L]^{\mathrm{pinch}}$ satisfies clauses~(ii) and~(iii) of Definition~\ref{def:subdiv_partition}.
 \end{proposition}
 \begin{proof}
     The iteration reaches its stopping cycle by Corollary~\ref{cor:pinch_rounds}, so the output $\domseq[\L]^{\mathrm{pinch}}$ exists, and the stopping rule says that the detection~\eqref{eq:pinch_round_detection} catches nothing there. It remains to see that the detection tests enough, that is $\V^{\mathrm{pinch}}(\domseq[\L]^{\mathrm{pinch},t}) \subseteq \candV[t]$ for every cycle $t$. We show this by induction, the case $t = 0$ being the hypothesis on the seed. Consider $\vertex{\l}{\coarseIdxone} \in \V^{\mathrm{pinch}}(\domseq[\L]^{\mathrm{pinch},t})$. It cannot have been a pinch of $\domseq[\L]^{\mathrm{pinch},t-1}$, because it would then lie in $\candV[t-1]$ by induction, hence be caught with $\targetlevel^t_\coarseIdxone > \l$, and Corollary~\ref{cor:pinch_spent} forbids a pinch below the target. So the pinch is new, and Corollary~\ref{cor:new_pinch_candidates} puts $\vertex{\l}{\coarseIdxone}$ into the candidate set $\collectV(\domseq[\L]^{\mathrm{pinch},t-1}, \simplexsubsetTwo[\mathrm{pinch},t]{})$. The set subtracted in~\eqref{eq:pinch_candidates} carries no pinch of $\domseq[\L]^{\mathrm{pinch},t}$, again by Corollary~\ref{cor:pinch_spent}, so $\vertex{\l}{\coarseIdxone} \in \candV[t]$. Thus, an empty detection on the stopping cycle implies the absence of pinch vertices, i.e. $\V^{\mathrm{pinch}}(\domseq[\L]^{\mathrm{pinch}}) = \varnothing$.
@@ -3439,7 +3447,8 @@ The iteration stops when the confinement detection catches nothing, i.e. $\simpl
 
 The second column of Figure~\ref{fig:candidate_sets} shows one confinement padding loop with two cycles. It shows how the loop is seeded from a previous pinch resolution loop, and tracks the successive face candidate sets until they are exhausted.
 
-The seed $\candF[\mathrm{seed}]$ may always be taken to be all leaf faces $\leafMesh(\domseq[\L]^{\mathrm{pinch}})$ of the input domain sequence. A smaller seed can be used whenever that sequence is already known to carry no confined face outside a given set, which is the case in every pass of the overarching padding loop in Section~\ref{subsec:outer_loop}.
+% 2026-09-10: merged into Definition def:covering_seed and the paragraph after it. Kept for cherry-picking.
+\tobecut{The seed $\candF[\mathrm{seed}]$ may always be taken to be all leaf faces $\leafMesh(\domseq[\L]^{\mathrm{pinch}})$ of the input domain sequence. A smaller seed can be used whenever that sequence is already known to carry no confined face outside a given set, which is the case in every pass of the overarching padding loop in Section~\ref{subsec:outer_loop}.}
 
 \begin{corollary}[The confinement iteration advances one level per cycle]
     \label{cor:confinement_cycles}
@@ -3456,7 +3465,7 @@ The seed $\candF[\mathrm{seed}]$ may always be taken to be all leaf faces $\leaf
 
 \begin{proposition}[The confinement iteration discharges clause (i)]
     \label{prop:confined_discharged}
-    Let the seed cover the confined faces of the input so that $\F^{\mathrm{conf}}(\domseq[\L]^{\mathrm{pinch}}) \subseteq \candF[\mathrm{seed}]$. Then no leaf face of the output $\domseq[\L]^{\mathrm{conf}}$ of Iteration~\ref{it:confined_iteration} is confined, so $\domseq[\L]^{\mathrm{conf}}$ satisfies clause~(i) of Definition~\ref{def:subdiv_partition}.
+    Let the seed \tobecut{cover the confined faces of the input so that $\F^{\mathrm{conf}}(\domseq[\L]^{\mathrm{pinch}}) \subseteq \candF[\mathrm{seed}]$}\robert{$\candF[\mathrm{seed}]$ cover the input $\domseq[\L]^{\mathrm{pinch}}$ in the sense of Definition~\ref{def:covering_seed}}. Then no leaf face of the output $\domseq[\L]^{\mathrm{conf}}$ of Iteration~\ref{it:confined_iteration} is confined, so $\domseq[\L]^{\mathrm{conf}}$ satisfies clause~(i) of Definition~\ref{def:subdiv_partition}.
 \end{proposition}
 \begin{proof}
     The iteration reaches its stopping cycle by Corollary~\ref{cor:confinement_cycles}, so the output exists, and the stopping rule says the detection~\eqref{eq:confined_cycle_detection} catches nothing there. What remains is that the detection tests enough, which is the invariant
@@ -3711,7 +3720,7 @@ The sweep admits a sharper reading of its own candidates than Corollary~\ref{cor
 
 \begin{corollary}[Grading candidates cover the residual]
     \label{cor:grading_candidates_cover}
-    Let $\candC[\mathrm{seed}] \subseteq \vertexClasses(\domseq[\L])$ cover the defects of $\domseq[\L]$ so that $\gradeClasses(\domseq[\L]) \subseteq \candC[\mathrm{seed}]$. The detection $\detectG(\domseq[\L], \candC[\mathrm{seed}])$ then catches exactly $\gradeClasses(\domseq[\L])$, and we write $\targetlevel$ for its target level map. Let $\domseq[\L]' \coloneq \quadriV(\domseq[\L], \gradeClasses(\domseq[\L]), \targetlevel)$ be the sweep on that seed, with marked family $\simplexsubsetTwo{}$ given by~\eqref{eq:graded_marked_family}. A defect of $\domseq[\L]$ that the sweep leaves of level span above $g$ is a changed class and violates~\eqref{eq:span_stays}, so
+    Let $\candC[\mathrm{seed}] \subseteq \vertexClasses(\domseq[\L])$ cover \tobecut{the defects of $\domseq[\L]$ so that $\gradeClasses(\domseq[\L]) \subseteq \candC[\mathrm{seed}]$}\robert{$\domseq[\L]$ in the sense of Definition~\ref{def:covering_seed}}. The detection $\detectG(\domseq[\L], \candC[\mathrm{seed}])$ then catches exactly $\gradeClasses(\domseq[\L])$, and we write $\targetlevel$ for its target level map. Let $\domseq[\L]' \coloneq \quadriV(\domseq[\L], \gradeClasses(\domseq[\L]), \targetlevel)$ be the sweep on that seed, with marked family $\simplexsubsetTwo{}$ given by~\eqref{eq:graded_marked_family}. A defect of $\domseq[\L]$ that the sweep leaves of level span above $g$ is a changed class and violates~\eqref{eq:span_stays}, so
     \begin{equation}
         \label{eq:grading_candidates_cover}
         \gradeClasses \big( \domseq[\L]' \big) \; \cap \; \gradeClasses \big( \domseq[\L] \big) \; \subseteq \; \collectC{}^{,c} \big( \domseq[\L], \, \simplexsubsetTwo{} \big) .
@@ -3730,11 +3739,12 @@ The sweep admits a sharper reading of its own candidates than Corollary~\ref{cor
 
 Corollary~\ref{cor:grading_candidates_cover} is the one statement of the three that drops the set difference, and it is the one the grading step uses. It supplies the hypothesis that Proposition~\ref{prop:grading_span} later places on the seed of the next grading sweep in the overall padding loop.
 
-The seed $\candC[\mathrm{seed}]$ may always be taken to be all classes $\vertexClasses(\domseq[\L]^{\mathrm{conf}})$ of the input. A smaller seed can be used whenever that sequence is already known to carry no class of level span above $g$ outside a given set, which is the case in every pass of the padding loop after the first, by Corollaries~\ref{cor:span_candidates} and~\ref{cor:grading_candidates_cover} read on the three repairs of the pass before it. The seed is an argument so that Proposition~\ref{prop:grading_span} can state the hypothesis it uses.
+% 2026-09-10: merged into Definition def:covering_seed and the paragraph after it. Kept for cherry-picking.
+\tobecut{The seed $\candC[\mathrm{seed}]$ may always be taken to be all classes $\vertexClasses(\domseq[\L]^{\mathrm{conf}})$ of the input. A smaller seed can be used whenever that sequence is already known to carry no class of level span above $g$ outside a given set, which is the case in every pass of the padding loop after the first, by Corollaries~\ref{cor:span_candidates} and~\ref{cor:grading_candidates_cover} read on the three repairs of the pass before it.} The seed is an argument so that Proposition~\ref{prop:grading_span} can state the hypothesis it uses.
 
 \begin{proposition}[What one grading sweep achieves]
     \label{prop:grading_span}
-    Let the seed cover the classes of large level span in the input so that $\gradeClasses(\domseq[\L]^{\mathrm{conf}}) \subseteq \candC[\mathrm{seed}]$. Then every class of $\vertexClasses(\domseq[\L]^{\mathrm{conf}})$ has level span at most $g \! + \! 1$ on the output $\domseq[\L]^{\mathrm{grad}}$ of the grading sweep~\ref{sw:grading_sweep}. If in addition the detection~\eqref{eq:grading_sweep_detection} catches nothing, then $\domseq[\L]^{\mathrm{grad}} = \domseq[\L]^{\mathrm{conf}}$ and every class has level span at most $g$.
+    Let the seed \tobecut{cover the classes of large level span in the input so that $\gradeClasses(\domseq[\L]^{\mathrm{conf}}) \subseteq \candC[\mathrm{seed}]$}\robert{$\candC[\mathrm{seed}]$ cover the input $\domseq[\L]^{\mathrm{conf}}$ in the sense of Definition~\ref{def:covering_seed}}. Then every class of $\vertexClasses(\domseq[\L]^{\mathrm{conf}})$ has level span at most $g \! + \! 1$ on the output $\domseq[\L]^{\mathrm{grad}}$ of the grading sweep~\ref{sw:grading_sweep}. If in addition the detection~\eqref{eq:grading_sweep_detection} catches nothing, then $\domseq[\L]^{\mathrm{grad}} = \domseq[\L]^{\mathrm{conf}}$ and every class has level span at most $g$.
 \end{proposition}
 \begin{proof}
     Let $\vertexClass{\coarseIdxone} \in \vertexClasses(\domseq[\L]^{\mathrm{conf}})$. The hypothesis on the seed makes the detection~\eqref{eq:grading_detection_classes} exhaustive, so the class is caught exactly when $\levelSpan{\coarseIdxone} > g$. Two cases follow.
@@ -3759,7 +3769,7 @@ The proposition speaks only about the classes the input carries and not about th
 \subsection{The padding loop}
 \label{subsec:padding_loop}
 
-The three substeps of Section~\ref{subsec:padding} repair either pinches, confined faces or large level spans. Once a substep has completed, the substep's own predicate has been discharged and the domain sequence no longer possesses the defect the predicate indicates. However, every substep can create defects for the other substeps. For instance, confinement padding can create a pinch, and thus the padding loop needs an additional pinch resolution step. For this reason, we set up the padding loop as a fixed-point iteration of the substeps. This section defines that iteration and the candidates that provide the interface between the substeps. The next Section~\ref{subsec:termination} then shows that it the padding loop terminates and that the fixed point is an admissible domain sequence.
+The three substeps of Section~\ref{subsec:padding} repair either pinches, confined faces or large level spans. Once a substep has completed, the substep's own predicate has been discharged and the domain sequence no longer possesses the defect the predicate indicates. However, every substep can create defects for the other substeps. For instance, confinement padding can create a pinch, and thus the padding loop needs an additional pinch resolution step. For this reason, we set up the padding loop as a fixed-point iteration of the substeps. This section defines that iteration and the candidates that provide the interface between the substeps. The next Section~\ref{subsec:termination} then shows that \tobecut{it} the padding loop terminates and that the fixed point is an admissible domain sequence.
 
 \subsubsection{The outer loop}
 \label{subsec:outer_loop}
@@ -3772,9 +3782,17 @@ The three substeps of Section~\ref{subsec:padding} compose into the padding cycl
 \end{equation}
 whose first two factors are the iterations of Section~\ref{subsubsec:pinch_resolution} and Section~\ref{subsubsec:confined_faces} and not single sweeps. Our implementation wraps $\textsc{Pad}$ in a loop that stops once a pass no longer detects any defects, and a counter records the number $q$ of \emph{productive} passes. One padding pass runs the three substeps in the order~\eqref{eq:pad_operator}, and fixes and moves the three types of candidate between them. The pinch resolution and confinement padding cycles of Section~\ref{subsubsec:pinch_resolution} and Section~\ref{subsubsec:confined_faces}, respectively, are called the \emph{inner} cycles in the following, and both run in every iteration of the \emph{outer} padding loop.
 
+\begin{assumption}[\robert{Single refinement of an admissible domain sequence}]
+    \label{ass:single_refinement}
+    \robert{The \textsc{Refine} step acts on an admissible domain sequence $\domseq[\L] \in \allpartitions$ of level span at most $g$, and it refines $\domseq[\L]$ with a single marked family $\simplexsubsetTwo{\mathrm{refine}}$.}
+\end{assumption}
+
+\robert{The second half costs no generality. A \textsc{Refine} step made of several refinements has a single marked family, since every vertex-star refinement is a face quadrisection by Corollary~\ref{cor:graded_is_face_quadrisection} and two face quadrisections compose into one on the union of their families by Lemma~\ref{lemma:face_quadrisection_composition}.}
+
 \begin{iteration}[Padding]
 \label{it:pad_iteration}
-    Write $\domseq[\L]$ for the domain sequence the \textsc{Refine} step of Section~\ref{subsec:refine} refines and $\simplexsubsetTwo{\mathrm{refine}}$ for the marked family it refined, so that $\domseq[\L]^{\mathrm{refine}} = \textsc{Refine} ( \domseq[\L] )$. The padding loop is initialised with the domain sequence $\domseq[\L]^{0} \coloneq \domseq[\L]^{\mathrm{refine}}$ and with the candidates that step leaves behind,
+    Write $\domseq[\L]$ for the domain sequence the \textsc{Refine} step of Section~\ref{subsec:refine} refines and $\simplexsubsetTwo{\mathrm{refine}}$ for the marked family it refined, so that $\domseq[\L]^{\mathrm{refine}} = \textsc{Refine} ( \domseq[\L] )$. % 2026-09-10: moved into Assumption ass:single_refinement before the iteration. Kept for cherry-picking.
+    \tobecut{We take $\domseq[\L]$ to be admissible of level span at most $g$ and $\simplexsubsetTwo{\mathrm{refine}}$ to be a single marked family. A \textsc{Refine} step made of several refinements has one, since every vertex-star refinement is a face quadrisection by Corollary~\ref{cor:graded_is_face_quadrisection} and two face quadrisections compose into one on the union of their families by Lemma~\ref{lemma:face_quadrisection_composition}.} \robert{Under Assumption~\ref{ass:single_refinement}} \tobecut{T}\robert{t}he collections below then cover every defect of $\domseq[\L]^{\mathrm{refine}}$, which is what the first pass relies on in Lemma~\ref{lemma:pad_seeds_cover}. The padding loop is initialised with the domain sequence $\domseq[\L]^{0} \coloneq \domseq[\L]^{\mathrm{refine}}$ and with the candidates that step leaves behind,
     \begin{equation}
         \label{eq:pad_initial_seeds}
         \begin{aligned}
@@ -3784,7 +3802,7 @@ whose first two factors are the iterations of Section~\ref{subsubsec:pinch_resol
             \candC[\mathrm{grad},0] \; &\coloneq \; \collectC \big( \domseq[\L], \, \simplexsubsetTwo{\mathrm{refine}} \big) ,
         \end{aligned}
     \end{equation}
-    All three collections are read on $\domseq[\L]$, the sequence the refinement or repair was applied to, and on the family it refined, as Definition~\ref{def:candidate_collection} asks. \robert{The \textsc{Refine} step sits in the slot of a grading here, since it is one sweep and not an iteration, which is why all three collections carry the index $\mathrm{grad},0$. No confinement padding runs before pass $1$, so we set $\candV[\mathrm{conf},0] \coloneq \varnothing$. The three seed identities below then hold at $p = 1$ as they do at every later pass, and the vertex seed of the first pass is the collection above.} The padding loop then iterates the following \emph{padding pass} for $p = 1, \, 2, \, \ldots \;$:
+    All three collections are read on $\domseq[\L]$, the sequence the refinement or repair was applied to, and on the family it refined, as Definition~\ref{def:candidate_collection} asks. The three collections sit in the slot of the grading of a pass $0$, which is why they carry the indices $\mathrm{grad}$ and $0$. They then feed pass $1$ through the same seed identities as every later pass, so pass $1$ needs no seed definition of its own. Figure~\ref{fig:padding_signal_flow} shows where each set enters pass $1$. Each one runs back along a path marked $p\!+\!1$. There $\candF[\mathrm{grad},0]$ joins $\candF[\mathrm{pinch},1]$ at the confinement padding, and $\candC[\mathrm{grad},0]$ joins the class candidates of the first two substeps at the grading. No confinement padding runs before pass $1$, so we set $\candV[\mathrm{conf},0] \coloneq \varnothing$. The padding loop then iterates the following \emph{padding pass} for $p = 1, \, 2, \, \ldots \;$:
     \begin{enumerate}[topsep=3pt, itemsep=-2pt]
     \item Resolve the pinches of the pass input with Iteration~\ref{it:pinch_iteration}, seeded by the vertices the previous pass handed over, and keep the faces and classes its cycles accumulated in~\eqref{eq:pinch_handover},
     \begin{equation}
@@ -3940,14 +3958,13 @@ since each of them is collected from the faces its own substep refined. We then 
 Iteration~\ref{it:pad_iteration} can formally be written as $q$ applications of the operator~\eqref{eq:pad_operator} by
 \begin{equation}
     \label{eq:pad_power}
-    \domseq[\L]^{\mathrm{pad}} \; = \; \textsc{Pad}^{q} \big( \domseq[\L]^{\mathrm{refine}} \big),
-    \qquad \textsc{Pad}^{q} \; \colon \; \alldomseqs \; \longrightarrow \; \alldomseqs .
+    \domseq[\L]^{\mathrm{pad}} \; = \; \textsc{Pad}^{q} \big( \domseq[\L]^{\mathrm{refine}} \big).
 \end{equation}
-The seeds do not appear there, and they are not an independent variable. The first pass may always detect against the global sets $\V^{\mathrm{pinch}}$, $\F^{\mathrm{conf}}$ and $\gradeClasses$ of $\domseq[\L]^{\mathrm{refine}}$ from Section~\ref{subsec:padding}, and every later seed is produced inside the iteration by the pass before it. A seed only has to cover the defects of its input, and when it does the detection of each substep is exhaustive, which~\eqref{eq:confined_detection_exhaustive} records for the confinement padding, the invariant in the proof of Proposition~\ref{prop:pinch_discharged} gives for the pinch resolution, and the hypothesis of Proposition~\ref{prop:grading_span} gives for the grading. \robert{That the seeds of Iteration~\ref{it:pad_iteration} do cover is Lemma~\ref{lemma:pad_seeds_cover} of the next section, which is where~\eqref{eq:pad_detection_exhaustive} states the consequence.} So a seeded substep marks exactly what a full scan would mark, and~\eqref{eq:pad_power} is the map the loop computes however it is seeded.
+Note that $q$ depends on $\domseq[\L]^{\mathrm{refine}}$. The seeds do not appear there, and they are not an independent variable. The first pass may always detect against the global sets $\V^{\mathrm{pinch}}$, $\F^{\mathrm{conf}}$ and $\gradeClasses$ of $\domseq[\L]^{\mathrm{refine}}$ from Section~\ref{subsec:padding}, and every later seed is produced inside the iteration by the pass before it. A seed only has to cover the defects of its input, and when it does the detection of each substep is exhaustive\tobecut{, which~\eqref{eq:confined_detection_exhaustive} records for the confinement padding, the invariant in the proof of Proposition~\ref{prop:pinch_discharged} gives for the pinch resolution, and the hypothesis of Proposition~\ref{prop:grading_span} gives for the grading}\robert{ by Definition~\ref{def:covering_seed}. For the later cycles of the two inner iterations this is the invariant in the proofs of Propositions~\ref{prop:pinch_discharged} and~\ref{prop:confined_discharged}, which~\eqref{eq:confined_detection_exhaustive} records for the confinement padding}. \robert{That the seeds of Iteration~\ref{it:pad_iteration} do cover is Lemma~\ref{lemma:pad_seeds_cover} of the next section, which is where~\eqref{eq:pad_detection_exhaustive} states the consequence.} So a seeded substep marks exactly what a full scan would mark, and~\eqref{eq:pad_power} is \tobecut{the map the loop computes}\robert{what the loop computes} however it is seeded.
 
 \robert{The implementation does not seed this way. All three substeps restart from the full scan, which is what Section~\ref{subsec:padding} describes and what the reported counts come from. The saving is real but not on the critical path, since the scan is linear in the mesh and the solve dominates. Measured on the valence-$10$ domain sequence of Figure~\ref{fig:candidate_sets}, the seed that Iteration~\ref{it:pad_iteration} hands the first pinch resolution carries $16$ vertices against the $629$ that the full initial set carries.}
 
-Nothing so far says that the stopping rule of Iteration~\ref{it:pad_iteration} ever fires. The question is whether some finite $q$ makes $\textsc{Pad}^{q}$ a map $\alldomseqs \to \allpartitions$, so that finitely many passes restore admissibility whatever the \textsc{Refine} step hands it. Section~\ref{subsec:termination} settles that, and Section~\ref{subsubsec:pass_count} takes up how large $q$ has to be.
+Nothing so far says that the stopping rule of Iteration~\ref{it:pad_iteration} ever fires. The question is whether \tobecut{some finite $q$ makes $\textsc{Pad}^{q}$ a map $\alldomseqs \to \allpartitions$, so that}\robert{the loop stops after} finitely many passes \robert{and whether they} restore admissibility whatever the \textsc{Refine} step hands it. Section~\ref{subsec:termination} settles that, and Section~\ref{subsubsec:pass_count} takes up how large $q$ has to be.
 
 \smallskip
 
@@ -3960,9 +3977,7 @@ One rule runs through the whole figure. Each substep iterates on its own candida
 \subsubsection{Termination and admissibility}
 \label{subsec:termination}
 
-The first two padding substeps of pinch resolution and confinement padding discharge their own predicates by Proposition~\ref{prop:pinch_discharged} and Proposition~\ref{prop:confined_discharged}, and the grading leaves its predicate one level short by Proposition~\ref{prop:grading_span}. However, no single cycle of a substep can discharge its own effect on a different substep, so the cycles have to be iterated. We can think of that as closing the non-self-loops in Figures~\ref{fig:padding_interactions_b} and~\ref{fig:padding_signal_flow}.
-
-This section shows that the outer padding cycle indeed terminates and that its fixed point is an admissible domain sequence.
+The first two padding substeps of pinch resolution and confinement padding discharge their own predicates by Proposition~\ref{prop:pinch_discharged} and Proposition~\ref{prop:confined_discharged}, and the grading leaves its predicate one level short by Proposition~\ref{prop:grading_span}. However, no single cycle of a substep can discharge its own effect on a different substep, so the substeps have to be iterated. We can think of that as closing the non-self-loops in Figures~\ref{fig:padding_interactions_b} and~\ref{fig:padding_signal_flow}. This section shows that the outer padding cycle indeed terminates and that its fixed point is an admissible domain sequence.
 
 \begin{lemma}[A caught defect refines at least one face]
     \label{lemma:pad_productive}
@@ -3973,14 +3988,16 @@ This section shows that the outer padding cycle indeed terminates and that its f
     \begin{equation*}
         \lminIdx{\coarseIdxone} \; < \; \targetlevel_\coarseIdxone ,
     \end{equation*}
-    which is what Corollary~\ref{cor:graded_quadrisection_composition} rules out for the identity. The confinement padding repairs with $\quadriF$ on confined faces, which are leaf faces by~\eqref{eq:confined_set} and so carry no children yet.
+    which is what Corollary~\ref{cor:graded_quadrisection_composition} rules out for the identity. The confinement padding repairs with $\quadriF$ on confined faces, which are leaf faces by~\eqref{eq:confined_set} and so carry no children yet. None of them lies on level $\L$. A vertex has an empty refinement fan on level $\L$, so it is refinement-exterior there and Definition~\ref{def:confined_face} leaves every face of level $\L$ unconfined.
 
     No target exceeds $\L$, and~\eqref{eq:marked_face_family} carries no face on level $\L$, so nothing is refined past the finest level.
 \end{proof}
 
-The lemma above is what makes the stopping rule of Iteration~\ref{it:pad_iteration} sensible. A pass whose three detections catch nothing is the identity, because an empty detection leaves an empty marked family. Conversely a pass that refines no face can have fired no predicate, by the lemma. So the rule stops on exactly the passes that refine nothing, and~\eqref{eq:pad_stopping} reads that off the candidates rather than the detections. The set $\candF[\mathrm{pinch},p]$ is needed there. The sets that cross the pass boundary do not suffice on their own, because the pinch resolution hands its faces to the confinement padding inside the same pass and they never reach the boundary.
+The lemma above is what makes the stopping rule of Iteration~\ref{it:pad_iteration} sensible. A pass whose three detections catch nothing is the identity, because an empty detection leaves an empty marked family. Conversely a pass that refines no face can have fired no predicate, by the lemma. So the rule stops on exactly the passes that refine nothing, and~\eqref{eq:pad_stopping} reads that off the candidates rather than the detections.
+% 2026-09-10: moved next to eq:pad_stopping in the outer loop. Kept for cherry-picking.
+\tobecut{The set $\candF[\mathrm{pinch},p]$ is needed there. The sets that cross the pass boundary do not suffice on their own, because the pinch resolution hands its faces to the confinement padding inside the same pass and they never reach the boundary.}
 
-Termination of the padding loop follows follows from Lemma~\ref{lemma:pad_productive} and the fact that the mesh hierarchy is finite.
+Termination of the padding loop follows \tobecut{follows} from Lemma~\ref{lemma:pad_productive} and the fact that the mesh hierarchy is finite\robert{, by the same argument that Corollary~\ref{cor:pinch_rounds} uses for the inner pinch iteration}.
 
 \begin{corollary}[The padding loop terminates]
     \label{cor:pad_passes}
@@ -3991,16 +4008,17 @@ Termination of the padding loop follows follows from Lemma~\ref{lemma:pad_produc
     \end{equation}
 \end{corollary}
 \begin{proof}
-    Every productive pass refines at least one face by Lemma~\ref{lemma:pad_productive}, so some region $\M_\l$ grows. Every $\M_\l$ is bounded by $\F_\l(\T_\l)$ individually. The sum starts at $\l = 1$ since $\F_\lzero(\T_{\lzero}) = \M_\lzero^{\mathrm{refine}}$.
+    Every productive pass refines at least one face by Lemma~\ref{lemma:pad_productive}, so some region $\M_\l$ grows\robert{ and none shrinks, since both quadrisection operators only adjoin faces by~\eqref{eq:def_face_quadrisection_operator} and~\eqref{eq:graded_vertex_quadrisection}}. Every $\M_\l$ is bounded by $\F_\l(\T_\l)$ individually. The sum starts at $\l = 1$ since $\F_\lzero(\T_{\lzero}) = \M_\lzero^{\mathrm{refine}}$.
 \end{proof}
 
-This is the room the input leaves in the hierarchy, which is what Corollary~\ref{cor:pinch_rounds} gives the inner pinch iteration and by the same argument. However, the chaining mechanism is more constrained for the outer loop, see Section~\ref{subsec:termination}.
+% 2026-09-10: the first sentence restates the corollary, the comparison moved to the lead-in. Kept for cherry-picking.
+\tobecut{This is the room the input leaves in the hierarchy, which is what Corollary~\ref{cor:pinch_rounds} gives the inner pinch iteration and by the same argument. However, the}\robert{The} chaining mechanism is more constrained for the outer loop, see Section~\tobecut{\ref{subsec:termination}}\robert{\ref{subsubsec:pass_count}}.
 
-Corollary~\ref{cor:pad_passes} shows that the padding loop terminates and thus that its fixed point, the output domain sequence $\domseq[\L]^{\mathrm{pad}}$, exists. The other important property is that $\domseq[\L]^{\mathrm{pad}}$ is admissible. The loop terminates once it no longer detects any defects between the candidate sets. Thus, the crucial question is whether these candidates are exhaustive, i.e. that they would cover every potential defect without ever letting one slip through. The two inner iterations and the grading sweep each settle this on their own input, in Proposition~\ref{prop:pinch_discharged}, Proposition~\ref{prop:confined_discharged} and Proposition~\ref{prop:grading_span}, and each does so under a hypothesis on the seed it is handed. What remains is that Iteration~\ref{it:pad_iteration} hands them seeds meeting that condition in every pass.
+Corollary~\ref{cor:pad_passes} shows that the padding loop terminates and thus that its fixed point, the output domain sequence $\domseq[\L]^{\mathrm{pad}}$, exists. The other important property is that $\domseq[\L]^{\mathrm{pad}}$ is admissible. The loop terminates once it no longer detects any defects \tobecut{between the candidate sets}\robert{among its candidates}. Thus, the crucial question is whether these candidates are exhaustive, i.e. \tobecut{that they would cover}\robert{whether they cover} every potential defect without ever letting one slip through. The two inner iterations and the grading sweep each settle this on their own input, in Proposition~\ref{prop:pinch_discharged}, Proposition~\ref{prop:confined_discharged} and Proposition~\ref{prop:grading_span}, and each does so under a hypothesis on the seed it is handed. What remains is that Iteration~\ref{it:pad_iteration} hands them seeds meeting that condition in every pass.
 
 \begin{lemma}[The seeds of a padding pass cover its defects]
     \label{lemma:pad_seeds_cover}
-    Let $\domseq[\L] \in \allpartitions$ carry level span at most $g$, let $\domseq[\L]^{\mathrm{refine}} = \textsc{Refine}(\domseq[\L])$ and run Iteration~\ref{it:pad_iteration} on it. Then every pass $p \geq 1$ satisfies
+    \tobecut{Let $\domseq[\L] \in \allpartitions$ carry level span at most $g$, let $\domseq[\L]^{\mathrm{refine}} = \textsc{Refine}(\domseq[\L])$}\robert{Let $\domseq[\L]^{\mathrm{refine}} = \textsc{Refine}(\domseq[\L])$ under Assumption~\ref{ass:single_refinement}} and run Iteration~\ref{it:pad_iteration} on it. Then every pass $p \geq 1$ satisfies
     \begin{equation}
         \label{eq:pad_seeds_cover}
         \V^{\mathrm{pinch}} \big( \domseq[\L]^{p-1} \big) \subseteq \candV[\mathrm{seed},p],
@@ -4009,7 +4027,7 @@ Corollary~\ref{cor:pad_passes} shows that the padding loop terminates and thus t
         \quad
         \gradeClasses \big( \domseq[\L]^{\mathrm{conf},p} \big) \subseteq \candC[\mathrm{seed},p] .
     \end{equation}
-    Every substep of every pass therefore meets the hypothesis of its own discharge result, and its detection is exhaustive.
+    \robert{So the seed of every substep covers its input in the sense of Definition~\ref{def:covering_seed}.} Every substep of every pass therefore meets the hypothesis of its own discharge result, and its detection is exhaustive.
 \end{lemma}
 \begin{proof}
     All three inclusions have the same shape, so we prove the first in full and take the other two from it. Each substep is one face quadrisection on one marked family, by Lemma~\ref{lemma:face_quadrisection_composition} for the two inner loops and by Corollary~\ref{cor:graded_is_face_quadrisection} for the grading, and it hands on its candidates collected from that family and the sequence it started from. So one citation discharges a substep instead of an argument over its cycles. Every discharge result below is applied under the induction hypothesis, which is~\eqref{eq:pad_seeds_cover} read at pass $p \! - \! 1$, and the induction runs on the three inclusions together.
@@ -4029,43 +4047,45 @@ Corollary~\ref{cor:pad_passes} shows that the padding loop terminates and thus t
 
     \emph{Faces.} This case is analogous. The confinement padding of pass $p \! - \! 1$ leaves $\domseq[\L]^{\mathrm{conf},p-1}$ free of confined faces by Proposition~\ref{prop:confined_discharged}, and Corollary~\ref{cor:new_confined_candidates} says for confined faces what the corollary above says for pinches. The two refinements in between straddle the pass boundary here, since they are the grading of pass $p \! - \! 1$ and the pinch resolution of pass $p$. Their collections $\candF[\mathrm{grad},p-1]$ and $\candF[\mathrm{pinch},p]$ are the terms of the seed $\candF[\mathrm{seed},p]$ of~\eqref{eq:pad_step_confined}, and the chain closes as above.
 
-    \emph{Classes.} This case differs in two ways, and both come from the grading having no inner loop of its own. First, no substep ever discharges the level span, since Proposition~\ref{prop:grading_span} only brings the classes of a sweep's input down to $g \! + \! 1$. The chain has no anchor of the kind above, and Corollary~\ref{cor:grading_candidates_cover} supplies one instead. Read on a sweep whose seed covers its own input, it bounds every class of large level span in the output and not only those the sweep opened, so the grading of pass $p \! - \! 1$ gives $\gradeClasses(\domseq[\L]^{p-1}) \subseteq \candC[\mathrm{grad},p-1]$ with nothing subtracted. What an empty predicate set did for the vertices is done here by the covering hypothesis.
+    \emph{Classes.} This case differs in two ways, and both come from the grading having no inner loop of its own. First, \tobecut{no substep ever discharges}\robert{a grading sweep does not in general discharge} the level span, since Proposition~\ref{prop:grading_span} only brings the classes of a sweep's input down to $g \! + \! 1$. The chain has no anchor of the kind above, and Corollary~\ref{cor:grading_candidates_cover} supplies one instead. Read on a sweep whose seed covers its own input, it bounds every class of large level span in the output and not only those the sweep opened, so the grading of pass $p \! - \! 1$ gives $\gradeClasses(\domseq[\L]^{p-1}) \subseteq \candC[\mathrm{grad},p-1]$ with nothing subtracted. What an empty predicate set did for the vertices is done here by the covering hypothesis.
 
     Second, the seed~\eqref{eq:pad_step_grading_seed} has three terms and not two, because the grading runs last and its own collection is one of them. The other two come from the pinch resolution and the confinement padding of pass $p$, which Corollary~\ref{cor:span_candidates} bounds in the shape used above, so the substitution runs twice. The confinement term carries only the classes that substep created, by the narrowing the paragraph after~\eqref{eq:confined_handover_2} reads off Corollary~\ref{cor:confined_class_candidates} cycle by cycle.
 
     \emph{Pass $1$.} The three chains read the same way, with $\domseq[\L]$ in the anchor slot and the \textsc{Refine} step in the slot of the grading of pass $p \! - \! 1$. Its collections are the initial seeds~\eqref{eq:pad_initial_seeds}, read on $\domseq[\L]$ and on the family $\simplexsubsetTwo{\mathrm{refine}}$ that step refined. The input is admissible of level span at most $g$, so $\V^{\mathrm{pinch}}(\domseq[\L])$, $\F^{\mathrm{conf}}(\domseq[\L])$ and $\gradeClasses(\domseq[\L])$ are empty and every chain anchors on the input itself. The class chain then cites Corollary~\ref{cor:span_candidates} rather than Corollary~\ref{cor:grading_candidates_cover}, since an empty $\gradeClasses(\domseq[\L])$ leaves no residual to carry.
 \end{proof}
 
-Two things follow from Lemma~\ref{lemma:pad_seeds_cover}. The detections are exhaustive, so every substep of every pass marks exactly what a full scan of its own input would mark, for example
+\tobecut{Two things follow from Lemma~\ref{lemma:pad_seeds_cover}. The detections are exhaustive, so}\robert{By Lemma~\ref{lemma:pad_seeds_cover}} every substep of every pass marks exactly what a full scan of its own input would mark, for example
 \begin{equation}
     \label{eq:pad_detection_exhaustive}
     \detectV \big( \domseq[\L]^{p-1}, \, \candV[\mathrm{seed},p] \big) \; = \; \detectV \big( \domseq[\L]^{p-1}, \, \V(\domseq[\L]^{p-1}) \big) ,
 \end{equation}
-and the same on the other two types of candidates. Iteration~\ref{it:pad_iteration} therefore computes the map~\eqref{eq:pad_power} whatever seeds it is run with, which is the claim Section~\ref{subsec:outer_loop} makes after that equation. Without a covering seed the two sides can differ, which is why the iteration is written with the seeds and not with the predicate sets, as~\eqref{eq:confined_detection_exhaustive} already records one loop down.
+and the same on the other two types of candidates.
+% 2026-09-10: repeats the lemma and the paragraph after eq:pad_power. Kept for cherry-picking.
+\tobecut{Iteration~\ref{it:pad_iteration} therefore computes the map~\eqref{eq:pad_power} whatever seeds it is run with, which is the claim Section~\ref{subsec:outer_loop} makes after that equation. Without a covering seed the two sides can differ, which is why the iteration is written with the seeds and not with the predicate sets, as~\eqref{eq:confined_detection_exhaustive} already records one loop down.}
 
 \begin{proposition}[The padding loop restores admissibility]
     \label{prop:pad_terminates}
-    Let $\domseq[\L] \in \allpartitions$ carry level span at most $g$ and let $\domseq[\L]^{\mathrm{refine}} = \textsc{Refine}(\domseq[\L])$. Then the output $\domseq[\L]^{\mathrm{pad}} = \textsc{Pad}^{q}(\domseq[\L]^{\mathrm{refine}})$ of Iteration~\ref{it:pad_iteration} is admissible of level span at most $g$, so $\textsc{Pad}^q \colon \alldomseqs \to \allpartitions$.
+    \tobecut{Let $\domseq[\L] \in \allpartitions$ carry level span at most $g$ and let $\domseq[\L]^{\mathrm{refine}} = \textsc{Refine}(\domseq[\L])$.}\robert{Let $\domseq[\L]^{\mathrm{refine}} = \textsc{Refine}(\domseq[\L])$ under Assumption~\ref{ass:single_refinement}.} Then the output $\domseq[\L]^{\mathrm{pad}} = \textsc{Pad}^{q}(\domseq[\L]^{\mathrm{refine}})$ of Iteration~\ref{it:pad_iteration} is admissible of level span at most $g$\tobecut{, so $\textsc{Pad}^q \colon \alldomseqs \to \allpartitions$}. \robert{The fixed points of $\textsc{Pad}$, read with full seeds, are exactly the admissible domain sequences of level span at most $g$.}
 \end{proposition}
 \begin{proof}
-    The iteration reaches its stopping pass by Corollary~\ref{cor:pad_passes}, so the output exists, and the stopping rule says that the three detections catch nothing there.
+    The iteration reaches its stopping pass by Corollary~\ref{cor:pad_passes}, so the output exists, and the stopping rule says that the three detections catch nothing there. \robert{Every substep of the stopping pass is then the identity, so the outputs of its three substeps all equal $\domseq[\L]^{\mathrm{pad}}$.}
 
-    Lemma~\ref{lemma:pad_seeds_cover} makes each of them exhaustive, so an empty detection is an empty predicate set and not merely an empty intersection with a seed. Proposition~\ref{prop:pinch_discharged} then gives clauses~$(ii)$ and~$(iii)$ of Definition~\ref{def:subdiv_partition}, Proposition~\ref{prop:confined_discharged} gives clause~$(i)$, and the second clause of Proposition~\ref{prop:grading_span} gives level span at most $g$.
+    Lemma~\ref{lemma:pad_seeds_cover} makes each of them exhaustive, so an empty detection is an empty predicate set and not merely an empty intersection with a seed. Proposition~\ref{prop:pinch_discharged} then gives clauses~$(ii)$ and~$(iii)$ of Definition~\ref{def:subdiv_partition}, Proposition~\ref{prop:confined_discharged} gives clause~$(i)$, and the second clause of Proposition~\ref{prop:grading_span} gives level span at most $g$. \robert{So the residual level $g \! + \! 1$ that a grading sweep may leave never survives the loop, because the grading of the stopping pass catches nothing.}
 
-    For the characterisation, read $\textsc{Pad}$ with the full seeds of Section~\ref{subsec:padding}. A domain sequence that is admissible of level span at most $g$ catches nothing in any of the three detections, so every substep is the identity on it and thus the fixed point is an admissible domain sequence.
+    For the characterisation, read $\textsc{Pad}$ with the full seeds of \tobecut{Section~\ref{subsec:padding}}\robert{Definition~\ref{def:covering_seed}}. \robert{Let $\domseq[\L]$ be a fixed point of $\textsc{Pad}$. Regions only grow, so every substep leaves $\domseq[\L]$ unchanged and refines no face. By Lemma~\ref{lemma:pad_productive} none of the three detections catches anything. With full seeds each detection tests every vertex, leaf face or class of $\domseq[\L]$. So $\domseq[\L]$ carries no pinch, no confined face and no class of level span above $g$. Conversely,} \tobecut{A}\robert{a} domain sequence that is admissible of level span at most $g$ catches nothing in any of the three detections, so every substep is the identity on it and \tobecut{thus the fixed point is an admissible domain sequence}\robert{it is a fixed point of $\textsc{Pad}$}.
 \end{proof}
 
 \begin{corollary}[Every domain sequence of the adaptive loop is admissible]
     \label{cor:adaptive_loop_admissible}
-    Run the loop of Section~\ref{subsec:adaptive_loop} from the initial domain sequence $\domseq^0 = \F_\lzero(\T_\lzero) \sqcup \bigsqcup_{\l = 1}^{\L} \varnothing$, with every step applying \textsc{Refine} and then \textsc{Pad}. Then every iterate $\domseq^n$ is admissible of level span at most $g$, so the hypotheses of Theorem~\ref{theorem:linear_independence} and Theorem~\ref{theorem:exactness} hold at every step of the loop.
+    Run the loop of Section~\ref{subsec:adaptive_loop} from the initial domain sequence $\robert{\domseq[\L]^0} = \F_\lzero(\T_\lzero) \sqcup \bigsqcup_{\l = 1}^{\L} \varnothing$, with every step applying \textsc{Refine} and then \textsc{Pad}. Then every iterate $\robert{\domseq[\L]^n}$ is admissible of level span at most $g$, so the hypotheses of Theorem~\ref{theorem:linear_independence} and Theorem~\ref{theorem:exactness} hold at every step of the loop.
 \end{corollary}
 \begin{proof}
-    $\domseq^0$ is admissible with level span $0 < g$ and Proposition~\ref{prop:pad_terminates} carries both properties from $\domseq^n$ to $\domseq^{n+1}$.
+    $\robert{\domseq[\L]^0}$ is admissible with level span $0 \tobecut{<} \robert{\leq} g$ and Proposition~\ref{prop:pad_terminates} carries both properties from $\robert{\domseq[\L]^n}$ to $\robert{\domseq[\L]^{n+1}}$.
 \end{proof}
 
 \begin{corollary}[The loop moves up the order]
     \label{cor:adaptive_loop_chain}
-    In the setting of Corollary~\ref{cor:adaptive_loop_admissible}, the domain sequences of the adaptive loop form a chain $\domseq^{0} \subseteq \domseq^{1} \subseteq \dots$ in the order~\eqref{eq:domseq_order}, and the padding contributes strictly whenever it is productive, $\domseq[\L]^{\mathrm{refine}} \subsetneq \domseq[\L]^{\mathrm{pad}}$ for $q \geq 1$. The adaptive spaces nest along the chain by~\eqref{eq:quadrisection_monotone}.
+    In the setting of Corollary~\ref{cor:adaptive_loop_admissible}, the domain sequences of the adaptive loop form a chain $\robert{\domseq[\L]^{0} \subseteq \domseq[\L]^{1}} \subseteq \dots$ in the order~\eqref{eq:domseq_order}, and the padding contributes strictly whenever it is productive, $\domseq[\L]^{\mathrm{refine}} \subsetneq \domseq[\L]^{\mathrm{pad}}$ for $q \geq 1$. The adaptive spaces nest along the chain by~\eqref{eq:quadrisection_monotone}.
 \end{corollary}
 \begin{proof}
     Both quadrisection operators only adjoin faces to regions, by~\eqref{eq:def_face_quadrisection_operator} and~\eqref{eq:graded_vertex_quadrisection}, so no step of the loop moves down. A productive pass refines at least one face by Lemma~\ref{lemma:pad_productive}, and a refined face contributes children that the region one level finer did not carry.
@@ -4073,9 +4093,11 @@ and the same on the other two types of candidates. Iteration~\ref{it:pad_iterati
 
 \begin{remark}[The order of the padding substeps]
 \label{rem:padding_order}
-    A single pass never suffices in general, whichever order is used, and the order is not what makes $\textsc{Pad}$ terminate. The proof of Lemma~\ref{lemma:pad_productive} uses only that a substep is the identity when its own detection catches nothing, so Proposition~\ref{prop:pad_terminates} holds for every ordering of the three substeps.
+    A single pass never suffices in general\robert{, see Figure~\ref{fig:padding_chain}}, whichever order is used, and the order is not what makes $\textsc{Pad}$ terminate. The proof of Lemma~\ref{lemma:pad_productive} uses only that a substep is the identity when its own detection catches nothing, so Proposition~\ref{prop:pad_terminates} holds for every ordering of the three substeps.
 
-    We run pinch resolution first because it refines the most, so that the faces it confines can still be repaired downstream in the same cycle, and the grading last because it has the least to do. That is a preference and not a bound. Proposition~\ref{prop:grading_span} closes the level span to $g \! + \! 1$ whatever reaches the grading, so the ordering costs nothing if a leaf star arrives wider than expected.
+    We run pinch resolution first because it refines the most, so that the faces it confines can still be repaired downstream in the same cycle, and the grading last because it has the least to do. That is a preference and not a bound.
+    % 2026-09-10: hard to parse, and the sentence before already makes the point. Kept for cherry-picking.
+    \tobecut{Proposition~\ref{prop:grading_span} closes the level span to $g \! + \! 1$ whatever reaches the grading, so the ordering costs nothing if a leaf star arrives wider than expected.}
 \end{remark}
 
 \subsubsection{The number of passes}
@@ -4458,7 +4480,10 @@ This section verifies the properties of the adaptive subdivision $k$-form spaces
 \end{figure}
 
 Before applying the adaptive loop to a PDE, we validate the admissibility
-construction directly on a suite of domain sequences that represent minimal test cases. This allows us to study the different modes of failure of adaptive subdivision $k$-form spaces and to confirm that padding repairs them correctly so that the assumptions of the Theorems~\ref{theorem:linear_independence} and~\ref{theorem:exactness} are satisfied again. Each domain sequence is a small concentric-ring mesh around a single, irregular vertex of chosen valence at the centre.
+construction directly on a suite of domain sequences that represent minimal test cases. This allows us to study the different modes of failure of adaptive subdivision $k$-form spaces and to confirm that padding repairs them correctly so that the assumptions of the Theorems~\ref{theorem:linear_independence} and~\ref{theorem:exactness} are satisfied again. Each domain sequence is a small concentric-ring mesh around a single, irregular vertex of chosen valence at the centre. 
+% 2026-09-10: shortened to a pointer to Assumption ass:single_refinement. Kept for cherry-picking.
+\tobecut{Each is built from the initial domain sequence $\domseq[\L]^0$ by vertex-star refinements with no padding in between. Every vertex-star refinement is a face quadrisection by Corollary~\ref{cor:graded_is_face_quadrisection}, and successive face quadrisections compose into one by Lemma~\ref{lemma:face_quadrisection_composition}. So each test sequence is the output of a single \textsc{Refine} step on the admissible $\domseq[\L]^0$, and Proposition~\ref{prop:pad_terminates} applies to it.}
+\robert{Each is built from the initial domain sequence $\domseq[\L]^0$ by vertex-star refinements with no padding in between. By Lemma~\ref{lemma:face_quadrisection_composition} this is a single \textsc{Refine} step in the sense of Assumption~\ref{ass:single_refinement}, so Proposition~\ref{prop:pad_terminates} applies to it.}
 
 We want to verify the linear independence of all active DoFs $\activeDoFSet{k}{}(\domseq)$ of the respective domain sequences $\domseq$. We will test that by computing $\vert \activeDoFSet{k}{}(\domseq) \vert$ by counting elements and $\mathrm{dim}(\hierSDFspace{k}{\domseq}{\L}) \!=\! \mathrm{rank} (\Amat{k}{\domseq}{\L})$. If these two coincide, all active DoFs are indeed linearly independent.
 
