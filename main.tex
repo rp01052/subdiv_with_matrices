@@ -4511,15 +4511,26 @@ Figure~\ref{fig:pinch_resolution_boundary_pinches} presents data of the spaces $
 
 \smallskip
 
-The second observation is concerned with \checkit{confined} faces and the defects they cause. \guidance{The domain sequence in Figure~\ref{fig:coarse_ring} exhibits linear dependence in every form degree: the active $0$-form DoFs have $18$ linear dependencies, the $1$-form DoFs have $36$, and the $2$-form DoFs have $18$. The cohomology, on the other hand, is already correct on the input domain sequence, $\mathrm{dim}(\mathcal{H}^1) \!=\! 0$, so a closed coarse loop of \checkit{confined} faces costs us linear independence without creating a spurious harmonic.} The padding step refines the entire coarse loop from level $0$ to level $1$.
+% 2026-09-11: superseded by the fig:confinement_cases prose below. Kept for cherry-picking.
+\tobecut{The second observation is concerned with \checkit{confined} faces and the defects they cause. \guidance{The domain sequence in Figure~\ref{fig:coarse_ring} exhibits linear dependence in every form degree: the active $0$-form DoFs have $18$ linear dependencies, the $1$-form DoFs have $36$, and the $2$-form DoFs have $18$. The cohomology, on the other hand, is already correct on the input domain sequence, $\mathrm{dim}(\mathcal{H}^1) \!=\! 0$, so a closed coarse loop of \checkit{confined} faces costs us linear independence without creating a spurious harmonic.} The padding step refines the entire coarse loop from level $0$ to level $1$.
 
 \guidance{The domain sequence in Figure~\ref{fig:horsehoe} opens the loop, and the picture is the same: linear dependencies but no spurious harmonics. They split into $17$ $0$-form DoFs, $31$ $1$-form DoFs, and $15$ $2$-form DoFs.} The padding space removes these linearly dependent DoFs while maintaining the correct cohomology.
 
-Finally, Figure~\ref{fig:nested_center} shows the prototypical configuration around a vertex that has been refined gradedly by the vertex quadrisection operator from Definition~\ref{def:graded_vertex_quadrisection}. We see that the domain sequence has no \checkit{confined} faces since all vertices become \guidance{refinement-exterior} at just the right level, see Figure~\ref{fig:adm_exterior}. This means that we can run the \textsc{Pad} step unconditionally in the adaptive loop without any risks of over-refining regions that are already \checkit{unconfined}.
+Finally, Figure~\ref{fig:nested_center} shows the prototypical configuration around a vertex that has been refined gradedly by the vertex quadrisection operator from Definition~\ref{def:graded_vertex_quadrisection}. We see that the domain sequence has no \checkit{confined} faces since all vertices become \guidance{refinement-exterior} at just the right level, see Figure~\ref{fig:adm_exterior}. This means that we can run the \textsc{Pad} step unconditionally in the adaptive loop without any risks of over-refining regions that are already \checkit{unconfined}.}
+
+\robert{The second observation is concerned with \checkit{confined} faces. Figure~\ref{fig:confinement_cases} orders five domain sequences by what padding does to them. The domain sequence in Figure~\ref{fig:cc_nested_centre} is refined gradedly around a vertex by the vertex quadrisection operator from Definition~\ref{def:graded_vertex_quadrisection}. It has no \checkit{confined} faces and padding leaves it unchanged. So we can run the \textsc{Pad} step unconditionally in the adaptive loop without over-refining regions that are already \checkit{unconfined}. The domain sequence in Figure~\ref{fig:cc_single_wedge} has one \checkit{confined} face. Padding refines it, but the space stays the same in every form degree. In Figure~\ref{fig:cc_merging_patches} two \checkit{confined} faces sit between two refined patches. The input space has a spurious harmonic $1$-form, and padding removes it. Finally, the coarse band in Figure~\ref{fig:cc_coarse_ring} is a closed loop of $18$ \checkit{confined} faces. The cohomology of the input is correct, but its active DoFs are linearly dependent. Padding removes the dependent DoFs and keeps the space.}
+
+\robert{The domain sequence in Figure~\ref{fig:cc_no_fine_edge} has a single \checkit{confined} face and no pinch. No edge of this face is shared with a finer face. The active DoFs are linearly independent and the cohomology is correct. Padding still enlarges the space by $15$, $33$ and $18$ dimensions for $k = 0, 1, 2$. Refining the \checkit{confined} face creates pinches at its three vertices. The next padding iteration resolves them and refines every face around the \checkit{confined} face.}
+
+\robert{The inner and outer bands of Figure~\ref{fig:cc_coarse_ring} are on level $2$ and the band between them is on level $0$. The active DoFs have $18$ linear dependencies in degree $0$, $36$ in degree $1$ and $18$ in degree $2$. These are the same counts as for the bands on level $1$ in Figure~\ref{fig:coarse_ring}. Padding refines the coarse band to level $1$ only, not to level $2$, and this removes every dependency.}
+
+\guidance{The claims table in the introduction to the numerics and the paragraph introducing both figures still cite Figure~\ref{fig:confinement_padding}. Point them at whichever of the two confinement figures survives.}
 
 \smallskip
 
-Every domain sequence considered so far is a topological disk, so the only harmonic $1$-forms observed have been the defect-driven ones that padding removes. Figure~\ref{fig:genuine_cohomology} shows a domain sequence with a non-trivial topology (two holes). \guidance{The input domain sequence has $15$ linearly dependent $1$-form DoFs and $\mathrm{dim}(\mathcal{H}^1) \!=\! 4$. After padding, all DoFs are independent again and $\mathrm{dim}(\mathcal{H}^1) \!=\! 2$ exactly. The padding removed the $2$ spurious harmonics while leaving both genuine harmonics untouched.}
+Every domain sequence considered so far is a topological disk, so the only harmonic $1$-forms observed have been the defect-driven ones that padding removes. Figure~\ref{fig:genuine_cohomology} shows a domain sequence with a non-trivial topology (two holes). % 2026-09-11: numbers of the previous configuration (eight more faces refined on the right). Kept for cherry-picking.
+\tobecut{\guidance{The input domain sequence has $15$ linearly dependent $1$-form DoFs and $\mathrm{dim}(\mathcal{H}^1) \!=\! 4$. After padding, all DoFs are independent again and $\mathrm{dim}(\mathcal{H}^1) \!=\! 2$ exactly. The padding removed the $2$ spurious harmonics while leaving both genuine harmonics untouched.}}
+\robert{The input domain sequence has $2$ linearly dependent $1$-form DoFs, $2$ linearly dependent $2$-form DoFs and $\mathrm{dim}(\mathcal{H}^1) \!=\! 6$. After padding, all DoFs are independent again and $\mathrm{dim}(\mathcal{H}^1) \!=\! 2$ exactly. So padding removes the $4$ spurious harmonics and leaves both genuine harmonics untouched.}
 
 \smallskip
 
@@ -4530,37 +4541,59 @@ This section confirms that the \textsc{Pad} step correctly restores the geometri
     \begin{subfigure}{\textwidth}
         \raggedright
         \begin{tabular}{@{}cc@{\hspace{2em}}cc@{}}
-            \atomicimg{images/exactness/v6_3rings_inner_outer_refined_input.pdf}  & \guidance{\minitab{145}{378}{234}{127}{342}{216}{1}{0}{0}} &
-            \atomicimg{images/exactness/v6_3rings_inner_outer_refined_padded.pdf} & \minitab{127}{342}{216}{127}{342}{216}{1}{0}{0} \\
+            \atomicimg{images/exactness/v6_nested_center_lvl3_input.pdf} & \minitab{73}{240}{168}{73}{240}{168}{1}{0}{0} &
+            \atomicimg{images/exactness/v6_nested_center_lvl3_padded.pdf}          & \minitab{73}{240}{168}{73}{240}{168}{1}{0}{0} \\
         \end{tabular}
         \centering
-        \caption{$3$-ring, inner$+$outer refined (closed one-band annulus).}
-        \label{fig:coarse_ring}
+        \caption{Nested centre, level $3$.}
+        \label{fig:cc_nested_centre}
     \end{subfigure}
     \par\medskip
     \begin{subfigure}{\textwidth}
         \raggedright
         \begin{tabular}{@{}cc@{\hspace{2em}}cc@{}}
-            \atomicimg{images/exactness/v6_3rings_horseshoe_lvl2_input.pdf}  & \guidance{\minitab{447}{1272}{827}{430}{1241}{812}{1}{0}{0}} &
-            \atomicimg{images/exactness/v6_3rings_horseshoe_lvl2_padded.pdf} & \minitab{430}{1241}{812}{430}{1241}{812}{1}{0}{0} \\
+            \atomicimg{images/exactness/centre_face_single_wedge_L2_input.pdf} & \minitab{92}{253}{162}{92}{253}{162}{1}{0}{0} &
+            \atomicimg{images/exactness/centre_face_single_wedge_L2_padded.pdf}          & \minitab{92}{253}{162}{92}{253}{162}{1}{0}{0} \\
         \end{tabular}
         \centering
-        \caption{$3$-ring horseshoe, level $2$ (open arc).}
-        \label{fig:horsehoe}
+        \caption{Single wedge, level $2$.}
+        \label{fig:cc_single_wedge}
     \end{subfigure}
     \par\medskip
     \begin{subfigure}{\textwidth}
         \raggedright
         \begin{tabular}{@{}cc@{\hspace{2em}}cc@{}}
-            \atomicimg{images/exactness/v6_nested_center_lvl3_input.pdf}  & \minitab{73}{240}{168}{73}{240}{168}{1}{0}{0} &
-            \atomicimg{images/exactness/v6_nested_center_lvl3_padded.pdf} & \minitab{73}{240}{168}{73}{240}{168}{1}{0}{0} \\
+            \atomicimg{images/exactness/centre_face_confined_with_no_fine_edge_L1_input.pdf} & \minitab{87}{246}{160}{87}{246}{160}{1}{0}{0} &
+            \atomicimg{images/exactness/centre_face_confined_with_no_fine_edge_L1_padded.pdf}          & \minitab{102}{279}{178}{102}{279}{178}{1}{0}{0} \\
         \end{tabular}
         \centering
-        \caption{Nested centre, level $3$ (deep but \checkit{free of confined faces}).}
-        \label{fig:nested_center}
+        \caption{One \checkit{confined} face without a finer edge neighbour, level $1$.}
+        \label{fig:cc_no_fine_edge}
     \end{subfigure}
-    \caption{Domain sequences with \checkit{confined} faces before (left) and after (right) padding. Each domain sequence $\domseq$ is annotated with the number $\lvert\activeDoFSet{k}{}\rvert$ of active $k$-form DoFs, the dimension $\dim V^k$ of the adaptive subdivision $k$-form spaces $V^k \coloneq \hierSDFspace{k}{\domseq}{\L}$, and the dimension $\dim\mathcal{H}^k$ of the spaces of harmonic $k$-forms of $\hierSDFspace{k}{\domseq}{\L}$.}
-    \label{fig:confinement_padding}
+    \par\medskip
+    \begin{subfigure}{\textwidth}
+        \raggedright
+        \begin{tabular}{@{}cc@{\hspace{2em}}cc@{}}
+            \atomicimg{images/exactness/centre_face_merging_patches_L1_input.pdf} & \minitab{63}{177}{114}{63}{177}{114}{1}{1}{0} &
+            \atomicimg{images/exactness/centre_face_merging_patches_L1_padded.pdf}          & \minitab{65}{178}{114}{65}{178}{114}{1}{0}{0} \\
+        \end{tabular}
+        \centering
+        \caption{Two merging patches, level $1$.}
+        \label{fig:cc_merging_patches}
+    \end{subfigure}
+    \par\medskip
+    \begin{subfigure}{\textwidth}
+        \raggedright
+        \begin{tabular}{@{}cc@{\hspace{2em}}cc@{}}
+            \atomicimg{images/exactness/v6_3rings_inner_outer_refined_lvl2_input.pdf} & \minitab{433}{1242}{810}{415}{1206}{792}{1}{0}{0} &
+            \atomicimg{images/exactness/v6_3rings_inner_outer_refined_lvl2_padded.pdf}          & \minitab{415}{1206}{792}{415}{1206}{792}{1}{0}{0} \\
+        \end{tabular}
+        \centering
+        \caption{Coarse ring, level $2$.}
+        \label{fig:cc_coarse_ring}
+    \end{subfigure}
+    \caption{\robert{Domain sequences with \checkit{confined} faces before (left) and after (right) padding, ordered from a padding step that changes nothing to one that repairs the space. Each domain sequence $\domseq$ is annotated with the number $\lvert\activeDoFSet{k}{}\rvert$ of active $k$-form DoFs, the dimension $\dim V^k$ of the adaptive subdivision $k$-form spaces $V^k \coloneq \hierSDFspace{k}{\domseq}{\L}$, and the dimension $\dim\mathcal{H}^k$ of the spaces of harmonic $k$-forms of $\hierSDFspace{k}{\domseq}{\L}$.}}
+    \label{fig:confinement_cases}
 \end{figure}
 
 \begin{figure}[tb]
@@ -4568,16 +4601,21 @@ This section confirms that the \textsc{Pad} step correctly restores the geometri
     \begin{subfigure}{\textwidth}
         \raggedright
         \begin{tabular}{@{}cc@{\hspace{2em}}cc@{}}
-            \atomicimg{images/exactness/v6_annulus_two_holes_input.pdf}  & \guidance{\minitab{241}{673}{428}{235}{658}{420}{1}{4}{0}} &
-            \atomicimg{images/exactness/v6_annulus_two_holes_padded.pdf} & \guidance{\minitab{241}{668}{426}{241}{668}{426}{1}{2}{0}} \\
+            % 2026-09-11: previous configuration, kept for cherry-picking.
+            % \atomicimg{images/exactness/v6_annulus_two_holes_input.pdf}  & \guidance{\minitab{241}{673}{428}{235}{658}{420}{1}{4}{0}} &
+            % \atomicimg{images/exactness/v6_annulus_two_holes_padded.pdf} & \guidance{\minitab{241}{668}{426}{241}{668}{426}{1}{2}{0}} \\
+            \atomicimg{images/exactness/v6_annulus_two_holes_v2_input.pdf}  & \minitab{220}{627}{402}{220}{625}{400}{1}{6}{0} &
+            \atomicimg{images/exactness/v6_annulus_two_holes_v2_padded.pdf} & \minitab{228}{635}{406}{228}{635}{406}{1}{2}{0} \\
         \end{tabular}
         \centering
         %\caption{Domain sequence with two holes and scattered defects.}
         \label{fig:genuine_holes}
     \end{subfigure}
-    \caption{A domain sequence with two holes and additional scattered pinch and \checkit{confined} face defects, before (left) and after (right) padding. \guidance{The padding step removes only the two-dimensional space of spurious harmonic $1$-forms to restore the correct cohomology.}}
+    \caption{A domain sequence with two holes and additional scattered pinch and \checkit{confined} face defects, before (left) and after (right) padding. \tobecut{\guidance{The padding step removes only the two-dimensional space of spurious harmonic $1$-forms to restore the correct cohomology.}} \robert{The padding step removes only the four-dimensional space of spurious harmonic $1$-forms to restore the correct cohomology.}}
     \label{fig:genuine_cohomology}
 \end{figure}
+
+\FloatBarrier
 
 \subsection{Maxwell Eigenvalue problem}
 \label{subsec:maxwell}
