@@ -4402,8 +4402,8 @@ This section verifies the properties of the adaptive subdivision $k$-form spaces
         $k$ & $0$ & $1$ & $2$ \\
         \midrule
         $\lvert \activeDoFSet{k}{} \rvert$ & #1 & #2 & #3 \\
-        $\dim V^k$                         & #4 & #5 & #6 \\
-        $\dim \mathcal{H}^k$               & #7 & #8 & #9 \\
+        $\dim(V^k)$                         & #4 & #5 & #6 \\
+        $\dim(\mathcal{H}^k)$               & #7 & #8 & #9 \\
         \bottomrule
     \end{tabular}}}
 % Dirichlet (vanishing-trace) variant: ring space + relative harmonics
@@ -4414,12 +4414,31 @@ This section verifies the properties of the adaptive subdivision $k$-form spaces
         $k$ & $0$ & $1$ & $2$ \\
         \midrule
         $\lvert \activeDoFSet{k}{} \rvert$ & #1 & #2 & #3 \\
-        $\dim \mathring{V}^k$              & #4 & #5 & #6 \\
-        $\dim \mathring{\mathcal{H}}^k$    & #7 & #8 & #9 \\
+        $\dim(\mathring{V}^k)$              & #4 & #5 & #6 \\
+        $\dim(\mathring{\mathcal{H}}^k)$    & #7 & #8 & #9 \\
+        \bottomrule
+    \end{tabular}}}
+% natural-BC mini-table plus a vanishing-trace harmonics row. Twelve values, so two stages:
+% \minitabBC{|A^k|}{dim V^k}{dim H^k}{dim H0^k}, each group three values, 9 + 3 arguments
+\newcommand{\minitabBC}[9]{%
+    \def\mtbcA{#1}\def\mtbcB{#2}\def\mtbcC{#3}%
+    \def\mtbcD{#4}\def\mtbcE{#5}\def\mtbcF{#6}%
+    \def\mtbcG{#7}\def\mtbcH{#8}\def\mtbcI{#9}%
+    \minitabBCrest}
+\newcommand{\minitabBCrest}[3]{{%
+    \small\setlength{\tabcolsep}{5pt}\renewcommand{\arraystretch}{1.15}%
+    \begin{tabular}[c]{@{}l@{\hspace{6pt}}ccc@{}}
+        \toprule
+        $k$ & $0$ & $1$ & $2$ \\
+        \midrule
+        $\lvert \activeDoFSet{k}{} \rvert$ & \mtbcA & \mtbcB & \mtbcC \\
+        $\dim(V^k)$                         & \mtbcD & \mtbcE & \mtbcF \\
+        $\dim(\mathcal{H}^k)$               & \mtbcG & \mtbcH & \mtbcI \\
+        $\dim(\mathring{\mathcal{H}}^k)$    & #1 & #2 & #3 \\
         \bottomrule
     \end{tabular}}}
 % ------------------------------------------------------------------------------
-\begin{figure}%[htbp]
+\begin{figure}[p]
     \centering
     \begin{subfigure}{\textwidth}
         \raggedright
@@ -4428,7 +4447,7 @@ This section verifies the properties of the adaptive subdivision $k$-form spaces
             \atomicimg{images/exactness/v8_quarters_lvl1_padded.pdf} & \minitab{73}{192}{120}{73}{192}{120}{1}{0}{0} \\
         \end{tabular}
         \centering
-        \caption{Valence-$8$ pinch, level $1$.}
+        \caption{Simple pinch on level $0$, $q = 1$.}
         \label{fig:pinch_level_1}
     \end{subfigure}
     \par\medskip
@@ -4439,7 +4458,7 @@ This section verifies the properties of the adaptive subdivision $k$-form spaces
             \atomicimg{images/exactness/v10_mixed_level_arcs_padded.pdf} & \minitab{239}{674}{436}{239}{674}{436}{1}{0}{0} \\
         \end{tabular}
         \centering
-        \caption{Valence-$10$ pinch with mixed-level arcs.}
+        \caption{Vertex that pinches on levels $0$ and $1$, $q = 1$.}
         \label{fig:pinch_mixed_level}
     \end{subfigure}
     \par\medskip
@@ -4450,93 +4469,36 @@ This section verifies the properties of the adaptive subdivision $k$-form spaces
             \atomicimg{images/exactness/v9_cff_lvl1_padded.pdf} & \minitab{91}{234}{144}{91}{234}{144}{1}{0}{0} \\
         \end{tabular}
         \centering
-        \caption{Valence-$9$ $2$-pinch (three refinement arcs).}
+        \caption{Pinch on level $0$ with three refinement arcs, $q = 1$.}
         \label{fig:double_pinch}
     \end{subfigure}
     \par\medskip
     \begin{subfigure}{\textwidth}
         \raggedright
         \begin{tabular}{@{}cc@{\hspace{2em}}cc@{}}
-            \atomicimg{images/exactness/v6_boundary_topbottom_lvl1_input.pdf}  & \minitabD{23}{104}{80}{23}{104}{80}{0}{2}{1} &
-            \atomicimg{images/exactness/v6_boundary_topbottom_lvl1_padded.pdf} & \minitabD{25}{104}{80}{25}{104}{80}{0}{0}{1} \\
+            \atomicimg{images/exactness/v6_boundary_topbottom_lvl1_input.pdf}  & \minitabBC{49}{128}{80}{49}{128}{80}{1}{0}{0}{0}{2}{1} &
+            \atomicimg{images/exactness/v6_boundary_topbottom_lvl1_padded.pdf} & \minitabBC{49}{128}{80}{49}{128}{80}{1}{0}{0}{0}{0}{1} \\
         \end{tabular}
         \centering
-        \caption{Two boundary pinches (Dirichlet).}
-        \label{fig:pinch_resolution_boundary_pinches}
+        \caption{Two pinch vertices on the boundary, $q = 1$.}
+        \label{fig:pinch_resolution_vertices_at_boundary}
     \end{subfigure}
     \par\medskip
     \begin{subfigure}{\textwidth}
         \raggedright
         \begin{tabular}{@{}cc@{\hspace{2em}}cc@{}}
-            \atomicimg{images/exactness/v6_boundary_triangle_4rings_input.pdf}  & \minitab{142}{417}{273}{142}{417}{273}{1}{3}{0} &
-            \atomicimg{images/exactness/v6_boundary_triangle_4rings_padded.pdf} & \minitab{157}{447}{291}{157}{447}{291}{1}{0}{0} \\
+            \atomicimg{images/exactness/v6_boundary_triangle_4rings_input.pdf}  & \minitabBC{142}{417}{273}{142}{417}{273}{1}{3}{0}{0}{0}{1} &
+            \atomicimg{images/exactness/v6_boundary_triangle_4rings_padded.pdf} & \minitabBC{157}{447}{291}{157}{447}{291}{1}{0}{0}{0}{0}{1} \\
         \end{tabular}
         \centering
-        \caption{Three unanchored refinement arcs.}
-        \label{fig:pinch_resolution_unanchored}
+        \caption{Three boundary pinches, $q = 1$.}
+        \label{fig:pinch_resolution_boundary_pinch}
     \end{subfigure}
-    \caption{Domain sequences with pinches before (left) and after padding (right). Each domain sequence $\domseq$ is annotated with the number $\lvert\activeDoFSet{k}{}\rvert$ of active $k$-form DoFs, the dimension $\dim(V^k)$ of the adaptive subdivision $k$-form spaces $V^k = \hierSDFspace{k}{\domseq}{\L}$, and the dimension $\dim(\mathcal{H}^k)$ of the spaces of harmonic $k$-forms of $\hierSDFspace{k}{\domseq}{\L}$. Note that panel (e) shows $\dim(\mathring{V}^k)$ and $\dim(\mathring{\mathcal{H}}^k)$ for the spaces $\hierSDFspaceZero{k}{\domseq}{\L}$ with vanishing trace boundary conditions.}
+    \caption{Domain sequences with pinches before (left) and after padding (right). Each domain sequence is annotated with the number $\lvert\activeDoFSet{k}{}\rvert$ of active $k$-form DoFs, the dimension $\dim(V^k)$ of the adaptive subdivision $k$-form spaces $V^k = \hierSDFspace{k}{\domseq}{\L}$, and the dimension $\dim(\mathcal{H}^k)$ of the spaces of harmonic $k$-forms of $\hierSDFspace{k}{\domseq}{\L}$. Panels (d) and (e) add a fourth row with the dimension $\dim(\mathring{\mathcal{H}}^k)$ of the spaces of harmonic $k$-forms of $\hierSDFspaceZero{k}{\domseq}{\L}$ with vanishing trace boundary conditions because $\dim(\mathcal{H}^1)$ and $\dim(\mathring{\mathcal{H}}^1)$ differ in these cases. Each subcaption gives the number $q$ of productive \textsc{Pad} passes of Iteration~\ref{it:pad_iteration}.}
     \label{fig:pinch_resolution}
 \end{figure}
 
-Before applying the adaptive loop to a PDE, we validate the admissibility
-construction directly on a suite of domain sequences that represent minimal test cases. This allows us to study the different modes of failure of adaptive subdivision $k$-form spaces and to confirm that padding repairs them correctly so that the assumptions of the Theorems~\ref{theorem:linear_independence} and~\ref{theorem:exactness} are satisfied again. Each domain sequence is a small concentric-ring mesh around a single, irregular vertex of chosen valence at the centre. 
-% 2026-09-10: shortened to a pointer to Assumption ass:single_refinement. Kept for cherry-picking.
-\tobecut{Each is built from the initial domain sequence $\domseq[\L]^0$ by vertex-star refinements with no padding in between. Every vertex-star refinement is a face quadrisection by Corollary~\ref{cor:graded_is_face_quadrisection}, and successive face quadrisections compose into one by Lemma~\ref{lemma:face_quadrisection_composition}. So each test sequence is the output of a single \textsc{Refine} step on the admissible $\domseq[\L]^0$, and Proposition~\ref{prop:pad_terminates} applies to it.}
-\robert{Each is built from the initial domain sequence $\domseq[\L]^0$ by vertex-star refinements with no padding in between. By Lemma~\ref{lemma:face_quadrisection_composition} this is a single \textsc{Refine} step in the sense of Assumption~\ref{ass:single_refinement}, so Proposition~\ref{prop:pad_terminates} applies to it.}
-
-We want to verify the linear independence of all active DoFs $\activeDoFSet{k}{}(\domseq)$ of the respective domain sequences $\domseq$. We will test that by computing $\vert \activeDoFSet{k}{}(\domseq) \vert$ by counting elements and $\mathrm{dim}(\hierSDFspace{k}{\domseq}{\L}) \!=\! \mathrm{rank} (\Amat{k}{\domseq}{\L})$. If these two coincide, all active DoFs are indeed linearly independent.
-
-Further, we want to test whether the adaptive $k$-form subdivision spaces $\hierSDFspace{k}{\domseq}{\L}$ possess the correct cohomology. Since the domains are topological disks, we expect the spaces of harmonic $k$-form to have the dimensions $\mathrm{dim}(\mathcal{H}^0) \!=\! 1$ and $\mathrm{dim}(\mathcal{H}^1) \!=\! \mathrm{dim}(\mathcal{H}^2) \!=\! 0$ for $\hierSDFspace{k}{\domseq}{\L}$ without boundary conditions. For each domain sequence and its respective adaptive subdivision $k$-form space, we compute $\mathrm{dim}(\mathcal{H}^k) \!=\! \mathrm{dim}(\mathrm{ker}(\extd^{k})) - \mathrm{rank}(\extd^{k-1})$ explicitly from the rank of the discrete $k$-form derivative $\extd^k$ before and after padding.
-
-\smallskip
-
-Figures~\ref{fig:pinch_resolution} and~\ref{fig:confinement_padding} show the test domain sequences on the left and the padded domain sequences on the right, annotating every domain sequence with its active $k$-form DoF count $\lvert\activeDoFSet{k}{}\rvert$, the true space dimension $\dim V^k = \operatorname{rank}(\Aop{k}{\domseq}{\L})$, and the harmonic dimension $\dim(\mathcal{H}^k)$. Note that we denote $V^k = \hierSDFspace{k}{\domseq}{\L}$ here to save horizontal space. The reported data belongs to $\hierSDFspace{k}{\domseq}{\L}$ throughout because the geometric defects of the domain sequence are \checkit{restricted} to the interior and thus, the vanishing-trace spaces $\hierSDFspaceZero{k}{\domseq}{\L}$ exhibit the same algebraic defects and are repaired identically by the padding. The sole exception is the domain sequence in Figure~\ref{fig:pinch_resolution_boundary_pinches}, whose two boundary pinches leave $\hierSDFspace{k}{\domseq}{\L}$ intact and cost a harmonic only under a vanishing trace, so we report $\hierSDFspaceZero{k}{\domseq}{\L}$ there. The unanchored arcs of Figure~\ref{fig:pinch_resolution_unanchored} behave the other way round --- one spurious harmonic $1$-form each in $\hierSDFspace{k}{\domseq}{\L}$, none under a vanishing trace --- so that panel is reported without boundary conditions like the rest.
-
-\smallskip
-
-We can identify two trends in the data that are consistent with the theoretical predictions. First, Figure~\ref{fig:pinch_resolution} shows that vertex pinches lead to spurious $1$-form harmonics but do not introduce any linear dependencies since $\vert \activeDoFSet{k}{} \vert = \mathrm{dim}(\hierSDFspace{k}{\domseq}{\L})$ in any case, before and after padding. We can observe that padding indeed removes these spurious $1$-form harmonics.
-
-The individual panels show that the dimensions $\mathrm{dim}(\mathcal{H}^1)$ of the spurious harmonic $1$-form spaces increase with the level difference of the target level and the coarsest level of the faces incident to the pinch vertex. For instance, the domain sequence in Figure~\ref{fig:pinch_level_1} has a pinch on level $1$ with the coarsest level being $0$. This leads to $\mathrm{dim}(\mathcal{H}^1) \! = \! 1$. In contrast, Figure~\ref{fig:pinch_level_2} has its pinch on level $2$ and $\mathrm{dim}(\mathcal{H}^1) \! = \! 2$. Figure~\ref{fig:pinch_mixed_level} also has a pinch on level $2$, but the faces between its two refinement arcs mix the levels $0$ and $1$. It is the coarsest level $0$ around the vertex that sets the dimension, not the second finest level $1$: we again observe $\mathrm{dim}(\mathcal{H}^1) \! = \! 2$, and not $1$.
-
-\guidance{\robert{This rule is empirical and rests on the three cases above.} It is stated
-here as an observation, not a consequence of~\cite{companion_paper}, which establishes that a
-pinch obstructs the exactness argument but explicitly does not claim the converse --- that
-every pinch produces a defect of a predictable dimension. Worth re-checking if further pinch
-configurations are added.}
-
-The dimensions $\mathrm{dim}(\mathcal{H}^1)$ of the spurious harmonic $1$-form spaces also increase with the number $\gamma$ of fine arcs around the pinch, see Definition~\ref{def:pinch_vertex}. Figure~\ref{fig:pinch_level_1} has $\gamma = 2$ and $\mathrm{dim}(\mathcal{H}^1) = 1$, while Figure~\ref{fig:double_pinch} has $\gamma = 3$ and $\mathrm{dim}(\mathcal{H}^1) \!=\! 2$.
-
-Figure~\ref{fig:pinch_resolution_boundary_pinches} presents data of the spaces $\hierSDFspaceZero{k}{\domseq}{\L}$ with vanishing boundary conditions, and thus we expect $\mathrm{dim}(\mathring{\mathcal{H}}^0) \!=\! \mathrm{dim}(\mathring{\mathcal{H}}^1) \!=\! 0$ and $\mathrm{dim}(\mathring{\mathcal{H}}^2) \!=\! 1$. The domain sequence in the figure has six pinches at the boundary. The table reports $\mathrm{dim}(\mathring{\mathcal{H}}^1) = 6$ before padding, implying that the spurious harmonics act additively for multiple pinches.
-
-\smallskip
-
-% 2026-09-11: superseded by the fig:confinement_cases prose below. Kept for cherry-picking.
-\tobecut{The second observation is concerned with \checkit{confined} faces and the defects they cause. \guidance{The domain sequence in Figure~\ref{fig:coarse_ring} exhibits linear dependence in every form degree: the active $0$-form DoFs have $18$ linear dependencies, the $1$-form DoFs have $36$, and the $2$-form DoFs have $18$. The cohomology, on the other hand, is already correct on the input domain sequence, $\mathrm{dim}(\mathcal{H}^1) \!=\! 0$, so a closed coarse loop of \checkit{confined} faces costs us linear independence without creating a spurious harmonic.} The padding step refines the entire coarse loop from level $0$ to level $1$.
-
-\guidance{The domain sequence in Figure~\ref{fig:horsehoe} opens the loop, and the picture is the same: linear dependencies but no spurious harmonics. They split into $17$ $0$-form DoFs, $31$ $1$-form DoFs, and $15$ $2$-form DoFs.} The padding space removes these linearly dependent DoFs while maintaining the correct cohomology.
-
-Finally, Figure~\ref{fig:nested_center} shows the prototypical configuration around a vertex that has been refined gradedly by the vertex quadrisection operator from Definition~\ref{def:graded_vertex_quadrisection}. We see that the domain sequence has no \checkit{confined} faces since all vertices become \guidance{refinement-exterior} at just the right level, see Figure~\ref{fig:adm_exterior}. This means that we can run the \textsc{Pad} step unconditionally in the adaptive loop without any risks of over-refining regions that are already \checkit{unconfined}.}
-
-\robert{The second observation is concerned with \checkit{confined} faces. Figure~\ref{fig:confinement_cases} orders five domain sequences by what padding does to them. The domain sequence in Figure~\ref{fig:cc_nested_centre} is refined gradedly around a vertex by the vertex quadrisection operator from Definition~\ref{def:graded_vertex_quadrisection}. It has no \checkit{confined} faces and padding leaves it unchanged. So we can run the \textsc{Pad} step unconditionally in the adaptive loop without over-refining regions that are already \checkit{unconfined}. The domain sequence in Figure~\ref{fig:cc_single_wedge} has one \checkit{confined} face. Padding refines it, but the space stays the same in every form degree. In Figure~\ref{fig:cc_merging_patches} two \checkit{confined} faces sit between two refined patches. The input space has a spurious harmonic $1$-form, and padding removes it. Finally, the coarse band in Figure~\ref{fig:cc_coarse_ring} is a closed loop of $18$ \checkit{confined} faces. The cohomology of the input is correct, but its active DoFs are linearly dependent. Padding removes the dependent DoFs and keeps the space.}
-
-\robert{The domain sequence in Figure~\ref{fig:cc_no_fine_edge} has a single \checkit{confined} face and no pinch. No edge of this face is shared with a finer face. The active DoFs are linearly independent and the cohomology is correct. Padding still enlarges the space by $15$, $33$ and $18$ dimensions for $k = 0, 1, 2$. Refining the \checkit{confined} face creates pinches at its three vertices. The next padding iteration resolves them and refines every face around the \checkit{confined} face.}
-
-\robert{The inner and outer bands of Figure~\ref{fig:cc_coarse_ring} are on level $2$ and the band between them is on level $0$. The active DoFs have $18$ linear dependencies in degree $0$, $36$ in degree $1$ and $18$ in degree $2$. These are the same counts as for the bands on level $1$ in Figure~\ref{fig:coarse_ring}. Padding refines the coarse band to level $1$ only, not to level $2$, and this removes every dependency.}
-
-\guidance{The claims table in the introduction to the numerics and the paragraph introducing both figures still cite Figure~\ref{fig:confinement_padding}. Point them at whichever of the two confinement figures survives.}
-
-\smallskip
-
-Every domain sequence considered so far is a topological disk, so the only harmonic $1$-forms observed have been the defect-driven ones that padding removes. Figure~\ref{fig:genuine_cohomology} shows a domain sequence with a non-trivial topology (two holes). % 2026-09-11: numbers of the previous configuration (eight more faces refined on the right). Kept for cherry-picking.
-\tobecut{\guidance{The input domain sequence has $15$ linearly dependent $1$-form DoFs and $\mathrm{dim}(\mathcal{H}^1) \!=\! 4$. After padding, all DoFs are independent again and $\mathrm{dim}(\mathcal{H}^1) \!=\! 2$ exactly. The padding removed the $2$ spurious harmonics while leaving both genuine harmonics untouched.}}
-\robert{The input domain sequence has $2$ linearly dependent $1$-form DoFs, $2$ linearly dependent $2$-form DoFs and $\mathrm{dim}(\mathcal{H}^1) \!=\! 6$. After padding, all DoFs are independent again and $\mathrm{dim}(\mathcal{H}^1) \!=\! 2$ exactly. So padding removes the $4$ spurious harmonics and leaves both genuine harmonics untouched.}
-
-\smallskip
-
-This section confirms that the \textsc{Pad} step correctly restores the geometric defects of the domain sequence produced by the \text{Refine} and makes it a admissible domain sequence. Thus, it also restores the important algebraic properties of linear independence and exactness of the complex of the adaptive subdivision $k$-form spaces, both with and without vanishing trace boundary conditions.
-
-\begin{figure}[tb]
+\begin{figure}[p]
     \centering
     \begin{subfigure}{\textwidth}
         \raggedright
@@ -4545,7 +4507,7 @@ This section confirms that the \textsc{Pad} step correctly restores the geometri
             \atomicimg{images/exactness/v6_nested_center_lvl3_padded.pdf}          & \minitab{73}{240}{168}{73}{240}{168}{1}{0}{0} \\
         \end{tabular}
         \centering
-        \caption{Nested centre, level $3$.}
+        \caption{Nested centre, $q = 0$.}
         \label{fig:cc_nested_centre}
     \end{subfigure}
     \par\medskip
@@ -4556,7 +4518,7 @@ This section confirms that the \textsc{Pad} step correctly restores the geometri
             \atomicimg{images/exactness/centre_face_single_wedge_L2_padded.pdf}          & \minitab{92}{253}{162}{92}{253}{162}{1}{0}{0} \\
         \end{tabular}
         \centering
-        \caption{Single wedge, level $2$.}
+        \caption{Single wedge, $q = 1$.}
         \label{fig:cc_single_wedge}
     \end{subfigure}
     \par\medskip
@@ -4567,7 +4529,7 @@ This section confirms that the \textsc{Pad} step correctly restores the geometri
             \atomicimg{images/exactness/centre_face_confined_with_no_fine_edge_L1_padded.pdf}          & \minitab{102}{279}{178}{102}{279}{178}{1}{0}{0} \\
         \end{tabular}
         \centering
-        \caption{One \checkit{confined} face without a finer edge neighbour, level $1$.}
+        \caption{Confined face without a refined edge, $q = 2$.}
         \label{fig:cc_no_fine_edge}
     \end{subfigure}
     \par\medskip
@@ -4578,7 +4540,7 @@ This section confirms that the \textsc{Pad} step correctly restores the geometri
             \atomicimg{images/exactness/centre_face_merging_patches_L1_padded.pdf}          & \minitab{65}{178}{114}{65}{178}{114}{1}{0}{0} \\
         \end{tabular}
         \centering
-        \caption{Two merging patches, level $1$.}
+        \caption{Two merging patches, $q = 1$.}
         \label{fig:cc_merging_patches}
     \end{subfigure}
     \par\medskip
@@ -4589,29 +4551,79 @@ This section confirms that the \textsc{Pad} step correctly restores the geometri
             \atomicimg{images/exactness/v6_3rings_inner_outer_refined_lvl2_padded.pdf}          & \minitab{415}{1206}{792}{415}{1206}{792}{1}{0}{0} \\
         \end{tabular}
         \centering
-        \caption{Coarse ring, level $2$.}
+        \caption{Coarse ring, $q = 1$.}
         \label{fig:cc_coarse_ring}
     \end{subfigure}
-    \caption{\robert{Domain sequences with \checkit{confined} faces before (left) and after (right) padding, ordered from a padding step that changes nothing to one that repairs the space. Each domain sequence $\domseq$ is annotated with the number $\lvert\activeDoFSet{k}{}\rvert$ of active $k$-form DoFs, the dimension $\dim V^k$ of the adaptive subdivision $k$-form spaces $V^k \coloneq \hierSDFspace{k}{\domseq}{\L}$, and the dimension $\dim\mathcal{H}^k$ of the spaces of harmonic $k$-forms of $\hierSDFspace{k}{\domseq}{\L}$.}}
+    \caption{Domain sequences with confined faces before (left) and after (right) confinement padding with the same annotations as in Figure~\ref{fig:pinch_resolution}.}
     \label{fig:confinement_cases}
 \end{figure}
+
+Before we apply the entire adaptive loop to an adaptive simulation, we test the padding steps of Section~\ref{subsec:padding_loop} directly. We use a suite of domain sequences that are minimal test cases. They let us study the different ways in which adaptive subdivision $k$-form spaces fail. They also confirm that padding repairs these failures, so that the assumptions of Theorems~\ref{theorem:linear_independence} and~\ref{theorem:exactness} hold again. The padded spaces then have no linear dependencies and the correct cohomology.
+
+Each input domain sequence is obtained from the initial mesh $\T_\lzero$ by vertex-star refinements or by refining a set of faces, with no padding in between. Vertex-star refinements are face quadrisections by Corollary~\ref{cor:graded_is_face_quadrisection}, and so is refining a set of faces. By Lemma~\ref{lemma:face_quadrisection_composition} they compose into a single \textsc{Refine} step in the sense of Assumption~\ref{ass:single_refinement}. So Proposition~\ref{prop:pad_terminates} applies to each of them and guarantees that the padding loop terminates. The captions of the figures report the number $q$ of productive passes for each of them.
+
+We want to verify the linear independence of all active DoFs $\activeDoFSet{k}{}(\domseq[\L])$ of the respective domain sequences after padding. We test that by counting $\vert \activeDoFSet{k}{}(\domseq[\L]) \vert$ and comparing it with
+\begin{equation}
+    \mathrm{dim}(\hierSDFspace{k}{\domseq}{\L}) = \mathrm{rank} (\Amat{k}{\activeDoFs}{\L}) \;\; \leq \;\; \vert \activeDoFSet{k}{}(\domseq[\L]) \vert,
+\end{equation}
+where $\Amat{k}{\activeDoFs}{\L}$ is the adaptive subdivision matrix from~\eqref{eq:hierarchical_matrix_blocks}. If these two coincide, all active DoFs are indeed linearly independent.
+
+Further, we want to verify that the adaptive $k$-form subdivision spaces $\hierSDFspace{k}{\domseq}{\L}$ have the correct cohomology after padding. All initial meshes except for the one in Figure~\ref{fig:genuine_cohomology} are topological disks. We treat that mesh at the end of this section. On the disks we expect the spaces of harmonic $k$-forms without boundary conditions to have the dimensions of those of the absolute de Rham complex, i.e.
+\begin{equation}
+    \mathrm{dim}(\mathcal{H}^0) = 1 \quad \text{and} \quad \mathrm{dim}(\mathcal{H}^1) = \mathrm{dim}(\mathcal{H}^2) = 0 \qquad \text{for} \quad \hierSDFspace{k}{\domseq}{\L} \quad \text{if} \quad \domseq[\L] \in \allpartitions,
+\end{equation}
+where $\allpartitions$ denotes the set of admissible domain sequences, see Definition~\ref{def:subdiv_partition}. In contrast, the adaptive $k$-form spaces with vanishing trace boundary conditions are expected to have the cohomology of the relative de Rham complex on the same initial meshes, so that
+\begin{equation}
+    \mathrm{dim}(\mathring{\mathcal{H}}^0) = \mathrm{dim}(\mathring{\mathcal{H}}^1) = 0 \quad \text{and} \quad \mathrm{dim}(\mathring{\mathcal{H}}^2) = 1 \qquad \text{for} \quad \hierSDFspaceZero{k}{\domseq}{\L} \quad \text{if} \quad \domseq[\L] \in \allpartitions.
+\end{equation}
+We compute all ranks on the finest mesh $\T_\L$. There, the coordinate expression of $\extd^k$ is the oriented incidence matrix $\Dmat{k}{\L}$ of $\T_\L$, and $\Amat{k}{\activeDoFs}{\L}$ contains the coefficients of the active basis functions in $\FEECspace{k}{\L}$, see Section~\ref{subsec:computational_representations}. Then $\mathrm{rank}(\Dmat{k}{\L} \Amat{k}{\activeDoFs}{\L})$ is the dimension of $\extd [ \hierSDFspace{k}{\domseq}{\L} ]$, and
+\begin{equation}
+    \mathrm{dim}(\mathcal{H}^k) = \mathrm{rank}(\Amat{k}{\activeDoFs}{\L}) - \mathrm{rank}(\Dmat{k}{\L} \cdot \Amat{k}{\activeDoFs}{\L}) - \mathrm{rank}(\Dmat{k-1}{\L} \cdot \Amat{k-1}{\activeDoFs}{\L}).
+\end{equation}
+This formula holds because Theorem~\ref{theorem:differential_complex} guarantees $\extd [ \hierSDFspace{k-1}{\domseq}{\L} ] \subseteq \hierSDFspace{k}{\domseq}{\L}$. For the vanishing trace spaces we use the subdivision matrices of the DoFs $\activeDoFSetZero{k}{}(\domseq[\L])$ instead.
+
+\smallskip
+
+Figures~\ref{fig:pinch_resolution}, \ref{fig:confinement_cases} and~\ref{fig:genuine_cohomology} show the input domain sequences on the left and the padded output domain sequences on the right. We write $V^k = \hierSDFspace{k}{\domseq}{\L}$ to save horizontal space in the figures. Each domain sequence is annotated with its active $k$-form DoF count $\lvert\activeDoFSet{k}{}\rvert$, the true space dimension $\dim(V^k) = \operatorname{rank}(\Amat{k}{\activeDoFs}{\L})$ and the dimension $\dim(\mathcal{H}^k)$ of its harmonic $k$-form spaces. These are the numbers of the spaces $\hierSDFspace{k}{\domseq}{\L}$ without boundary conditions. For defects in the interior they suffice. There the vanishing-trace spaces $\hierSDFspaceZero{k}{\domseq}{\L}$ show the same spurious harmonics and the same linear dependencies, and padding repairs them in the same way. Defects at the boundary can affect the two spaces differently. For these domain sequences a fourth row reports the dimension $\dim(\mathring{\mathcal{H}}^k)$ under a vanishing trace.
+
+\smallskip
+
+We first consider the pinches of Figure~\ref{fig:pinch_resolution}. Every pinch leads to spurious harmonic $1$-forms in at least one of the two spaces but introduces no linear dependencies, since $\lvert \activeDoFSet{k}{} \rvert = \dim(V^k)$ in every case, before and after padding. Padding removes all spurious harmonic $1$-forms.
+
+The number of spurious harmonic $1$-forms depends on how the vertex pinches. The vertex of Figure~\ref{fig:pinch_level_1} pinches on level $0$ with two refinement arcs, see Definition~\ref{def:pinch_vertex}, and has $\dim(\mathcal{H}^1) = 1$. The vertex of Figure~\ref{fig:pinch_mixed_level} pinches with two refinement arcs on each of the levels $0$ and $1$ and has $\dim(\mathcal{H}^1) = 2$. The vertex of Figure~\ref{fig:double_pinch} pinches on level $0$ with three refinement arcs and has $\dim(\mathcal{H}^1) = 2$ as well. All three counts agree with one spurious harmonic $1$-form per refinement arc beyond the first, summed over the levels on which the vertex pinches.
+
+At the boundary the pinch vertices of Definition~\ref{def:pinch_vertex} and the boundary pinches of Definition~\ref{def:boundary_pinch} behave differently. Figure~\ref{fig:pinch_resolution_vertices_at_boundary} has two pinch vertices on the boundary, each with two anchored refinement arcs. They do not cause any spurious harmonic $1$-forms in $\hierSDFspace{k}{\domseq}{\L}$. Under a vanishing trace, the input has $\dim(\mathring{\mathcal{H}}^1) = 2$, which is one spurious harmonic $1$-form per pinch vertex. Figure~\ref{fig:pinch_resolution_boundary_pinch} has three boundary pinches, each with a single refinement arc that is not anchored. They behave the other way round. Each causes one spurious harmonic $1$-form in $\hierSDFspace{k}{\domseq}{\L}$ but none under a vanishing trace. In both domain sequences padding removes every spurious harmonic.
+
+\smallskip
+
+The second group of test cases concerns confined faces. Figure~\ref{fig:confinement_cases} shows five domain sequences and padding acts differently on each of them. The domain sequence in Figure~\ref{fig:cc_nested_centre} is refined gradedly around a vertex by the vertex quadrisection operator from Definition~\ref{def:graded_vertex_quadrisection}. It has no confined faces because all of its leaf faces have a vertex that is refinement-exterior at their level (cf. Figure~\ref{fig:adm_exterior}) and thus padding leaves it unchanged. The domain sequence in Figure~\ref{fig:cc_single_wedge} has one confined face on level $0$, and refining this face introduces another confined face on level $1$. The next inner padding iteration then refines that face as well, so Figure~\ref{fig:cc_single_wedge} shows an example that needs two productive inner padding cycles so that $q^{\mathrm{conf}} = 2$ in Corollary~\ref{cor:confinement_cycles}, while the number of outer passes stays $q = 1$. While the padding step refines the domain sequence, the space stays the same in every form degree in this particular example.
+
+The input domain sequence in Figure~\ref{fig:cc_no_fine_edge} also has a single confined face and no pinch. No edge of this face is shared with a finer face. The active DoFs are linearly independent and the cohomology is correct, even at the input. Padding still enlarges the space by $15$, $33$ and $18$ dimensions for $k = 0, 1, 2$. Refining the confined face creates pinches at its three vertices. A second productive outer pass resolves them and refines every face around the confined face. Thus, $q = 2$ in this example.
+
+In Figure~\ref{fig:cc_merging_patches} two confined faces sit between two refined patches. The input space has a spurious harmonic $1$-form and padding removes it. The coarse band in Figure~\ref{fig:cc_coarse_ring} is a closed loop of $18$ confined faces on level $0$ between an inner and an outer band on level $2$. The cohomology of the input is correct, but its active DoFs have $18$ linear dependencies in degree $0$, $36$ in degree $1$ and $18$ in degree $2$. These are the same counts as with the inner and outer bands on level $1$. Padding refines the coarse band to level $1$ because the level-$1$ children of its faces all have a refinement-exterior vertex at that level. This removes every dependency and keeps the space.
+
+The examples show that not every confined face damages the space. The single wedge and the face without a refined edge are refined although their spaces were already correct. Further, the padding step leaves a domain sequence without confined faces and pinches unchanged, see Figure~\ref{fig:cc_nested_centre}. So we can run the \textsc{Pad} step unconditionally in the adaptive loop without over-refining domain sequences that are already admissible.
+
+\smallskip
+
+Every domain sequence considered so far is a topological disk, so the only harmonic $1$-forms observed have been the defect-driven ones that padding removes. Figure~\ref{fig:genuine_cohomology} shows a domain sequence with a non-trivial topology. Its initial mesh is a disk with two holes, so an admissible domain sequence has two genuine harmonic $1$-forms, with and without a vanishing trace. The input domain sequence has a pinch vertex, a boundary pinch and confined faces. It has $2$ linearly dependent $1$-form DoFs, $2$ linearly dependent $2$-form DoFs and $\dim(\mathcal{H}^1) = 6$. After padding, all DoFs are independent again and $\dim(\mathcal{H}^1) = 2$ is restored. Thus, padding removes the $4$ spurious harmonics and leaves both genuine harmonics untouched. Under a vanishing trace the input has $\dim(\mathring{\mathcal{H}}^1) = 5$, i.e. $3$ spurious harmonics instead of $4$. This matches Figure~\ref{fig:pinch_resolution_boundary_pinch}, since a boundary pinch adds no harmonic under a vanishing trace.
+
+\smallskip
+
+This section confirms that the \textsc{Pad} step repairs the geometric defects that the \textsc{Refine} step leaves in a domain sequence and makes it admissible. With it, the active DoFs are linearly independent again and the adaptive subdivision $k$-form spaces have the correct cohomology, with and without vanishing trace boundary conditions.
 
 \begin{figure}[tb]
     \centering
     \begin{subfigure}{\textwidth}
         \raggedright
         \begin{tabular}{@{}cc@{\hspace{2em}}cc@{}}
-            % 2026-09-11: previous configuration, kept for cherry-picking.
-            % \atomicimg{images/exactness/v6_annulus_two_holes_input.pdf}  & \guidance{\minitab{241}{673}{428}{235}{658}{420}{1}{4}{0}} &
-            % \atomicimg{images/exactness/v6_annulus_two_holes_padded.pdf} & \guidance{\minitab{241}{668}{426}{241}{668}{426}{1}{2}{0}} \\
-            \atomicimg{images/exactness/v6_annulus_two_holes_v2_input.pdf}  & \minitab{220}{627}{402}{220}{625}{400}{1}{6}{0} &
-            \atomicimg{images/exactness/v6_annulus_two_holes_v2_padded.pdf} & \minitab{228}{635}{406}{228}{635}{406}{1}{2}{0} \\
+            \atomicimg{images/exactness/v6_annulus_two_holes_v2_input.pdf}  & \minitabBC{220}{627}{402}{220}{625}{400}{1}{6}{0}{0}{5}{1} &
+            \atomicimg{images/exactness/v6_annulus_two_holes_v2_padded.pdf} & \minitabBC{228}{635}{406}{228}{635}{406}{1}{2}{0}{0}{2}{1} \\
         \end{tabular}
         \centering
-        %\caption{Domain sequence with two holes and scattered defects.}
         \label{fig:genuine_holes}
     \end{subfigure}
-    \caption{A domain sequence with two holes and additional scattered pinch and \checkit{confined} face defects, before (left) and after (right) padding. \tobecut{\guidance{The padding step removes only the two-dimensional space of spurious harmonic $1$-forms to restore the correct cohomology.}} \robert{The padding step removes only the four-dimensional space of spurious harmonic $1$-forms to restore the correct cohomology.}}
+    \caption{A domain sequence with two holes and additional scattered defects before (left) and after (right) padding. The input domain sequence has a pinch vertex, a boundary pinch and confined faces. The padding step removes all spurious harmonic $1$-forms to restore the correct cohomology and leaves the two genuine harmonic $1$-forms intact. Without boundary conditions, the input has four spurious harmonics (two from pinches, two from confinement), while under a vanishing trace it has only three because the boundary pinch adds no harmonic there. Padding needs one productive pass, $q = 1$.}
     \label{fig:genuine_cohomology}
 \end{figure}
 
