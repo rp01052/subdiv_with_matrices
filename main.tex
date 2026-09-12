@@ -4632,32 +4632,21 @@ This section confirms that the \textsc{Pad} step repairs the geometric defects t
 \subsection{Maxwell Eigenvalue problem}
 \label{subsec:maxwell}
 
-This section studies the Maxwell eigenvalue problem, a classical test case to verify the properties of discrete differential complexes. Section~\ref{subsec:exactness_atomic} has already established that the \textsc{Pad} step restores the correct cohomology for the spaces $\hierSDFspace{k}{\domseq}{\L}$ by repairing the geometric defects of the domain sequence $\domseq$ so that it becomes a admissible domain sequence. \guidance{In contrast}, this section studies how the spurious harmonic $1$-forms of a domain sequence concretely affect the solution of the eigenproblem.
-
-The weak form of the Maxwell cavity (curl--curl) eigenvalue problem on the domain $\M = [0,\pi]^2$ with mesh $\T_\L$ is given by: Find $\lambda_{h,\coarseIdxone} \in \mathbb{R}$ and $u_\coarseIdxone \in \hierSDFspaceZero{1}{\domseq}{\L}$ such that
-\begin{equation}
-  (\extd u_i, \extd v)_\M = \lambda_{h,\coarseIdxone} (u_i, v)_\M \qquad \forall v \in \hierSDFspaceZero{1}{\domseq}{\L}
-\end{equation}
-with analytic spectrum $\lambda_\coarseIdxone = m^2 + n^2$, where $m$ and $n$ are integers. We will approximate the discrete spectra on the domain sequence $\domseq^{\mathrm{pinch}}$ with a pinch on level $\l=1$ as displayed in Figure~\ref{fig:Maxwell_inexact_DoFmesh} and its padded version, the admissible domain sequence $\domseq^{\mathrm{padded}}$ from Figure~\ref{fig:Maxwell_exact_DoFmesh}. Since the domain is contractible, its relative first Betti number is zero. Thus, $\hierSDFspaceZero{1}{\domseq^{\mathrm{padded}}}{\L}$ has no $1$-form harmonics because $\domseq^{\mathrm{padded}}$ is a admissible domain sequence. The pinch of $\domseq^{\mathrm{pinch}}$ introduces a one-dimensional spurious harmonic $1$-form space into $\hierSDFspaceZero{1}{\domseq^{\mathrm{pinch}}}{\L}$.
-
-Applying Loop subdivision alters the domain slightly, so we do not compare the discrete spectrum directly with the analytic spectrum  $\lambda_\coarseIdxone$. Instead, we compare the discrete spectra $\lambda_\coarseIdxone$ with the spectrum of $\FEECspaceZero{k}{\L}$ with $\domseq^{\mathrm{FEEC}} = \T_\L$, a superspace of both $\hierSDFspaceZero{1}{\domseq^{\mathrm{pinch}}}{\L}$ and $\hierSDFspaceZero{1}{\domseq^{\mathrm{padded}}}{\L}$ that verifiably converges to the correct spectrum, see~\cite{Arnold.FEEC}.
-
-Figure~\ref{fig:Maxwell_eigenvalues} reports the discrete spectra with $\lambda_{h,\coarseIdxone} > 0$ for all three domain sequences. Outside of small approximation errors, the spectra agree across all the three
-partitions. That means that the defects caused by the spurious $1$-form harmonics of $\hierSDFspaceZero{1}{\domseq^{\mathrm{pinch}}}{\L}$ are \checkit{restricted} to the eigenspace of $\lambda_{h,\coarseIdxone} = 0$. The reason for that behaviour is Theorem~\ref{theorem:differential_complex}, stating that \guidance{$\extd \hierSDFspaceZero{0}{\domseq}{\L} \subseteq \hierSDFspaceZero{1}{\domseq}{\L}$ holds} for all domain sequences $\domseq \in \guidance{\alldomseqs}$, regardless of whether they satisfy the admissible domain sequence conditions. \guidance{Every gradient of an active $0$-form is therefore itself an active $1$-form and is annihilated by $\extd$, so it contributes to the eigenvalue $0$ rather than to the non-zero spectrum, cf.~\cite{Boffi.2010}.}
+Section~\ref{subsec:exactness_atomic} counted the dimensions of the spurious harmonic spaces of atomic domain sequences and showed that the \textsc{Pad} step drives their dimension to zero. That is a statement about the spaces alone. This section studies what those harmonic forms do to a computed solution. We solve the Maxwell eigenvalue problem, a classical test case for a discrete differential complex, on a domain sequence that is not admissible and on its padded counterpart. The dimensions reported here are the same quantity as in Section~\ref{subsec:exactness_atomic}, this time inferred from a spectrum instead of directly computed from a rank.
 
 \begin{figure}%[htbp]
     \centering
     \begin{subfigure}[b]{0.24\textwidth}
         \centering
         \includegraphics[width=\textwidth]{images/maxwell/maxwell_partition_inexact.pdf}
-        \caption{Domain sequence $\domseq^{\mathrm{pinch}}$ with pinch}
+        \caption{Input domain sequence $\domseq[\L]^{\mathrm{input}}$}
         \label{fig:Maxwell_inexact_DoFmesh}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.24\textwidth}
         \centering
         \includegraphics[width=\textwidth]{images/maxwell/maxwell_partition_exact.pdf}
-        \caption{Admissible domain sequence  $\domseq^{\mathrm{padded}}$}
+        \caption{Admissible domain sequence $\domseq[\L]^{\mathrm{output}}$}
         \label{fig:Maxwell_exact_DoFmesh}
     \end{subfigure}
     \hfill
@@ -4667,9 +4656,47 @@ partitions. That means that the defects caused by the spurious $1$-form harmonic
         \caption{Computed EVs over EV index}
         \label{fig:Maxwell_eigenvalues}
     \end{subfigure}
-    \caption{Domain sequences and discrete spectra of the spaces $\hierSDFspaceZero{1}{\domseq^{\mathrm{pinch}}}{\L}$, $\hierSDFspaceZero{1}{\domseq^{\mathrm{padded}}}{\L}$ and $\FEECspaceZero{k}{\L}$.}
+    % -----------------------------------------------------------------------
+    % NEW (2026-09-12): panel (d). The spectrum panel only plots
+    % $\lambda_{h,\coarseIdxone} > 0$, so the actual defect is invisible in it.
+    % This row carries the zero count, which is the whole result.
+    % -----------------------------------------------------------------------
+    \\[0.8em]
+    \begin{subfigure}[b]{\textwidth}
+        \centering
+        \begin{tabular}{ccc}
+            \toprule
+            $\hierSDFspaceZero{1}{\domseq[\L]^{\mathrm{input}}}{}$ & $\hierSDFspaceZero{1}{\domseq[\L]^{\mathrm{output}}}{}$ & $\FEECspaceZero{1}{\L}$ \\
+            \midrule
+            $3$ & $0$ & $0$ \\
+            \bottomrule
+        \end{tabular}
+        \caption{Spurious eigenvalues $\lambda_{h,\coarseIdxone} = 0$, i.e. the zero EVs in excess of $\dim($$\extd$$[\hierSDFspaceZero{0}{\domseq[\L]}{}])$}
+        \label{fig:Maxwell_harmonics}
+    \end{subfigure}
+    \caption{Domain sequences and discrete spectra of $\hierSDFspaceZero{1}{\domseq[\L]^{\mathrm{input}}}{}$, $\hierSDFspaceZero{1}{\domseq[\L]^{\mathrm{output}}}{}$ and $\FEECspaceZero{1}{\L}$.}
     \label{fig:maxwell_overview}
 \end{figure}
+
+The weak form of the Maxwell eigenvalue problem on the domain $\M = [0,\pi]^2$ \robert{seeks} $\lambda_{h,\coarseIdxone} \in \mathbb{R}$ and $u_\coarseIdxone \in \hierSDFspaceZero{1}{\domseq[\L]}{}$ such that
+\begin{equation}
+  (\extd u_\coarseIdxone, \extd v)_\M = \lambda_{h,\coarseIdxone} (u_\coarseIdxone, v)_\M \qquad \forall v \in \hierSDFspaceZero{1}{\domseq[\L]}{}.
+\end{equation}
+Its analytic spectrum is $\lambda_\coarseIdxone = m^2 + n^2$ with integers $m, n \geq 0$ that do not both vanish.
+
+We compare two domain sequences on a mesh hierarchy with initial mesh $\T_\lzero$ and $\L = 2$. The domain sequence $\domseq[\L]^{\mathrm{input}}$ of Figure~\ref{fig:Maxwell_inexact_DoFmesh} refines four vertex stars to level $\l = 1$. Their positions are chosen so that the domain sequence carries one pinch vertex and two pairs of confined faces. The \textsc{Pad} step repairs all three defects in a single cycle to obtain the admissible domain sequence $\domseq[\L]^{\mathrm{output}}$ of Figure~\ref{fig:Maxwell_exact_DoFmesh}.
+
+Applying Loop subdivision alters the domain slightly, so $\T_\L$ does not represent $\M$ exactly. For this reason, we do not compare the discrete spectra directly with the analytic spectrum $\lambda_\coarseIdxone$. We compare them with the spectrum of $\FEECspaceZero{1}{\L}$ on the finest mesh $\T_\L$ instead because it is a superspace of both adaptive spaces that verifiably converges to the correct spectrum, see~\cite{Arnold.FEEC}.
+
+Figure~\ref{fig:Maxwell_eigenvalues} reports the $40$ smallest eigenvalues $\lambda_{h,\coarseIdxone} > 0$ of all three spaces. The two adaptive spectra coincide up to a small difference caused by two slightly different approximation spaces, and both agree with the reference solution of $\FEECspaceZero{1}{\L}$. The number of eigenvalues $\lambda_{h,\coarseIdxone} > 0$ equals $\dim ($$\extd$$[\hierSDFspaceZero{1}{\domseq[\L]}{}])$, and this dimension also coincides for both adaptive spaces. The two spaces therefore differ only inside the kernel of $\extd$.
+
+The spurious harmonics show up at the eigenvalue $0$ alone. Their number is the difference between the multiplicity of that eigenvalue and the dimension $\dim ($$\extd$$[\hierSDFspaceZero{0}{\domseq[\L]}{}])$ of the gradients of the active $0$-forms. The number of spurious harmonics is three for $\domseq[\L]^{\mathrm{input}}$, one for the pinch vertex and one for each pair of confined faces, and zero for $\domseq[\L]^{\mathrm{output}}$, as reported in Figure~\ref{fig:Maxwell_harmonics}.
+
+This difference is meaningful because of Theorem~\ref{theorem:differential_complex}, which states that $\extd \hierSDFspaceZero{0}{\domseq[\L]}{} \subseteq \hierSDFspaceZero{1}{\domseq[\L]}{}$ holds for all domain sequences $\domseq[\L] \in \alldomseqs$ regardless of whether they are admissible. Every gradient of an active $0$-form is therefore itself an active $1$-form and is annihilated by $\extd$, so it contributes to the eigenvalue $0$ rather than to the non-zero spectrum, cf.~\cite{Boffi.2010}. This is also why both spaces remain differential complexes even though one of them has the wrong cohomology. The theorem reaches no further than the gradients. A spurious harmonic $1$-form is not a gradient, so nothing in Theorem~\ref{theorem:differential_complex} forces it to the eigenvalue $0$. That the three spurious dimensions appear there and not in the non-zero spectrum is an observation.
+
+\cite{Cabanas.2026} study the same problem on hierarchical B-spline spaces. On a mesh with four problematic intersections they report four extraneous zero eigenvalues and four spurious non-zero eigenvalues. Our observation differs in the second part. A spurious non-zero eigenvalue requires an added mode whose exterior derivative does not vanish, and the mode counts above show that no such mode is added here. Once the discretisations are repaired, the results agree again. The two constructions therefore fail differently before the repair and agree after it.
+
+
 
 %\FloatBarrier
 
