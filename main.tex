@@ -718,6 +718,7 @@ Starting from an initial coarse triangular mesh $\T_\l$ at level $\l = \lzero$, 
 
 On each mesh $\T_\l$ along the mesh hierarchy, the lowest-order Whitney $k$-form spaces are the standard FEEC spaces~\citep{Arnold.2006}
 \begin{equation}
+    \label{eq:whitney_spaces}
     \FEECspace{0}{\l} = \mathrm{CG}_1(\T_\l), \qquad \FEECspace{1}{\l} = \mathrm{NED}_1(\T_\l), \qquad \FEECspace{2}{\l} = \mathrm{DG}_0(\T_\l),
 \end{equation}
 with basis functions $\freeQ{\FEECbasis}{k}{\l}{\coarseIdxone}$ indexed by the $k$-simplices $\simplex{k}{\l}{\coarseIdxone} \in \K^k_\l$.
@@ -4678,7 +4679,7 @@ Section~\ref{subsec:exactness_atomic} counted the dimensions of the spurious har
     \label{fig:maxwell_overview}
 \end{figure}
 
-The weak form of the Maxwell eigenvalue problem on the domain $\M = [0,\pi]^2$ \robert{seeks} $\lambda_{h,\coarseIdxone} \in \mathbb{R}$ and $u_\coarseIdxone \in \hierSDFspaceZero{1}{\domseq[\L]}{}$ such that
+The weak form of the Maxwell eigenvalue problem on the domain $\M = [0,\pi]^2$ seeks $\lambda_{h,\coarseIdxone} \in \mathbb{R}$ and $u_\coarseIdxone \in \hierSDFspaceZero{1}{\domseq[\L]}{}$ such that
 \begin{equation}
   (\extd u_\coarseIdxone, \extd v)_\M = \lambda_{h,\coarseIdxone} (u_\coarseIdxone, v)_\M \qquad \forall v \in \hierSDFspaceZero{1}{\domseq[\L]}{}.
 \end{equation}
@@ -4718,25 +4719,29 @@ The $1$-form Laplace problem is given by
     \label{eq:strong_laplace}
     (\extd \boldsymbol{\delta} + \boldsymbol{\delta} \extd) u = f
 \end{equation}
-on a domain $\M$. Since the operator $\boldsymbol{\delta}$ is not well-defined for a (subdivision) $1$-form, we introduce the auxiliary variable $\boldsymbol{\delta} \sigma = u$ and use the FEEC-typical mixed weak formulation: Find $\sigma \in H^1(\M)$ and $u \in \HcurlM{\M}$ such that
-\begin{align}
+on a domain $\M$. The operator $\boldsymbol{\delta}$ is not well-defined for a (subdivision) $1$-form in the spaces we want to use for the discretisation. We therefore introduce the auxiliary variable $\sigma = \boldsymbol{\delta} u$. This gives the following FEEC-typical mixed weak formulation. Find $\sigma \in H^1(\M)$ and $u \in \HcurlM{\M}$ such that
+\begin{alignat}{3}
     \label{eq:mixed_laplacian1}
-    (\sigma, \tau)_\M - (u, \extd \tau)_\M &= 0 \qquad \forall \tau \in H^1(\M), \\
+    (\sigma, \tau)_\M& \; - \;\;\, (u, \extd \tau)_\M&& = 0 \qquad &&\forall \tau \in H^1(\M), \\
     \label{eq:mixed_laplacian2}
-    (\extd \sigma, v)_\M + (\extd u, \extd v)_\M &= (f, v)_\M \qquad \forall v \in \HcurlM{\M}.
-\end{align}
+    (\extd \sigma, v)_\M& \; + (\extd u, \extd v)_\M&&= (f, v)_\M \qquad &&\forall v \in \HcurlM{\M}.
+\end{alignat}
 
-This section studies the circular layer test case from \cite{Cabanas.2026} to exercise the entire adaptive loop of \textsc{Solve}--\textsc{Estimate}--\textsc{Mark}--\textsc{Refine}--\textsc{Pad}. Its analytical solution is given by
+This section studies the circular layer test case from \cite{Cabanas.2026} to exercise the entire adaptive loop of \textsc{Solve}--\textsc{Estimate}--\textsc{Mark}--\textsc{Refine}--\textsc{Pad} from Section~\ref{subsec:adaptive_loop}. Its analytical solution is given by
 \begin{equation}
     \label{eq:circular_layer_test_case}
-    \Vec{u}_{\mathrm{CL}}(x) = \tanh \big(\alpha (\vvert{\vvert{x}}^2 - R^2) \big) \; \Vec{b}(x) \quad \text{with} \quad \Vec{b}(x) = \begin{bmatrix}
+    \Vec{u}_{\mathrm{CL}}(x) = \tanh \big(\alpha (\vvert{\vvert{x - \Vec{c}}}^2 - R^2) \big) \; \Vec{b}(x) \quad \text{with} \quad \Vec{b}(x) = \begin{bmatrix}
         2 x_2^2 (x_2 - 1)^2 (x_1^2 - x_1) (2 x_1 - 1) \\[2pt]
         2 x_1^2 (x_1 - 1)^2 (x_2^2 - x_2) (2 x_2 - 1)
     \end{bmatrix},
 \end{equation}
-where $\alpha = 100$, $R = 0.3$, and $\Vec{u}_{\mathrm{CL}}$ is the vector-proxy of the $1$-form $u_{\mathrm{CL}}$. The vector part $\Vec{b}(x)$ provides a background field while the $\tanh$ term adds a sharp, radially symmetric transition between $+\Vec{b}$ and $-\Vec{b}$ localised on the ring $\vvert{\vvert{x}} = R$. The right-hand side $f_{\mathrm{CL}}$ corresponding to $\Vec{u}_{\mathrm{CL}}$ can be computed using the (strong) Laplace equation~\eqref{eq:strong_laplace}. The problem carries no essential boundary conditions: both equations are natural in $\sigma$ and in $u$, so the discrete spaces are $\hierSDFspace{0}{\domseq}{\L}$ and $\hierSDFspace{1}{\domseq}{\L}$ rather than their vanishing-trace counterparts.
+where $\M = [0,1]^2$, $\alpha = 100$, $R = 0.3$, $\Vec{c} = (\tfrac{1}{2}, \tfrac{1}{2})^\top$, and $\Vec{u}_{\mathrm{CL}}$ is the vector-proxy of the $1$-form $u_{\mathrm{CL}}$. The vector part $\Vec{b}(x)$ provides a background field while the $\tanh$ term adds a sharp, radially symmetric transition between $+\Vec{b}$ and $-\Vec{b}$ localised on the ring $\vvert{\vvert{x - \Vec{c}}} = R$ around the centre of $\M$. The right-hand side $f_{\mathrm{CL}}$ corresponding to $\Vec{u}_{\mathrm{CL}}$ is obtained in closed form from the (strong) Laplace equation~\eqref{eq:strong_laplace}.
 
-\guidance{The \textsc{Solve} step follows the pattern of Section~\ref{subsec:solve}. We use a standard finite element library like FEniCS~\citep{Logg.2012} to assemble the $0$-form mass matrix $\mathbf{M}_\L$ and the gradient-coupling matrix $\mathbf{B}_\L$ of Equation~\eqref{eq:mixed_laplacian1} and the curl--curl matrix $\mathbf{C}_\L$ of Equation~\eqref{eq:mixed_laplacian2} over the FEEC spaces $\FEECspace{k}{\L}$ on $\T_\L$, and never touch a subdivision basis function during assembly. Unrefining them with the adaptive subdivision $k$-form matrices $\Amat{k}{\activeDoFs}{\L}$ as in Equation~\eqref{eq:unrefinement} yields
+The problem imposes no vanishing trace on $\sigma$ or on $u$. The discrete spaces are therefore $\hierSDFspace{0}{\domseq}{\L}$ and $\hierSDFspace{1}{\domseq}{\L}$ rather than their vanishing-trace counterparts, so the relevant cohomology is that of the absolute de Rham complex as in Section~\ref{subsec:exactness_atomic}. The test spaces in~\eqref{eq:mixed_laplacian1} and~\eqref{eq:mixed_laplacian2} are unrestricted, so the solution satisfies $\Vec{u} \cdot \Vec{n} = 0$ and $\mathrm{curl} \, \Vec{u} = 0$ on $\partial \M$. The solution $\Vec{u}_{\mathrm{CL}}$ meets both.
+
+\smallskip
+
+The \textsc{Solve} step follows the pattern of Section~\ref{subsec:solve}. We use a standard finite element library like FEniCS~\citep{Logg.2012} to assemble the $0$-form mass matrix $\mathbf{M}_\L$ and the gradient-coupling matrix $\mathbf{B}_\L$ of Equation~\eqref{eq:mixed_laplacian1} and the curl--curl matrix $\mathbf{C}_\L$ of Equation~\eqref{eq:mixed_laplacian2} over the FEEC spaces $\FEECspace{k}{\L}$ on $\T_\L$, which are the lowest-order Whitney spaces of Equation~\eqref{eq:whitney_spaces}. Let $\domseq \in \alldomseqs$ be a domain sequence. Unrefining $\mathbf{M}_\L$, $\mathbf{B}_\L$ and $\mathbf{C}_\L$ with the adaptive subdivision $k$-form matrices $\Amat{k}{\activeDoFs}{\L}$ as in Equation~\eqref{eq:unrefinement} yields
 \begin{equation}
     \label{eq:FE_matrix_assembly}
     \mathbf{M}_{\domseq} = (\Amat{0}{\activeDoFs}{\L})^\top \; \cdot \; \mathbf{M}_\L \; \cdot \; \Amat{0}{\activeDoFs}{\L},
@@ -4765,29 +4770,24 @@ whose matrix we denote by $K_{\domseq}$. It is symmetric indefinite, so we solve
     \mathbf{P} =
     \begin{pmatrix}
         \mathbf{M}_{\domseq} & 0 \\
-        0 & \mathbf{S_{\domseq}}
+        0 & \mathbf{S}_{\domseq}
     \end{pmatrix},
     \qquad
     \mathbf{S}_{\domseq}= \mathbf{C}_{\domseq} + \mathbf{B}_{\domseq}^\top\, \mathrm{diag}(\mathbf{M}_{\domseq} \mathbf{1})^{-1}\, \mathbf{B}_{\domseq},
 \end{equation}
-in which $\mathbf{S}_{\domseq}$ approximates the Schur complement of the $(1,1)$ block by replacing $\mathbf{M}_{\domseq}^{-1}$ with a row-sum lumped inverse ($\mathbf{1}$ the all-ones vector of length $\vert \activeDoFSet{0}{} \vert$). A multilevel preconditioner, for instance BPX or a subdivision-aware multigrid V-cycle, would be the natural way to exploit the hierarchical structure of $\hierSDFspace{k}{\domseq}{\L}$, but constructing one for the subdivision basis is nontrivial, so we use the simpler level-agnostic choice above. Section~\ref{subsubsec:cl_performance} measures what that costs.}
+in which $\mathbf{S}_{\domseq}$ approximates the Schur complement obtained by eliminating the $(1,1)$ block by replacing $\mathbf{M}_{\domseq}^{-1}$ with a row-sum lumped inverse ($\mathbf{1}$ the all-ones vector of length $\vert \activeDoFSet{0}{} \vert$). A multilevel preconditioner, for instance BPX or a subdivision-aware multigrid V-cycle, would be the natural way to exploit the hierarchical structure of $\hierSDFspace{k}{\domseq}{\L}$. Constructing such a preconditioner for the subdivision basis is not trivial, so we use the simpler level-agnostic choice above. Section~\ref{subsubsec:cl_performance} measures the solver performance.
 
-\guidance{The \textsc{Estimate} step of Section~\ref{subsec:estimate} needs an indicator per face of the finest mesh $\T_\L$. We use the residual indicator that~\cite{Demlow.2014} derive for the mixed Hodge--Laplace problem on a general Hilbert complex. Their element indicator $\eta_0$ of Lemma~8, Equation~(4.6), collects the residual of the second equation~\eqref{eq:mixed_laplacian2}, their $\eta_{-1}$ of Lemma~7, Equation~(4.1), the residual of the first one~\eqref{eq:mixed_laplacian1}, and their Theorem~10, Equation~(4.18), proves the resulting estimator reliable, with the matching efficiency bounds in their Section~5. Specialising $\eta_0$ to $k=1$ in two dimensions, the harmonic contribution $p_h$ drops out because $\M$ is a topological disk, and $\boldsymbol{\delta} \extd u_h$ vanishes elementwise because $\extd (\iota u_h)$ is piecewise constant on $\T_\L$, where $\iota \colon \hierSDFspace{k}{\domseq}{\L} \hookrightarrow \FEECspace{k}{\L}$ is the inclusion into the fine FEEC space. What remains is the indicator
+\guidance{The MINRES stopping tolerance and the iteration cap are stated nowhere in this section. Please supply both, and say whether the tolerance is relative or absolute. Section~\ref{subsubsec:cl_performance} reports iteration counts, which cannot be read without them.}
+
+\smallskip
+
+The \textsc{Estimate} step of Section~\ref{subsec:estimate} needs an indicator per face of the finest mesh $\T_\L$. We use the residual indicator that~\cite{Demlow.2014} derive for the mixed Hodge--Laplace problem. Their element indicators $\eta_{-1}$ of Lemma~7, Equation~(4.1), and $\eta_0$ of Lemma~8, Equation~(4.6), collect the residuals of~\eqref{eq:mixed_laplacian1} and of~\eqref{eq:mixed_laplacian2}. Two terms of $\eta_0$ drop for $k=1$ in two dimensions. The harmonic contribution vanishes because $\M$ is a topological disk and every domain sequence of the adaptive loop is admissible by Corollary~\ref{cor:adaptive_loop_admissible}, so $\hierSDFspace{1}{\domseq}{\L}$ has no harmonic $1$-form by Theorem~\ref{theorem:exactness}. The term $\boldsymbol{\delta} \extd u_h$ vanishes elementwise because $\extd (\iota u_h)$ is piecewise constant on $\T_\L$, where $\iota \colon \hierSDFspace{k}{\domseq}{\L} \hookrightarrow \FEECspace{k}{\L}$ denotes the inclusion into the fine FEEC space. In the vector proxies of their Equations~(6.1) and~(6.2), $\eta_{-1}$ and $\eta_0$ carry six norms, or nine squared contributions once each element-boundary norm splits into interior jumps and boundary traces. Of these, two are invariant or saturating on the fixed mesh $\T_\L$, three are boundary traces, and two stay below $0.4\%$ of the indicator in every run reported here. We evaluate the remaining two,
 \begin{equation}
     \label{eq:cl_estimator}
     \eta^2_{\L,\fineIdxone} \; = \; h_{\face{\L}{\fineIdxone}}^2 \, \big\| f - \extd \sigma_h \big\|^2_{L^2(\face{\L}{\fineIdxone})}
-    \; + \sum\limits_{\edge{\L}{\fineIdxtwo} \, \subset \, \partial \face{\L}{\fineIdxone}} h_{\edge{\L}{\fineIdxtwo}} \, \big\| [\![ \mathrm{curl} (\iota u_h) ]\!] \big\|^2_{L^2(\edge{\L}{\fineIdxtwo})},
+    \; + \sum\limits_{\edge{\L}{\fineIdxtwo} \, \subset \, \partial \face{\L}{\fineIdxone} \, \setminus \, \partial \T_\L} h_{\edge{\L}{\fineIdxtwo}} \, \big\| [\![ \mathrm{curl} (\iota u_h) ]\!] \big\|^2_{L^2(\edge{\L}{\fineIdxtwo})},
 \end{equation}
-in which the first term is the elementwise residual of~\eqref{eq:mixed_laplacian2} and the second collects the curl--curl contribution through the jump $[\![ \cdot ]\!]$ of the piecewise constant $\mathrm{curl}(\iota u_h)$ across the interior edges of $\face{\L}{\fineIdxone}$. The indicator is evaluated on $\T_\L$ and aggregated to the faces of $\domseq$ by Equation~\eqref{eq:project_estimator_on_L_to_partition}, and from there to the vertices of $\domseq$ by Equation~\eqref{eq:vertex_residual}.}
-
-\todo{\guidance{\textbf{Not paper text --- three points to settle about~\eqref{eq:cl_estimator}.}
-\emph{(a)} It reproduces \texttt{weak\_forms/laplace/eta\_form\_Hcurl.ufl} exactly, which is what the runs of this section evaluate: \texttt{h**2*inner(f-grad(sigma),\,f-grad(sigma))*q*dx} plus \texttt{avg(h)*inner(jump(curl(u)),\,jump(curl(u)))*avg(q)*dS}. The superseded Example in Section~\ref{subsec:estimate} carried a third term $\|\sigma_h + \boldsymbol{\delta} u_h\|^2$ that the code never computes, so it was not moved across --- and its sign was wrong either way: \eqref{eq:mixed_laplacian1} gives $\sigma = \boldsymbol{\delta} u$, and Demlow--Hirani (4.1) reads $h_K \| \sigma_h - \boldsymbol{\delta} u_h \|_K$.
-\emph{(b)} The $h_T^2$ and $h_e$ weights are confirmed: (4.1) and (4.6) weight element terms by $h_K$ and edge terms by $h_K^{1/2}$ before squaring. The \texttt{\textbackslash robert\{\}} marks on them can go.
-\emph{(c)} \eqref{eq:cl_estimator} is a strict subset of the reliable estimator of Theorem~10. Not evaluated: all of $\eta_{-1}$, i.e.\ $h_K\|\sigma_h - \boldsymbol{\delta} u_h\|_K + h_K^{1/2} \| [\![ u_h \cdot n ]\!] \|_{\partial K}$; the two data terms $\| \boldsymbol{\delta} (f - \extd \sigma_h) \|_K$ and $\| [\![ (f - \extd \sigma_h) \cdot n ]\!] \|_{\partial K}$ of (4.6); and, since the problem has natural boundary conditions, the boundary-edge terms, which Demlow--Hirani read as the trace itself while the code sums interior edges only (\texttt{dS}).
-
-\emph{Measured, $\L = 3$, three runs at identical settings:} adding the element term of $\eta_{-1}$, and adding its normal jump on top, reproduces the adaptive trajectory \emph{exactly} --- same faces, active DoFs, marked and padded faces, padding cycles, MINRES iterations and $L^2$ errors at every step, same stopping step --- while contributing between $0.04\%$ and $0.37\%$ of $\eta^2$. On a fixed uniform subdivision space represented on $\T_\L$ for growing $\L$, the share $\eta_{-1}/\eta_0$ falls monotonically with the number of subdivision steps, $0.39\%,\ 0.067\%,\ 0.042\%,\ 0.032\%$, so the omission gets safer as $\L$ grows.
-
-\emph{The referee question this invites:} if the comparison was run, why not use the estimator with the proven properties? Only the data terms have a standard answer (data oscillation, higher order for the analytic $f$ of this test case, and flagged by Demlow--Hirani themselves as an artefact of the Hodge imbalance). Dropping $\eta_{-1}$ is a measurement, not an argument. Since the extra terms cost two DG0 form assemblies and no measurable time, the defensible choice is to make $\eta_0 + \eta_{-1}$ (boundary edges included, data terms out) the production estimator and re-run $\L = 3, 4, 5$; the $\L=3$ trajectory is already known to be unchanged.}}
+in which the first term is the elementwise residual of~\eqref{eq:mixed_laplacian2} and the second collects the curl--curl contribution through the jump $[\![ \cdot ]\!]$ of the piecewise constant $\mathrm{curl}(\iota u_h)$ across all edges $\edge{\L}{\fineIdxtwo}$ of $\partial \face{\L}{\fineIdxone}$ that are interior to $\T_\L$. The indicator is evaluated on $\T_\L$ and aggregated to the leaf faces of the domain sequence by Equation~\eqref{eq:project_estimator_on_L_to_partition}, and from there to the vertices by Equation~\eqref{eq:vertex_residual}.
 
 \subsubsection{Approximation}
 
