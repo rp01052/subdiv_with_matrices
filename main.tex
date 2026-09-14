@@ -237,7 +237,7 @@ Werner Bauer\footnote{University of Surrey, School of Mathematics and Physics, U
 \newcommand{\targetlevel}{\tau}                                 % marking target level
 \newcommand{\Ltwoerror}{e_{L^2}}
 \newcommand{\grapherror}{e_{\HLam{k}}}                                     % graph-norm error of the mixed pair
-\newcommand{\laststep}{{\mathrm{N}_\L}}                         % index of the last adaptive step
+\newcommand{\laststep}{{n_{\mathrm{end}}}}                      % index of the last adaptive step. n, not N. N is \totalDoFs and sits on every figure axis
 % Total DoF count of a domain sequence: the size of the solved saddle-point
 % system, n0 + n1. This is what "DoFs" means everywhere the form degree is not
 % named, in the text, the tables and every figure axis.
@@ -2915,7 +2915,7 @@ and is initialized with the admissible domain sequence $\domseq[\L]^0 = \F_\lzer
 \subsection{Solve}
 \label{subsec:solve}
 
-The details of the \textsc{Solve} step are typically problem-specific. The common thread for methods using subdivision differential forms is a two stage assembly. The bilinear forms of the weak formulation are first assembled using the spaces $\FEECspace{k}{\L}$ on $\T_\L$. They are then unrefined to the spaces $\hierSDFspace{k}{\domseq}{\L}$ with the adaptive subdivision matrices $\Amat{k}{\activeDoFs}{\L}$ as in Equation~\eqref{eq:unrefinement} in Section~\ref{subsec:unrefinement_and_solve}. The matrices of $\FEECspace{k}{\L}$ do not change during the adaptive loop because $\T_\L$ is fixed. A step changes only the selection of active DoFs, so its cost is the recomputation of the active DoFs $\activeDoFSet{k}{}$ followed by one sparse triple product per bilinear form. The unrefined matrices of the adaptive space inherit the density and the conditioning from the subdivision basis, which is where the cost of the method reappears. Section~\ref{subsubsec:cl_performance} measures both for an adaptive algorithm solving the mixed vector Laplace problem from Section~\ref{subsec:vector_laplace} and compares them to the reference run using $\FEECspace{k}{\L}$.
+The details of the \textsc{Solve} step are typically problem-specific. The common thread for methods using subdivision differential forms is a two stage assembly. The bilinear forms of the weak formulation are first assembled using the spaces $\FEECspace{k}{\L}$ on $\T_\L$. They are then unrefined to the spaces $\hierSDFspace{k}{\domseq}{\L}$ with the adaptive subdivision matrices $\Amat{k}{\activeDoFs}{\L}$ as in Equation~\eqref{eq:unrefinement} in Section~\ref{subsec:unrefinement_and_solve}. The matrices of $\FEECspace{k}{\L}$ do not change during the adaptive loop because $\T_\L$ is fixed. A step changes only the selection of active DoFs, so its cost is the recomputation of the active DoFs $\activeDoFSet{k}{}$ followed by one sparse triple product per bilinear form. The unrefined matrices of the adaptive space inherit the density and the conditioning from the subdivision basis, which is where the cost of the method reappears. Section~\ref{subsubsec:cl_cost} measures both for an adaptive algorithm solving the mixed vector Laplace problem from Section~\ref{subsec:vector_laplace} and compares them to the reference run using $\FEECspace{k}{\L}$.
 
 \subsection{Estimation}
 \label{subsec:estimate}
@@ -4391,7 +4391,7 @@ Corollary~\ref{cor:pinch_cycles_chain} is the bound Remark~\ref{rem:pinch_rounds
 \begin{remark}[Relaxing the star marking]
     \label{rem:face_marking_chain}
     Single-face refinement is not new to the loop, since the confinement padding repairs with $\quadriF$ on every pass by~\eqref{eq:confined_cycle_repair}. It refines confined faces only, so it never starts a new arc and Lemma~\ref{lemma:thick_arcs} survives it. Refining faces like in Section~\ref{subsubsec:refine_face} breaks the start of that induction instead. A face marked in the \textsc{Refine} step may carry a refinement-exterior vertex. There it opens an arc of one face, with no irregular vertex, no boundary and no second level.
-    \guidance{comparing the two refinement atoms is something we look at in the numerics section.}
+    \robert{Tables~\ref{tab:refine_atoms_L4} and~\ref{tab:refine_atoms_theta} measure what this costs against vertex-star refinement on the test case of Section~\ref{subsec:vector_laplace}.}
 \end{remark}
 
 At $\L = 1$, Lemma~\ref{lemma:site_chain_bound} and Corollary~\ref{cor:pinch_cycles_chain} bound both counts by $1 + c(\T_\lzero)$. No bound can be a constant, since a row of single marked faces on a regular patch at $\L = 1$ adds one productive pass per face. The confinement count needs no bound, since Corollary~\ref{cor:confinement_cycles} bounds it by the number of levels. We conjecture that $\L + c(\T_\lzero)$ bounds both remaining counts in general. We finish the discussion of the termination of the padding loop by stating the following open problem.
@@ -4408,7 +4408,7 @@ At $\L = 1$, Lemma~\ref{lemma:site_chain_bound} and Corollary~\ref{cor:pinch_cyc
 
 This section verifies the properties of the adaptive subdivision $k$-form spaces $\hierSDFspace{k}{\domseq}{\L}$ and $\hierSDFspaceZero{k}{\domseq}{\L}$ predicted in Section~\ref{sec:construction_of_hierarchical_subdiv_spaces} and tests the adaptive loop presented in Section~\ref{subsec:adaptive_loop}. Section~\ref{subsec:exactness_atomic} illustrates how domain sequences with pinch vertices or \checkit{confined} faces can break the de~Rham complex and linear independence, and how padding repairs the domain sequences. Section~\ref{subsec:maxwell} then confirms on the Maxwell eigenvalue problem that the spurious modes are \checkit{restricted} to the eigenvalue $0$, \guidance{which reflects that $\extd$ maps $\hierSDFspaceZero{0}{\domseq}{\L}$ into $\hierSDFspaceZero{1}{\domseq}{\L}$ for every domain sequence.} Section~\ref{subsec:vector_laplace} exercises the full adaptive loop on a vector Laplace problem with a singular solution. The emphasis throughout is on the admissibility of the adaptive subdivision $k$-form spaces, i.e. whether the active DoFs are linearly independent and preserve the cohomology of the de Rham complex, rather than on approximation rates.
 
-\subsection{Exactness and padding on atomic partitions}
+\subsection{Exactness and padding on minimal configurations}
 \label{subsec:exactness_atomic}
 
 % --- Atomic-test figure macros: mesh + inline k-form data mini-table ---
@@ -4791,9 +4791,7 @@ whose matrix we denote by $K_{\domseq}$. It is symmetric indefinite, so we solve
     \qquad
     \mathbf{S}_{\domseq}= \mathbf{C}_{\domseq} + \mathbf{B}_{\domseq}^\top\, \mathrm{diag}(\mathbf{M}_{\domseq} \mathbf{1})^{-1}\, \mathbf{B}_{\domseq},
 \end{equation}
-in which $\mathbf{S}_{\domseq}$ approximates the Schur complement obtained by eliminating the $(1,1)$ block by replacing $\mathbf{M}_{\domseq}^{-1}$ with a row-sum lumped inverse ($\mathbf{1}$ the all-ones vector of length $\vert \activeDoFSet{0}{} \vert$). A multilevel preconditioner, for instance BPX or a subdivision-aware multigrid V-cycle, would be the natural way to exploit the hierarchical structure of $\hierSDFspace{k}{\domseq}{\L}$. Constructing such a preconditioner for the subdivision basis is not trivial, so we use the simpler level-agnostic choice above. Section~\ref{subsubsec:cl_performance} measures the solver performance.
-
-\guidance{The MINRES stopping tolerance and the iteration cap are stated nowhere in this section. Please supply both, and say whether the tolerance is relative or absolute. Section~\ref{subsubsec:cl_performance} reports iteration counts, which cannot be read without them.}
+in which $\mathbf{S}_{\domseq}$ approximates the Schur complement obtained by eliminating the $(1,1)$ block by replacing $\mathbf{M}_{\domseq}^{-1}$ with a row-sum lumped inverse ($\mathbf{1}$ the all-ones vector of length $\vert \activeDoFSet{0}{} \vert$). A multilevel preconditioner, for instance BPX or a subdivision-aware multigrid V-cycle, would be the natural way to exploit the hierarchical structure of $\hierSDFspace{k}{\domseq}{\L}$. Constructing such a preconditioner for the subdivision basis is not trivial, so we use the simpler level-agnostic choice above. \robert{We stop the iteration once the residual satisfies $\vvert{\vvert{r}}_2 < 10^{-6}$, with a cap of $10\,000$ iterations that no run reported here comes close to. The criterion is absolute rather than relative, so the effective relative tolerance tightens as $f_{\domseq}$ grows over the adaptive steps. Iteration counts of different steps are therefore not directly comparable.} Section~\ref{subsubsec:cl_cost} measures the solver performance.
 
 \smallskip
 
@@ -4850,7 +4848,7 @@ in which the first term is the elementwise residual of~\eqref{eq:mixed_laplacian
 
 Figure~\ref{fig:adaptive_solution} displays the solution's vector proxy $\Vec{u}^n$ after $n$ steps of the adaptive loop with Do\"rfler parameter $\theta = 0.9$ and $\L=4$, meaning that the domain sequence cannot be refined beyond that level. The refinement stays concentrated around the circle to capture the sharp transition of the analytical solution. We denote the domain sequences across the steps by $\domseq[\L]^n$ and the final step of the adaptive loop by $\laststep$.
 
-Unless stated otherwise, every run reported in this section uses the circular layer~\eqref{eq:circular_layer_test_case} with $R = 0.3$ and $\alpha = 100$, the vertex-star atom of Section~\ref{subsubsec:refine_vertex}, and a D\"orfler parameter of $\theta = 0.9$. Section~\ref{subsubsec:cl_performance} varies the refinement atom, the grading bound $g$ and the layer radius $R$, in each case holding the rest fixed. We write
+Unless stated otherwise, every run reported in this section uses the circular layer~\eqref{eq:circular_layer_test_case} with $R = 0.3$ and $\alpha = 100$, the vertex-star atom of Section~\ref{subsubsec:refine_vertex}, and a D\"orfler parameter of $\theta = 0.9$. Section~\ref{subsubsec:cl_performance} varies the refinement atom and the grading bound $g$, and Section~\ref{subsubsec:cl_cost} varies the layer radius $R$, in each case holding the rest fixed. We write
 \begin{equation}
     \label{def:total_dofs}
     \totalDoFs{\domseq[\L]^n} \coloneq \vvert{\, \activeDoFSet{0}{}(\domseq[\L]^n) \,} + \vvert{\, \activeDoFSet{1}{}(\domseq[\L]^n) \,}
@@ -4894,7 +4892,7 @@ In two dimensions $\extd$ is the gradient on $0$-forms and the curl on $1$-forms
 
 Note that the $L^2$ errors of $\sigma^n$ and $\Vec{u}^n$ are two of the four terms that~\eqref{eq:graph_norms} contributes to~\eqref{def:graph_error}. We do not discuss them in detail here because the estimator drives the graph norm rather than the $L^2$ norm.
 
-Figure~\ref{fig:cl_graph_vs_dofs} reports $\grapherror^n$ against $\totalDoFs{\domseq[\L]^n}$ for $\L \in \{3,4,5\}$, together with the reference values of $\FEECspace{1}{\L}$ as hollow squares and their levels as dotted lines. Every adaptive curve approaches its reference line quickly and flattens there. We therefore read each run at \emph{matched accuracy}, the first step whose graph-norm error lies within $1\%$ of the reference value. At that step the adaptive loop with $\theta = 0.9$ matches the accuracy of the fine FEEC reference with $3.3$, $5.5$ and $9.4$ times fewer DoFs for $\L = 3$, $4$ and $5$, respectively, cf.\ Table~\ref{tab:cl_headline}. These savings are not optimised over $\theta$. The third row of Table~\ref{tab:cl_headline} repeats the $\L = 4$ run at $\theta = 0.4$, which matches the accuracy at $8\,137$ DoFs instead of $10\,400$. We observe a reduction of DoFs by $7.0$ times rather than $5.5$ times but the adaptive loop needs $23$ steps rather than $5$.
+Figure~\ref{fig:cl_graph_vs_dofs} reports $\grapherror^n$ against $\totalDoFs{\domseq[\L]^n}$ for $\L \in \{3,4,5\}$, together with the reference values of $\FEECspace{1}{\L}$ as hollow squares and their levels as dotted lines. Every adaptive curve approaches its reference line quickly and flattens there. We therefore read each run at \emph{matched accuracy}, the first step whose graph-norm error lies within $1\%$ of the reference value. In the absence of a suitable stopping criterion, we consider this step to be the \emph{last step} $\laststep$ of the adaptive loop from now on. At that step the adaptive loop with $\theta = 0.9$ matches the accuracy of the fine FEEC reference with $3.3$, $5.5$ and $9.4$ times fewer DoFs for $\L = 3$, $4$ and $5$, respectively, cf.\ Table~\ref{tab:cl_headline}. These savings are not optimised over $\theta$. The third row of Table~\ref{tab:cl_headline} repeats the $\L = 4$ run at $\theta = 0.4$, which matches the accuracy at $8\,137$ DoFs instead of $10\,400$. We observe a reduction of DoFs by $7.0$ times rather than $5.5$ times but the adaptive loop needs $23$ steps rather than $5$.
 
 \begin{table}[tb]
     \centering
@@ -4903,7 +4901,7 @@ Figure~\ref{fig:cl_graph_vs_dofs} reports $\grapherror^n$ against $\totalDoFs{\d
         \toprule
         & & & \multicolumn{3}{c}{$\totalDoFs{\cdot}$} & \multicolumn{2}{c}{graph norm $\grapherror$} \\
         \cmidrule(r{16pt}){4-6}\cmidrule(r{4pt}){7-8}
-        $\L$ & $\theta$ & step & adaptive & $\FEECspace{1}{\L}$ & saving & adaptive & $\FEECspace{1}{\L}$ \\
+        $\L$ & $\theta$ & $\laststep$ & adaptive & $\FEECspace{1}{\L}$ & saving & adaptive & $\FEECspace{1}{\L}$ \\
         \midrule
         3 & $0.9$ & $4$  & $4\,300$  & $14\,337$  & $\mathbf{3.3\times}$ & $3.78286$ & $3.78253$ \\
         4 & $0.9$ & $5$  & $10\,400$ & $56\,833$  & $\mathbf{5.5\times}$ & $1.86842$ & $1.86795$ \\
@@ -4911,7 +4909,7 @@ Figure~\ref{fig:cl_graph_vs_dofs} reports $\grapherror^n$ against $\totalDoFs{\d
         5 & $0.9$ & $6$  & $24\,140$ & $226\,305$ & $\mathbf{9.4\times}$ & $0.91870$ & $0.91793$ \\
         \bottomrule
     \end{tabular}
-    \caption{The adaptive method at matched accuracy against the reference space $\FEECspace{1}{\L}$ for $\L \in \{3,4,5\}$. Each row reports the first step whose graph-norm error lies within $1\%$ of the reference value, and \emph{step} names it. DoF counts are $\totalDoFs{\cdot}$ of Equation~\eqref{def:total_dofs} and \emph{saving} is the ratio of the two. The last two columns give the measured graph-norm error of both spaces on the same mesh $\T_\L$, so that the ratios quoted in the text can be read off directly. The third row repeats $\L = 4$ with the D\"orfler parameter lowered to $\theta = 0.4$.}
+    \caption{The adaptive method at matched accuracy against the reference space $\FEECspace{1}{\L}$ for $\L \in \{3,4,5\}$. Each row reports the first step $\laststep$ whose graph-norm error lies within $1\%$ of the reference value. DoF counts are $\totalDoFs{\cdot}$ of Equation~\eqref{def:total_dofs} and \emph{saving} is the ratio of the two. The last two columns give the measured graph-norm error of both spaces on the same mesh $\T_\L$, so that the ratios quoted in the text can be read off directly. The third row repeats $\L = 4$ with the D\"orfler parameter lowered to $\theta = 0.4$.}
     \label{tab:cl_headline}
 \end{table}
 
@@ -4919,92 +4917,209 @@ Figure~\ref{fig:cl_graph_vs_dofs} reports $\grapherror^n$ against $\totalDoFs{\d
 
 We finish the section by revisiting the discussion of stopping criteria. The usual criteria on $\eta$ do not work in our adaptive loop. First, the attainable estimator has a non-zero floor because the finest possible approximation space of the adaptive loop is $\FEECspace{k}{\L}$, see Figure~\ref{fig:cl_saturation_fig}. This floor thus depends on $\L$. A tolerance on $\eta$ absolute or relative to $\eta^0$ needs that floor in advance, which is generally not computable. Second, conditioning on the change between consecutive steps fails as well. The estimator is not monotone. For instance, the estimator of the $\L = 5$ run of Figure~\ref{fig:cl_saturation_fig} rises by about $12\%$ on its first step. Further, $\theta$ itself dictates how much residual a step removes and the stopping criterion using successive estimators would need to account for that robustly. A usable criterion therefore needs either a runtime estimate of the floor or a $\theta$-independent test for stagnation.
 
-\subsubsection{Performance metrics}
+\subsubsection{The cost of admissibility and grading}
 \label{subsubsec:cl_performance}
 
-This section explores two metrics: the overhead of interface DoFs and additional DoFs due to padding, and the wallclock time of the adaptive loop.
-
-Table~\ref{tab:padding_interface_L4} tracks the number of active DoFs and how they split into patch versus interface and marked versus padded for the simulation with $\L=4$. First, the table shows that the fraction of active $1$-form interface DoFs is between $20\%$ and $30\%$ of the overall DoF count. Since the underlying geometry is a thin annulus, this is already a pessimistic estimate. Nevertheless, the interface DoFs never dominate the patch DoFs. Second, padding never exceeds $22$ faces (step $5$), under $8\%$ of the $279$ marked faces of that step. This implies that neither the interface DoFs nor the padding constitute the bulk of the overall active DoFs.
-
-\robert{A second productive padding pass is rare under vertex-star refinement. Under face refinement it occurs in ordinary steps of the loop. This is the difference Remark~\ref{rem:face_marking_chain} predicts, since only face refinement opens refinement arcs of a single face.}
-\guidance{Moved here from the end of Section~\ref{subsubsec:pass_count}. Numbers from the 16-run $\theta$ sweep, not from Table~\ref{tab:padding_interface_L4}, which is stale. Vertex stars give $q = 1$ for $\theta \geq 0.5$ and $q = 2$ at $\theta \leq 0.4$. Face refinement gives $q = 2$ at every $\theta$ except $0.9$. The paper has no face-refinement run yet, so this needs a table or a sentence with the run it comes from.}
+The adaptive space achieves fewer DoFs than the reference space because it inserts new DoFs where they drive down the residual the most. However, not all DoFs can be spent reducing the residual. Some of them are inserted only to maintain admissibility of the domain sequence. This section measures what the construction spends beyond what the residual estimator asked for. There are three such costs, namely the padding the refinement atom provokes, the active DoFs carried on interfaces between coarse and fine regions, and the grading substep.
 
 \begin{table}[tb]
   \centering
-  \begin{tabular}{r@{\hspace{40pt}}r@{\hspace{16pt}}rrr@{\hspace{40pt}}rrr@{\hspace{16pt}}r}
+  \small
+  \begin{tabular}{@{}lr r@{\hspace{16pt}} r@{\hspace{12pt}} rrr r@{\hspace{12pt}} r@{\hspace{16pt}} r@{}}
     \toprule
-    \multirow{2}{*}{step} & \multirow{2}{*}{$\vert \activeDoFSet{1}{} \vert$} & \multicolumn{3}{c}{splits into} & \multirow{2}{*}{$\vert \F(\domseq) \vert$} & \multicolumn{2}{c}{of which refined} & \multirow{2}{*}{\guidance{$q$}} \\
-    \cmidrule(r{40pt}){3-5}\cmidrule(lr){7-8}
-    & & patch & interface & fraction & & marked & padded & \\
+    & & & & \multicolumn{4}{c}{padding} \\
+    \cmidrule(r{12pt}){5-8}
+    atom & step & $\totalDoFs{\domseq[\L]^n}$ & $m^n$ & $p^n_{\bullet}$ & $p^n_{\triangle}$
+         & $p^n_{s}$ & $p^n$ & overhead & $q^n$ \\
     \midrule
-    0 & 181  & 181  & 0    & $0\%$  & 110  & 38  & 0  & \guidance{0} \\
-    1 & 495  & 390  & 105  & $21\%$ & 328  & 94  & 4  & \guidance{1} \\
-    2 & 1245 & 897  & 348  & $28\%$ & 847  & 229 & 9  & \guidance{1} \\
-    3 & 2936 & 2112 & 824  & $28\%$ & 2016 & 452 & 12 & \guidance{1} \\
-    4 & 6260 & 4545 & 1715 & $27\%$ & 4314 & 314 & 9  & \guidance{1} \\
-    5 & 7874 & 6035 & 1839 & $23\%$ & 5385 & 279 & 22 & \guidance{1} \\
-    6 & 9235 & 7335 & 1900 & $21\%$ & 6293 & ---   & ---  & \guidance{---} \\
+    \multirow{7}{*}{\shortstack[l]{vertex\\star}}
+      & $0$ & $253$     & $38$     & $0$ & $0$  & $0$  & $0$  & $0\%$            & $0$ \\
+      & $1$ & $663$     & $94$     & $0$ & $4$  & $0$  & $4$  & $4.3\%$          & $1$ \\
+      & $2$ & $1\,644$  & $229$    & $0$ & $0$  & $9$  & $9$  & $3.9\%$          & $1$ \\
+      & $3$ & $3\,857$  & $454$    & $6$ & $4$  & $8$  & $18$ & $4.0\%$          & $1$ \\
+      & $4$ & $8\,233$  & $318$    & $0$ & $5$  & $4$  & $9$  & $2.8\%$          & $1$ \\
+      & $5^{\star}$ & $10\,400$ & -- & -- & -- & -- & -- & -- & -- \\
+    \cmidrule(l{0pt}r{0pt}){2-10}
+      & $\Sigma$ & --      & $1\,133$ & $6$ & $13$ & $21$ & $40$ & $\mathbf{3.5\%}$ & -- \\
+    \midrule
+    \multirow{6}{*}{\shortstack[l]{leaf\\face}}
+      & $0$ & $253$     & $22$     & $22$  & $2$   & $0$  & $24$  & $109.1\%$         & $1$ \\
+      & $1$ & $721$     & $63$     & $5$   & $5$   & $0$  & $10$  & $15.9\%$          & $1$ \\
+      & $2$ & $1\,574$  & $191$    & $4$   & $17$  & $6$  & $27$  & $14.1\%$          & $1$ \\
+      & $3$ & $3\,695$  & $318$    & $121$ & $33$  & $9$  & $163$ & $51.3\%$          & $2$ \\
+      & $4^{\star}$ & $8\,296$  & -- & -- & -- & -- & -- & -- & -- \\
+    \cmidrule(l{0pt}r{0pt}){2-10}
+      & $\Sigma$ & --      & $594$ & $152$ & $57$ & $15$ & $224$ & $\mathbf{37.7\%}$ & -- \\
     \bottomrule
   \end{tabular}
-  \caption{Metrics for all steps of the adaptive loop with $\L=4$. The first half shows the $1$-form DoFs and how they split into patch and interface DoFs, alongside the fraction of overall DoFs that are interface DoFs. The second half reports the number of faces of the admissible domain sequence $\domseq$ at the end of the step, and how they split into marked faces based on the estimator and additional refinement due to padding. \guidance{The last column reports the number $q$ of productive \textsc{Pad} passes of Section~\ref{subsec:outer_loop} in that step, which is zero exactly when no predicate fired and never exceeds one anywhere in the run.}}
+  \caption{Comparison of the two refinement atoms of Section~\ref{subsec:refine} for $\L = 4$ and $\theta = 0.9$. The DoF count~\eqref{def:total_dofs} is that of the space solved at the step. The other columns count the faces the padding of the step refines. Each block stops at $\laststep$ marked by a star. The $\Sigma$ row contains the sums of~\eqref{eq:whole_run_sum}, and it reports the overhead as the ratio of the two totals as in~\eqref{eq:padding_overhead}.}
+  \label{tab:refine_atoms_L4}
+\end{table}
+
+The tables of this section report counts of face quadrisections. The \textsc{Refine} and \textsc{Pad} steps replace a marked leaf face by its four children, so a count of $k$ raises the leaf face count by $3k$. A marked vertex class whose leaf star spans several levels contributes one count for each face its homogenisation quadrisects. The number of selected classes is not reported.
+
+Fix a step $n$ of the adaptive loop. Write $\simplexsubsetNewAll[\mathrm{mark},n]$ for the union over levels of the newly refined slices~\eqref{eq:newly_refined_slice} of the marking, and $\simplexsubsetNewAll[\bullet,n]$, $\simplexsubsetNewAll[\triangle,n]$ and $\simplexsubsetNewAll[s,n]$ for those of the pinch, confinement and grading substeps of Section~\ref{subsec:padding}, collected over all $q^n$ passes the \textsc{Pad} loop of that step. The decorators are those of the candidate sets $\candV$, $\candF$ and $\candC$, so each count carries the mark of the channel that produced it. The reported counts are
+\begin{equation}
+    \label{eq:refine_counts}
+    m^n \; \coloneq \; \vvert{\simplexsubsetNewAll[\mathrm{mark},n]}
+    \qquad\text{and}\qquad
+    p^n_r \; \coloneq \; \vvert{\simplexsubsetNewAll[r,n]}
+    \quad\text{for}\quad
+    r \, \in \, \{ \bullet, \, \triangle, \, s \} ,
+\end{equation}
+together with their sum $p^n \coloneq p^n_\bullet + p^n_\triangle + p^n_s$. Every run of this section is measured at its last step $\laststep$ in the sense of Section~\ref{subsubsec:cl_approximation}. We drop the superscript for a quantity that has been summed over the steps of the adaptive loop, for example
+\begin{equation}
+    \label{eq:whole_run_sum}
+    m \coloneq \sum\limits_{n = 0}^{\laststep - 1} m^n, \qquad p \coloneq \sum\limits_{n = 0}^{\laststep - 1} p^n,
+\end{equation}
+and likewise for $p_\bullet$, $p_\triangle$ and $p_s$. The sums stop one step short of $\laststep$. The last step solves on the space that step $\laststep - 1$ built, so it marks and pads nothing. This is the starred row of Table~\ref{tab:refine_atoms_L4}. A pass applies the three substeps in the order of pinch resolution, confinement padding and grading, and~\eqref{eq:newly_refined_slice} charges a face to the substep that refines it first, so the three counts are disjoint and sum to $p^n$ by construction. The padding \emph{overhead} is defined as
+\begin{equation}
+    \label{eq:padding_overhead}
+    \frac{p^n}{m^n} \quad \text{per step and} \qquad \frac{p}{m} \quad \text{per run}.
+\end{equation}
+
+The two atoms of the \textsc{Refine} step are a single leaf face and a vertex star, and the choice between them is free by Section~\ref{subsec:mark_refine}. We run the adaptive loop once with each atom and hold everything else fixed. Table~\ref{tab:refine_atoms_L4} follows the two runs step by step at $\theta = 0.9$. Table~\ref{tab:refine_atoms_theta} adds a second pair at $\theta = 0.4$ and provides a summary of the runs. All four are measured at $\laststep$, so their DoF counts compare at matched accuracy.
+
+We first compare the spaces the two atoms build. At $\theta = 0.9$ the face-refined space reaches matched accuracy at $8\,296$ DoFs against $10\,400$ for the vertex star. At $\theta = 0.4$ it reaches it at $7\,768$ against $8\,137$. The leaf face is therefore the more DoF efficient atom at both values of $\theta$.
+Vertex-star based refinement is more efficient in terms of padding costs. Per run the vertex star has an overhead of only $3.5\%$ while the leaf face has $37.7\%$. Table~\ref{tab:refine_atoms_theta} shows the same order at $\theta = 0.4$, where the two figures are $14.1\%$ and $167.1\%$. The reason we see such different padding costs is the pinch repair, which carries most of the gap. The leaf face accumulates $152$ and $438$ pinch refinements against $6$ and $38$ for the vertex star. A vertex star is refined as one unit, so its refinement fan is a single arc. Lone faces are exactly what Definition~\ref{def:pinch_vertex} separates, and a face marked in the \textsc{Refine} step may open an arc of one face on its own, as in Remark~\ref{rem:face_marking_chain}. These are exactly the mechanisms we discussed in Section~\ref{subsec:termination}.
+
+We next compare the number $q^n$ of productive padding passes of a step $n$. The $q^n$ column of Table~\ref{tab:refine_atoms_L4} stays at $1$ for the vertex-star run and reaches $2$ at step $3$ of the face run. The $q$ column of Table~\ref{tab:refine_atoms_theta} reports $2$ for both atoms at $\theta = 0.4$. The two atoms reach that second pass by different mechanisms. Under leaf faces it is the single-face marking of Remark~\ref{rem:face_marking_chain}, which fires at both values of $\theta$. Under vertex stars it is the regular-vertex mechanism of Remark~\ref{rem:regular_chain}, which the $\theta = 0.4$ run reaches inside the steps we measure. A second productive pass therefore arises in an ordinary step of the adaptive loop.
+
+We do not give a general recommendation regarding which atom to choose. The leaf face builds the more DoF efficient space. The vertex star pays far less padding overhead and needs fewer productive padding passes. Which of the two matters more depends on the problem and on the setup of the adaptive loop, including the estimator.
+
+\begin{table}[tb]
+  \centering
+  \small
+  \begin{tabular}{@{}cl rr@{\hspace{12pt}} rrrr@{\hspace{12pt}} rr@{\hspace{16pt}} rr@{}}
+    \toprule
+    & & & & \multicolumn{4}{c}{padding} & & & \multicolumn{2}{c}{matched accuracy} \\
+    \cmidrule(l{4pt}r{10pt}){5-8}\cmidrule(lr{4pt}){11-12}
+    $\theta$ & atom & $\laststep$ & $m$ & $p_{\bullet}$ & $p_{\triangle}$ & $p_{s}$ & $p$
+      & overhead & $q$ & $\totalDoFs{\cdot}$ & $\grapherror$ \\
+    \midrule
+    \multirow{2}{*}{$0.9$} & vertex star & $5$ & $1\,133$ & $6$   & $13$ & $21$ & $40$  & $\mathbf{3.5\%}$   & $1$ & $10\,400$ & $1.86842$ \\
+                           & leaf face   & $4$ & $594$   & $152$ & $57$ & $15$ & $224$ & $\mathbf{37.7\%}$  & $2$ & $8\,296$  & $1.87293$ \\
+    \midrule
+    \multirow{2}{*}{$0.4$} & vertex star & $23$ & $711$ & $38$  & $29$ & $33$ & $100$ & $\mathbf{14.1\%}$  & $2$ & $8\,137$ & $1.87095$ \\
+                           & leaf face   & $21$ & $280$ & $438$ & $21$ & $9$  & $468$ & $\mathbf{167.1\%}$ & $2$ & $7\,768$ & $1.87017$ \\
+    \bottomrule
+  \end{tabular}
+  \caption{The same comparison as in Table~\ref{tab:refine_atoms_L4} for two different D\"orfler parameters. Every row corresponds to a $\Sigma$ row of Table~\ref{tab:refine_atoms_L4}, i.e. it contains the summed quantities from~\eqref{eq:whole_run_sum} and~\ref{eq:padding_overhead}. The $q$ column measures the maximum $q^n$ over all steps until the last step $\laststep$.}
+  \label{tab:refine_atoms_theta}
+\end{table}
+\smallskip
+
+Table~\ref{tab:padding_interface_L4} splits the active $1$-form DoFs of the vertex-star run into patch DoFs and interface DoFs. The patch DoFs are carried by the leaf faces, and are thus controlled by the refinement of the domain sequence. The interface DoFs are added on top of those to guarantee the differential complex. The fraction of interface over total DoFs rises to $28\%$ over the first steps and then falls to $20\%$ as the refined region consolidates.
+
+The interface DoFs are added where a fine patch meets a coarser one. The test geometry is a thin annulus, so the refined region is nearly all interface and the fractions of Table~\ref{tab:padding_interface_L4} are an upper estimate. The face-refined run gives the same fractions to within one point, so this cost belongs to the construction rather than to the atom.
+\begin{table}[tb]
+  \centering
+  \begin{tabular}{@{}r@{\hspace{40pt}}r@{\hspace{24pt}}rrr@{}}
+    \toprule
+    \multirow{2}{*}{step} & \multirow{2}{*}{$\vert \activeDoFSet{1}{} \vert$} & \multicolumn{3}{c}{splits into} \\
+    \cmidrule(l{0pt}r{0pt}){3-5}
+    & & patch & interface & fraction \\
+    \midrule
+    0 & $181$   & $181$   & $0$      & $0\%$  \\
+    1 & $495$   & $390$   & $105$    & $21\%$ \\
+    2 & $1\,245$ & $897$   & $348$    & $28\%$ \\
+    3 & $2\,936$ & $2\,112$ & $824$    & $28\%$ \\
+    4 & $6\,280$ & $4\,557$ & $1\,723$ & $27\%$ \\
+    5 & $7\,901$ & $6\,062$ & $1\,839$ & $23\%$ \\
+    6 & $9\,323$ & $7\,439$ & $1\,884$ & $20\%$ \\
+    \bottomrule
+  \end{tabular}
+  \caption{Active $1$-form DoFs of the vertex-star run of Table~\ref{tab:refine_atoms_L4}, split into patch and interface DoFs. The last column reports the fraction of interface DoFs over the total $\vert \activeDoFSet{1}{} \vert$. Only $1$-forms are counted here, so these totals are smaller than the counts $\totalDoFs{\cdot}$ of Table~\ref{tab:refine_atoms_L4}.}
   \label{tab:padding_interface_L4}
 \end{table}
 
 \smallskip
 
-\robert{The grading is optional for admissibility, so it is worth measuring separately what it costs and what it returns. Table~\ref{tab:grading_ab} repeats the run of Table~\ref{tab:padding_interface_L4} with the grading switched off, which is any $g \geq \L$, since no leaf star can span more levels than the hierarchy has.}
-
-\begin{table}[htb]
-  \centering
-  \robert{\begin{tabular}{@{}lrrrrrr@{}}
-    \toprule
-    & $\vert \activeDoFSet{1}{} \vert$ & energy err. & $\kappa(P^{-1}K)$ & its. & padded & stranded \\
-    \midrule
-    with grading, $g = 2$    & $9323$ & $1.86812$ & $45.4$ & $203$ & $67$ & $9.6\%$ \\
-    without grading          & $9753$ & $1.86821$ & $44.2$ & $203$ & $32$ & $68.8\%$ \\
-    \bottomrule
-  \end{tabular}}
-  \caption{\robert{The $\L = 4$ adaptive run with and without the grading substep. Reported at the last step. Columns are the $1$-form DoFs, the energy error, the condition number of the preconditioned system, the MINRES iteration count, the number of padding refinements over the whole run, and \emph{stranded}, the share of the estimator mass still eligible for refinement, that is carried on levels below $\L$, which sits on level $\lzero$. Padded counts refinements, not faces added.}}
-  \label{tab:grading_ab}
-\end{table}
-
-\robert{Two things follow. The first is that the grading is not a conditioning device. The condition number of the preconditioned system agrees between the two runs to about one part in forty, with no consistent sign, and the iteration counts are equal. Whatever the transition regions cost the solve, the level span is not the handle on it.}
-
-\robert{The second is where it does pay, and it is in the marking rather than in the solve. Because the ranking~\eqref{eq:vertex_residual} is an area density, a coarse face away from the layer ranks last and is never selected, and without the grading nothing raises it either. At the end of the ungraded run more than two thirds of the estimator mass still eligible for refinement is on level $\lzero$, against under a tenth with the grading. That mass is counted in the bulk criterion~\eqref{eq:doerfler_selection} and never marked, so the same $\theta$ is only reached by marking further into the finer levels. At step $5$ the ungraded run marks $397$ faces on level $3$ against $271$, at the same number of DoFs per marked face, and it ends with $4.6\%$ more DoFs at the same energy error. The $37$ refinements the grading spends over the whole run buy that back.}
-
-\robert{Reweighting the ranking does not substitute for the grading, which is worth recording because it is the obvious thing to try. Replacing the area in~\eqref{eq:vertex_residual} by a weight that gives a coarse face its full pooled mass does clear the coarse levels, and further than the grading does. But the target level $\targetlevel_\coarseIdxone = \min(\lmaxIdx{\coarseIdxone} \! + \! 1, \L)$ advances a marked star by a single level, so a coarse star far from the layer is left part way and the run saturates before it arrives. Measured on the same problem, the level-$\L$ face count does not grow at all, $4803$ against $4890$, while the level-$3$ count grows from $748$ to $1226$ and the space ends $7\%$ larger at the same energy error. The refinement is spent one level short of where the error is.}
-
-\robert{These are observations on one test case and not a general property of the loop.}
-
-The most relevant shortcoming of methods the adaptive subdivision $k$-form spaces is that saving DoFs does not translate to faster solves. Table~\ref{tab:solve_stats_L4} summarises the important metrics around the solve, including the wallclock time needed by the MINRES solver alongside the DoF count, the number of iterations, the condition number of the preconditioned system matrix $P^{-1}K_{\domseq[\L]^n}$, and the number of non-zero elements of $K_{\domseq[\L]^n}$ per DoF. Finally, we list the metrics for the fine FEEC reference $\FEECspace{k}{\L}$ with $\L=4$.
-
-The wallclock times reveal that the solver performance degrades rapidly as the adaptive iterations increase. In fact, the FEEC reference method is about $130$ times faster than the adaptive solve of step $6$ even though it has roughly $4.7$ times as many DoFs. The reasons for that are found in the last three columns of Table~\ref{tab:solve_stats_L4}. First, the number of iterations needed for the MINRES solver to converge skyrocket initially until they start to become flat around step $4$. This happens due to the successive activation of basis functions across finer and finer levels, until at step $4$ the finest possible basis functions are first included in the adaptive space. This means that the condition number $\kappa(P^{-1}K_{\domseq[\L]^n})$ increases until then, explaining the increased number of iterations. This is a conditioning effect distinct from the rank-deficiency discussed in Section~\ref{subsec:unrefinement_and_solve}. $\domseq[\L]^n$ remains a admissible domain sequence throughout the loop, so $\Amat{k}{\activeDoFs}{\L}$ has full column rank at every step, yet $\kappa(P^{-1}K_{\domseq[\L]^n})$ still grows. The second reason for the large wallclock times is that the increased number of nonzero entries $\text{nnz}(K_{\domseq[\L]^n})/(\vert \activeDoFSet{0}{} \vert + \vert \activeDoFSet{1}{} \vert)$ per active DoF increases the number of operations per MINRES iteration. The increase of non-zero entries is due to the smoothing nature of subdivision, meaning that coarse basis functions have larger supports and thus cover a lot of triangles of $\T_\L$. The unrefinement step in Equation~\ref{eq:FE_matrix_assembly} extends this large number of non-zeros to $K_{\domseq}$.
-
-\smallskip
-
-The adaptive method thus only wins in DoFs and memory, not wall-clock, with the current solver. A truncated basis in the spirit of THB-splines \citep{Gianelli.2016} might be able to mitigate that problem. Truncating each coarse active basis function's representation over the region already covered by finer active DoFs would remove exactly the redundant coarse/fine support overlap responsible for the ill-conditioning and reduces the number of non-zeros, both without changing the discrete space itself. This means we would target both measured mechanisms directly, rather than working around them with a different solver. Truncating the subdivision-induced basis functions will be a subject of future work.
+The final cost of the space construction is the grading step. Since grading is optional for admissibility, we measure it on its own, detached from pinch resolution and confinement padding. It is the one substep that no clause of Definition~\ref{def:subdiv_partition} requires, and what it controls instead is the level span of a leaf star. Table~\ref{tab:grading_ab} repeats the vertex-star run with the grading switched off. We represent that by choosing any $g \geq \L$, which leaves the grading predicate in~\eqref{eq:grading_detection_classes} never satisfied.
 
 \begin{table}[tb]
   \centering
-  \begin{tabular}{r@{\hspace{16pt}}r@{\hspace{16pt}}r@{\hspace{16pt}}r@{\hspace{16pt}}r@{\hspace{16pt}}r}
+  \begin{tabular}{@{}l rrr@{\hspace{16pt}} rrrrr@{\hspace{16pt}} r@{}}
     \toprule
-    \multirow{2}{*}{step} & wallclock & DoF count & \multirow{2}{*}{iterations} & \multirow{2}{*}{$\kappa(P^{-1}K_{\domseq})$} & \multirow{2}{*}{$\dfrac{\mathrm{nnz}(K_{\domseq})}{\vert \activeDoFSet{0}{} \vert + \vert \activeDoFSet{1}{} \vert}$} \\
-     & time & $\vert \activeDoFSet{0}{} \vert + \vert \activeDoFSet{1}{} \vert$ & & & \\
+    & & & & & \multicolumn{4}{c}{padding} & \\
+    \cmidrule(lr{16pt}){6-9}
+    & $\totalDoFs{\cdot}$ & graph norm & $\max(\levelSpan{\coarseIdxone})$ & $m$
+      & $p_{\bullet}$ & $p_{\triangle}$ & $p_{s}$ & $p$ & stranded \\
     \midrule
-    0 & $0.06\,\mathrm{s}$    & 253  & 63  & 9.98  & 77.7  \\
-    1 & $1.57\,\mathrm{s}$    & 663  & 241 & 82.7  & 129.6 \\
-    2 & $18.4\,\mathrm{s}$    & 1\,644  & 474 & 107.7 & 177.8 \\
-    3 & $125.1\,\mathrm{s}$   & 3\,857  & 606 & 112.8 & 156.5 \\
-    4 & $602.5\,\mathrm{s}$   & 8\,207  & 656 & 111.4 & 126.1 \\
-    5 & $974.0\,\mathrm{s}$   & 10\,364  & 672 & 111.6 & 116.0 \\
-    6 & $1380.9\,\mathrm{s}$  & 12\,178  & 692 & 103.2 & 106.2 \\
-    \midrule
-    FEEC reference $\FEECspace{k}{\L}$ & $10.6\,\mathrm{s}$   & $56\,833$ & 25  & 4.11  & 11.4  \\
+    $g = 2$ & $10\,400$ & $1.86842$ & $2$ & $1\,133$ & $6$ & $13$ & $21$ & $40$ & $2.0\%$ \\
+    $g \geq \L$ & $10\,294$ & $1.86845$ & $4$ & $1\,136$ & $4$ & $17$ & $0$  & $21$ & $12.9\%$ \\
     \bottomrule
   \end{tabular}
-  \caption{Solve metrics for all steps of the adaptive simulation with $\L=4$. The fine superspace $\FEECspace{k}{4}$ is included as a reference. $\kappa(P^{-1}K_{\domseq})$ is the estimated condition number of the preconditioned operator after unrefinement, see Equation~\ref{eq:FE_matrix_assembly} and the preconditioner $\mathbf{P}$ defined in Equation~\ref{eq:preconditioner} (\S~\ref{subsec:solve}). The term \emph{nnz} refers to the number of non-zero elements of a matrix, and to obtain $\mathrm{nnz}(K_{\domseq})/(\vert \activeDoFSet{0}{} \vert + \vert \activeDoFSet{1}{} \vert)$ we normalised by the number of active DoFs.}
+  \caption{The $\L = 4$ adaptive run with and without the grading substep, both measured at their last step $\laststep = 5$. Columns are the DoF count of Equation~\eqref{def:total_dofs}, the graph-norm error of Equation~\eqref{def:graph_error}, the largest level span $\levelSpan{\coarseIdxone}$ of a leaf star, the faces $m$ the marking refined, and the faces each padding substep refined. The \emph{stranded} column reports the fraction $\zeta = \eta^2_{\lzero} / \rho^2$ defined in the text.}
+  \label{tab:grading_ab}
+\end{table}
+
+The \emph{stranded} column of Table~\ref{tab:grading_ab} tests the claim of Section~\ref{subsubsec:grading}, that grading exists to move estimator mass off the coarsest level. It reports the share $\zeta  \coloneq  \eta^2_{\lzero} / \rho^2$ of the refinable residual of Equation~\eqref{def:total_and_refinable_residuals} that sits on the coarsest level. A large $\zeta$ therefore says that the loop is leaving residual on the coarsest level while it refines on finer levels. The vertex-based estimator used for the ranking~\eqref{eq:vertex_residual} is an area density, so a coarse face away from the circular layer~\eqref{eq:circular_layer_test_case} ranks last. Without the grading that mass strands on the coarsest level. It still counts in the refinable residual $\rho$ of~\eqref{eq:doerfler_selection}, but it is never selected into $\B_\theta$. The grading is what raises such a face to a finer level, so that the ranking can pick it up again. At matched accuracy the graded run gives $\zeta = 2.0\%$ and the ungraded run $12.9\%$.
+
+Table~\ref{tab:grading_ab} also shows that the grading does not increase the DoF efficiency. The two runs with and without grading mark $1\,133$ and $1\,136$ faces and reach the same graph-norm error at $10\,400$ and $10\,294$ DoFs. The grading therefore saves no degrees of freedom here. It costs $p_s = 21$ of the $p = 40$ refinements the padding performs and leaves the space $1.0\%$ larger. The grading step only allows us to control the level span. The graded run holds every leaf star at a span of $2$, which is the bound $g$, while the ungraded run drifts to $4$. Stranded residual turns into extra marking only once the loop has finished with the circular layer and starts targeting the bulk, which happens only beyond $\laststep$ in our test case.
+
+\FloatBarrier
+
+\subsubsection{Cost to accuracy}
+\label{subsubsec:cl_cost}
+
+The savings of Section~\ref{subsubsec:cl_approximation} were measured with the transition of the circular layer at $R = 0.3$, which covers a large part of the domain. Table~\ref{tab:cl_cost} adds a second test with $R = 0.05$ to localise the feature. The sharpness of the transition is rescaled with it, from $\alpha = 100$ to $\alpha = 600$, so that the radial width of the layer stays at about $0.017$. Without that rescale a smaller $R$ would also flatten the layer.
+
+\robert{The DoF saving is a function of how localised the feature is. At $R = 0.3$ it is $3.3$ to $9.4$ times, and at $R = 0.05$ it is $14$ to $28$ times, both read at matched accuracy. The saving at $R = 0.05$ is not monotone in $\L$, and the $\L = 5$ entry is the overshoot of Section~\ref{subsubsec:cl_approximation} rather than a reversal. That run steps from $3\,356$ DoFs to $10\,079$ to $16\,030$, and only the last is within $1\%$ of the reference.}
+
+\begin{table}[tb]
+    \centering
+    \small
+    \robert{\begin{tabular}{@{}ccc@{\hspace{16pt}} rc@{\hspace{16pt}} rc@{\hspace{16pt}} rc@{}}
+        \toprule
+        & & & \multicolumn{2}{c}{$\totalDoFs{\domseq[\L]^n}$} & \multicolumn{2}{c}{$\mathrm{nnz}(K_{\domseq})$} & \multicolumn{2}{c}{wallclock} \\
+        \cmidrule(r{16pt}){4-5}\cmidrule(r{16pt}){6-7}\cmidrule(r{0pt}){8-9}
+        $R$ & $\L$ & step & count & saving & count & saving & time & saving \\
+        \midrule
+        $0.30$ & 3 & $4$ & $4\,300$  & $\mathbf{3.3\times}$  & $389\,442$    & $0.42\times$ & $136.6\,\mathrm{s}$    & $0.01\times$ \\
+        $0.30$ & 4 & $5$ & $10\,400$ & $\mathbf{5.5\times}$  & $1\,205\,150$ & $0.54\times$ & $970.1\,\mathrm{s}$    & $0.01\times$ \\
+        $0.30$ & 5 & $6$ & $24\,140$ & $\mathbf{9.4\times}$  & $2\,839\,712$ & $0.91\times$ & $5\,180.5\,\mathrm{s}$ & $0.01\times$ \\
+        \midrule
+        $0.05$ & 3 & $3$ & $880$     & $\mathbf{16.3\times}$ & $90\,260$     & $1.81\times$ & $1.9\,\mathrm{s}$      & $0.84\times$ \\
+        $0.05$ & 4 & $4$ & $1\,998$  & $\mathbf{28.4\times}$ & $251\,086$    & $2.59\times$ & $16.4\,\mathrm{s}$     & $0.48\times$ \\
+        $0.05$ & 5 & $6$ & $16\,030$ & $\mathbf{14.1\times}$ & $783\,230$    & $3.31\times$ & $715.3\,\mathrm{s}$    & $0.05\times$ \\
+        \bottomrule
+    \end{tabular}}
+    \caption{\robert{The adaptive method against the reference space $\FEECspace{1}{\L}$ at two layer radii, each row read at matched accuracy as in Table~\ref{tab:cl_headline}. Reported are the DoF count, the non-zero entries of the system matrix, and the MINRES solve time of that step, each with the corresponding reference value divided by it. A saving below one means the adaptive run is the more expensive of the two. The reference values are $14\,337$, $56\,833$ and $226\,305$ DoFs, $0.16$, $0.65$ and $2.59$ million non-zeros, and $2.0$, $10.1$ and $46.0$ seconds for $\L = 3$, $4$ and $5$. The DoF columns of the upper block repeat Table~\ref{tab:cl_headline}.}}
+    \label{tab:cl_cost}
+\end{table}
+
+\robert{Neither saving carries over to the other two columns in full. The system matrix is denser per DoF than the reference, so the memory saving is much smaller than the DoF saving, and at $R = 0.3$ it is not a saving at all. At $\L = 3$ the adaptive matrix holds more than twice the non-zeros of the reference while using a third of the DoFs. The wallclock is worse still. The adaptive solve is slower in every configuration we measured, by a factor of about $100$ at $R = 0.3$ and between $1.2$ and $19$ at $R = 0.05$. The most relevant shortcoming of the method as it stands is therefore that saving DoFs saves neither memory nor time reliably.}
+
+\robert{Table~\ref{tab:solve_stats_L4} shows where the time goes, for the $\L = 4$ run at $R = 0.3$. Two properties of the subdivision basis account for most of the gap. The first is conditioning. The condition number $\kappa(P^{-1}K_{\domseq[\L]^n})$ rises by an order of magnitude over the first steps and the iteration count rises with it, from $63$ to $682$ against $25$ for the reference. This is a conditioning effect distinct from the rank deficiency of Section~\ref{subsec:unrefinement_and_solve}. The domain sequence stays admissible throughout, so $\Amat{k}{\activeDoFs}{\L}$ has full column rank at every step, and $\kappa(P^{-1}K_{\domseq[\L]^n})$ grows anyway. The second is density. Coarse subdivision basis functions have large supports and cover many triangles of $\T_\L$, and the unrefinement of Equation~\eqref{eq:FE_matrix_assembly} carries that into $K_{\domseq}$. The adaptive system holds about nine times as many non-zeros per DoF as the reference. Together these two factors account for a slowdown of roughly $250$ against the measured per-DoF factor of about $630$.}
+
+\robert{Neither factor explains the growth from step to step, and it is worth saying what does. From step $4$ to step $6$ the iteration count rises by $4\%$ and the non-zeros per DoF fall by $17\%$, while the solve time more than doubles. The preconditioner~\eqref{eq:preconditioner} is applied by direct factorisations of $\mathbf{M}_{\domseq}$ and $\mathbf{S}_{\domseq}$, so the cost of one iteration is the fill-in of those factors rather than the non-zeros of $K_{\domseq}$. The same wide supports that raise $\mathrm{nnz}(K_{\domseq})$ raise the fill-in considerably faster, and that is the growth the table does not show.}
+
+\begin{table}[tb]
+  \centering
+  \robert{\begin{tabular}{r@{\hspace{16pt}}r@{\hspace{16pt}}r@{\hspace{16pt}}r@{\hspace{16pt}}r@{\hspace{16pt}}r}
+    \toprule
+    \multirow{2}{*}{step} & wallclock & DoF count & \multirow{2}{*}{iterations} & \multirow{2}{*}{$\kappa(P^{-1}K_{\domseq})$} & \multirow{2}{*}{$\dfrac{\mathrm{nnz}(K_{\domseq})}{\vert \activeDoFSet{0}{} \vert + \vert \activeDoFSet{1}{} \vert}$} \\
+     & time & $\totalDoFs{\domseq[\L]^n}$ & & & \\
+    \midrule
+    0 & $0.06\,\mathrm{s}$    & $253$     & $63$  & $9.98$   & $77.7$  \\
+    1 & $1.57\,\mathrm{s}$    & $663$     & $241$ & $83.9$   & $129.6$ \\
+    2 & $18.1\,\mathrm{s}$    & $1\,644$  & $473$ & $107.7$  & $177.8$ \\
+    3 & $123.5\,\mathrm{s}$   & $3\,857$  & $603$ & $108.8$  & $156.5$ \\
+    4 & $603.3\,\mathrm{s}$   & $8\,233$  & $658$ & $111.9$  & $126.1$ \\
+    5 & $970.1\,\mathrm{s}$   & $10\,400$ & $670$ & $112.5$  & $115.9$ \\
+    6 & $1\,371.1\,\mathrm{s}$ & $12\,296$ & $682$ & $113.9$  & $105.4$ \\
+    \midrule
+    FEEC reference $\FEECspace{k}{\L}$ & $10.1\,\mathrm{s}$ & $56\,833$ & $25$ & $4.11$ & $11.4$ \\
+    \bottomrule
+  \end{tabular}}
+  \caption{\robert{Solve metrics for all steps of the adaptive run with $\L=4$ and $R = 0.3$, with the fine superspace $\FEECspace{k}{4}$ as a reference. The wallclock time is the MINRES solve alone. $\kappa(P^{-1}K_{\domseq})$ is the estimated condition number of the preconditioned operator after unrefinement, see Equation~\eqref{eq:FE_matrix_assembly} and the preconditioner $\mathbf{P}$ of Equation~\eqref{eq:preconditioner}. The last column normalises the number of non-zero entries of $K_{\domseq}$ by the number of active DoFs. Iteration counts are not directly comparable across steps, see Section~\ref{subsec:solve}.}}
   \label{tab:solve_stats_L4}
 \end{table}
+
+\smallskip
+
+\robert{Both mechanisms are properties of the basis rather than of the solver, so a different solver would not remove them.} A truncated basis in the spirit of THB-splines \citep{Gianelli.2016} might be able to mitigate that problem. Truncating each coarse active basis function's representation over the region already covered by finer active DoFs would remove exactly the redundant coarse/fine support overlap responsible for \robert{both the ill-conditioning and the fill-in}, both without changing the discrete space itself. This means we would target both measured mechanisms directly, rather than working around them with a different solver. Truncating the subdivision-induced basis functions will be a subject of future work.
 
 \section{Conclusion}
 
